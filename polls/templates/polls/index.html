@@ -1,0 +1,15 @@
+<h1> H o l a  </h1>
+<h2> soy el index</h2>
+{% if ultimas_respuestas %}
+    <ul>
+    {% for pregunta in ultimas_respuestas %}
+
+<!-- 	<li><a href="/polls/{{ pregunta.id }}/">{{ pregunta.texto_pregunta }}</a></li>
+ -->
+ 		<li><a href="{% url 'polls:detalles' pregunta.id %}">{{ pregunta.texto_pregunta }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+

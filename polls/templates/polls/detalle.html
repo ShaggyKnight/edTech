@@ -1,0 +1,22 @@
+<h1>{{pregunta.texto_pregunta}}</h1>
+
+<!--"
+<ul>
+	{% for opcion in pregunta.opcion_set.all%}
+	<li>{{opcion.texto_opcion}}</li>
+	{% endfor %}
+</ul>
+-->
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'polls:voto' pregunta.id %}" method="post">
+{% csrf_token %}
+{% for opcion in pregunta.opcion_set.all %}
+    <input type="radio" name="opcion" id="opcion{{ forloop.counter }}" value="{{ opcion.id }}" />
+    <label for="opcion{{ forloop.counter }}">{{ opcion.texto_opcion }}</label><br />
+{% endfor %}
+<input type="submit" value="voto" />
+</form>
+
+

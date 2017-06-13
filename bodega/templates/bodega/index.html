@@ -1,4 +1,10 @@
+{# Cargar las librerias #}
 {% load static %}
+{% load bootstrap3 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
 
 <!doctype html>
 <html class="no-js" lang="">
@@ -22,31 +28,51 @@
         <![endif]-->
 
         <!-- Add your site or application content here -->
-        <p>Hello world! This is HTML5 Boilerplate.</p>
-         {% if lista_bodega %}
-         <p>Holi, esto es Index en Bodega.</p>
+        <h1>Bienvenido al centro de Inventario </h1>
+        <img src="{% static '/tile.png' %}" alt="My image" width="100p" />
+         {% if inventario %}
+            <p>Holi, esto es Index en Bodega.</p>
 
-        <div id="botones">
-            <div>
-                <button class="ui-btn">Button</button>   
-            </div>
-            <div>
-                <button class="ui-btn">Button</button>
-            </div>
+            <div id="botones">
+                <div>
+                    <button class="ui-btn">Ir a algo</button>   
+                </div>
+                <div>
+                 <button class="ui-btn">otra cosa</button>
+                </div>
             
-        </div>
-         
-         <img src="{% static '/tile.png' %}" alt="My image"/>
-            <ul>
-            {% for bodega in lista_bodega %}
-                <h1>{{bodega.texto_pregunta}}</h1>
+            </div>
 
+            <h2>Productos en stock:</h2>
+
+            <div class="row">
+                    <div class="col-md-3"><strong>Producto</strong></div>
+                    <div class="col-md-3"><strong>Precio</strong></div>
+                    <div class="col-md-3"><strong>Familia</strong></div>
+            </div>
+            {% for producto in inventario %}
+                <div class="row">
+                    <div class="col-md-3"><a href="{% url 'bodega:detalles' producto.id %}">{{producto.descripcion}}</a></div>
+                    <div class="col-md-3">{{producto.precio}}</div>
+                    <div class="col-md-3">{{producto.familia}}</div>
+                </div>
             {% endfor %}
-            </ul>
+            
         {% else %}
-            <p>No polls are available.</p>
+            <p>No hay Productos que mostrar</p>
         {% endif %}
 
+
+        
+{% block bootstrap3_content %}
+    <div class="container">
+        <h1>{% block title %}Bootstrap content{% endblock %}</h1>
+        {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
+
+        {% block content %} No haty contenido{% endblock %}
+    </div>
+
+{% endblock %}
 
         <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
         <script>window.jQuery || document.write('<script src="{% static 'js/vendor/jquery-1.12.0.min.js' %}"><\/script>')</script>

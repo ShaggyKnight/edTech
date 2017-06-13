@@ -12,12 +12,24 @@ from polls.models import Pregunta
 
 class IndexView(generic.ListView):
 	template_name = 'bodega/index.html'
-	context_object_name = 'lista_bodega'
+	context_object_name = 'inventario'
 
 	def get_queryset(self):
 		""" Retorna las ulimas 5 publicaciones"""
-		return Pregunta.objects.order_by('fecha_pub')[:5]
+		return Producto.objects.all()
 
 class FamiliasView(generic.ListView):
 	model = Familia
-	template_name = 'bodega/index2.html'
+	template_name = 'bodega/familias.html'
+
+class ProductoView(generic.ListView):
+	template_name = 'bodega/productos.html'
+	context_object_name = 'lista_productos'
+
+	def get_queryset(self):
+		'''retorna los productos'''
+		return Producto.objects.all()
+
+class DetallesView(generic.DetailView):
+	model = Producto
+	template_name = 'bodega/detalles.html'

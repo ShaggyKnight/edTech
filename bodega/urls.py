@@ -8,7 +8,7 @@ app_name = 'bodega'
 urlpatterns = [
 	# ej: /polls/
     url(r'^$', views.IndexView.as_view(), name='index'),
-
+    url(r'^(?P<pk>[0-9]+)/$', views.DetallesView.as_view(), name='detalles')
     # ej: /polls/5
 #    url(r'^(?P<pk>[0-9]+)/$', views.DetallesView.as_view(), name='detalles'),
     # ej: /polls/5/resultados

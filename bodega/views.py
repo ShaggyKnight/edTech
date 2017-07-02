@@ -1,17 +1,15 @@
 # coding=utf-8
 # Ìmports django
-from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.template import loader
-from django.urls import reverse
-from django.views import generic
-from django.views.generic import TemplateView
-
-from .models import *
-from polls.models import Pregunta
+from django.shortcuts 		import get_object_or_404, render
+from django.http 			import HttpResponse, Http404, HttpResponseRedirect
+from django.template 		import loader
+from django.urls 			import reverse
+from django.views 			import generic
+from django.views.generic 	import TemplateView
+from .models 				import *
 
 class IndexView(generic.ListView):
-	template_name = 'bodega/index.html'
+	template_name 		= 'bodega/index.html'
 	context_object_name = 'inventario'
 
 	def get_queryset(self):

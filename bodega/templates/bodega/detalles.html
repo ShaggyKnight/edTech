@@ -1,11 +1,13 @@
-<h1>{{producto.id}}</h1>
-<h1>{{producto.descripcion}}</h1>
 
+{% extends "base.html" %}
+{% block content %}
+	<h1>{{producto.id}}</h1>
+	<h1>{{producto.nombre}}</h1>
 
-
-<ul>
-{% csrf_token %}
-	{% for linea in producto.familia_set.all %}
-		<li>{{ linea.id}} </li>
-	{% endfor %}
-</ul>
+	<ul>
+	{% csrf_token %}
+		{% for linea in producto.ProductoLinea_set.all %}
+			<li>{{ linea.id}} </li>
+		{% endfor %}
+	</ul>
+{% endblock content %}

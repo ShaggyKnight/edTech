@@ -3,11 +3,11 @@
 
 # TEAM
 
-    <name> -- <role> -- <twitter>
+    <ShaggyKnight> -- <role> -- <twitter>
 
 # THANKS
 
-    <name>
+    <A los que aportaron con ideas y buenas energias para el desarrollo>
 
 # TECHNOLOGY COLOPHON
 

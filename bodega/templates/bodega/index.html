@@ -1,20 +1,25 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% block titulo %}Ideas Inventario {% endblock %}
+
+
+
 {% block content %}
+{% include "bodega/analitycs.html" %}
+  <div class="container">
+
         <h1>Bienvenido al centro de Inventario </h1>
         <img src="{% static '/tile.png' %}" alt="My image" width="100p" />
          {% if inventario %}
             <p>Holi, esto es Index en Bodega.</p>
-
             <div id="botones">
                 <div>
-                    <button class="ui-btn">Ir a algo</button>   
+                    <button class="ui-btn">Ir a algo</button>
                 </div>
                 <div>
                  <button class="ui-btn">otra cosa</button>
                 </div>
-            
+
             </div>
 
             <h2>Productos en stock:</h2>
@@ -24,8 +29,8 @@
                     <div class="col-md-3"><strong>Precio</strong></div>
                     <div class="col-md-3"><strong>Familia</strong></div>
             </div>
-            {% block bootstrap3_content %}
-           
+            {% block productos %}
+            {% if user.is_authenticated %}
                  <div class="table-responsive">
                       <table class="table">
                         <thead>
@@ -42,17 +47,18 @@
                                 <td>{{producto.id}}</td>
                                 <td><a href="{% url 'bodega:detalles' producto.id %}">{{producto.nombre}}</a></td>
                                 <td>{{producto.precio}}</td>
-                        
                             </tr>
                          {% endfor %}
                         </tbody>
                       </table>
-                </div> 
-                
-            
-            {% endblock %}
+                </div>
+            {% endif%}
+
+            {% endblock productos %}
         {% else %}
             <p>No hay Productos que mostrar</p>
         {% endif %}
 
-        {% endblock content %}
+      </div> <!-- container-fluid -->
+
+{% endblock content %}

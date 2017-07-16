@@ -8,10 +8,9 @@ from django.utils import timezone
 
 class Bodega(models.Model):
 	'''
-		Bodegas de almacenamiento
+		Bodegas de almacenamiento de productos
 	'''
 	nombre 			= models.CharField(max_length=30, unique = True)
-	descripcion 	= models.CharField(max_length=90, blank = True, null = True)
 	ubicacion 		= models.CharField(max_length=30, blank = True)
 	creado			= models.DateTimeField(auto_now_add = True)
 	modificado		= models.DateTimeField(auto_now = True)
@@ -25,15 +24,18 @@ class Familia(models.Model):
 		Familias de productos, cada producto pertenece a una familia
 		ej: Buzos, Poleras, Chalecos
 	"""
-	nombre 			= models.CharField(max_length=30, unique = True)
-	descripcion 	= models.TextField(null = True, blank= True)
-	creado			= models.DateTimeField(auto_now_add = True)
-	modificado		= models.DateTimeField(auto_now = True)
+	nombre		= models.CharField(max_length=30, unique = True)
+	descripcion 		= models.TextField(null = True, blank= True)
+	creado				= models.DateTimeField(auto_now_add = True)
+	modificado			= models.DateTimeField(auto_now = True)
 	def __str__(self):
 		return self.nombre
 
 
-
+class Grupo(models.Model):
+	nombre_grupo		= models.CharField(max_length=30, unique=True)
+	def __str__(self):
+		return self.nombre_grupo
 
 class Producto(models.Model):
 	""" 
@@ -45,7 +47,8 @@ class Producto(models.Model):
 					('L', 'Large')
 					)			
 	familia 		= models.ForeignKey(Familia)
-	nombre 			= models.CharField(max_length=200, unique=True)
+	nombre = models.CharField(max_length=200, unique=True)
+	descripcion 	= models.CharField(max_length=300, null = True, blank= True)
 	precio 			= models.FloatField(default=0)
 	talla 			= models.CharField(max_length=1, choices=TALLA_TAMANO)
 	creado			= models.DateTimeField(auto_now_add = True)
@@ -53,7 +56,25 @@ class Producto(models.Model):
 	def __str__(self):
 		return self.nombre
 
+class Atributo(models.Model):
+	""" 
+		Define los productos del sistema, los productos son articulos terminados 
+	"""
+	nombre 			= models.CharField(max_length=30, unique= True )
+	def __str__(self):
+		return self.nombre
 
+class ProductoAtributo(models.Model):
+	"""
+		contiene la relacion entre producto y atributo
+	"""
+	producto_id 	= models.ForeignKey(Producto)
+	atributo_id 	= models.ForeignKey(Atributo)
+	valor 			= models.CharField(max_length=30, null = True, blank=True)
+
+class ProductoAtributoValor(models.Model):
+	producto_atributo_id	= models.ForeignKey(ProductoAtributo)
+	valor 					= models.CharField(max_length=30, null = True, blank=True)
 
 class Material(models.Model):
 	""" 
@@ -99,9 +120,7 @@ class Inventariolinea(models.Model):
 	def __str__(self):
 		return self.producto.nombre
 
-class StockTienda(models.Model):
-	producto 			= models.ForeignKey(Producto, null = True)
-	cantidad_contada 	= models.PositiveIntegerField(default=0)
+
 
 
 class Proveedor(models.Model):

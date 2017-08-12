@@ -47,7 +47,7 @@ class Producto(models.Model):
 					('L', 'Large')
 					)			
 	familia 		= models.ForeignKey(Familia)
-	nombre = models.CharField(max_length=200, unique=True)
+	nombre 			= models.CharField(max_length=200, unique=True)
 	descripcion 	= models.CharField(max_length=300, null = True, blank= True)
 	precio 			= models.FloatField(default=0)
 	talla 			= models.CharField(max_length=1, choices=TALLA_TAMANO)

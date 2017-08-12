@@ -8,7 +8,7 @@ class StockTienda(models.Model):
 	producto 			= models.ForeignKey(bodega.models.Producto, null = True)
 	cantidad_contada 	= models.PositiveIntegerField(default=0)
 	def __str__(self):
-		return str("Stock " + str(self.fecha_hora_creacion.year))
+		return str(self.producto.nombre +" "+ str(self.fecha_hora_creacion))
 
 class Tienda(models.Model):
 	nombre_organizacion	= models.CharField(max_length=200, unique=True)
@@ -36,4 +36,4 @@ class ReciboVentaDetalle(models.Model):
 class HistoriaVentas(models.Model):
 	fecha_venta			= models.DateTimeField(auto_now_add = True)	
 	id_reciboVenta		= models.ForeignKey(ReciboVenta)
-	monto_venta			= models.PositiveIntegerField()
+	monto_venta			= models.PositiveIntegerField()	

@@ -6,7 +6,8 @@ from . import views
 
 app_name = 'tienda'
 urlpatterns = [
-	# ej: /polls/
-    url(r'^$', views.index, name='index')
+	#  /tienda/
+	url(r'^$', views.IndexView.as_view(), name='index'),
+    #url(r'^$', views.index, name='index')
 
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

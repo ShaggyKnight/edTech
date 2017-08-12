@@ -8,8 +8,39 @@
 			<h1>Bienvenido al centro de Inventario </h1	>
 			<h2>Esto es Index Tienda </h2>
 	       	<img src="{% static '/tile.png' %}" alt="estrellita" width="100p" />
-	  </div>
-	</div>
+	  	</div> 
+		<p> Esto debe desaparecer!! o:</p>
+		{% if stock_productos %}
+			<h1> Existen <strong>Productos</strong> en la tienda!! </h1>
+			
+			<table class="table table-striped">
+			   	<thead>
+				    <tr>
+					    <th>Id</th>
+					    <th>Categoria</th>
+					    <th>Nombre</th>
+				        <th>Existencias</th>
+				        <th>Agregado</th>
+				    </tr>
+				</thead>
+				    <tbody>
+					    {% for linea in stock_productos%}
+				    		<tr>
+				    			<td>{{linea.id}}</td>
+				    			<td>{{linea.producto.familia.nombre}}</td>
+				        		<td>{{linea.producto.nombre}}</td>
+				        		<td>{{linea.cantidad_contada}}</td>
+				        		<td>{{linea.fecha_hora_creacion.date}}</td>
+				      		</tr>
+				      	{% endfor %}
+				     </tbody>
+				</table>
+		{% else %}
+			<h2>No existen productos o algo salió mal :(</h2>
+		{% endif %}
+	</div>  <!-- fin container-->
+
+
 	<div id="myCarousel" class="carousel slide" data-ride="carousel">
 		 <!-- Indicators -->
 		 <ol class="carousel-indicators">
@@ -20,7 +51,7 @@
 	 <!-- Wrapper for slides -->
 	 <div class="carousel-inner" role="listbox">
 		 <div class="item active">
-			 <img src="https://placehold.it/1200x400?text=IMAGE" alt="Image">
+			 <img src="https://s-media-cache-ak0.pinimg.com/564x/ab/2e/f1/ab2ef1aba70037763aa9fc29264bf3d9.jpg" alt="Image">
 			 <div class="carousel-caption">
 				 <h3>Sell $</h3>
 				 <p>Money Money.</p>
@@ -28,7 +59,7 @@
 		 </div>
 
 		 <div class="item">
-			 <img src="https://placehold.it/1200x400?text=Another Image Maybe" alt="Image">
+			 <img src="https://s-media-cache-ak0.pinimg.com/564x/21/39/1f/21391fe3f5f27c5aa92fd74e700a5c4f.jpg" alt="Image">
 			 <div class="carousel-caption">
 				 <h3>More Sell $</h3>
 				 <p>Lorem ipsum...</p>

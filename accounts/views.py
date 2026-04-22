@@ -11,7 +11,7 @@ def dashboard(request):
     user = request.user
 
     if user.is_superuser or user_in_role(user, ADMIN):
-        return redirect(reverse('admin:index'))
+        return redirect(reverse('reportes:dashboard'))
     if user_in_role(user, CAJERO):
         return redirect(reverse('pos:home'))
     if user_in_role(user, BODEGUERO):

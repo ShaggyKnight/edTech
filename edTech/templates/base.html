@@ -53,6 +53,9 @@
                     <li class="active"><a href="{% url 'index' %}">Inicio</a></li>
                     <li><a href="{% url 'ecommerce:catalogo' %}"><span class="glyphicon glyphicon-th-large"></span> Tienda</a></li>
                     {% if user.is_authenticated %}
+                      {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
+                        <li><a href="{% url 'reportes:dashboard' %}"><span class="glyphicon glyphicon-dashboard"></span> Dashboard</a></li>
+                      {% endif %}
                       {% if perms.pos.add_reciboventa %}
                         <li><a href="{% url 'pos:home' %}"><span class="glyphicon glyphicon-shopping-cart"></span> POS</a></li>
                       {% endif %}

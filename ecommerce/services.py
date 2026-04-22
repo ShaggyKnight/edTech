@@ -232,6 +232,12 @@ def _aplicar_resultado(recibo: ReciboVenta, result: PaymentResult) -> ReciboVent
 
     recibo.estado = ReciboVenta.ESTADO_PAGADO
     recibo.save(update_fields=['estado', 'payment_provider', 'modificado'])
+
+    # Asiento contable de ingreso (idempotente).
+    # Import local: evita dependencias circulares con contabilidad en el arranque.
+    from contabilidad.services import registrar_ingreso_venta
+    registrar_ingreso_venta(recibo)
+
     return recibo
 
 

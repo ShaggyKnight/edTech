@@ -182,6 +182,11 @@ def procesar_venta(
             mov_kwargs['producto_id'] = item.item_id
         MovimientoStock.objects.create(**mov_kwargs)
 
+    # 7. Asiento contable de ingreso (idempotente).
+    # Import local: evita dependencias circulares con contabilidad en el arranque.
+    from contabilidad.services import registrar_ingreso_venta
+    registrar_ingreso_venta(recibo, usuario=vendedor)
+
     return recibo
 
 

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <h2>Dashboard</h2>
+    <p class="text-muted">
+        Ventana: {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
+    </p>
+
+    <form method="get" class="form-inline" style="margin-bottom: 20px;">
+        <div class="form-group">
+            <label>Últimos</label>
+            <select name="dias" class="form-control">
+                {% for d in "7,30,90,180,365"|slice:"::" %}{% endfor %}
+                <option value="7" {% if dias == 7 %}selected{% endif %}>7 días</option>
+                <option value="30" {% if dias == 30 %}selected{% endif %}>30 días</option>
+                <option value="90" {% if dias == 90 %}selected{% endif %}>90 días</option>
+                <option value="180" {% if dias == 180 %}selected{% endif %}>6 meses</option>
+                <option value="365" {% if dias == 365 %}selected{% endif %}>12 meses</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Tienda</label>
+            <select name="tienda" class="form-control">
+                <option value="">Todas</option>
+                {% for t in tiendas %}
+                    <option value="{{ t.pk }}" {% if tienda_filtro and tienda_filtro.pk == t.pk %}selected{% endif %}>
+                        {{ t.nombre_organizacion }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Actualizar</button>
+        <a href="{% url 'reportes:caja' %}" class="btn btn-default">Caja</a>
+    </form>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Ventas totales</div>
+                <div class="panel-body">
+                    <h3>${{ resumen.total_ventas }}</h3>
+                    <small>{{ resumen.n_ventas }} venta{{ resumen.n_ventas|pluralize }} pagada{{ resumen.n_ventas|pluralize }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">Presencial</div>
+                <div class="panel-body">
+                    <h3>${{ resumen.ventas_por_canal.presencial.total }}</h3>
+                    <small>{{ resumen.ventas_por_canal.presencial.n_ventas }} venta{{ resumen.ventas_por_canal.presencial.n_ventas|pluralize }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">Online</div>
+                <div class="panel-body">
+                    <h3>${{ resumen.ventas_por_canal.online.total }}</h3>
+                    <small>{{ resumen.ventas_por_canal.online.n_ventas }} venta{{ resumen.ventas_por_canal.online.n_ventas|pluralize }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-success">
+                <div class="panel-heading">Saldo de caja (ventana)</div>
+                <div class="panel-body">
+                    <h3>${{ resumen.caja.saldo }}</h3>
+                    <small>
+                        +${{ resumen.caja.entradas }} / −${{ resumen.caja.salidas }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">Valor de inventario</div>
+                <div class="panel-body">
+                    <h3>${{ resumen.valor_inventario }}</h3>
+                    <small>Stock actual × precio de costo</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="panel panel-default">
+                <div class="panel-heading"><strong>Ventas por día</strong></div>
+                <div class="panel-body">
+                    {% if serie %}
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th class="text-right">Ventas</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in serie %}
+                            <tr>
+                                <td>{{ d.fecha|date:"d-m-Y" }}</td>
+                                <td class="text-right">{{ d.n_ventas }}</td>
+                                <td class="text-right">${{ d.total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted">Sin ventas en la ventana seleccionada.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="panel panel-default">
+                <div class="panel-heading"><strong>Top productos</strong></div>
+                <div class="panel-body">
+                    {% if resumen.top_productos %}
+                    <table class="table table-condensed">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-right">Unid.</th>
+                                <th class="text-right">Ingreso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in resumen.top_productos %}
+                            <tr>
+                                <td>{{ p.descripcion }}</td>
+                                <td class="text-right">{{ p.unidades }}</td>
+                                <td class="text-right">${{ p.ingreso }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted">Sin ventas en la ventana seleccionada.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

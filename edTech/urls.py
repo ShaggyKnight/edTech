@@ -8,6 +8,8 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('cuenta/', include('django.contrib.auth.urls')),
+    path('cuenta/', include('accounts.urls')),
     path('tienda/', include('tienda.urls')),
     path('bodega/', include('bodega.urls')),
     path('admin/', admin.site.urls),

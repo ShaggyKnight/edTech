@@ -1,79 +1,111 @@
-{% extends "base.html" %}
+{% extends 'base_public.html' %}
+{% load static humanize %}
 
-{% block titulo %}Tienda · Ideas{% endblock %}
+{% block titulo %}
+  {% if cat_info %}{{ cat_info.title }} · Ideas Boutique{% else %}Tienda · Ideas Boutique{% endif %}
+{% endblock %}
 
-{% block content %}
-<div class="container" style="padding: 20px;">
-    <div class="row">
-        <div class="col-md-3">
-            <div class="panel panel-default">
-                <div class="panel-heading">Familias</div>
-                <ul class="list-group">
-                    <li class="list-group-item {% if not familia_activa %}active{% endif %}">
-                        <a href="{% url 'ecommerce:catalogo' %}{% if query %}?q={{ query }}{% endif %}"
-                           style="color: inherit;">Todas</a>
-                    </li>
-                    {% for f in familias %}
-                    <li class="list-group-item {% if familia_activa == f.pk %}active{% endif %}">
-                        <a href="?familia={{ f.pk }}{% if query %}&q={{ query }}{% endif %}"
-                           style="color: inherit;">{{ f.nombre }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with cat_activa=cat_activa items_count=items_count query=query %}
 
-            <a href="{% url 'ecommerce:carrito' %}" class="btn btn-primary btn-block">
-                <span class="glyphicon glyphicon-shopping-cart"></span>
-                Mi carrito ({{ items_count }})
-            </a>
-        </div>
+<main class="shop-cat-page">
+  <div class="shop-breadcrumb">
+    <a href="{% url 'index' %}">Inicio</a>
+    {% if cat_info %}
+      / <a href="{% url 'ecommerce:catalogo' %}">Tienda</a> / <strong>{{ cat_info.title }}</strong>
+    {% else %}
+      / <strong>Tienda</strong>
+    {% endif %}
+  </div>
 
-        <div class="col-md-9">
-            <form method="get" class="form-inline" style="margin-bottom: 20px;">
-                {% if familia_activa %}
-                    <input type="hidden" name="familia" value="{{ familia_activa }}">
-                {% endif %}
-                <div class="input-group" style="width: 100%;">
-                    <input type="text" name="q" value="{{ query }}" class="form-control"
-                           placeholder="Buscar productos...">
-                    <span class="input-group-btn">
-                        <button type="submit" class="btn btn-default">
-                            <span class="glyphicon glyphicon-search"></span>
-                        </button>
-                    </span>
-                </div>
-            </form>
-
-            <div class="row">
-                {% for p in productos %}
-                <div class="col-sm-6 col-md-4" style="margin-bottom: 20px;">
-                    <div class="thumbnail">
-                        {% if p.imagen %}
-                            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}"
-                                 style="height: 180px; object-fit: cover;">
-                        {% else %}
-                            <div style="height: 180px; background: #eee; display: flex;
-                                        align-items: center; justify-content: center;">
-                                <span class="text-muted">sin foto</span>
-                            </div>
-                        {% endif %}
-                        <div class="caption">
-                            <h4>{{ p.nombre }}</h4>
-                            <p class="text-muted">{{ p.familia.nombre }}</p>
-                            <p><strong>${{ p.precio_base }}</strong></p>
-                            <a href="{% url 'ecommerce:producto' p.pk %}" class="btn btn-primary btn-block">
-                                Ver
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="col-sm-12">
-                    <div class="alert alert-info">No hay productos con stock disponibles.</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+  <header class="shop-cat-head" style="--cat-accent: {% if cat_info %}{{ cat_info.accent }}{% else %}var(--gold){% endif %};">
+    <div>
+      <div class="eyebrow">{% if cat_info %}Categoría{% else %}Catálogo{% endif %}</div>
+      <h1>{% if cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
+      <p>
+        {% if cat_info %}{{ cat_info.desc }} · {% endif %}
+        {{ productos|length }} producto{{ productos|length|pluralize:"s" }}
+      </p>
     </div>
-</div>
+    <div class="sort-sel">
+      <span>Ordenar:</span>
+      <form method="get" style="display:inline;">
+        {% if cat_activa %}<input type="hidden" name="cat" value="{{ cat_activa }}">{% endif %}
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+        <select name="sort" onchange="this.form.submit()">
+          <option value="relevant">Más relevantes</option>
+          <option value="low">Menor precio</option>
+          <option value="high">Mayor precio</option>
+          <option value="new">Más nuevos</option>
+        </select>
+      </form>
+    </div>
+  </header>
+
+  <div class="shop-cat-body">
+    <aside class="shop-filters">
+      <h4>Filtrar</h4>
+      <div class="filter-group">
+        <div class="filter-title">Categoría</div>
+        {% for c in categorias %}
+          <label style="display:block;padding:4px 0;">
+            <input type="radio" name="catopt" value="{{ c.slug }}"
+                   onchange="location.href='{% url 'ecommerce:catalogo' %}?cat={{ c.slug }}'"
+                   {% if cat_activa == c.slug %}checked{% endif %}>
+            {{ c.title }}
+          </label>
+        {% endfor %}
+        <label style="display:block;padding:4px 0;">
+          <input type="radio" name="catopt" value=""
+                 onchange="location.href='{% url 'ecommerce:catalogo' %}'"
+                 {% if not cat_activa %}checked{% endif %}>
+          Todas
+        </label>
+      </div>
+
+      {% if cat_activa == 'uniformes' %}
+        <div class="filter-group">
+          <div class="filter-title">Colegio</div>
+          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> San Francisco Javier</label>
+          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> Divina Providencia</label>
+          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> Nicolás F. Lohse</label>
+          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> Diego de Almagro</label>
+        </div>
+        <div class="filter-group">
+          <div class="filter-title">Talle</div>
+          <div class="size-chips">
+            <button type="button" class="size-chip">4</button>
+            <button type="button" class="size-chip">6</button>
+            <button type="button" class="size-chip">8</button>
+            <button type="button" class="size-chip">10</button>
+            <button type="button" class="size-chip">12</button>
+            <button type="button" class="size-chip">14</button>
+            <button type="button" class="size-chip">S</button>
+            <button type="button" class="size-chip">M</button>
+            <button type="button" class="size-chip">L</button>
+            <button type="button" class="size-chip">XL</button>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="filter-group">
+        <div class="filter-title">Precio</div>
+        <div class="range-labs"><span>$0</span><span>$500.000</span></div>
+      </div>
+    </aside>
+
+    <div class="shop-grid four">
+      {% for producto in productos %}
+        {% include 'ecommerce/_pcard.html' with producto=producto %}
+      {% empty %}
+        <div style="grid-column: 1 / -1; padding: 80px 20px; text-align:center; color: var(--ink-60);">
+          <p style="font-size:18px;margin-bottom:12px;">No hay productos disponibles con esos filtros.</p>
+          <a class="btn-outline" href="{% url 'ecommerce:catalogo' %}">Ver toda la tienda</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+
+{% include 'ecommerce/_shop_footer.html' %}
 {% endblock %}

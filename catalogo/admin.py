@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from .models import Atributo, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
 
@@ -22,10 +23,36 @@ class ProductoVarianteInline(admin.TabularInline):
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'familia', 'precio_base', 'precio_costo', 'tiene_variantes', 'activo']
+    list_display = ['thumb', 'nombre', 'familia', 'precio_base', 'precio_costo', 'tiene_variantes', 'activo']
+    list_display_links = ['nombre']
     list_filter = ['familia', 'activo', 'tiene_variantes']
     search_fields = ['nombre', 'descripcion']
     inlines = [ProductoVarianteInline]
+    readonly_fields = ['preview']
+    fieldsets = (
+        (None, {'fields': ('nombre', 'familia', 'descripcion', 'activo')}),
+        ('Precios', {'fields': ('precio_base', 'precio_costo')}),
+        ('Imagen', {'fields': ('imagen', 'preview')}),
+        ('Variantes', {'fields': ('tiene_variantes',)}),
+    )
+
+    def thumb(self, obj):
+        if obj.imagen:
+            return format_html(
+                '<img src="{}" style="height:36px;width:36px;object-fit:cover;border-radius:4px;" />',
+                obj.imagen.url,
+            )
+        return '—'
+    thumb.short_description = 'Img'
+
+    def preview(self, obj):
+        if obj.imagen:
+            return format_html(
+                '<img src="{}" style="max-height:240px;max-width:320px;border-radius:6px;" />',
+                obj.imagen.url,
+            )
+        return 'Sin imagen'
+    preview.short_description = 'Vista previa'
 
 
 @admin.register(Familia)

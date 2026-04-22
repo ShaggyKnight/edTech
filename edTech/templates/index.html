@@ -1,240 +1,283 @@
+{% extends 'base_public.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
+{% block titulo %}Ideas Boutique — Perfumes · Uniformes Escolares · Moda en Los Vilos{% endblock %}
+{% block meta_description %}Boutique familiar en Los Vilos desde 1990. Perfumes originales, uniformes del San Francisco Javier y otros colegios, y moda — ahora también online.{% endblock %}
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+{% block body %}
+<div class="landing">
 
-    <title>New Age - Start Bootstrap Theme</title>
+  {# ========== NAV ========== #}
+  <nav class="landing-nav" id="landingNav">
+    <a href="{% url 'index' %}" class="ideas-logo ideas-logo--cream" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
+      {% include 'partials/_ideas_logo.html' with size=36 tone='cream' %}
+    </a>
+    <div class="landing-nav-links">
+      <a href="#historia">Nuestra historia</a>
+      <a href="#categorias">Categorías</a>
+      <a href="#uniformes">Uniformes</a>
+      <a href="#visitanos">Visítanos</a>
+      {% if user.is_authenticated and user.is_superuser %}
+        <a href="{% url 'reportes:dashboard' %}" style="opacity:.75;">Admin</a>
+      {% endif %}
+    </div>
+    <a class="btn-ghost" href="{% url 'ecommerce:catalogo' %}">
+      Tienda online <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg>
+    </a>
+  </nav>
 
-    <!-- Bootstrap Core CSS -->
-    <link href="{% static 'lib/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  {# ========== HERO ========== #}
+  <section class="hero">
+    <div class="hero-bg" style="background-image:url('{% static 'img/ideas/logo-letrero.png' %}');"></div>
+    <div class="hero-veil"></div>
+    <div class="hero-content">
+      <div class="hero-kicker">
+        <span class="dot"></span> Boutique familiar · Desde 1990
+      </div>
+      <h1 class="hero-title">
+        Perfumes, uniformes<br>
+        <span class="italic-gold">y el regalo perfecto</span><br>
+        bajo un mismo techo.
+      </h1>
+      <p class="hero-sub">
+        Tres generaciones en Los Vilos. Desde la feria con Estela Contreras hasta nuestra tienda en Caupolicán 437-B — ahora también online.
+      </p>
+      <div class="hero-ctas">
+        <a class="btn-primary" href="{% url 'ecommerce:catalogo' %}">
+          Explorar tienda <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
+        </a>
+        <a class="btn-outline" href="#historia">
+          Conocer la historia
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>36</strong><span>años en Los Vilos</span></div>
+        <div class="sep"></div>
+        <div><strong>4</strong><span>colegios surtidos</span></div>
+        <div class="sep"></div>
+        <div><strong>3</strong><span>generaciones</span></div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Custom Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">
+  {# ========== VALUE STRIP ========== #}
+  <section class="strip">
+    <div class="strip-item">
+      <svg class="ico ico--22"><use href="#ico-truck"/></svg>
+      <div><strong>Envíos a todo Chile</strong><span>24–72 h hábiles</span></div>
+    </div>
+    <div class="strip-item">
+      <svg class="ico ico--22"><use href="#ico-shield"/></svg>
+      <div><strong>Perfumes originales</strong><span>Garantía de autenticidad</span></div>
+    </div>
+    <div class="strip-item">
+      <svg class="ico ico--22"><use href="#ico-scissors"/></svg>
+      <div><strong>Uniformes a medida</strong><span>Ajustes sin costo</span></div>
+    </div>
+    <div class="strip-item">
+      <svg class="ico ico--22"><use href="#ico-whatsapp"/></svg>
+      <div><strong>Atención por WhatsApp</strong><span>Lun–Sáb · 9 a 19 h</span></div>
+    </div>
+  </section>
 
-    <!-- Plugin CSS -->
-    <link rel="stylesheet" href="{% static 'lib/font-awesome/css/font-awesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'lib/simple-line-icons/css/simple-line-icons.css' %}">
-    <link rel="stylesheet" href="{% static 'lib/device-mockups/device-mockups.min.css' %}">
+  {# ========== HISTORIA ========== #}
+  <section id="historia" class="historia">
+    <div class="historia-img">
+      <img src="{% static 'img/ideas/tienda-mama.jpg' %}" alt="Blanca Contreras en Ideas Boutique">
+      <div class="historia-badge">
+        <span class="quote">&ldquo;</span>
+        <p>Blanca Contreras<br><em style="font-size:13px;opacity:.7;">al frente de la tienda</em></p>
+      </div>
+    </div>
+    <div class="historia-copy">
+      <div class="eyebrow">Nuestra historia</div>
+      <h2>36 años vistiendo a Los Vilos.</h2>
+      <p>
+        Todo empezó con <strong>Estela Contreras</strong> en la feria, vendiendo lo que cada familia necesitaba. Con el tiempo se trasladó a casa, después a un local en calle Purén — muchos años en Purén 060, a la bajada a la playa.
+      </p>
+      <p>
+        Hoy, <strong>Blanca Contreras</strong> sigue al frente de Ideas Boutique, ahora en <strong>Caupolicán 437-B</strong> desde el año pasado. Tres generaciones, el mismo mostrador, las mismas manos doblando cada chaleco — y ahora una tienda online que lleva ese cariño hasta tu casa.
+      </p>
+      <div class="historia-sign">
+        <div class="sign-name">— Familia Contreras</div>
+        <div class="sign-sub">Tres generaciones. Un solo compromiso.</div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Theme CSS -->
-    <link href="{% static 'css/new-age.min.css'%}" rel="stylesheet">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-</head>
-
-<body id="page-top">
-
-    <nav id="mainNav" class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
-                </button>
-                <a class="navbar-brand page-scroll" href="#page-top">Start Bootstrap</a>
-            </div>
-
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a class="page-scroll" href="#download">Download</a>
-                    </li>
-                    <li>
-                        <a class="page-scroll" href="#features">Features</a>
-                    </li>
-                    <li>
-                        <a class="page-scroll" href="#contact">Contact</a>
-                    </li>
-                </ul>
-            </div>
-            <!-- /.navbar-collapse -->
+  {# ========== CATEGORIAS ========== #}
+  <section id="categorias" class="cats">
+    <div class="section-head">
+      <div class="eyebrow">Qué encontrás</div>
+      <h2>Cuatro mundos, una sola tienda.</h2>
+    </div>
+    <div class="cats-grid">
+      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="--cat-accent:#7A1E2B;">
+        <div class="cat-num">01</div>
+        <div class="cat-body">
+          <h3>Uniformes Escolares</h3>
+          <p>Buzos, chalecos y remeras de tu colegio.</p>
+          <div class="cat-foot">
+            <span>San Francisco Javier y más</span>
+            <svg class="ico ico--18"><use href="#ico-arrow-right"/></svg>
+          </div>
         </div>
-        <!-- /.container-fluid -->
-    </nav>
-
-    <header>
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-7">
-                    <div class="header-content">
-                        <div class="header-content-inner">
-                            <h1>New Age is an app landing page that will help you beautifully showcase your new mobile app, or anything else!</h1>
-                            <a href="#download" class="btn btn-outline btn-xl page-scroll">Start Now for Free!</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-5">
-                    <div class="device-container">
-                        <div class="device-mockup iphone6_plus portrait white">
-                            <div class="device">
-                                <div class="screen">
-                                    <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
-                                    <img src="{% static 'img/demo-screen-1.jpg' %}" class="img-responsive" alt="">
-                                </div>
-                                <div class="button">
-                                    <!-- You can hook the "home button" to some JavaScript events or just remove it -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      </a>
+      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=perfumes" style="--cat-accent:#C9A96E;">
+        <div class="cat-num">02</div>
+        <div class="cat-body">
+          <h3>Perfumes</h3>
+          <p>Fragancias originales y decants.</p>
+          <div class="cat-foot">
+            <span>Originales garantizados</span>
+            <svg class="ico ico--18"><use href="#ico-arrow-right"/></svg>
+          </div>
         </div>
-    </header>
-
-    <section id="download" class="download bg-primary text-center">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-8 col-md-offset-2">
-                    <h2 class="section-heading">Discover what all the buzz is about!</h2>
-                    <p>Our app is available on any mobile device! Download now to get started!</p>
-                    <div class="badges">
-                        <a class="badge-link" href="#"><img src="{% static 'img/google-play-badge.svg' %}" alt=""></a>
-                        <a class="badge-link" href="#"><img src="{% static 'img/app-store-badge.svg' %}" alt=""></a>
-                    </div>
-                </div>
-            </div>
+      </a>
+      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=moda" style="--cat-accent:#2B3140;">
+        <div class="cat-num">03</div>
+        <div class="cat-body">
+          <h3>Moda</h3>
+          <p>Ropa casual y formal para toda la familia.</p>
+          <div class="cat-foot">
+            <span>Novedades cada temporada</span>
+            <svg class="ico ico--18"><use href="#ico-arrow-right"/></svg>
+          </div>
         </div>
-    </section>
-
-    <section id="features" class="features">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <div class="section-heading">
-                        <h2>Unlimited Features, Unlimited Fun</h2>
-                        <p class="text-muted">Check out what you can do with this app theme!</p>
-                        <hr>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="device-container">
-                        <div class="device-mockup iphone6_plus portrait white">
-                            <div class="device">
-                                <div class="screen">
-                                    <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
-                                    <img src="{% static 'img/demo-screen-1.jpg' %}" class="img-responsive" alt=""> </div>
-                                <div class="button">
-                                    <!-- You can hook the "home button" to some JavaScript events or just remove it -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="feature-item">
-                                    <i class="icon-screen-smartphone text-primary"></i>
-                                    <h3>Device Mockups</h3>
-                                    <p class="text-muted">Ready to use HTML/CSS device mockups, no Photoshop required!</p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="feature-item">
-                                    <i class="icon-camera text-primary"></i>
-                                    <h3>Flexible Use</h3>
-                                    <p class="text-muted">Put an image, video, animation, or anything else in the screen!</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="feature-item">
-                                    <i class="icon-present text-primary"></i>
-                                    <h3>Free to Use</h3>
-                                    <p class="text-muted">As always, this theme is free to download and use for any purpose!</p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="feature-item">
-                                    <i class="icon-lock-open text-primary"></i>
-                                    <h3>Open Source</h3>
-                                    <p class="text-muted">Since this theme is MIT licensed, you can use it commercially!</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      </a>
+      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=intima" style="--cat-accent:#A03853;">
+        <div class="cat-num">04</div>
+        <div class="cat-body">
+          <h3>Ropa Íntima</h3>
+          <p>Lencería y ropa interior de calidad.</p>
+          <div class="cat-foot">
+            <span>Talles para todas</span>
+            <svg class="ico ico--18"><use href="#ico-arrow-right"/></svg>
+          </div>
         </div>
-    </section>
+      </a>
+    </div>
+  </section>
 
-    <section class="cta">
-        <div class="cta-content">
-            <div class="container">
-                <h2>Stop waiting.<br>Start building.</h2>
-                <a href="#contact" class="btn btn-outline btn-xl page-scroll">Let's Get Started!</a>
-            </div>
+  {# ========== UNIFORMES — STAR PRODUCT ========== #}
+  <section id="uniformes" class="uniformes">
+    <div class="uniformes-copy">
+      <div class="eyebrow red">Producto estrella</div>
+      <h2>El uniforme del <span class="italic-gold">San Francisco Javier</span>, como lo conocés.</h2>
+      <p>El buzo gris con franja roja, el chaleco rojo vino, la polera gris — los más pedidos desde hace años. Confeccionados con la tela que aguanta el recreo, el invierno y al hermano menor.</p>
+      <ul class="uni-features">
+        <li><svg class="ico ico--16"><use href="#ico-check"/></svg> Talles desde 4 años hasta adulto XL</li>
+        <li><svg class="ico ico--16"><use href="#ico-check"/></svg> Franja y logo bordado, no estampado</li>
+        <li><svg class="ico ico--16"><use href="#ico-check"/></svg> Ajuste gratis si te queda largo</li>
+        <li><svg class="ico ico--16"><use href="#ico-check"/></svg> Reservá ahora para marzo</li>
+      </ul>
+      <a class="btn-primary" href="{% url 'ecommerce:catalogo' %}?cat=uniformes">
+        Ver todos los uniformes <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
+      </a>
+    </div>
+    <div class="uniformes-gallery">
+      <div class="uni-big" style="background-image:url('{% static 'img/ideas/tienda-chalecos-rojos.jpg' %}');"></div>
+      <div class="uni-small" style="background-image:url('{% static 'img/ideas/tienda-buzos-grises.jpg' %}');"></div>
+      <div class="uni-small" style="background-image:url('{% static 'img/ideas/tienda-buzos-mix.jpg' %}');"></div>
+    </div>
+  </section>
+
+  {# ========== TESTIMONIO ========== #}
+  <section class="testi">
+    <div class="testi-inner">
+      <svg class="ico ico--28"><use href="#ico-sparkle"/></svg>
+      <blockquote>
+        Le compro a Blanca desde que mi hijo mayor entró al San Francisco Javier — ahora le compro al chico. Siempre el mismo trato, la misma calidad, y ahora lo pido por WhatsApp y me llega a casa.
+      </blockquote>
+      <div class="testi-author">
+        <div class="avatar">S</div>
+        <div>
+          <strong>Silvia M.</strong>
+          <span>Cliente hace 12 años</span>
         </div>
-        <div class="overlay"></div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <section id="contact" class="contact bg-primary">
-        <div class="container">
-            <h2>We <i class="fa fa-heart"></i> new friends!</h2>
-            <ul class="list-inline list-social">
-                <li class="social-twitter">
-                    <a href="#"><i class="fa fa-twitter"></i></a>
-                </li>
-                <li class="social-facebook">
-                    <a href="#"><i class="fa fa-facebook"></i></a>
-                </li>
-                <li class="social-google-plus">
-                    <a href="#"><i class="fa fa-google-plus"></i></a>
-                </li>
-            </ul>
+  {# ========== VISITANOS ========== #}
+  <section id="visitanos" class="visita">
+    <div class="visita-copy">
+      <div class="eyebrow">Visítanos</div>
+      <h2>Estamos en el barrio, con el letrero dorado prendido.</h2>
+      <div class="visita-info">
+        <div>
+          <svg class="ico ico--18"><use href="#ico-pin"/></svg>
+          <span><strong>Caupolicán 437-B</strong><br>Los Vilos, Chile</span>
         </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2016 Start Bootstrap. All Rights Reserved.</p>
-            <ul class="list-inline">
-                <li>
-                    <a href="#">Privacy</a>
-                </li>
-                <li>
-                    <a href="#">Terms</a>
-                </li>
-                <li>
-                    <a href="#">FAQ</a>
-                </li>
-            </ul>
+        <div>
+          <svg class="ico ico--18"><use href="#ico-phone"/></svg>
+          <span><strong>Contáctanos</strong><br>Lun a Sáb · 9:00 – 19:00</span>
         </div>
-    </footer>
+        <div>
+          <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
+          <span><strong>WhatsApp directo</strong><br>Pedidos y reservas</span>
+        </div>
+      </div>
+    </div>
+    <div class="visita-img">
+      <img src="{% static 'img/ideas/logo-letrero.png' %}" alt="Letrero Ideas Boutique">
+    </div>
+  </section>
 
-    <!-- jQuery -->
-    <script src="{% static 'lib/jquery/jquery.min.js' %}"></script>
+  {# ========== FOOTER ========== #}
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        {% include 'partials/_ideas_logo.html' with size=44 tone='cream' %}
+        <p>Perfumes · Uniformes Escolares · Moda<br>Boutique familiar desde 1990.</p>
+      </div>
+      <div class="footer-cols">
+        <div>
+          <h5>Tienda</h5>
+          <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes">Uniformes</a>
+          <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes">Perfumes</a>
+          <a href="{% url 'ecommerce:catalogo' %}?cat=moda">Moda</a>
+          <a href="{% url 'ecommerce:catalogo' %}?cat=intima">Ropa Íntima</a>
+        </div>
+        <div>
+          <h5>Ayuda</h5>
+          <a href="#visitanos">Envíos</a>
+          <a href="#visitanos">Cambios</a>
+          <a href="#uniformes">Tallas</a>
+          <a href="#visitanos">Contacto</a>
+        </div>
+        <div>
+          <h5>Nosotros</h5>
+          <a href="#historia">Nuestra historia</a>
+          <a href="#visitanos">Sucursal</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'accounts:dashboard' %}">Mi cuenta</a>
+          {% else %}
+            <a href="{% url 'login' %}">Ingresar</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="footer-bot">
+      <span>© {% now "Y" %} Ideas Boutique · Los Vilos, Chile · Caupolicán 437-B</span>
+      <span>Desde 1990, por la familia Contreras ✦</span>
+    </div>
+  </footer>
 
-    <!-- Bootstrap Core JavaScript -->
-    <script src="{% static 'lib/bootstrap/js/bootstrap.min.js' %}"></script>
+</div>
+{% endblock %}
 
-    <!-- Plugin JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
-
-    <!-- Theme JavaScript -->
-    <script src="{% static 'js/new-age.min.js' %}"></script>
-
-</body>
-
-</html>
+{% block extra_scripts %}
+<script>
+  (function(){
+    var nav = document.getElementById('landingNav');
+    if (!nav) return;
+    var onScroll = function(){
+      if (window.scrollY > 40) nav.classList.add('is-scrolled');
+      else nav.classList.remove('is-scrolled');
+    };
+    window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+  })();
+</script>
+{% endblock %}

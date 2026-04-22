@@ -47,7 +47,8 @@ class EcommerceFlujoCompletoTests(TestCase):
                 'cantidad': 2,
             }, follow=True)
             self.assertEqual(resp.status_code, 200)
-            self.assertContains(resp, 'TOTAL')
+            # El nuevo diseño usa "Total" (title-case) en el resumen del carrito.
+            self.assertContains(resp, 'Total')
 
             # Ir al checkout.
             resp = self.client.get(reverse('ecommerce:checkout'))

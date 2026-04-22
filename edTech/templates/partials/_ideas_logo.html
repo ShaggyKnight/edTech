@@ -1,0 +1,24 @@
+{% comment %}
+  Logo Ideas Boutique.
+  Params opcionales:
+    - size          : px del símbolo (default 40)
+    - tone          : gold | cream | ink (default gold) — controla color via CSS var
+    - show_wordmark : si mostrar el texto al costado (default True)
+{% endcomment %}
+{% with size=size|default:40 tone=tone|default:'gold' %}
+<span class="ideas-logo ideas-logo--{{ tone }}" style="display:inline-flex;align-items:center;gap:10px;">
+  <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="1.5" fill="none"/>
+    <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="0.75" fill="none"/>
+    <text x="32" y="40" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="26" font-weight="600" fill="currentColor" letter-spacing="1">i</text>
+    <path d="M14 18 Q 32 12 50 18" stroke="currentColor" stroke-width="0.75" fill="none"/>
+    <path d="M14 46 Q 32 52 50 46" stroke="currentColor" stroke-width="0.75" fill="none"/>
+  </svg>
+  {% if show_wordmark != False %}
+    <span class="ideas-logo__wordmark" style="line-height:1;">
+      <span class="ideas-logo__name" style="display:block;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:{% widthratio size 100 55 %}px;letter-spacing:0.08em;">IDEAS</span>
+      <span class="ideas-logo__tag" style="display:block;font-family:'Inter',sans-serif;font-weight:500;font-size:{% widthratio size 100 22 %}px;letter-spacing:0.28em;margin-top:2px;opacity:0.85;">BOUTIQUE</span>
+    </span>
+  {% endif %}
+</span>
+{% endwith %}

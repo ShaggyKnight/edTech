@@ -1,0 +1,42 @@
+{% load static %}
+{% comment %}
+  Cabecera sticky de la tienda online. Usa `items_count` desde el contexto.
+  Parámetros opcionales: `cat_activa` (slug de categoría resaltada).
+{% endcomment %}
+<header class="shop-header">
+  <div class="shop-header-inner">
+    <a class="shop-menu" href="{% url 'index' %}" aria-label="Inicio">
+      {% include 'partials/_ideas_logo.html' with size=32 tone='ink' show_wordmark=False %}
+    </a>
+    <nav class="shop-nav">
+      <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes" {% if cat_activa == 'uniformes' %}class="active"{% endif %}>Uniformes</a>
+      <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes" {% if cat_activa == 'perfumes' %}class="active"{% endif %}>Perfumes</a>
+      <a href="{% url 'ecommerce:catalogo' %}?cat=moda" {% if cat_activa == 'moda' %}class="active"{% endif %}>Moda</a>
+      <a href="{% url 'ecommerce:catalogo' %}?cat=intima" {% if cat_activa == 'intima' %}class="active"{% endif %}>Íntima</a>
+      <a href="{% url 'ecommerce:catalogo' %}?oferta=1" class="sale">OFERTAS</a>
+    </nav>
+    <form class="shop-search" method="get" action="{% url 'ecommerce:catalogo' %}">
+      <svg class="ico ico--16"><use href="#ico-search"/></svg>
+      <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar por colegio, marca o producto…">
+    </form>
+    <div class="shop-actions">
+      {% if user.is_authenticated %}
+        <a href="{% url 'accounts:dashboard' %}" aria-label="Mi cuenta">
+          <svg class="ico ico--18"><use href="#ico-user"/></svg>
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}" aria-label="Ingresar">
+          <svg class="ico ico--18"><use href="#ico-user"/></svg>
+        </a>
+      {% endif %}
+      <a class="shop-cart" href="{% url 'ecommerce:carrito' %}" aria-label="Carrito">
+        <svg class="ico ico--18"><use href="#ico-bag"/></svg>
+        {% if items_count %}<span class="cart-dot">{{ items_count }}</span>{% endif %}
+      </a>
+    </div>
+  </div>
+  <div class="shop-promo">
+    <svg class="ico ico--14"><use href="#ico-truck"/></svg>
+    Envío gratis en compras sobre $50.000 · Ajustes de uniforme sin cargo
+  </div>
+</header>

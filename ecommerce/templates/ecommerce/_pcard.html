@@ -1,0 +1,29 @@
+{% load humanize static %}
+{% comment %}
+  Tarjeta de producto para grids de catálogo/home.
+  Param requerido: `producto` (Producto)
+{% endcomment %}
+<article class="pcard">
+  <a href="{% url 'ecommerce:producto' producto.pk %}" class="pcard-link" style="display:block;">
+    <div class="pcard-img">
+      {% if producto.imagen %}
+        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" loading="lazy">
+      {% else %}
+        <div class="pcard-placeholder">
+          {{ producto.familia.nombre|default:"Producto"|upper }}
+        </div>
+      {% endif %}
+      {% if producto.tag %}<span class="pcard-tag">{{ producto.tag }}</span>{% endif %}
+    </div>
+    <div class="pcard-body">
+      <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>
+      <div class="pcard-name">{{ producto.nombre }}</div>
+      <div class="pcard-price-row">
+        <span class="pcard-price">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+        {% if producto.precio_old %}
+          <span class="pcard-old">${{ producto.precio_old|floatformat:0|intcomma }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </a>
+</article>

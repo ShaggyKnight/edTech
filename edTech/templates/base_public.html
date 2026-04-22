@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>{% block titulo %}Ideas Boutique — Perfumes · Uniformes Escolares · Moda{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Boutique familiar en Los Vilos desde 1990. Perfumes originales, uniformes escolares y moda. Tres generaciones, un solo compromiso.{% endblock %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+
+    {# Fuentes tipográficas del sistema de diseño #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    {# Hoja de estilos del sistema Ideas Boutique #}
+    <link rel="stylesheet" href="{% static 'css/ideas.css' %}">
+
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    {% include 'partials/_icons.html' %}
+
+    {% block body %}{% endblock %}
+
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

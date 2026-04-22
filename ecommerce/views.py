@@ -47,6 +47,48 @@ from pos.payments import PaymentGatewayError
 log = logging.getLogger(__name__)
 
 
+# Slug → (título para el header, descripción, tintes de acento).
+# Permite que la landing enlace a `/tienda/?cat=uniformes` sin conocer la pk
+# de la familia correspondiente.
+CAT_SLUGS = {
+    'uniformes': {
+        'title': 'Uniformes Escolares',
+        'desc':  'Buzos, chalecos y remeras de tu colegio',
+        'accent': '#7A1E2B',
+        'match':  ['uniform'],
+    },
+    'perfumes': {
+        'title': 'Perfumes',
+        'desc':  'Fragancias originales y decants',
+        'accent': '#C9A96E',
+        'match':  ['perfum', 'fragranc'],
+    },
+    'moda': {
+        'title': 'Moda',
+        'desc':  'Ropa casual y formal',
+        'accent': '#2B3140',
+        'match':  ['moda', 'ropa'],
+    },
+    'intima': {
+        'title': 'Ropa Íntima',
+        'desc':  'Lencería y ropa interior',
+        'accent': '#A03853',
+        'match':  ['intim', 'lenc'],
+    },
+}
+
+
+def _familias_por_slug(slug: str):
+    """Devuelve el queryset de familias que corresponden al slug de categoría."""
+    info = CAT_SLUGS.get(slug)
+    if not info:
+        return Familia.objects.none()
+    q = Familia.objects.none()
+    for term in info['match']:
+        q = q | Familia.objects.filter(nombre__icontains=term)
+    return q
+
+
 def catalogo(request):
     """Listado público de productos con stock > 0 en la tienda online."""
     try:
@@ -55,6 +97,7 @@ def catalogo(request):
         return render(request, 'ecommerce/sin_tienda.html', status=503)
 
     familia_id = request.GET.get('familia')
+    cat_slug = (request.GET.get('cat') or '').strip().lower()
     query = request.GET.get('q', '').strip()
 
     # Producto activo que tenga al menos una variante con stock, o que sea
@@ -80,14 +123,27 @@ def catalogo(request):
     )
     if familia_id:
         productos_qs = productos_qs.filter(familia_id=familia_id)
+    elif cat_slug in CAT_SLUGS:
+        productos_qs = productos_qs.filter(familia__in=_familias_por_slug(cat_slug))
     if query:
         productos_qs = productos_qs.filter(nombre__icontains=query)
 
     cart = Cart(request.session)
+
+    # Categorías para el listado lateral / chips.
+    categorias = [
+        {'slug': slug, 'title': info['title'], 'desc': info['desc'], 'accent': info['accent']}
+        for slug, info in CAT_SLUGS.items()
+    ]
+    cat_info = CAT_SLUGS.get(cat_slug) if cat_slug in CAT_SLUGS else None
+
     return render(request, 'ecommerce/catalogo.html', {
         'productos': productos_qs.order_by('familia__nombre', 'nombre').distinct(),
         'familias': Familia.objects.all(),
         'familia_activa': int(familia_id) if familia_id and familia_id.isdigit() else None,
+        'categorias': categorias,
+        'cat_activa': cat_slug if cat_slug in CAT_SLUGS else '',
+        'cat_info': cat_info,
         'query': query,
         'items_count': cart.items_count,
     })

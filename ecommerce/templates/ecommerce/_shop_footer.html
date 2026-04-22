@@ -1,0 +1,39 @@
+{% load static %}
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      {% include 'partials/_ideas_logo.html' with size=40 tone='cream' %}
+      <p>Perfumes · Uniformes Escolares · Moda<br>Boutique familiar desde 1990.</p>
+    </div>
+    <div class="footer-cols">
+      <div>
+        <h5>Tienda</h5>
+        <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes">Uniformes</a>
+        <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes">Perfumes</a>
+        <a href="{% url 'ecommerce:catalogo' %}?cat=moda">Moda</a>
+        <a href="{% url 'ecommerce:catalogo' %}?cat=intima">Ropa Íntima</a>
+      </div>
+      <div>
+        <h5>Ayuda</h5>
+        <a href="{% url 'index' %}#visitanos">Envíos</a>
+        <a href="{% url 'index' %}#visitanos">Cambios</a>
+        <a href="{% url 'index' %}#uniformes">Tallas</a>
+        <a href="{% url 'index' %}#visitanos">Contacto</a>
+      </div>
+      <div>
+        <h5>Nosotros</h5>
+        <a href="{% url 'index' %}#historia">Nuestra historia</a>
+        <a href="{% url 'index' %}#visitanos">Sucursal</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'accounts:dashboard' %}">Mi cuenta</a>
+        {% else %}
+          <a href="{% url 'login' %}">Ingresar</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="footer-bot">
+    <span>© {% now "Y" %} Ideas Boutique · Los Vilos, Chile · Caupolicán 437-B</span>
+    <span>Desde 1990, por la familia Contreras ✦</span>
+  </div>
+</footer>

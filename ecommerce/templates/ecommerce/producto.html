@@ -1,99 +1,155 @@
-{% extends "base.html" %}
+{% extends 'base_public.html' %}
+{% load static humanize %}
 
-{% block titulo %}{{ producto.nombre }} · Tienda{% endblock %}
+{% block titulo %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
 
-{% block content %}
-<div class="container" style="padding: 20px;">
-    <ol class="breadcrumb">
-        <li><a href="{% url 'ecommerce:catalogo' %}">Tienda</a></li>
-        <li>{{ producto.familia.nombre }}</li>
-        <li class="active">{{ producto.nombre }}</li>
-    </ol>
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
 
-    <div class="row">
-        <div class="col-md-6">
-            {% if producto.imagen %}
-                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-responsive">
-            {% else %}
-                <div style="height: 400px; background: #eee; display: flex;
-                            align-items: center; justify-content: center;">
-                    <span class="text-muted">sin imagen</span>
-                </div>
-            {% endif %}
-        </div>
+<main class="pdp">
+  <div class="shop-breadcrumb">
+    <a href="{% url 'index' %}">Inicio</a> /
+    <a href="{% url 'ecommerce:catalogo' %}">{{ producto.familia.nombre }}</a> /
+    <strong>{{ producto.nombre }}</strong>
+  </div>
 
-        <div class="col-md-6">
-            <h2>{{ producto.nombre }}</h2>
-            <p class="text-muted">{{ producto.familia.nombre }}</p>
-
-            {% if producto.descripcion %}
-                <p>{{ producto.descripcion|linebreaksbr }}</p>
-            {% endif %}
-
-            {% if producto.tiene_variantes %}
-                <h3>Selecciona</h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Variante</th>
-                            <th class="text-right">Precio</th>
-                            <th class="text-right">Stock</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for v in variantes %}
-                        <tr>
-                            <td>
-                                <code>{{ v.sku }}</code>
-                                {% for val in v.valores.all %}
-                                    <span class="label label-default">{{ val.valor }}</span>
-                                {% endfor %}
-                            </td>
-                            <td class="text-right">${{ v.precio }}</td>
-                            <td class="text-right">{{ v.stock|default:0 }}</td>
-                            <td>
-                                <form method="post" action="{% url 'ecommerce:agregar' %}" style="margin:0;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="tipo" value="v">
-                                    <input type="hidden" name="item_id" value="{{ v.pk }}">
-                                    <input type="hidden" name="cantidad" value="1">
-                                    <button type="submit" class="btn btn-sm btn-primary"
-                                            {% if not v.stock %}disabled{% endif %}>
-                                        <span class="glyphicon glyphicon-plus"></span> Agregar
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <h3>${{ producto.precio_base }}</h3>
-                <p class="text-muted">Stock disponible: {{ stock_directo }}</p>
-                <form method="post" action="{% url 'ecommerce:agregar' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="tipo" value="p">
-                    <input type="hidden" name="item_id" value="{{ producto.pk }}">
-                    <div class="form-group">
-                        <label>Cantidad</label>
-                        <input type="number" name="cantidad" value="1" min="1"
-                               max="{{ stock_directo }}" class="form-control" style="width: 100px;">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-lg"
-                            {% if not stock_directo %}disabled{% endif %}>
-                        <span class="glyphicon glyphicon-shopping-cart"></span> Agregar al carrito
-                    </button>
-                </form>
-            {% endif %}
-
-            <div style="margin-top: 20px;">
-                <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-default">Seguir comprando</a>
-                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">
-                    Ver carrito ({{ items_count }})
-                </a>
-            </div>
-        </div>
+  <div class="pdp-main">
+    <div class="pdp-gallery">
+      <div class="pdp-thumbs">
+        {% if producto.imagen %}
+          <div class="pdp-thumb active">
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+          </div>
+        {% else %}
+          <div class="pdp-thumb active">
+            <div class="pdp-placeholder"></div>
+          </div>
+        {% endif %}
+        {# Thumbs adicionales: cuando haya galería los iteramos aquí #}
+      </div>
+      <div class="pdp-big">
+        {% if producto.imagen %}
+          <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+        {% else %}
+          <div class="pdp-placeholder" style="aspect-ratio:1/1;"></div>
+        {% endif %}
+      </div>
     </div>
-</div>
+
+    <div class="pdp-info">
+      <div class="pdp-school">{{ producto.familia.nombre }}</div>
+      <h1>{{ producto.nombre }}</h1>
+
+      <div class="pdp-rating">
+        {% for i in "12345" %}<svg class="ico ico--16"><use href="#ico-star"/></svg>{% endfor %}
+        <span>Nuevo · sin reseñas aún</span>
+      </div>
+
+      <div class="pdp-price">
+        <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+        <span class="pdp-installments">o 3 cuotas sin interés de ${% widthratio producto.precio_base 3 1 %}</span>
+      </div>
+
+      {% if producto.descripcion %}
+        <p style="color: var(--ink-60); margin: 16px 0;">{{ producto.descripcion|linebreaksbr }}</p>
+      {% endif %}
+
+      {% if producto.tiene_variantes %}
+        <div class="pdp-opts">
+          <div class="pdp-opt-label">Elegí tu variante</div>
+          <div class="size-chips">
+            {% for v in variantes %}
+              {% if v.stock %}
+                <form method="post" action="{% url 'ecommerce:agregar' %}" style="display:inline-block;margin:0;">
+                  {% csrf_token %}
+                  <input type="hidden" name="tipo" value="v">
+                  <input type="hidden" name="item_id" value="{{ v.pk }}">
+                  <input type="hidden" name="cantidad" value="1">
+                  <button type="submit" class="size-chip" title="Agregar {{ v.sku }}">
+                    {% for val in v.valores.all %}{{ val.valor }} {% endfor %}
+                    <small style="display:block;opacity:.6;font-size:10px;">stock {{ v.stock }}</small>
+                  </button>
+                </form>
+              {% else %}
+                <span class="size-chip" style="opacity:.35;text-decoration:line-through;">
+                  {% for val in v.valores.all %}{{ val.valor }} {% endfor %}
+                </span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <form method="post" action="{% url 'ecommerce:agregar' %}">
+          {% csrf_token %}
+          <input type="hidden" name="tipo" value="p">
+          <input type="hidden" name="item_id" value="{{ producto.pk }}">
+          <div class="pdp-opts">
+            <div class="pdp-opt-label">Cantidad</div>
+            <div class="qty">
+              <button type="button" onclick="var i=this.nextElementSibling.querySelector('input'); i.value=Math.max(1,(+i.value)-1);">
+                <svg class="ico ico--14"><use href="#ico-minus"/></svg>
+              </button>
+              <span><input type="number" name="cantidad" value="1" min="1" max="{{ stock_directo|default:1 }}" style="width:50px;border:none;background:transparent;text-align:center;font:inherit;"></span>
+              <button type="button" onclick="var i=this.previousElementSibling.querySelector('input'); var m={{ stock_directo|default:1 }}; i.value=Math.min(m,(+i.value)+1);">
+                <svg class="ico ico--14"><use href="#ico-plus"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="pdp-ctas">
+            <button type="submit" class="btn-primary lg" {% if not stock_directo %}disabled{% endif %}>
+              {% if stock_directo %}
+                Agregar al carrito · ${{ producto.precio_base|floatformat:0|intcomma }}
+              {% else %}
+                Sin stock
+              {% endif %}
+              <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
+            </button>
+          </div>
+          <p style="color:var(--ink-60);font-size:13px;margin-top:8px;">
+            Stock disponible: <strong>{{ stock_directo }}</strong>
+          </p>
+        </form>
+      {% endif %}
+
+      <div class="pdp-perks">
+        <div>
+          <svg class="ico ico--18"><use href="#ico-truck"/></svg>
+          <div><strong>Envío en 24–72 h</strong><span>Gratis sobre $50.000</span></div>
+        </div>
+        <div>
+          <svg class="ico ico--18"><use href="#ico-scissors"/></svg>
+          <div><strong>Ajustes gratis</strong><span>Hasta marzo 2026</span></div>
+        </div>
+        <div>
+          <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
+          <div><strong>Consúltanos por WhatsApp</strong><span>Te respondemos al toque</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="pdp-tabs">
+    <div class="tabs-head">
+      <button class="active">Descripción</button>
+      <button>Guía de talles</button>
+      <button>Envío y cambios</button>
+    </div>
+    <div class="tabs-body">
+      <div class="prose">
+        {% if producto.descripcion %}
+          <p>{{ producto.descripcion|linebreaksbr }}</p>
+        {% else %}
+          <p>Producto seleccionado por la familia Contreras para tu tranquilidad. Si tenés dudas sobre talle, tela o calce, escribinos por WhatsApp y te ayudamos en persona.</p>
+          <ul>
+            <li>Vendido y garantizado por Ideas Boutique, Los Vilos.</li>
+            <li>Ajustes de uniformes sin costo hasta marzo 2026.</li>
+            <li>Cambios sin costo dentro de los 15 días si el producto está sin uso.</li>
+          </ul>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</main>
+
+{% include 'ecommerce/_shop_footer.html' %}
 {% endblock %}

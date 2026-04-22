@@ -1,102 +1,122 @@
-{% extends "base.html" %}
+{% extends 'base_public.html' %}
+{% load static humanize %}
 
-{% block titulo %}Carrito · Tienda{% endblock %}
+{% block titulo %}Tu carrito · Ideas Boutique{% endblock %}
 
-{% block content %}
-<div class="container" style="padding: 20px; max-width: 900px;">
-    <h2><span class="glyphicon glyphicon-shopping-cart"></span> Tu carrito</h2>
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+<main class="cart">
+  <h1>Tu carrito <span class="muted">({{ items_count }} producto{{ items_count|pluralize:"s" }})</span></h1>
 
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-right">Precio</th>
-                <th class="text-right">Subtotal</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for linea in lineas %}
-            <tr>
-                <td>
-                    {% if linea.tipo == 'v' %}
-                        <strong>{{ linea.item.producto.nombre }}</strong><br>
-                        <small class="text-muted">{{ linea.item.sku }}</small>
-                    {% else %}
-                        <strong>{{ linea.item.nombre }}</strong>
-                    {% endif %}
-                    {% if linea.descuento_unitario %}
-                        <span class="label label-warning">-${{ linea.descuento_unitario }} c/u</span>
-                    {% endif %}
-                </td>
-                <td class="text-center">
-                    <form method="post" action="{% url 'ecommerce:actualizar' %}" style="margin:0;">
-                        {% csrf_token %}
-                        <input type="hidden" name="key" value="{{ linea.key }}">
-                        <input type="number" name="cantidad" value="{{ linea.cantidad }}"
-                               min="0" class="form-control" style="width: 70px; display: inline-block;"
-                               onchange="this.form.submit()">
-                    </form>
-                </td>
-                <td class="text-right">${{ linea.precio_unitario }}</td>
-                <td class="text-right">${{ linea.subtotal }}</td>
-                <td>
-                    <form method="post" action="{% url 'ecommerce:quitar' linea.key %}" style="margin:0;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-xs btn-danger" title="Quitar">
-                            <span class="glyphicon glyphicon-trash"></span>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center text-muted" style="padding: 40px;">
-                    Tu carrito está vacío.<br>
-                    <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-primary" style="margin-top: 10px;">
-                        Ir al catálogo
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        {% if lineas %}
-        <tfoot>
-            <tr>
-                <td colspan="3" class="text-right">Subtotal</td>
-                <td class="text-right">${{ subtotal_bruto }}</td>
-                <td></td>
-            </tr>
-            {% if descuento_total %}
-            <tr class="text-warning">
-                <td colspan="3" class="text-right">Descuentos</td>
-                <td class="text-right">-${{ descuento_total }}</td>
-                <td></td>
-            </tr>
-            {% endif %}
-            <tr>
-                <th colspan="3" class="text-right">TOTAL</th>
-                <th class="text-right"><h3>${{ total_neto }}</h3></th>
-                <th></th>
-            </tr>
-        </tfoot>
-        {% endif %}
-    </table>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert" style="padding:12px 16px;border-radius:8px;margin-bottom:16px;background:#FEF3C7;color:#92400E;border:1px solid #F59E0B;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
 
-    {% if lineas %}
-    <div class="text-right">
-        <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-default">Seguir comprando</a>
-        <a href="{% url 'ecommerce:checkout' %}" class="btn btn-success btn-lg">
-            <span class="glyphicon glyphicon-credit-card"></span> Ir a pagar
-        </a>
+  {% if not lineas %}
+    <div class="cart-empty">
+      <svg class="ico" style="width:40px;height:40px;"><use href="#ico-bag"/></svg>
+      <p>Tu carrito está vacío.</p>
+      <a class="btn-primary" href="{% url 'ecommerce:catalogo' %}">Ir a la tienda</a>
     </div>
-    {% endif %}
-</div>
+  {% else %}
+    <div class="cart-main">
+      <div class="cart-items">
+        {% for linea in lineas %}
+          <div class="cart-row">
+            <div class="cart-img">
+              {% if linea.tipo == 'v' and linea.item.producto.imagen %}
+                <img src="{{ linea.item.producto.imagen.url }}" alt="">
+              {% elif linea.tipo == 'p' and linea.item.imagen %}
+                <img src="{{ linea.item.imagen.url }}" alt="">
+              {% else %}
+                <div class="pcard-placeholder" style="aspect-ratio:1/1;"></div>
+              {% endif %}
+            </div>
+            <div class="cart-body">
+              <div class="cart-cat">
+                {% if linea.tipo == 'v' %}{{ linea.item.producto.familia.nombre }}{% else %}{{ linea.item.familia.nombre }}{% endif %}
+              </div>
+              <div class="cart-name">
+                {% if linea.tipo == 'v' %}
+                  {{ linea.item.producto.nombre }}
+                {% else %}
+                  {{ linea.item.nombre }}
+                {% endif %}
+              </div>
+              {% if linea.tipo == 'v' %}
+                <div class="cart-meta">SKU: <strong>{{ linea.item.sku }}</strong></div>
+              {% endif %}
+              {% if linea.descuento_unitario %}
+                <div class="cart-meta" style="color: var(--vino);">-${{ linea.descuento_unitario|floatformat:0|intcomma }} c/u</div>
+              {% endif %}
+              <form method="post" action="{% url 'ecommerce:actualizar' %}" class="qty small" style="margin-top:8px;">
+                {% csrf_token %}
+                <input type="hidden" name="key" value="{{ linea.key }}">
+                <button type="submit" name="cantidad" value="{{ linea.cantidad|add:'-1' }}" aria-label="Restar">
+                  <svg class="ico ico--14"><use href="#ico-minus"/></svg>
+                </button>
+                <span>{{ linea.cantidad }}</span>
+                <button type="submit" name="cantidad" value="{{ linea.cantidad|add:'1' }}" aria-label="Sumar">
+                  <svg class="ico ico--14"><use href="#ico-plus"/></svg>
+                </button>
+              </form>
+            </div>
+            <div class="cart-price">
+              <strong>${{ linea.subtotal|floatformat:0|intcomma }}</strong>
+              <form method="post" action="{% url 'ecommerce:quitar' linea.key %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="remove">Quitar</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <aside class="cart-summary">
+        <h3>Resumen</h3>
+        <div class="sum-row">
+          <span>Subtotal</span>
+          <span>${{ subtotal_bruto|floatformat:0|intcomma }}</span>
+        </div>
+        {% if descuento_total %}
+          <div class="sum-row" style="color: var(--vino);">
+            <span>Descuentos</span>
+            <span>-${{ descuento_total|floatformat:0|intcomma }}</span>
+          </div>
+        {% endif %}
+        <div class="sum-row">
+          <span>Envío</span>
+          <span>{% if total_neto >= 50000 %}Gratis{% else %}$3.990{% endif %}</span>
+        </div>
+        {% if total_neto < 50000 %}
+          <div class="ship-hint">
+            Envío gratis en compras sobre $50.000.
+          </div>
+        {% endif %}
+        <div class="sum-total">
+          <span>Total</span>
+          <strong>${{ total_neto|floatformat:0|intcomma }}</strong>
+        </div>
+        <a href="{% url 'ecommerce:checkout' %}" class="btn-primary lg full">
+          Finalizar compra <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
+        </a>
+        <div class="cart-perks">
+          <div><svg class="ico ico--14"><use href="#ico-shield"/></svg> Pago seguro</div>
+          <div><svg class="ico ico--14"><use href="#ico-truck"/></svg> Envío garantizado</div>
+        </div>
+      </aside>
+    </div>
+
+    <div style="margin-top:32px;">
+      <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline">← Seguir comprando</a>
+    </div>
+  {% endif %}
+</main>
+
+{% include 'ecommerce/_shop_footer.html' %}
 {% endblock %}

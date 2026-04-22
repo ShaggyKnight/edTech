@@ -1,30 +1,16 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views import generic
 
-from .models import Familia, Producto
+from .models import StockTienda
 
 
-class IndexView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
-    permission_required = 'bodega.view_producto'
-    template_name = 'bodega/index.html'
-    context_object_name = 'inventario'
-    queryset = Producto.objects.select_related('familia').all()
-
-
-class FamiliasView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
-    permission_required = 'bodega.view_familia'
-    model = Familia
-    template_name = 'bodega/familias.html'
-
-
-class ProductoView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
-    permission_required = 'bodega.view_producto'
-    template_name = 'bodega/productos.html'
-    context_object_name = 'lista_productos'
-    queryset = Producto.objects.select_related('familia').all()
-
-
-class DetallesView(LoginRequiredMixin, PermissionRequiredMixin, generic.DetailView):
-    permission_required = 'bodega.view_producto'
-    model = Producto
-    template_name = 'bodega/detalles.html'
+class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.ListView):
+    """Listado de stock por tienda — placeholder, se expandirá en Fase D (admin)."""
+    permission_required = 'bodega.view_stocktienda'
+    template_name = 'bodega/stock.html'
+    context_object_name = 'stock'
+    queryset = (
+        StockTienda.objects
+        .select_related('tienda', 'variante__producto', 'producto')
+        .order_by('tienda__nombre_organizacion')
+    )

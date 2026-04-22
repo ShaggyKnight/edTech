@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block titulo %}Stock{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <h2>Stock por tienda</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tienda</th>
+                <th>Item</th>
+                <th>SKU / tipo</th>
+                <th class="text-right">Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in stock %}
+            <tr>
+                <td>{{ s.tienda.nombre_organizacion }}</td>
+                <td>
+                    {% if s.variante %}{{ s.variante.producto.nombre }}
+                    {% else %}{{ s.producto.nombre }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if s.variante %}<code>{{ s.variante.sku }}</code>
+                    {% else %}<em>sin variantes</em>
+                    {% endif %}
+                </td>
+                <td class="text-right">{{ s.cantidad }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">No hay stock registrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

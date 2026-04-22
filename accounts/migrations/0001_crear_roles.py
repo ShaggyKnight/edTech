@@ -18,7 +18,9 @@ def _asegurar_permisos_base(app_labels):
 def crear_grupos_y_permisos(apps, schema_editor):
     from accounts.roles import ADMIN, BODEGUERO, CAJERO, ROLE_PERMISSIONS
 
-    _asegurar_permisos_base(['auth', 'contenttypes', 'bodega', 'tienda'])
+    _asegurar_permisos_base([
+        'auth', 'contenttypes', 'catalogo', 'bodega', 'pos',
+    ])
 
     Group = apps.get_model('auth', 'Group')
     Permission = apps.get_model('auth', 'Permission')
@@ -58,8 +60,9 @@ class Migration(migrations.Migration):
     dependencies = [
         ('auth', '0012_alter_user_first_name_max_length'),
         ('contenttypes', '0002_remove_content_type_name'),
+        ('catalogo', '0001_initial'),
         ('bodega', '0001_initial'),
-        ('tienda', '0001_initial'),
+        ('pos', '0001_initial'),
     ]
 
     operations = [

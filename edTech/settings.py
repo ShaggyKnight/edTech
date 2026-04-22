@@ -28,8 +28,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'accounts.apps.AccountsConfig',
+    'catalogo.apps.CatalogoConfig',
     'bodega.apps.BodegaConfig',
-    'tienda.apps.TiendaConfig',
+    'pos.apps.PosConfig',
+    'ecommerce.apps.EcommerceConfig',
+    'contabilidad.apps.ContabilidadConfig',
+    'reportes.apps.ReportesConfig',
 ]
 
 LOGIN_URL = 'login'

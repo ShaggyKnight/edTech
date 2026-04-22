@@ -52,11 +52,11 @@
                   <ul class="nav navbar-nav">
                     <li class="active"><a href="{% url 'index' %}">Inicio</a></li>
                     {% if user.is_authenticated %}
-                      {% if perms.tienda.view_stocktienda %}
-                        <li><a href="{% url 'tienda:index' %}">Tienda</a></li>
+                      {% if perms.bodega.view_stocktienda %}
+                        <li><a href="{% url 'bodega:stock' %}">Stock</a></li>
                       {% endif %}
-                      {% if perms.bodega.view_producto %}
-                        <li><a href="{% url 'bodega:index' %}">Bodega</a></li>
+                      {% if perms.catalogo.view_producto %}
+                        <li><a href="{% url 'admin:catalogo_producto_changelist' %}">Catálogo</a></li>
                       {% endif %}
                     {% endif %}
                   </ul>

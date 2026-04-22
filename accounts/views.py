@@ -13,8 +13,9 @@ def dashboard(request):
     if user.is_superuser or user_in_role(user, ADMIN):
         return redirect(reverse('admin:index'))
     if user_in_role(user, CAJERO):
-        return redirect(reverse('tienda:index'))
+        # TODO Fase B: reemplazar por reverse('pos:home') cuando exista la app pos
+        return redirect(reverse('admin:index'))
     if user_in_role(user, BODEGUERO):
-        return redirect(reverse('bodega:index'))
+        return redirect(reverse('bodega:stock'))
 
     return render(request, 'accounts/sin_rol.html', status=403)

@@ -13,34 +13,39 @@ ALL_ROLES = (ADMIN, CAJERO, BODEGUERO)
 
 ROLE_PERMISSIONS = {
     CAJERO: {
-        'bodega': {
+        'catalogo': {
             'producto': ['view'],
+            'productovariante': ['view'],
             'familia': ['view'],
+            'oferta': ['view'],
         },
-        'tienda': {
+        'bodega': {
             'tienda': ['view'],
             'stocktienda': ['view'],
+        },
+        'pos': {
             'reciboventa': ['add', 'change', 'view'],
             'reciboventadetalle': ['add', 'change', 'view'],
-            'historiaventas': ['add', 'view'],
         },
     },
     BODEGUERO: {
-        'bodega': {
+        'catalogo': {
             'producto': ['add', 'change', 'view'],
+            'productovariante': ['add', 'change', 'view'],
             'familia': ['add', 'change', 'view'],
-            'grupo': ['add', 'change', 'view'],
             'atributo': ['add', 'change', 'view'],
-            'productoatributo': ['add', 'change', 'delete', 'view'],
-            'productoatributovalor': ['add', 'change', 'delete', 'view'],
+            'valoratributo': ['add', 'change', 'delete', 'view'],
+            'oferta': ['add', 'change', 'view'],
+        },
+        'bodega': {
+            'tienda': ['view'],
+            'bodega': ['add', 'change', 'view'],
+            'stocktienda': ['add', 'change', 'view'],
+            'proveedor': ['add', 'change', 'view'],
             'material': ['add', 'change', 'view'],
-            'bodega': ['view'],
             'inventario': ['add', 'change', 'view'],
             'inventariolinea': ['add', 'change', 'delete', 'view'],
-            'proveedor': ['add', 'change', 'view'],
-        },
-        'tienda': {
-            'stocktienda': ['add', 'change', 'view'],
+            'movimientostock': ['add', 'view'],
         },
     },
     # admin recibe todos los permisos dinámicamente en la migración

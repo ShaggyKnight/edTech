@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load static %}
 
 <!DOCTYPE html>
 <html class="no-js" lang="">
@@ -50,21 +50,30 @@
                 </div>
                 <div class="collapse navbar-collapse" id="myNavbar">
                   <ul class="nav navbar-nav">
-                    <li class="active"><a href="{% url 'index' %}">Home</a></li>
-                    <li class="dropdown">
-                      <a class="dropdown-toggle" data-toggle="dropdown" href="#">Page 1 <span class="caret"></span></a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">Page 1-1</a></li>
-                        <li><a href="#">Page 1-2</a></li>
-                        <li><a href="#">Page 1-3</a></li>
-                      </ul>
-                    </li>
-                    <li><a href="{% url 'tienda:index' %}">Tienda</a></li>
-                    <li><a href="{% url 'bodega:index' %}">Bodega</a></li>
+                    <li class="active"><a href="{% url 'index' %}">Inicio</a></li>
+                    {% if user.is_authenticated %}
+                      {% if perms.tienda.view_stocktienda %}
+                        <li><a href="{% url 'tienda:index' %}">Tienda</a></li>
+                      {% endif %}
+                      {% if perms.bodega.view_producto %}
+                        <li><a href="{% url 'bodega:index' %}">Bodega</a></li>
+                      {% endif %}
+                    {% endif %}
                   </ul>
                   <ul class="nav navbar-nav navbar-right">
-                    <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
-                    <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+                    {% if user.is_authenticated %}
+                      <li><a href="{% url 'accounts:dashboard' %}"><span class="glyphicon glyphicon-user"></span> {{ user.username }}</a></li>
+                      <li>
+                        <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-link navbar-btn" style="color:inherit;">
+                            <span class="glyphicon glyphicon-log-out"></span> Salir
+                          </button>
+                        </form>
+                      </li>
+                    {% else %}
+                      <li><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Ingresar</a></li>
+                    {% endif %}
                   </ul>
                 </div>
               </div>

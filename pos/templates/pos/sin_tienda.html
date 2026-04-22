@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block titulo %}Selecciona tienda{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px; max-width: 600px;">
+    <div class="panel panel-warning">
+        <div class="panel-heading"><h3 class="panel-title">Selecciona una tienda</h3></div>
+        <div class="panel-body">
+            {% if tiendas %}
+                <p>No hay tienda activa en tu sesión. Elige una para operar el POS:</p>
+                <form method="post" action="{% url 'pos:seleccionar_tienda' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <select name="tienda_id" class="form-control">
+                            {% for t in tiendas %}
+                                <option value="{{ t.pk }}">{{ t.nombre_organizacion }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Usar esta tienda</button>
+                </form>
+            {% else %}
+                <p>No hay tiendas activas registradas todavía. Crea una desde el
+                <a href="{% url 'admin:bodega_tienda_add' %}">admin</a> antes de operar el POS.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

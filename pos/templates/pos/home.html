@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}POS · {{ tienda.nombre_organizacion }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 15px;">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row" style="margin-bottom: 10px;">
+        <div class="col-sm-6">
+            <strong>Tienda activa:</strong> {{ tienda.nombre_organizacion }}
+            {% if tiendas_disponibles %}
+                <form method="post" action="{% url 'pos:seleccionar_tienda' %}" class="form-inline" style="display:inline; margin-left: 10px;">
+                    {% csrf_token %}
+                    <select name="tienda_id" class="form-control input-sm">
+                        {% for t in tiendas_disponibles %}
+                            <option value="{{ t.pk }}">{{ t.nombre_organizacion }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-default btn-sm">Cambiar</button>
+                </form>
+            {% endif %}
+        </div>
+        <div class="col-sm-6 text-right">
+            <a href="{% url 'pos:ventas' %}" class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-list"></span> Ver ventas
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <form method="get" action="{% url 'pos:home' %}" class="form-inline" style="margin-bottom: 10px;">
+                <div class="input-group" style="width: 100%;">
+                    <input type="text" name="q" value="{{ query }}" class="form-control"
+                           placeholder="Buscar por nombre, SKU o talla..." autofocus>
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-default">
+                            <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        {% if query %}
+                            <a href="{% url 'pos:home' %}" class="btn btn-default">Limpiar</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </form>
+
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Variante</th>
+                        <th>Familia</th>
+                        <th class="text-right">Precio</th>
+                        <th class="text-right">Stock</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in variantes %}
+                    <tr {% if not v.stock %}class="text-muted"{% endif %}>
+                        <td>{{ v.producto.nombre }}</td>
+                        <td>
+                            <code>{{ v.sku }}</code>
+                            {% for val in v.valores.all %}
+                                <span class="label label-default">{{ val.valor }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>{{ v.producto.familia.nombre }}</td>
+                        <td class="text-right">${{ v.precio }}</td>
+                        <td class="text-right">{{ v.stock|default:0 }}</td>
+                        <td>
+                            <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="tipo" value="v">
+                                <input type="hidden" name="item_id" value="{{ v.pk }}">
+                                <input type="hidden" name="cantidad" value="1">
+                                <button type="submit" class="btn btn-xs btn-primary"
+                                        {% if not v.stock %}disabled{% endif %}>
+                                    <span class="glyphicon glyphicon-plus"></span> Agregar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% for p in productos %}
+                    <tr {% if not p.stock %}class="text-muted"{% endif %}>
+                        <td>{{ p.nombre }}</td>
+                        <td><em class="text-muted">sin variantes</em></td>
+                        <td>{{ p.familia.nombre }}</td>
+                        <td class="text-right">${{ p.precio_base }}</td>
+                        <td class="text-right">{{ p.stock|default:0 }}</td>
+                        <td>
+                            <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="tipo" value="p">
+                                <input type="hidden" name="item_id" value="{{ p.pk }}">
+                                <input type="hidden" name="cantidad" value="1">
+                                <button type="submit" class="btn btn-xs btn-primary"
+                                        {% if not p.stock %}disabled{% endif %}>
+                                    <span class="glyphicon glyphicon-plus"></span> Agregar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                        {% if not variantes %}
+                        <tr><td colspan="6" class="text-center">No hay productos que coincidan.</td></tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-5">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-shopping-cart"></span>
+                        Carrito ({{ items_count }} items)
+                    </h3>
+                </div>
+                <div class="panel-body" style="padding: 0;">
+                    <table class="table" style="margin-bottom: 0;">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-right">Subtotal</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for linea in lineas %}
+                            <tr>
+                                <td>
+                                    {% if linea.tipo == 'v' %}
+                                        {{ linea.item.producto.nombre }}<br>
+                                        <small class="text-muted">
+                                            {{ linea.item.sku }} · ${{ linea.precio_unitario }} c/u
+                                            {% if linea.descuento_unitario %}
+                                                <span class="label label-warning">-${{ linea.descuento_unitario }}</span>
+                                            {% endif %}
+                                        </small>
+                                    {% else %}
+                                        {{ linea.item.nombre }}<br>
+                                        <small class="text-muted">
+                                            ${{ linea.precio_unitario }} c/u
+                                            {% if linea.descuento_unitario %}
+                                                <span class="label label-warning">-${{ linea.descuento_unitario }}</span>
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <form method="post" action="{% url 'pos:actualizar' %}" style="margin:0;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="key" value="{{ linea.key }}">
+                                        <input type="number" name="cantidad" value="{{ linea.cantidad }}"
+                                               min="0" class="form-control input-sm"
+                                               style="width: 60px; display: inline-block;"
+                                               onchange="this.form.submit()">
+                                    </form>
+                                </td>
+                                <td class="text-right">${{ linea.subtotal }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'pos:quitar' linea.key %}" style="margin:0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-xs btn-danger" title="Quitar">
+                                            <span class="glyphicon glyphicon-trash"></span>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted" style="padding: 30px;">
+                                    Carrito vacío.<br>Agrega items desde la tabla de la izquierda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if lineas %}
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-right">Subtotal bruto</td>
+                                <td class="text-right">${{ subtotal_bruto }}</td>
+                                <td></td>
+                            </tr>
+                            {% if descuento_total %}
+                            <tr class="text-warning">
+                                <td colspan="2" class="text-right">Descuentos</td>
+                                <td class="text-right">-${{ descuento_total }}</td>
+                                <td></td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <th colspan="2" class="text-right">TOTAL</th>
+                                <th class="text-right"><h4>${{ total_neto }}</h4></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+
+                {% if lineas %}
+                <div class="panel-footer">
+                    <form method="post" action="{% url 'pos:checkout' %}"
+                          onsubmit="return confirm('¿Cobrar ${{ total_neto }}?');">
+                        {% csrf_token %}
+                        <div class="row" style="margin-bottom: 8px;">
+                            <div class="col-xs-12">
+                                <input type="text" name="cliente_nombre" class="form-control input-sm"
+                                       placeholder="Nombre cliente (opcional)">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 8px;">
+                            <div class="col-xs-6">
+                                <input type="email" name="cliente_email" class="form-control input-sm"
+                                       placeholder="Email (boleta)">
+                            </div>
+                            <div class="col-xs-6">
+                                <input type="text" name="cliente_rut" class="form-control input-sm"
+                                       placeholder="RUT (si factura)">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg btn-block">
+                            <span class="glyphicon glyphicon-ok"></span> Cobrar
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'pos:vaciar' %}"
+                          onsubmit="return confirm('¿Vaciar carrito?');" style="margin-top: 8px;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-default btn-sm btn-block">
+                            <span class="glyphicon glyphicon-remove"></span> Vaciar carrito
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

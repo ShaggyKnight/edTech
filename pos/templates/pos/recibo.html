@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block titulo %}Recibo #{{ recibo.pk }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <div class="page-header">
+        <h2>
+            Recibo #{{ recibo.pk }}
+            <small>{{ recibo.creado|date:"d-m-Y H:i" }} · {{ recibo.tienda.nombre_organizacion }}</small>
+        </h2>
+        <span class="label label-{% if recibo.estado == 'pagado' %}success{% elif recibo.estado == 'fallido' %}danger{% else %}default{% endif %}">
+            {{ recibo.get_estado_display }}
+        </span>
+        <span class="label label-info">{{ recibo.get_canal_display }}</span>
+    </div>
+
+    {% if recibo.cliente_nombre or recibo.cliente_email or recibo.cliente_rut %}
+    <div class="panel panel-default">
+        <div class="panel-heading">Cliente</div>
+        <div class="panel-body">
+            {% if recibo.cliente_nombre %}<strong>{{ recibo.cliente_nombre }}</strong><br>{% endif %}
+            {% if recibo.cliente_rut %}RUT: {{ recibo.cliente_rut }}<br>{% endif %}
+            {% if recibo.cliente_email %}Email: {{ recibo.cliente_email }}{% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-right">Precio unit.</th>
+                <th class="text-right">Descuento</th>
+                <th class="text-right">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in recibo.detalles.all %}
+            <tr>
+                <td>{{ d.descripcion }}</td>
+                <td class="text-center">{{ d.cantidad }}</td>
+                <td class="text-right">${{ d.precio_unitario }}</td>
+                <td class="text-right">{% if d.descuento %}-${{ d.descuento }}{% else %}—{% endif %}</td>
+                <td class="text-right">${{ d.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-right">Subtotal</td>
+                <td class="text-right">${{ recibo.subtotal }}</td>
+            </tr>
+            {% if recibo.descuento %}
+            <tr>
+                <td colspan="4" class="text-right">Descuento</td>
+                <td class="text-right">-${{ recibo.descuento }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th colspan="4" class="text-right">TOTAL</th>
+                <th class="text-right"><h3>${{ recibo.total }}</h3></th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <strong>Pago</strong><br>
+            {% if recibo.payment_provider %}Proveedor: <code>{{ recibo.payment_provider }}</code><br>{% endif %}
+            {% if recibo.payment_reference %}Referencia: <code>{{ recibo.payment_reference }}</code><br>{% endif %}
+        </div>
+        <div class="col-sm-6">
+            {% if recibo.dte_tipo %}
+                <strong>DTE</strong><br>
+                Tipo: {{ recibo.dte_tipo }}<br>
+                {% if recibo.dte_folio %}Folio: {{ recibo.dte_folio }}{% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'pos:home' %}" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span> Nueva venta
+        </a>
+        <a href="{% url 'pos:ventas' %}" class="btn btn-default">
+            <span class="glyphicon glyphicon-list"></span> Ver ventas
+        </a>
+    </div>
+</div>
+{% endblock %}

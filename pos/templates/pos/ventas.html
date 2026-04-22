@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block titulo %}Ventas{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <h2>Ventas</h2>
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Tienda</th>
+                <th>Canal</th>
+                <th>Cajero</th>
+                <th class="text-right">Total</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in ventas %}
+            <tr>
+                <td>{{ v.pk }}</td>
+                <td>{{ v.creado|date:"d-m-Y H:i" }}</td>
+                <td>{{ v.tienda.nombre_organizacion }}</td>
+                <td><span class="label label-info">{{ v.get_canal_display }}</span></td>
+                <td>{{ v.vendedor|default:"—" }}</td>
+                <td class="text-right">${{ v.total }}</td>
+                <td>
+                    <span class="label label-{% if v.estado == 'pagado' %}success{% elif v.estado == 'fallido' %}danger{% else %}default{% endif %}">
+                        {{ v.get_estado_display }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'pos:recibo' v.pk %}" class="btn btn-xs btn-default">Ver</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="text-center">Sin ventas aún.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'pos:home' %}" class="btn btn-primary">
+        <span class="glyphicon glyphicon-shopping-cart"></span> Volver al POS
+    </a>
+</div>
+{% endblock %}

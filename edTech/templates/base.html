@@ -52,6 +52,12 @@
                   <ul class="nav navbar-nav">
                     <li class="active"><a href="{% url 'index' %}">Inicio</a></li>
                     {% if user.is_authenticated %}
+                      {% if perms.pos.add_reciboventa %}
+                        <li><a href="{% url 'pos:home' %}"><span class="glyphicon glyphicon-shopping-cart"></span> POS</a></li>
+                      {% endif %}
+                      {% if perms.pos.view_reciboventa %}
+                        <li><a href="{% url 'pos:ventas' %}">Ventas</a></li>
+                      {% endif %}
                       {% if perms.bodega.view_stocktienda %}
                         <li><a href="{% url 'bodega:stock' %}">Stock</a></li>
                       {% endif %}

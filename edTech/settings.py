@@ -12,6 +12,11 @@ env = environ.Env(
     ALLOWED_HOSTS=(list, ['localhost', '127.0.0.1']),
     LANGUAGE_CODE=(str, 'es-CL'),
     TIME_ZONE=(str, 'America/Santiago'),
+    PAYMENT_GATEWAY=(str, 'mock'),
+    TUU_API_KEY=(str, ''),
+    TUU_DEVICE_SERIAL=(str, ''),
+    TUU_BASE_URL=(str, 'https://integrations.payment.haulmer.com'),
+    TUU_DTE_TIPO=(str, '39'),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -94,3 +99,10 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Pagos POS (TUU / Haulmer). Usar gateway 'mock' en dev.
+PAYMENT_GATEWAY = env('PAYMENT_GATEWAY')
+TUU_API_KEY = env('TUU_API_KEY')
+TUU_DEVICE_SERIAL = env('TUU_DEVICE_SERIAL')
+TUU_BASE_URL = env('TUU_BASE_URL')
+TUU_DTE_TIPO = env('TUU_DTE_TIPO')

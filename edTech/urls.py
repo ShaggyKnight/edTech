@@ -12,6 +12,7 @@ urlpatterns = [
     path('cuenta/', include('accounts.urls')),
     path('bodega/', include('bodega.urls')),
     path('pos/', include('pos.urls')),
+    path('tienda/', include('ecommerce.urls')),
     path('admin/', admin.site.urls),
 ]
 

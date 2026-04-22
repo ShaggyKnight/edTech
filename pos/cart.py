@@ -1,14 +1,15 @@
-"""Carrito de cajero en sesión.
+"""Carrito en sesión reutilizable por POS y por ecommerce.
 
 Formato interno:
-    session['pos_cart'] = {
+    session[<session_key>] = {
         'v:<variante_id>': cantidad,
         'p:<producto_id>': cantidad,
     }
 
-Las líneas distinguen variante vs producto-sin-variantes. Los precios y
-stocks se leen de la DB al renderizar (no se cachean en sesión) para que
-cambios del admin se reflejen inmediatamente.
+POS usa `session_key='pos_cart'` y canal='presencial'; el ecommerce usa
+`session_key='ecommerce_cart'` y canal='online'. Los precios y stocks se
+leen de la DB al renderizar (no se cachean en sesión) para que cambios
+del admin se reflejen inmediatamente.
 """
 
 from decimal import Decimal
@@ -29,12 +30,13 @@ def _key_producto(producto_id: int) -> str:
 
 
 class Cart:
-    def __init__(self, session):
+    def __init__(self, session, session_key: str = SESSION_KEY):
         self.session = session
-        self._items = session.get(SESSION_KEY, {})
+        self.session_key = session_key
+        self._items = session.get(session_key, {})
 
     def _save(self):
-        self.session[SESSION_KEY] = self._items
+        self.session[self.session_key] = self._items
         self.session.modified = True
 
     # --- mutaciones ---
@@ -62,7 +64,7 @@ class Cart:
 
     def clear(self):
         self._items = {}
-        self.session.pop(SESSION_KEY, None)
+        self.session.pop(self.session_key, None)
         self.session.modified = True
 
     # --- lectura ---

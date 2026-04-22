@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ producto.nombre }} · Tienda{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <ol class="breadcrumb">
+        <li><a href="{% url 'ecommerce:catalogo' %}">Tienda</a></li>
+        <li>{{ producto.familia.nombre }}</li>
+        <li class="active">{{ producto.nombre }}</li>
+    </ol>
+
+    <div class="row">
+        <div class="col-md-6">
+            {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="img-responsive">
+            {% else %}
+                <div style="height: 400px; background: #eee; display: flex;
+                            align-items: center; justify-content: center;">
+                    <span class="text-muted">sin imagen</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <h2>{{ producto.nombre }}</h2>
+            <p class="text-muted">{{ producto.familia.nombre }}</p>
+
+            {% if producto.descripcion %}
+                <p>{{ producto.descripcion|linebreaksbr }}</p>
+            {% endif %}
+
+            {% if producto.tiene_variantes %}
+                <h3>Selecciona</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Variante</th>
+                            <th class="text-right">Precio</th>
+                            <th class="text-right">Stock</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in variantes %}
+                        <tr>
+                            <td>
+                                <code>{{ v.sku }}</code>
+                                {% for val in v.valores.all %}
+                                    <span class="label label-default">{{ val.valor }}</span>
+                                {% endfor %}
+                            </td>
+                            <td class="text-right">${{ v.precio }}</td>
+                            <td class="text-right">{{ v.stock|default:0 }}</td>
+                            <td>
+                                <form method="post" action="{% url 'ecommerce:agregar' %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="tipo" value="v">
+                                    <input type="hidden" name="item_id" value="{{ v.pk }}">
+                                    <input type="hidden" name="cantidad" value="1">
+                                    <button type="submit" class="btn btn-sm btn-primary"
+                                            {% if not v.stock %}disabled{% endif %}>
+                                        <span class="glyphicon glyphicon-plus"></span> Agregar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <h3>${{ producto.precio_base }}</h3>
+                <p class="text-muted">Stock disponible: {{ stock_directo }}</p>
+                <form method="post" action="{% url 'ecommerce:agregar' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="tipo" value="p">
+                    <input type="hidden" name="item_id" value="{{ producto.pk }}">
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <input type="number" name="cantidad" value="1" min="1"
+                               max="{{ stock_directo }}" class="form-control" style="width: 100px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg"
+                            {% if not stock_directo %}disabled{% endif %}>
+                        <span class="glyphicon glyphicon-shopping-cart"></span> Agregar al carrito
+                    </button>
+                </form>
+            {% endif %}
+
+            <div style="margin-top: 20px;">
+                <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-default">Seguir comprando</a>
+                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">
+                    Ver carrito ({{ items_count }})
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

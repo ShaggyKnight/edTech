@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block titulo %}Resultado del pago{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px; max-width: 600px;">
+    {% if error %}
+        <div class="panel panel-danger">
+            <div class="panel-heading"><h3 class="panel-title">No pudimos procesar tu pago</h3></div>
+            <div class="panel-body">
+                <p>{{ error }}</p>
+                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">Volver al carrito</a>
+            </div>
+        </div>
+    {% elif recibo.estado == 'fallido' %}
+        <div class="panel panel-danger">
+            <div class="panel-heading"><h3 class="panel-title">Pago rechazado</h3></div>
+            <div class="panel-body">
+                <p>No se pudo cobrar la compra #{{ recibo.pk }}. Intenta con otro medio.</p>
+                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">Volver al carrito</a>
+            </div>
+        </div>
+    {% elif recibo.estado == 'cancelado' %}
+        <div class="panel panel-warning">
+            <div class="panel-heading"><h3 class="panel-title">Pago cancelado</h3></div>
+            <div class="panel-body">
+                <p>Cancelaste el pago de la compra #{{ recibo.pk }}. Tu carrito sigue disponible.</p>
+                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">Volver al carrito</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="panel panel-info">
+            <div class="panel-heading"><h3 class="panel-title">Procesando...</h3></div>
+            <div class="panel-body">
+                <p>Estamos esperando confirmación de la pasarela.</p>
+                <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-default">Ir al catálogo</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

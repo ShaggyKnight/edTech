@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block titulo %}Pasarela simulada{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px; max-width: 500px;">
+    <div class="panel panel-warning">
+        <div class="panel-heading">
+            <h3 class="panel-title">Pasarela simulada (modo desarrollo)</h3>
+        </div>
+        <div class="panel-body">
+            <p class="text-muted">Esta pantalla reemplaza al gateway real mientras estás en dev.</p>
+            <p><strong>Token:</strong> <code>{{ token }}</code></p>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" name="decision" value="aprobar" class="btn btn-success btn-block">
+                    <span class="glyphicon glyphicon-ok"></span> Aprobar pago
+                </button>
+                <button type="submit" name="decision" value="rechazar" class="btn btn-danger btn-block">
+                    <span class="glyphicon glyphicon-remove"></span> Rechazar (tarjeta falla)
+                </button>
+                <button type="submit" name="decision" value="cancelar" class="btn btn-default btn-block">
+                    <span class="glyphicon glyphicon-arrow-left"></span> Cancelar (usuario desiste)
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

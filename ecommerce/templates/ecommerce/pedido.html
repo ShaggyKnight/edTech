@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block titulo %}Pedido #{{ recibo.pk }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px; max-width: 800px;">
+    <div class="panel panel-success">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <span class="glyphicon glyphicon-ok-circle"></span>
+                ¡Gracias por tu compra!
+            </h3>
+        </div>
+        <div class="panel-body">
+            <p>Tu pedido <strong>#{{ recibo.pk }}</strong> fue pagado exitosamente.</p>
+            {% if recibo.cliente_email %}
+                <p>Te enviamos la boleta a <strong>{{ recibo.cliente_email }}</strong>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="page-header">
+        <h2>
+            Detalle del pedido
+            <small>{{ recibo.creado|date:"d-m-Y H:i" }}</small>
+        </h2>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-right">Precio</th>
+                <th class="text-right">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in recibo.detalles.all %}
+            <tr>
+                <td>{{ d.descripcion }}</td>
+                <td class="text-center">{{ d.cantidad }}</td>
+                <td class="text-right">${{ d.precio_unitario }}</td>
+                <td class="text-right">${{ d.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-right">Subtotal</td>
+                <td class="text-right">${{ recibo.subtotal }}</td>
+            </tr>
+            {% if recibo.descuento %}
+            <tr>
+                <td colspan="3" class="text-right">Descuento</td>
+                <td class="text-right">-${{ recibo.descuento }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th colspan="3" class="text-right">TOTAL</th>
+                <th class="text-right"><h3>${{ recibo.total }}</h3></th>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if recibo.cliente_nombre or recibo.cliente_rut %}
+    <div class="panel panel-default">
+        <div class="panel-heading">Datos de la boleta</div>
+        <div class="panel-body">
+            {% if recibo.cliente_nombre %}<strong>{{ recibo.cliente_nombre }}</strong><br>{% endif %}
+            {% if recibo.cliente_rut %}RUT: {{ recibo.cliente_rut }}<br>{% endif %}
+            {% if recibo.cliente_email %}Email: {{ recibo.cliente_email }}{% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-primary">
+        <span class="glyphicon glyphicon-chevron-left"></span> Seguir comprando
+    </a>
+</div>
+{% endblock %}

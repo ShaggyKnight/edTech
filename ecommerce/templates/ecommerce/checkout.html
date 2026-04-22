@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block titulo %}Checkout · Tienda{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px; max-width: 900px;">
+    <h2>Finalizar compra</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="panel panel-default">
+                <div class="panel-heading">Tus datos</div>
+                <div class="panel-body">
+                    <form method="post" action="{% url 'ecommerce:checkout_iniciar' %}">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label>Nombre completo *</label>
+                            {{ form.cliente_nombre }}
+                            {% if form.cliente_nombre.errors %}
+                                <span class="help-block text-danger">{{ form.cliente_nombre.errors|join:", " }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email *</label>
+                            {{ form.cliente_email }}
+                            <span class="help-block">Recibirás la boleta en este correo.</span>
+                            {% if form.cliente_email.errors %}
+                                <span class="help-block text-danger">{{ form.cliente_email.errors|join:", " }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>RUT</label>
+                                    {{ form.cliente_rut }}
+                                    <span class="help-block">Obligatorio para factura.</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    {{ form.cliente_telefono }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Dirección de envío</label>
+                            {{ form.cliente_direccion }}
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg btn-block">
+                            <span class="glyphicon glyphicon-credit-card"></span>
+                            Pagar ${{ total_neto }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="panel panel-primary">
+                <div class="panel-heading">Resumen ({{ items_count }} items)</div>
+                <ul class="list-group">
+                    {% for linea in lineas %}
+                    <li class="list-group-item">
+                        <div>
+                            {% if linea.tipo == 'v' %}
+                                {{ linea.item.producto.nombre }} <small class="text-muted">{{ linea.item.sku }}</small>
+                            {% else %}
+                                {{ linea.item.nombre }}
+                            {% endif %}
+                        </div>
+                        <div class="text-muted">
+                            {{ linea.cantidad }} × ${{ linea.precio_unitario }}
+                            <span class="pull-right"><strong>${{ linea.subtotal }}</strong></span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="panel-footer">
+                    <div>Subtotal: <span class="pull-right">${{ subtotal_bruto }}</span></div>
+                    {% if descuento_total %}
+                    <div class="text-warning">Descuento: <span class="pull-right">-${{ descuento_total }}</span></div>
+                    {% endif %}
+                    <h4>TOTAL: <span class="pull-right">${{ total_neto }}</span></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Aplicar clase form-control a todos los inputs del form.
+    document.querySelectorAll('form input, form textarea').forEach(function(el) {
+        if (el.type !== 'hidden' && el.type !== 'submit') {
+            el.classList.add('form-control');
+        }
+    });
+</script>
+{% endblock %}

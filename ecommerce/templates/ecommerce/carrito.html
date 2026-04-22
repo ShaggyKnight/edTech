@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block titulo %}Carrito · Tienda{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px; max-width: 900px;">
+    <h2><span class="glyphicon glyphicon-shopping-cart"></span> Tu carrito</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-right">Precio</th>
+                <th class="text-right">Subtotal</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for linea in lineas %}
+            <tr>
+                <td>
+                    {% if linea.tipo == 'v' %}
+                        <strong>{{ linea.item.producto.nombre }}</strong><br>
+                        <small class="text-muted">{{ linea.item.sku }}</small>
+                    {% else %}
+                        <strong>{{ linea.item.nombre }}</strong>
+                    {% endif %}
+                    {% if linea.descuento_unitario %}
+                        <span class="label label-warning">-${{ linea.descuento_unitario }} c/u</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <form method="post" action="{% url 'ecommerce:actualizar' %}" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="key" value="{{ linea.key }}">
+                        <input type="number" name="cantidad" value="{{ linea.cantidad }}"
+                               min="0" class="form-control" style="width: 70px; display: inline-block;"
+                               onchange="this.form.submit()">
+                    </form>
+                </td>
+                <td class="text-right">${{ linea.precio_unitario }}</td>
+                <td class="text-right">${{ linea.subtotal }}</td>
+                <td>
+                    <form method="post" action="{% url 'ecommerce:quitar' linea.key %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-xs btn-danger" title="Quitar">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted" style="padding: 40px;">
+                    Tu carrito está vacío.<br>
+                    <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-primary" style="margin-top: 10px;">
+                        Ir al catálogo
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        {% if lineas %}
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-right">Subtotal</td>
+                <td class="text-right">${{ subtotal_bruto }}</td>
+                <td></td>
+            </tr>
+            {% if descuento_total %}
+            <tr class="text-warning">
+                <td colspan="3" class="text-right">Descuentos</td>
+                <td class="text-right">-${{ descuento_total }}</td>
+                <td></td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th colspan="3" class="text-right">TOTAL</th>
+                <th class="text-right"><h3>${{ total_neto }}</h3></th>
+                <th></th>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+
+    {% if lineas %}
+    <div class="text-right">
+        <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-default">Seguir comprando</a>
+        <a href="{% url 'ecommerce:checkout' %}" class="btn btn-success btn-lg">
+            <span class="glyphicon glyphicon-credit-card"></span> Ir a pagar
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

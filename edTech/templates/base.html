@@ -51,6 +51,7 @@
                 <div class="collapse navbar-collapse" id="myNavbar">
                   <ul class="nav navbar-nav">
                     <li class="active"><a href="{% url 'index' %}">Inicio</a></li>
+                    <li><a href="{% url 'ecommerce:catalogo' %}"><span class="glyphicon glyphicon-th-large"></span> Tienda</a></li>
                     {% if user.is_authenticated %}
                       {% if perms.pos.add_reciboventa %}
                         <li><a href="{% url 'pos:home' %}"><span class="glyphicon glyphicon-shopping-cart"></span> POS</a></li>

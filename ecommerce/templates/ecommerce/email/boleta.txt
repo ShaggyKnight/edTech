@@ -1,0 +1,20 @@
+Hola {{ recibo.cliente_nombre|default:"" }},
+
+Gracias por tu compra en Ideas de Blanca.
+
+Pedido: #{{ recibo.pk }}
+Fecha:  {{ recibo.creado|date:"d-m-Y H:i" }}
+Estado: {{ recibo.get_estado_display }}
+
+Detalle:
+{% for d in detalles %}  - {{ d.cantidad }} × {{ d.descripcion }}  ${{ d.precio_unitario }}  (subtotal ${{ d.subtotal }})
+{% endfor %}
+Subtotal:  ${{ recibo.subtotal }}
+{% if recibo.descuento %}Descuento: -${{ recibo.descuento }}
+{% endif %}TOTAL:     ${{ recibo.total }}
+
+Referencia de pago: {{ recibo.payment_reference }}
+Proveedor:          {{ recibo.payment_provider }}
+
+Saludos,
+Ideas de Blanca

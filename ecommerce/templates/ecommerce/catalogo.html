@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block titulo %}Tienda · Ideas{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">Familias</div>
+                <ul class="list-group">
+                    <li class="list-group-item {% if not familia_activa %}active{% endif %}">
+                        <a href="{% url 'ecommerce:catalogo' %}{% if query %}?q={{ query }}{% endif %}"
+                           style="color: inherit;">Todas</a>
+                    </li>
+                    {% for f in familias %}
+                    <li class="list-group-item {% if familia_activa == f.pk %}active{% endif %}">
+                        <a href="?familia={{ f.pk }}{% if query %}&q={{ query }}{% endif %}"
+                           style="color: inherit;">{{ f.nombre }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <a href="{% url 'ecommerce:carrito' %}" class="btn btn-primary btn-block">
+                <span class="glyphicon glyphicon-shopping-cart"></span>
+                Mi carrito ({{ items_count }})
+            </a>
+        </div>
+
+        <div class="col-md-9">
+            <form method="get" class="form-inline" style="margin-bottom: 20px;">
+                {% if familia_activa %}
+                    <input type="hidden" name="familia" value="{{ familia_activa }}">
+                {% endif %}
+                <div class="input-group" style="width: 100%;">
+                    <input type="text" name="q" value="{{ query }}" class="form-control"
+                           placeholder="Buscar productos...">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-default">
+                            <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                    </span>
+                </div>
+            </form>
+
+            <div class="row">
+                {% for p in productos %}
+                <div class="col-sm-6 col-md-4" style="margin-bottom: 20px;">
+                    <div class="thumbnail">
+                        {% if p.imagen %}
+                            <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}"
+                                 style="height: 180px; object-fit: cover;">
+                        {% else %}
+                            <div style="height: 180px; background: #eee; display: flex;
+                                        align-items: center; justify-content: center;">
+                                <span class="text-muted">sin foto</span>
+                            </div>
+                        {% endif %}
+                        <div class="caption">
+                            <h4>{{ p.nombre }}</h4>
+                            <p class="text-muted">{{ p.familia.nombre }}</p>
+                            <p><strong>${{ p.precio_base }}</strong></p>
+                            <a href="{% url 'ecommerce:producto' p.pk %}" class="btn btn-primary btn-block">
+                                Ver
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-sm-12">
+                    <div class="alert alert-info">No hay productos con stock disponibles.</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

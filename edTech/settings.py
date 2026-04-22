@@ -17,6 +17,13 @@ env = environ.Env(
     TUU_DEVICE_SERIAL=(str, ''),
     TUU_BASE_URL=(str, 'https://integrations.payment.haulmer.com'),
     TUU_DTE_TIPO=(str, '39'),
+    ECOMMERCE_PAYMENT_GATEWAY=(str, 'mock'),
+    ECOMMERCE_TIENDA_ID=(int, 0),
+    WEBPAY_COMMERCE_CODE=(str, ''),
+    WEBPAY_API_KEY=(str, ''),
+    WEBPAY_BASE_URL=(str, 'https://webpay3gint.transbank.cl'),
+    DEFAULT_FROM_EMAIL=(str, 'ventas@ideas.local'),
+    EMAIL_BACKEND=(str, 'django.core.mail.backends.console.EmailBackend'),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -106,3 +113,15 @@ TUU_API_KEY = env('TUU_API_KEY')
 TUU_DEVICE_SERIAL = env('TUU_DEVICE_SERIAL')
 TUU_BASE_URL = env('TUU_BASE_URL')
 TUU_DTE_TIPO = env('TUU_DTE_TIPO')
+
+# Pagos ecommerce (Webpay / Transbank). Usar gateway 'mock' en dev.
+ECOMMERCE_PAYMENT_GATEWAY = env('ECOMMERCE_PAYMENT_GATEWAY')
+# pk de bodega.Tienda que surte el canal online (0 = sin configurar)
+ECOMMERCE_TIENDA_ID = env('ECOMMERCE_TIENDA_ID') or None
+WEBPAY_COMMERCE_CODE = env('WEBPAY_COMMERCE_CODE')
+WEBPAY_API_KEY = env('WEBPAY_API_KEY')
+WEBPAY_BASE_URL = env('WEBPAY_BASE_URL')
+
+# Email (boleta al cliente online). Por defecto console backend en dev.
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')

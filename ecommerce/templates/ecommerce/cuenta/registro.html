@@ -1,0 +1,95 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block titulo %}Crear cuenta · Ideas Boutique{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-wrap { max-width: 500px; margin: 60px auto; padding: 0 24px 80px; }
+  .auth-wrap h1 { font-family: var(--serif); font-size: 40px; margin-bottom: 8px; }
+  .auth-sub { color: var(--ink-60); margin-bottom: 32px; }
+  .auth-card { background: var(--cream); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 32px; }
+  .auth-field { margin-bottom: 18px; }
+  .auth-field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 6px; }
+  .auth-field input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: white; }
+  .auth-field input:focus { outline: none; border-color: var(--gold); }
+  .auth-field .err { color: var(--vino); font-size: 13px; margin-top: 4px; }
+  .auth-field .hint { font-size: 12px; color: var(--ink-60); margin-top: 4px; }
+  .auth-field .hint ul { margin: 4px 0 0 18px; padding: 0; }
+  .auth-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .auth-alt { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); text-align: center; font-size: 14px; color: var(--ink-60); }
+  .auth-alt a { color: var(--ink); font-weight: 600; }
+  @media (max-width: 520px) { .auth-row-2 { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
+
+<main class="auth-wrap">
+  <h1>Crear cuenta</h1>
+  <p class="auth-sub">Para hacer seguimiento de tus pedidos y agilizar el próximo checkout.</p>
+
+  <div class="auth-card">
+    {% if form.non_field_errors %}
+      <div class="err" style="margin-bottom:16px;color:var(--vino);">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'ecommerce:registro' %}">
+      {% csrf_token %}
+
+      <div class="auth-row-2">
+        <div class="auth-field">
+          <label for="id_nombre">Nombre *</label>
+          {{ form.nombre }}
+          {% if form.nombre.errors %}<div class="err">{{ form.nombre.errors|join:", " }}</div>{% endif %}
+        </div>
+        <div class="auth-field">
+          <label for="id_apellido">Apellido</label>
+          {{ form.apellido }}
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label for="id_email">Email *</label>
+        {{ form.email }}
+        {% if form.email.errors %}<div class="err">{{ form.email.errors|join:", " }}</div>{% endif %}
+      </div>
+
+      <div class="auth-field">
+        <label for="id_password1">Contraseña *</label>
+        {{ form.password1 }}
+        {% if form.password1.help_text %}
+          <div class="hint">{{ form.password1.help_text|safe }}</div>
+        {% endif %}
+        {% if form.password1.errors %}<div class="err">{{ form.password1.errors|join:", " }}</div>{% endif %}
+      </div>
+
+      <div class="auth-field">
+        <label for="id_password2">Repetir contraseña *</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<div class="err">{{ form.password2.errors|join:", " }}</div>{% endif %}
+      </div>
+
+      <button type="submit" class="btn-primary lg full">
+        Crear cuenta
+        <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
+      </button>
+    </form>
+
+    <div class="auth-alt">
+      ¿Ya tenés cuenta? <a href="{% url 'ecommerce:login' %}">Ingresar</a>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Estiliza los inputs que vienen del UserCreationForm con nuestras clases.
+  document.querySelectorAll('.auth-field input').forEach(function(el){
+    if (el.type === 'hidden' || el.type === 'submit') return;
+    el.style.width = '100%';
+  });
+</script>
+
+{% include 'ecommerce/_shop_footer.html' %}
+{% endblock %}

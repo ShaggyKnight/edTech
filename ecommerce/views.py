@@ -256,8 +256,20 @@ def checkout(request):
         'descuento_total': descuento_total,
         'total_neto': total_neto,
         'items_count': cart.items_count,
-        'form': CheckoutForm(),
+        'form': CheckoutForm(initial=_checkout_initial(request)),
     })
+
+
+def _checkout_initial(request) -> dict:
+    """Prefill del checkout para clientes logueados."""
+    if not request.user.is_authenticated:
+        return {}
+    user = request.user
+    nombre = (f'{user.first_name} {user.last_name}'.strip()) or user.username
+    return {
+        'cliente_nombre': nombre,
+        'cliente_email': user.email or '',
+    }
 
 
 @require_POST
@@ -298,6 +310,7 @@ def checkout_iniciar(request):
             cliente_rut=form.cleaned_data.get('cliente_rut', ''),
             cliente_telefono=form.cleaned_data.get('cliente_telefono', ''),
             cliente_direccion=form.cleaned_data.get('cliente_direccion', ''),
+            cliente_usuario=request.user if request.user.is_authenticated else None,
             return_url=return_url,
         )
     except StockInsuficienteOnline as exc:

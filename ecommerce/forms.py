@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 
 
 class AgregarForm(forms.Form):
@@ -18,3 +20,48 @@ class CheckoutForm(forms.Form):
     cliente_rut = forms.CharField(max_length=20, required=False)
     cliente_telefono = forms.CharField(max_length=20, required=False)
     cliente_direccion = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
+
+
+class RegistroClienteForm(UserCreationForm):
+    """Registro de cliente en la tienda.
+
+    El email es el username: más natural para el comercio electrónico y se
+    reutiliza para enlazar recibos creados como invitado antes del registro.
+    """
+    nombre = forms.CharField(
+        max_length=150,
+        label='Nombre',
+        widget=forms.TextInput(attrs={'autocomplete': 'given-name'}),
+    )
+    apellido = forms.CharField(
+        max_length=150,
+        label='Apellido',
+        required=False,
+        widget=forms.TextInput(attrs={'autocomplete': 'family-name'}),
+    )
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={'autocomplete': 'email'}),
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'nombre', 'apellido', 'password1', 'password2')
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower().strip()
+        User = get_user_model()
+        if User.objects.filter(username__iexact=email).exists() or \
+                User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('Ya existe una cuenta con este email.')
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.username = self.cleaned_data['email']
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['nombre']
+        user.last_name = self.cleaned_data.get('apellido', '')
+        if commit:
+            user.save()
+        return user

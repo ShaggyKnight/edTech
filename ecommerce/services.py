@@ -86,6 +86,7 @@ def iniciar_pedido(
     cliente_rut: str = '',
     cliente_telefono: str = '',
     cliente_direccion: str = '',
+    cliente_usuario=None,
     return_url: str,
 ) -> tuple[ReciboVenta, OnlinePaymentInit]:
     """Crea un recibo 'online' pendiente y devuelve la URL para redirect."""
@@ -114,6 +115,7 @@ def iniciar_pedido(
         cliente_nombre=cliente_nombre,
         cliente_email=cliente_email,
         cliente_rut=cliente_rut,
+        cliente_usuario=cliente_usuario,
         subtotal=subtotal_bruto,
         descuento=descuento_total,
         total=total_neto,

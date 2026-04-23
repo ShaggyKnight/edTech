@@ -40,6 +40,14 @@ class ReciboVenta(models.Model):
     cliente_nombre = models.CharField(max_length=200, blank=True)
     cliente_email = models.EmailField(blank=True, help_text='Para envío de boleta por correo')
     cliente_rut = models.CharField(max_length=20, blank=True)
+    cliente_usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pedidos_online',
+        help_text='Cliente registrado que hizo la compra (solo online, opcional)',
+    )
 
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0'))
     descuento = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0'))

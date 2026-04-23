@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, views_cuenta
 
 app_name = 'ecommerce'
 
@@ -17,4 +17,10 @@ urlpatterns = [
     path('checkout/retorno/', views.checkout_retorno, name='checkout_retorno'),
     path('pedido/<str:token>/', views.ver_pedido, name='pedido'),
     path('mock-pago/', views.mock_pago, name='mock_pago'),
+
+    # Cuenta del cliente (flujo boutique, separado del login de staff).
+    path('cuenta/login/', views_cuenta.BoutiqueLoginView.as_view(), name='login'),
+    path('cuenta/logout/', views_cuenta.BoutiqueLogoutView.as_view(), name='logout'),
+    path('cuenta/registro/', views_cuenta.registro, name='registro'),
+    path('cuenta/pedidos/', views_cuenta.mis_pedidos, name='mis_pedidos'),
 ]

@@ -21,11 +21,11 @@
     </form>
     <div class="shop-actions">
       {% if user.is_authenticated %}
-        <a href="{% url 'accounts:dashboard' %}" aria-label="Mi cuenta">
+        <a href="{% url 'ecommerce:mis_pedidos' %}" aria-label="Mis pedidos" title="Hola, {{ user.first_name|default:user.username }}">
           <svg class="ico ico--18"><use href="#ico-user"/></svg>
         </a>
       {% else %}
-        <a href="{% url 'login' %}" aria-label="Ingresar">
+        <a href="{% url 'ecommerce:login' %}" aria-label="Ingresar" title="Ingresar a mi cuenta">
           <svg class="ico ico--18"><use href="#ico-user"/></svg>
         </a>
       {% endif %}

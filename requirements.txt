@@ -2,3 +2,12 @@ Django>=5.2,<5.3
 django-environ>=0.12
 djangorestframework>=3.15
 Pillow>=10.4
+
+# Producción: servidor WSGI y serving de static files sin nginx.
+gunicorn>=22.0
+whitenoise>=6.7
+
+# Postgres en prod (dev sigue con SQLite por DATABASE_URL=sqlite:///).
+# Dejamos psycopg2-binary para simplificar el deploy en plataformas sin
+# toolchain de build (Railway, Fly.io, etc).
+psycopg2-binary>=2.9

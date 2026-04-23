@@ -10,8 +10,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ['localhost', '127.0.0.1']),
+    CSRF_TRUSTED_ORIGINS=(list, []),
     LANGUAGE_CODE=(str, 'es-CL'),
     TIME_ZONE=(str, 'America/Santiago'),
+    SECURE_SSL_REDIRECT=(bool, False),
+    SECURE_HSTS_SECONDS=(int, 0),
+    USE_WHITENOISE=(bool, True),
+    LOG_LEVEL=(str, 'INFO'),
     PAYMENT_GATEWAY=(str, 'mock'),
     TUU_API_KEY=(str, ''),
     TUU_DEVICE_SERIAL=(str, ''),
@@ -30,6 +35,8 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+# En prod con HTTPS + dominio, ej: CSRF_TRUSTED_ORIGINS=https://ideas.cl,https://www.ideas.cl
+CSRF_TRUSTED_ORIGINS = env('CSRF_TRUSTED_ORIGINS')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -53,8 +60,13 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'accounts:dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
+USE_WHITENOISE = env('USE_WHITENOISE')
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise sirve static files en prod sin necesidad de nginx/CDN.
+    # Se inserta justo después de SecurityMiddleware (documentación oficial).
+    *(['whitenoise.middleware.WhiteNoiseMiddleware'] if USE_WHITENOISE else []),
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -103,10 +115,81 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'edTech' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# En prod con WhiteNoise usamos el storage con manifest (hash + compresión).
+# Sin WhiteNoise Django sirve staticfiles "crudos" y no hay que forzar el storage.
+if USE_WHITENOISE and not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# --- Seguridad de producción ----------------------------------------------
+# Todo lo que sigue sólo tiene efecto cuando DEBUG=False. En dev queda inerte
+# para no romper el runserver ni Django admin local sobre http.
+if not DEBUG:
+    # Detrás de un proxy (nginx, Railway, Fly, Heroku router) que termina TLS.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # Redirige http→https salvo que lo deshabilites explícitamente en el env.
+    # Esto permite desplegar en un host que ya hace redirect en el edge sin
+    # causar loops (por ejemplo, Fly.io con `force_https`).
+    SECURE_SSL_REDIRECT = env('SECURE_SSL_REDIRECT')
+
+    # HSTS: 0 por defecto para el primer deploy; aumentar a 31536000 (1 año)
+    # cuando el dominio esté estable. Incluir subdominios y preload sólo
+    # cuando confirmes que todos viven en HTTPS.
+    SECURE_HSTS_SECONDS = env('SECURE_HSTS_SECONDS')
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
+    SECURE_HSTS_PRELOAD = SECURE_HSTS_SECONDS > 0
+
+    # Cookies sólo por HTTPS.
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Hardening adicional.
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
+
+
+# --- Logging --------------------------------------------------------------
+# Salida estructurada a stderr para que el runtime (systemd, Docker, Railway)
+# la capture. Apps de Ideas 2.0 logean al namespace de Django.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '{levelname} {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': env('LOG_LEVEL'),
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': env('LOG_LEVEL'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
 
 # Pagos POS (TUU / Haulmer). Usar gateway 'mock' en dev.
 PAYMENT_GATEWAY = env('PAYMENT_GATEWAY')

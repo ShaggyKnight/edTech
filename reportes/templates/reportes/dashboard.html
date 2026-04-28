@@ -1,154 +1,222 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block titulo %}Dashboard{% endblock %}
+{% block titulo %}Dashboard · Ideas Boutique{% endblock %}
+{% block topbar_titulo %}Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px;">
-    <h2>Dashboard</h2>
-    <p class="text-muted">
-        Ventana: {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
-    </p>
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Reportes / Dashboard</div>
+      <h1>Resumen del negocio</h1>
+      <div class="sub">
+        Ventana: {{ resumen.desde|date:"d M Y" }} — {{ resumen.hasta|date:"d M Y" }}
+      </div>
+    </div>
 
-    <form method="get" class="form-inline" style="margin-bottom: 20px;">
-        <div class="form-group">
-            <label>Últimos</label>
-            <select name="dias" class="form-control">
-                {% for d in "7,30,90,180,365"|slice:"::" %}{% endfor %}
-                <option value="7" {% if dias == 7 %}selected{% endif %}>7 días</option>
-                <option value="30" {% if dias == 30 %}selected{% endif %}>30 días</option>
-                <option value="90" {% if dias == 90 %}selected{% endif %}>90 días</option>
-                <option value="180" {% if dias == 180 %}selected{% endif %}>6 meses</option>
-                <option value="365" {% if dias == 365 %}selected{% endif %}>12 meses</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Tienda</label>
-            <select name="tienda" class="form-control">
-                <option value="">Todas</option>
-                {% for t in tiendas %}
-                    <option value="{{ t.pk }}" {% if tienda_filtro and tienda_filtro.pk == t.pk %}selected{% endif %}>
-                        {{ t.nombre_organizacion }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Actualizar</button>
-        <a href="{% url 'reportes:caja' %}" class="btn btn-default">Caja</a>
-        <a href="{% url 'reportes:produccion' %}" class="btn btn-default">Producción</a>
+    <form method="get" class="bo-form-inline">
+      <div class="bo-field">
+        <label>Últimos</label>
+        <select name="dias" class="bo-select">
+          <option value="7"   {% if dias == 7 %}selected{% endif %}>7 días</option>
+          <option value="30"  {% if dias == 30 %}selected{% endif %}>30 días</option>
+          <option value="90"  {% if dias == 90 %}selected{% endif %}>90 días</option>
+          <option value="180" {% if dias == 180 %}selected{% endif %}>6 meses</option>
+          <option value="365" {% if dias == 365 %}selected{% endif %}>12 meses</option>
+        </select>
+      </div>
+      <div class="bo-field">
+        <label>Tienda</label>
+        <select name="tienda" class="bo-select">
+          <option value="">Todas</option>
+          {% for t in tiendas %}
+            <option value="{{ t.pk }}" {% if tienda_filtro and tienda_filtro.pk == t.pk %}selected{% endif %}>
+              {{ t.nombre_organizacion }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="bo-btn bo-btn-primary">Actualizar</button>
     </form>
+  </div>
 
-    <div class="row">
-        <div class="col-md-3">
-            <div class="panel panel-primary">
-                <div class="panel-heading">Ventas totales</div>
-                <div class="panel-body">
-                    <h3>${{ resumen.total_ventas }}</h3>
-                    <small>{{ resumen.n_ventas }} venta{{ resumen.n_ventas|pluralize }} pagada{{ resumen.n_ventas|pluralize }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="panel panel-info">
-                <div class="panel-heading">Presencial</div>
-                <div class="panel-body">
-                    <h3>${{ resumen.ventas_por_canal.presencial.total }}</h3>
-                    <small>{{ resumen.ventas_por_canal.presencial.n_ventas }} venta{{ resumen.ventas_por_canal.presencial.n_ventas|pluralize }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="panel panel-info">
-                <div class="panel-heading">Online</div>
-                <div class="panel-body">
-                    <h3>${{ resumen.ventas_por_canal.online.total }}</h3>
-                    <small>{{ resumen.ventas_por_canal.online.n_ventas }} venta{{ resumen.ventas_por_canal.online.n_ventas|pluralize }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="panel panel-success">
-                <div class="panel-heading">Saldo de caja (ventana)</div>
-                <div class="panel-body">
-                    <h3>${{ resumen.caja.saldo }}</h3>
-                    <small>
-                        +${{ resumen.caja.entradas }} / −${{ resumen.caja.salidas }}
-                    </small>
-                </div>
-            </div>
-        </div>
+  {# ─────────── KPI cards ─────────── #}
+  <div class="bo-grid cols-4" style="margin-bottom: 20px;">
+    <div class="bo-card bo-kpi is-primary">
+      <div class="label">Ventas totales</div>
+      <div class="value">${{ resumen.total_ventas|floatformat:0|intcomma }}</div>
+      <div class="sub">{{ resumen.n_ventas }} venta{{ resumen.n_ventas|pluralize }} pagada{{ resumen.n_ventas|pluralize }}</div>
     </div>
+    <div class="bo-card bo-kpi">
+      <div class="label">Presencial</div>
+      <div class="value">${{ resumen.ventas_por_canal.presencial.total|floatformat:0|intcomma }}</div>
+      <div class="sub">{{ resumen.ventas_por_canal.presencial.n_ventas }} ventas</div>
+    </div>
+    <div class="bo-card bo-kpi">
+      <div class="label">Online</div>
+      <div class="value">${{ resumen.ventas_por_canal.online.total|floatformat:0|intcomma }}</div>
+      <div class="sub">{{ resumen.ventas_por_canal.online.n_ventas }} ventas</div>
+    </div>
+    <div class="bo-card bo-kpi is-success">
+      <div class="label">Saldo de caja</div>
+      <div class="value">${{ resumen.caja.saldo|floatformat:0|intcomma }}</div>
+      <div class="sub">
+        +${{ resumen.caja.entradas|floatformat:0|intcomma }} /
+        −${{ resumen.caja.salidas|floatformat:0|intcomma }}
+      </div>
+    </div>
+  </div>
 
-    <div class="row">
-        <div class="col-md-3">
-            <div class="panel panel-default">
-                <div class="panel-heading">Valor de inventario</div>
-                <div class="panel-body">
-                    <h3>${{ resumen.valor_inventario }}</h3>
-                    <small>Stock actual × precio de costo</small>
-                </div>
-            </div>
-        </div>
+  <div class="bo-grid cols-2" style="margin-bottom: 20px;">
+    <div class="bo-card bo-kpi is-gold">
+      <div class="label">Valor de inventario</div>
+      <div class="value">${{ resumen.valor_inventario|floatformat:0|intcomma }}</div>
+      <div class="sub">Stock actual × precio de costo + materiales en bodega</div>
     </div>
+    <div class="bo-card bo-kpi">
+      <div class="label">Promedio por venta</div>
+      <div class="value">
+        ${% if resumen.n_ventas %}{% widthratio resumen.total_ventas resumen.n_ventas 1 %}{% else %}0{% endif %}
+      </div>
+      <div class="sub">Total / cantidad de recibos</div>
+    </div>
+  </div>
 
-    <div class="row">
-        <div class="col-md-7">
-            <div class="panel panel-default">
-                <div class="panel-heading"><strong>Ventas por día</strong></div>
-                <div class="panel-body">
-                    {% if serie %}
-                    <table class="table table-condensed">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th class="text-right">Ventas</th>
-                                <th class="text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for d in serie %}
-                            <tr>
-                                <td>{{ d.fecha|date:"d-m-Y" }}</td>
-                                <td class="text-right">{{ d.n_ventas }}</td>
-                                <td class="text-right">${{ d.total }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="text-muted">Sin ventas en la ventana seleccionada.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-md-5">
-            <div class="panel panel-default">
-                <div class="panel-heading"><strong>Top productos</strong></div>
-                <div class="panel-body">
-                    {% if resumen.top_productos %}
-                    <table class="table table-condensed">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th class="text-right">Unid.</th>
-                                <th class="text-right">Ingreso</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in resumen.top_productos %}
-                            <tr>
-                                <td>{{ p.descripcion }}</td>
-                                <td class="text-right">{{ p.unidades }}</td>
-                                <td class="text-right">${{ p.ingreso }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="text-muted">Sin ventas en la ventana seleccionada.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+  {# ─────────── Charts ─────────── #}
+  <div class="bo-grid cols-2" style="margin-bottom: 20px;">
+    <div class="bo-card">
+      <div class="bo-card-head">
+        <h3>Ventas por día</h3>
+      </div>
+      <div class="bo-card-body">
+        <canvas id="chartSerie" class="bo-chart"></canvas>
+      </div>
     </div>
-</div>
+    <div class="bo-card">
+      <div class="bo-card-head">
+        <h3>Distribución por canal</h3>
+      </div>
+      <div class="bo-card-body">
+        <canvas id="chartCanal" class="bo-chart bo-chart-sm"></canvas>
+      </div>
+    </div>
+  </div>
+
+  {# ─────────── Tabla top productos ─────────── #}
+  <div class="bo-card">
+    <div class="bo-card-head">
+      <h3>Top productos vendidos</h3>
+    </div>
+    {% if resumen.top_productos %}
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="num">Unidades</th>
+            <th class="num">Ingreso</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in resumen.top_productos %}
+            <tr>
+              <td>{{ p.descripcion }}</td>
+              <td class="num">{{ p.unidades }}</td>
+              <td class="num">${{ p.ingreso|floatformat:0|intcomma }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color: var(--bo-muted);">
+        Sin ventas en la ventana seleccionada.
+      </div>
+    {% endif %}
+  </div>
+
+  {# Datos para charts (JSON-safe en script tag) #}
+  {{ serie|json_script:"data-serie" }}
+  <script id="data-canal" type="application/json">
+    {
+      "labels": ["Presencial", "Online"],
+      "data": [
+        {{ resumen.ventas_por_canal.presencial.total|default:0|stringformat:"f"|floatformat:0 }},
+        {{ resumen.ventas_por_canal.online.total|default:0|stringformat:"f"|floatformat:0 }}
+      ]
+    }
+  </script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const css = getComputedStyle(document.documentElement);
+    const colors = {
+      primary: css.getPropertyValue('--bo-primary').trim() || '#1B84FF',
+      gold:    css.getPropertyValue('--bo-gold').trim()    || '#C9A96E',
+      success: css.getPropertyValue('--bo-success').trim() || '#17C653',
+      grid:    css.getPropertyValue('--bo-border-soft').trim() || '#F1F1F4',
+      muted:   css.getPropertyValue('--bo-muted').trim()   || '#71717A',
+    };
+
+    // Serie diaria
+    const serie = JSON.parse(document.getElementById('data-serie').textContent || '[]');
+    const ctxS = document.getElementById('chartSerie');
+    if (ctxS && window.Chart) {
+      new Chart(ctxS, {
+        type: 'line',
+        data: {
+          labels: serie.map(d => d.fecha),
+          datasets: [{
+            label: 'Ventas $',
+            data: serie.map(d => parseFloat(d.total) || 0),
+            borderColor: colors.primary,
+            backgroundColor: colors.primary + '22',
+            borderWidth: 2, fill: true, tension: 0.3,
+            pointRadius: 3, pointBackgroundColor: colors.primary,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: colors.grid }, ticks: { color: colors.muted } },
+            y: { grid: { color: colors.grid }, ticks: { color: colors.muted,
+                 callback: v => '$' + v.toLocaleString('es-CL') } }
+          }
+        }
+      });
+    }
+
+    // Donut por canal
+    const canalRaw = JSON.parse(document.getElementById('data-canal').textContent);
+    const ctxC = document.getElementById('chartCanal');
+    if (ctxC && window.Chart) {
+      new Chart(ctxC, {
+        type: 'doughnut',
+        data: {
+          labels: canalRaw.labels,
+          datasets: [{
+            data: canalRaw.data,
+            backgroundColor: [colors.primary, colors.gold],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: colors.muted } },
+            tooltip: {
+              callbacks: { label: ctx => ctx.label + ': $' +
+                (ctx.parsed || 0).toLocaleString('es-CL') }
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
 {% endblock %}

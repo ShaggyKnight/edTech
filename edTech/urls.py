@@ -6,6 +6,11 @@ from django.urls import include, path
 
 from . import views
 
+# Branding del Django admin (Fase M).
+admin.site.site_header = 'Ideas Boutique — Administración'
+admin.site.site_title  = 'Ideas Boutique'
+admin.site.index_title = 'Panel de control'
+
 urlpatterns = [
     path('', views.index, name='index'),
     path('cuenta/', include('django.contrib.auth.urls')),

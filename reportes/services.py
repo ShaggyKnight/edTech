@@ -52,7 +52,11 @@ def _recibos_pagados_qs(tienda=None, desde=None, hasta=None):
     if desde is not None:
         qs = qs.filter(creado__gte=desde)
     if hasta is not None:
-        qs = qs.filter(creado__lt=hasta)
+        # `__lte` (no `__lt`) para que un recibo creado en el mismo instante
+        # que `hasta` (caso común cuando el dashboard llama con timezone.now())
+        # entre en la ventana. En Windows la resolución de tiempo es más
+        # gruesa y `__lt` causa flakes en CI.
+        qs = qs.filter(creado__lte=hasta)
     return qs
 
 
@@ -129,7 +133,9 @@ def top_productos(
     if desde is not None:
         qs = qs.filter(recibo__creado__gte=desde)
     if hasta is not None:
-        qs = qs.filter(recibo__creado__lt=hasta)
+        # `__lte` por consistencia con `_recibos_pagados_qs`: un recibo
+        # creado en el instante exacto de `hasta` debe contar para el ranking.
+        qs = qs.filter(recibo__creado__lte=hasta)
 
     filas = (
         qs.values('descripcion')

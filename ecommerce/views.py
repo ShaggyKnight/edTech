@@ -61,7 +61,8 @@ CAT_SLUGS = {
         'title': 'Perfumes',
         'desc':  'Fragancias originales y decants',
         'accent': '#C9A96E',
-        'match':  ['perfum', 'fragranc'],
+        # 'fragan' (no 'fragranc') matchea 'Fragancia(s)' en español.
+        'match':  ['perfum', 'fragan'],
     },
     'moda': {
         'title': 'Moda',

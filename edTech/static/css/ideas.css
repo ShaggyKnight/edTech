@@ -431,3 +431,51 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
 
 /* Nav link activo en la tienda */
 .shop-nav a.active { color: var(--gold-2); font-weight: 600; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Helpers de accesibilidad — equivalentes a los de h5bp pero alineados
+   con el resto del sistema. `.sr-only` permite poner texto solo para
+   lectores de pantalla (ej: contenido alternativo en botones de íconos).
+   ───────────────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+  border: 0;
+}
+.clearfix::after { content: ""; display: table; clear: both; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Print stylesheet — pensado para que el cliente o el dueño puedan
+   imprimir un pedido / boleta / detalle de producto desde el navegador
+   y obtener algo legible. Oculta nav, footer y promo bar; reemplaza
+   colores de fondo por blanco; deja URLs absolutas detrás de cada link.
+   ───────────────────────────────────────────────────────────────────── */
+@media print {
+  *,
+  *::before,
+  *::after { background: transparent !important; color: #000 !important;
+             box-shadow: none !important; text-shadow: none !important; }
+  body { font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.4; }
+  a, a:visited { text-decoration: underline; }
+  /* Acompañar links con su URL para que la copia impresa sirva offline */
+  a[href]::after { content: " (" attr(href) ")"; font-size: 10pt; }
+  /* Pero no para links internos ni javascript: */
+  a[href^="#"]::after,
+  a[href^="javascript:"]::after { content: ""; }
+
+  /* Ocultar chrome de la tienda */
+  .shop-header, .shop-promo, .shop-footer,
+  nav, .nav, .pdp-tabs, .cart-empty, .pcard-placeholder,
+  form, button, .btn-primary, .btn-outline { display: none !important; }
+
+  /* Layout que evite páginas casi-vacías */
+  h1, h2, h3 { page-break-after: avoid; }
+  img { max-width: 100% !important; page-break-inside: avoid; }
+  table, pre, blockquote { page-break-inside: avoid; }
+
+  /* Bordes finos en tablas para que se vean al imprimir */
+  table { border-collapse: collapse; }
+  th, td { border: 1px solid #888; padding: 4px 8px; }
+}

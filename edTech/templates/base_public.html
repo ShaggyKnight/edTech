@@ -7,9 +7,21 @@
     <title>{% block titulo %}Ideas Boutique — Perfumes · Uniformes Escolares · Moda{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}Boutique familiar en Los Vilos desde 1990. Perfumes originales, uniformes escolares y moda. Tres generaciones, un solo compromiso.{% endblock %}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#C9A96E">
+
+    {# Open Graph / Twitter card — preview cuando se comparte en WhatsApp/IG/etc #}
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="Ideas Boutique">
+    <meta property="og:title" content="{% block og_title %}Ideas Boutique — Los Vilos{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Perfumes, uniformes escolares y moda en Caupolicán 437-B, Los Vilos. Boutique familiar desde 1990.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% static 'img/ideas/logo-letrero.png' %}{% endblock %}">
+    <meta property="og:image:alt" content="{% block og_image_alt %}Letrero de Ideas Boutique en Caupolicán 437-B{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
 
     <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'icon.svg' %}">
     <link rel="icon" href="{% static 'favicon.ico' %}">
+    <link rel="manifest" href="{% static 'site.webmanifest' %}">
 
     {# Fuentes tipográficas del sistema de diseño #}
     <link rel="preconnect" href="https://fonts.googleapis.com">

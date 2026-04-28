@@ -1,0 +1,22 @@
+{
+    "name": "Ideas Boutique",
+    "short_name": "Ideas",
+    "description": "Boutique familiar de perfumes, uniformes escolares y moda en Los Vilos.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FBF8F3",
+    "theme_color": "#C9A96E",
+    "icons": [
+        {
+            "src": "/static/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "/static/img/ideas/logo-principal.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

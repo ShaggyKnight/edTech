@@ -29,6 +29,10 @@ env = environ.Env(
     WEBPAY_BASE_URL=(str, 'https://webpay3gint.transbank.cl'),
     DEFAULT_FROM_EMAIL=(str, 'ventas@ideas.local'),
     EMAIL_BACKEND=(str, 'django.core.mail.backends.console.EmailBackend'),
+    DTE_EMISSOR=(str, 'mock'),
+    OPENFACTURA_API_KEY=(str, ''),
+    OPENFACTURA_BASE_URL=(str, 'https://api.haulmer.com'),
+    OPENFACTURA_RUT_EMISOR=(str, ''),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -209,3 +213,10 @@ WEBPAY_BASE_URL = env('WEBPAY_BASE_URL')
 # Email (boleta al cliente online). Por defecto console backend en dev.
 EMAIL_BACKEND = env('EMAIL_BACKEND')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+
+# Emisión de boleta/factura electrónica al SII (DTE).
+# Opciones: mock | openfactura | none | ruta.modulo.ClaseEmissor
+DTE_EMISSOR = env('DTE_EMISSOR')
+OPENFACTURA_API_KEY = env('OPENFACTURA_API_KEY')
+OPENFACTURA_BASE_URL = env('OPENFACTURA_BASE_URL')
+OPENFACTURA_RUT_EMISOR = env('OPENFACTURA_RUT_EMISOR')

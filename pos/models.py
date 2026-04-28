@@ -72,6 +72,10 @@ class ReciboVenta(models.Model):
     )
     dte_folio = models.CharField(max_length=50, blank=True)
     dte_timbre_xml = models.TextField(blank=True)
+    dte_url_pdf = models.URLField(
+        blank=True,
+        help_text='URL al PDF de la boleta/factura emitido por el servicio (p.ej. OpenFactura)',
+    )
 
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)

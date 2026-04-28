@@ -240,6 +240,13 @@ def _aplicar_resultado(recibo: ReciboVenta, result: PaymentResult) -> ReciboVent
     from contabilidad.services import registrar_ingreso_venta
     registrar_ingreso_venta(recibo)
 
+    # Emisión de DTE (boleta electrónica al SII). Idempotente y best-effort:
+    # si el emisor falla, la venta queda pagada y el dueño puede reemitir
+    # manualmente más tarde — preferimos no perder la venta por un fallo del
+    # servicio externo.
+    from pos.dte import emitir_si_corresponde
+    emitir_si_corresponde(recibo)
+
     return recibo
 
 

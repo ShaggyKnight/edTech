@@ -15,6 +15,9 @@ Subtotal:  ${{ recibo.subtotal }}
 
 Referencia de pago: {{ recibo.payment_reference }}
 Proveedor:          {{ recibo.payment_provider }}
-
+{% if recibo.dte_folio %}
+Boleta electrónica: Folio {{ recibo.dte_folio }}{% if recibo.dte_url_pdf %}
+Descargar PDF:      {{ recibo.dte_url_pdf }}{% endif %}
+{% endif %}
 Saludos,
 Ideas de Blanca

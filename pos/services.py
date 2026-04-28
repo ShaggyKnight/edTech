@@ -187,6 +187,12 @@ def procesar_venta(
     from contabilidad.services import registrar_ingreso_venta
     registrar_ingreso_venta(recibo, usuario=vendedor)
 
+    # 8. Emisión de DTE (boleta electrónica al SII). Idempotente y best-effort:
+    # si el servicio del emisor falla, la venta NO se rompe — el recibo queda
+    # pagado y se puede reemitir manual después.
+    from pos.dte import emitir_si_corresponde
+    emitir_si_corresponde(recibo)
+
     return recibo
 
 

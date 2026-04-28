@@ -22,7 +22,7 @@ from django.db import transaction
 from django.db.models import F, Q, Sum, Value
 from django.db.models.functions import Coalesce
 
-from bodega.models import StockTienda, Tienda
+from bodega.models import StockMaterial, StockTienda, Tienda
 from contabilidad.models import MovimientoCaja
 from pos.models import ReciboVenta
 
@@ -117,6 +117,12 @@ def resumen_caja(
 def valor_inventario(tienda: Optional[Tienda] = None) -> Decimal:
     """Suma `stock.cantidad × precio_costo` para valorizar el activo.
 
+    Incluye:
+      - Productos terminados en `StockTienda` (variantes y productos directos).
+      - Rollos de material en `StockMaterial` (a costo unitario de referencia).
+        Cuando se filtra por `tienda`, se incluyen los materiales en bodegas
+        que pertenecen a esa tienda (`Bodega.tienda`).
+
     Si una variante tiene `precio_override`, el costo sigue siendo el del
     producto padre (el override refiere al precio de venta, no al costo).
     """
@@ -140,4 +146,14 @@ def valor_inventario(tienda: Optional[Tienda] = None) -> Decimal:
         .aggregate(total=Coalesce(Sum('valor'), Value(Decimal('0'))))
     )['total']
     total += directos_valor
+
+    # Materiales en bodega (rollos) a costo unitario de referencia.
+    mats_qs = StockMaterial.objects.all()
+    if tienda is not None:
+        mats_qs = mats_qs.filter(bodega__tienda=tienda)
+    materiales_valor = mats_qs.annotate(
+        valor=F('cantidad') * F('material__costo_unitario_referencia'),
+    ).aggregate(total=Coalesce(Sum('valor'), Value(Decimal('0'))))['total']
+    total += materiales_valor
+
     return total

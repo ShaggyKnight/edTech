@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Producción · Capacidad de Bodega{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px;">
+    <h2>Capacidad de producción</h2>
+    <p class="text-muted">
+        Cuántas unidades se pueden confeccionar con la tela que tenés en bodega
+        y cuánto valdría a precio de venta.
+    </p>
+
+    <form method="get" class="form-inline" style="margin-bottom: 16px;">
+        <label>Bodega:</label>
+        <select name="bodega" class="form-control" onchange="this.form.submit()">
+            {% for b in bodegas %}
+                <option value="{{ b.pk }}" {% if bodega and bodega.pk == b.pk %}selected{% endif %}>
+                    {{ b.nombre }}{% if b.tienda %} · {{ b.tienda.nombre_organizacion }}{% endif %}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if not bodega %}
+        <div class="alert alert-warning">
+            No hay bodegas creadas. Andá al
+            <a href="{% url 'admin:bodega_bodega_add' %}">admin</a> para crear una.
+        </div>
+    {% else %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading"><strong>Costo de materiales</strong></div>
+                <div class="panel-body">
+                    <h3>${{ resumen.valor_materiales|floatformat:0|intcomma }}</h3>
+                    <p class="text-muted">A costo unitario de referencia</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-success">
+                <div class="panel-heading"><strong>Valor potencial de producción</strong></div>
+                <div class="panel-body">
+                    <h3>${{ resumen.valor_potencial_total|floatformat:0|intcomma }}</h3>
+                    <p class="text-muted">Si confeccionás y vendés todo lo que la tela permite</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading"><strong>Bodega</strong></div>
+                <div class="panel-body">
+                    <h4>{{ bodega.nombre }}</h4>
+                    {% if bodega.tienda %}<p>{{ bodega.tienda.nombre_organizacion }}</p>{% endif %}
+                    {% if bodega.ubicacion %}<p class="text-muted">{{ bodega.ubicacion }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Capacidad por variante</h3>
+    {% if resumen.capacidades %}
+    <table class="table table-bordered table-condensed">
+        <thead>
+            <tr>
+                <th>Variante</th>
+                <th>Material</th>
+                <th class="text-right">Rollos en bodega</th>
+                <th class="text-right">U/rollo</th>
+                <th class="text-right">Capacidad</th>
+                <th class="text-right">Precio venta</th>
+                <th class="text-right">Valor potencial</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in resumen.capacidades %}
+            <tr {% if c.capacidad == 0 %}class="warning"{% endif %}>
+                <td>{{ c.variante_label }}</td>
+                <td>{{ c.material_nombre }}</td>
+                <td class="text-right">{{ c.rollos_disponibles }}</td>
+                <td class="text-right">{{ c.unidades_por_rollo }}</td>
+                <td class="text-right"><strong>{{ c.capacidad }}</strong></td>
+                <td class="text-right">${{ c.precio_venta|floatformat:0|intcomma }}</td>
+                <td class="text-right">${{ c.valor_potencial|floatformat:0|intcomma }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info">
+        No hay rendimientos configurados. Definí en el
+        <a href="{% url 'admin:bodega_rendimiento_add' %}">admin</a>
+        cuántas unidades de cada variante salen de un rollo de cada material.
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

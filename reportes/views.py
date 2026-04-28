@@ -15,7 +15,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from accounts.roles import ADMIN, user_in_role
-from bodega.models import Tienda
+from bodega.models import Bodega, Tienda
+from bodega.services import resumen_produccion
 from contabilidad.models import MovimientoCaja
 from contabilidad.services import registrar_salida, resumen_caja
 
@@ -96,4 +97,30 @@ def caja(request):
         'resumen': resumen,
         'tiendas': Tienda.objects.filter(activa=True).order_by('nombre_organizacion'),
         'tienda_filtro': tienda,
+    })
+
+
+@login_required
+@admin_required
+def produccion(request):
+    """Capacidad de producción y valor potencial por bodega.
+
+    Muestra, para cada variante con `Rendimiento` configurado, cuántas
+    unidades se pueden producir hoy y cuánto valdrían a precio de venta.
+    """
+    bodega_id = request.GET.get('bodega')
+    bodegas = Bodega.objects.select_related('tienda').order_by('nombre')
+
+    bodega = None
+    if bodega_id:
+        bodega = bodegas.filter(pk=bodega_id).first()
+    if bodega is None:
+        bodega = bodegas.first()
+
+    resumen = resumen_produccion(bodega) if bodega else None
+
+    return render(request, 'reportes/produccion.html', {
+        'bodegas': bodegas,
+        'bodega': bodega,
+        'resumen': resumen,
     })

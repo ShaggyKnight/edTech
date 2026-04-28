@@ -5,8 +5,11 @@ from .models import (
     Inventario,
     InventarioLinea,
     Material,
+    MovimientoMaterial,
     MovimientoStock,
     Proveedor,
+    Rendimiento,
+    StockMaterial,
     StockTienda,
     Tienda,
 )
@@ -34,9 +37,32 @@ class ProveedorAdmin(admin.ModelAdmin):
 
 @admin.register(Material)
 class MaterialAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'producto', 'proveedor', 'precio', 'comerciable']
-    list_filter = ['comerciable', 'proveedor']
+    list_display = ['nombre', 'descripcion', 'proveedor', 'costo_unitario_referencia', 'activo']
+    list_filter = ['activo', 'proveedor']
     search_fields = ['nombre', 'descripcion']
+
+
+@admin.register(StockMaterial)
+class StockMaterialAdmin(admin.ModelAdmin):
+    list_display = ['bodega', 'material', 'cantidad', 'modificado']
+    list_filter = ['bodega']
+    search_fields = ['material__nombre', 'bodega__nombre']
+    readonly_fields = ['creado', 'modificado']
+
+
+@admin.register(MovimientoMaterial)
+class MovimientoMaterialAdmin(admin.ModelAdmin):
+    list_display = ['creado', 'bodega', 'tipo', 'material', 'cantidad', 'costo_total', 'usuario']
+    list_filter = ['tipo', 'bodega', 'material']
+    search_fields = ['referencia', 'material__nombre']
+    readonly_fields = ['creado']
+
+
+@admin.register(Rendimiento)
+class RendimientoAdmin(admin.ModelAdmin):
+    list_display = ['material', 'variante', 'unidades_por_rollo']
+    list_filter = ['material']
+    search_fields = ['material__nombre', 'variante__sku', 'variante__producto__nombre']
 
 
 @admin.register(StockTienda)

@@ -61,19 +61,24 @@ class Proveedor(models.Model):
 
 
 class Material(models.Model):
-    """Materia prima / insumo para elaborar un producto."""
-    producto = models.ForeignKey(
-        'catalogo.Producto', on_delete=models.CASCADE, related_name='materiales'
-    )
-    proveedor = models.ForeignKey(
-        Proveedor, on_delete=models.SET_NULL, null=True, blank=True, related_name='materiales'
-    )
-    nombre = models.CharField(max_length=60)
+    """Materia prima (rollo de tela) que se compra a un proveedor y se consume
+    al producir prendas terminadas.
+
+    Unidad: rollo (entero). Una compra registra cantidad + costo total real
+    pagado — el costo unitario varía con el peso del rollo, así que se guarda
+    en cada compra (MovimientoMaterial) y aquí queda solo como referencia.
+    """
+    nombre = models.CharField(max_length=80, unique=True)
     descripcion = models.CharField(max_length=200, blank=True)
-    precio = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    precio_proveedor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    largo = models.PositiveIntegerField(default=0, null=True, blank=True)
-    comerciable = models.BooleanField(default=False)
+    proveedor = models.ForeignKey(
+        Proveedor, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='materiales',
+    )
+    costo_unitario_referencia = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        help_text='Costo aproximado por rollo, en CLP. El costo real de cada compra se guarda en MovimientoMaterial.',
+    )
+    activo = models.BooleanField(default=True)
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)
 
@@ -81,7 +86,7 @@ class Material(models.Model):
         ordering = ['nombre']
 
     def __str__(self):
-        return f'{self.nombre} - {self.descripcion}'
+        return self.nombre
 
 
 class StockTienda(models.Model):
@@ -168,6 +173,100 @@ class InventarioLinea(models.Model):
                 name='inventariolinea_variante_xor_producto',
             ),
         ]
+
+
+class Rendimiento(models.Model):
+    """Cuántas unidades de una variante se obtienen de un rollo de material.
+
+    Ejemplo: "Rollo de fleece azul SFJ" + "Buzo SFJ talla M" = 50 unidades.
+              "Rollo de fleece azul SFJ" + "Buzo SFJ talla XL" = 35 unidades.
+
+    Si una variante no tiene fila de Rendimiento, no se puede calcular su
+    capacidad de producción y queda fuera del reporte (informa explícitamente).
+
+    Una variante usa **un solo material** (la tela del producto). Los
+    accesorios (cuellos, puños, hilo) los compra el confeccionista y se
+    pagan dentro del costo de confección, no se modelan acá.
+    """
+    material = models.ForeignKey(Material, on_delete=models.CASCADE, related_name='rendimientos')
+    variante = models.ForeignKey(
+        'catalogo.ProductoVariante',
+        on_delete=models.CASCADE,
+        related_name='rendimientos',
+    )
+    unidades_por_rollo = models.PositiveIntegerField(
+        help_text='Cuántas unidades de esta variante salen de un rollo (después de cortar). '
+                  'Tallas grandes consumen más tela, así que el número baja.',
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [('material', 'variante')]
+        ordering = ['material__nombre', 'variante__sku']
+
+    def __str__(self):
+        return f'{self.variante} ← {self.unidades_por_rollo} u/rollo de {self.material}'
+
+
+class StockMaterial(models.Model):
+    """Stock de rollos de un material en una bodega específica.
+
+    Análogo a `StockTienda` pero para materias primas. Se actualiza vía
+    `bodega.services.comprar_material` (entrada) y
+    `bodega.services.recibir_lote` (salida al confeccionarse productos).
+    """
+    bodega = models.ForeignKey(Bodega, on_delete=models.CASCADE, related_name='stock_materiales')
+    material = models.ForeignKey(Material, on_delete=models.PROTECT, related_name='stock_bodegas')
+    cantidad = models.PositiveIntegerField(default=0, help_text='Rollos disponibles')
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [('bodega', 'material')]
+        ordering = ['bodega__nombre', 'material__nombre']
+
+    def __str__(self):
+        return f'{self.bodega} · {self.material} · {self.cantidad} rollos'
+
+
+class MovimientoMaterial(models.Model):
+    """Audit log de cambios de stock de materiales en una bodega.
+
+    - ENTRADA: compra de rollos al proveedor. Lleva `costo_total` real pagado.
+    - SALIDA: rollos enviados a confeccionar (consumidos para producir prendas).
+    """
+
+    ENTRADA = 'entrada'
+    SALIDA = 'salida'
+    TIPO_CHOICES = [
+        (ENTRADA, 'Entrada'),
+        (SALIDA, 'Salida'),
+    ]
+
+    bodega = models.ForeignKey(Bodega, on_delete=models.PROTECT, related_name='movimientos_material')
+    material = models.ForeignKey(Material, on_delete=models.PROTECT, related_name='movimientos')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    cantidad = models.PositiveIntegerField(help_text='Rollos')
+    costo_total = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+        help_text='CLP total pagado/movido. En entradas = compra; en salidas = 0 (la plata sale al pagar la confección, no acá).',
+    )
+    referencia = models.CharField(max_length=120, blank=True, help_text='Descripción libre (proveedor, factura, lote, etc)')
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='movimientos_material',
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado']
+
+    def __str__(self):
+        return f'{self.creado:%d-%m-%Y} · {self.tipo} · {self.cantidad} × {self.material}'
 
 
 class MovimientoStock(models.Model):

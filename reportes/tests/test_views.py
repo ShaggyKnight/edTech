@@ -73,3 +73,44 @@ class CajaViewTests(TestCase):
             tipo=MovimientoCaja.SALIDA, monto=Decimal('50000'),
             concepto='Arriendo abril',
         ).exists())
+
+
+class ProduccionViewTests(TestCase):
+    """Smoke de /reportes/produccion/ (Fase K)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from bodega.models import Bodega, Material, Rendimiento, StockMaterial
+        from catalogo.models import Familia, Producto, ProductoVariante
+
+        cls.admin = User.objects.create_superuser('an', 'a@a.cl', 'x')
+        cls.tienda = Tienda.objects.create(nombre_organizacion='LV', activa=True)
+        cls.bodega = Bodega.objects.create(tienda=cls.tienda, nombre='B-LV')
+        material = Material.objects.create(
+            nombre='Tela buzo', costo_unitario_referencia=Decimal('40000'),
+        )
+        fam = Familia.objects.create(nombre='Uniformes')
+        prod = Producto.objects.create(
+            familia=fam, nombre='Buzo SFJ',
+            precio_base=Decimal('30000'), tiene_variantes=True,
+        )
+        var = ProductoVariante.objects.create(producto=prod, sku='BZ-M')
+        Rendimiento.objects.create(material=material, variante=var, unidades_por_rollo=50)
+        StockMaterial.objects.create(bodega=cls.bodega, material=material, cantidad=4)
+
+    def test_admin_ve_capacidad(self):
+        self.client.force_login(self.admin)
+        resp = self.client.get(reverse('reportes:produccion'))
+        self.assertEqual(resp.status_code, 200)
+        # 4 rollos × 50 u/rollo = 200 unidades
+        self.assertContains(resp, '200')
+        # Valor potencial = 200 × $30.000 = $6.000.000 → '6.000.000' con intcomma
+        self.assertContains(resp, '6.000.000')
+        # Costo materiales = 4 × $40.000 = $160.000
+        self.assertContains(resp, '160.000')
+
+    def test_no_admin_rebota(self):
+        User.objects.create_user('cli', password='x')
+        self.client.login(username='cli', password='x')
+        resp = self.client.get(reverse('reportes:produccion'))
+        self.assertEqual(resp.status_code, 302)

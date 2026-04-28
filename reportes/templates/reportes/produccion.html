@@ -4,98 +4,105 @@
 {% block titulo %}Producción · Capacidad de Bodega{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px;">
-    <h2>Capacidad de producción</h2>
-    <p class="text-muted">
-        Cuántas unidades se pueden confeccionar con la tela que tenés en bodega
-        y cuánto valdría a precio de venta.
-    </p>
-
-    <form method="get" class="form-inline" style="margin-bottom: 16px;">
-        <label>Bodega:</label>
-        <select name="bodega" class="form-control" onchange="this.form.submit()">
-            {% for b in bodegas %}
-                <option value="{{ b.pk }}" {% if bodega and bodega.pk == b.pk %}selected{% endif %}>
-                    {{ b.nombre }}{% if b.tienda %} · {{ b.tienda.nombre_organizacion }}{% endif %}
-                </option>
-            {% endfor %}
-        </select>
-    </form>
-
-    {% if not bodega %}
-        <div class="alert alert-warning">
-            No hay bodegas creadas. Andá al
-            <a href="{% url 'admin:bodega_bodega_add' %}">admin</a> para crear una.
-        </div>
-    {% else %}
-
-    <div class="row">
-        <div class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading"><strong>Costo de materiales</strong></div>
-                <div class="panel-body">
-                    <h3>${{ resumen.valor_materiales|floatformat:0|intcomma }}</h3>
-                    <p class="text-muted">A costo unitario de referencia</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="panel panel-success">
-                <div class="panel-heading"><strong>Valor potencial de producción</strong></div>
-                <div class="panel-body">
-                    <h3>${{ resumen.valor_potencial_total|floatformat:0|intcomma }}</h3>
-                    <p class="text-muted">Si confeccionás y vendés todo lo que la tela permite</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="panel panel-info">
-                <div class="panel-heading"><strong>Bodega</strong></div>
-                <div class="panel-body">
-                    <h4>{{ bodega.nombre }}</h4>
-                    {% if bodega.tienda %}<p>{{ bodega.tienda.nombre_organizacion }}</p>{% endif %}
-                    {% if bodega.ubicacion %}<p class="text-muted">{{ bodega.ubicacion }}</p>{% endif %}
-                </div>
-            </div>
-        </div>
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Reportes / Producción</div>
+      <h1>Capacidad de producción</h1>
+      <div class="sub">
+        Cuántas unidades se pueden confeccionar con la tela en bodega y cuánto valdría a precio de venta.
+      </div>
     </div>
 
-    <h3>Capacidad por variante</h3>
+    <form method="get" class="bo-form-inline">
+      <div class="bo-field">
+        <label>Bodega</label>
+        <select name="bodega" class="bo-select" onchange="this.form.submit()">
+          {% for b in bodegas %}
+            <option value="{{ b.pk }}" {% if bodega and bodega.pk == b.pk %}selected{% endif %}>
+              {{ b.nombre }}{% if b.tienda %} · {{ b.tienda.nombre_organizacion }}{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+
+  {% if not bodega %}
+    <div class="bo-alert bo-alert-warning">
+      No hay bodegas creadas. Andá al
+      <a href="{% url 'admin:bodega_bodega_add' %}" style="color:inherit;font-weight:600;">admin</a>
+      para crear una.
+    </div>
+  {% else %}
+
+  <div class="bo-grid cols-3" style="margin-bottom:20px;">
+    <div class="bo-card bo-kpi">
+      <div class="label">Costo de materiales</div>
+      <div class="value">${{ resumen.valor_materiales|floatformat:0|intcomma }}</div>
+      <div class="sub">A costo unitario de referencia</div>
+    </div>
+    <div class="bo-card bo-kpi is-success">
+      <div class="label">Valor potencial</div>
+      <div class="value">${{ resumen.valor_potencial_total|floatformat:0|intcomma }}</div>
+      <div class="sub">Si confeccionás y vendés todo lo que la tela permite</div>
+    </div>
+    <div class="bo-card bo-kpi is-gold">
+      <div class="label">Bodega activa</div>
+      <div class="value" style="font-size:22px;">{{ bodega.nombre }}</div>
+      <div class="sub">
+        {% if bodega.tienda %}{{ bodega.tienda.nombre_organizacion }}{% endif %}
+        {% if bodega.ubicacion %} · {{ bodega.ubicacion }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="bo-card">
+    <div class="bo-card-head">
+      <h3>Capacidad por variante</h3>
+    </div>
     {% if resumen.capacidades %}
-    <table class="table table-bordered table-condensed">
+      <table class="bo-table">
         <thead>
-            <tr>
-                <th>Variante</th>
-                <th>Material</th>
-                <th class="text-right">Rollos en bodega</th>
-                <th class="text-right">U/rollo</th>
-                <th class="text-right">Capacidad</th>
-                <th class="text-right">Precio venta</th>
-                <th class="text-right">Valor potencial</th>
-            </tr>
+          <tr>
+            <th>Variante</th>
+            <th>Material</th>
+            <th class="num">Rollos</th>
+            <th class="num">U/rollo</th>
+            <th class="num">Capacidad</th>
+            <th class="num">Precio venta</th>
+            <th class="num">Valor potencial</th>
+          </tr>
         </thead>
         <tbody>
-            {% for c in resumen.capacidades %}
-            <tr {% if c.capacidad == 0 %}class="warning"{% endif %}>
-                <td>{{ c.variante_label }}</td>
-                <td>{{ c.material_nombre }}</td>
-                <td class="text-right">{{ c.rollos_disponibles }}</td>
-                <td class="text-right">{{ c.unidades_por_rollo }}</td>
-                <td class="text-right"><strong>{{ c.capacidad }}</strong></td>
-                <td class="text-right">${{ c.precio_venta|floatformat:0|intcomma }}</td>
-                <td class="text-right">${{ c.valor_potencial|floatformat:0|intcomma }}</td>
+          {% for c in resumen.capacidades %}
+            <tr>
+              <td>{{ c.variante_label }}</td>
+              <td>{{ c.material_nombre }}</td>
+              <td class="num">{{ c.rollos_disponibles }}</td>
+              <td class="num">{{ c.unidades_por_rollo }}</td>
+              <td class="num">
+                {% if c.capacidad == 0 %}
+                  <span class="bo-badge bo-badge-warning">{{ c.capacidad }}</span>
+                {% else %}
+                  <strong>{{ c.capacidad }}</strong>
+                {% endif %}
+              </td>
+              <td class="num">${{ c.precio_venta|floatformat:0|intcomma }}</td>
+              <td class="num"><strong>${{ c.valor_potencial|floatformat:0|intcomma }}</strong></td>
             </tr>
-            {% endfor %}
+          {% endfor %}
         </tbody>
-    </table>
+      </table>
     {% else %}
-    <div class="alert alert-info">
-        No hay rendimientos configurados. Definí en el
-        <a href="{% url 'admin:bodega_rendimiento_add' %}">admin</a>
-        cuántas unidades de cada variante salen de un rollo de cada material.
-    </div>
+      <div class="bo-card-body">
+        <div class="bo-alert bo-alert-info" style="margin:0;">
+          No hay rendimientos configurados. Definí en el
+          <a href="{% url 'admin:bodega_rendimiento_add' %}" style="color:inherit;font-weight:600;">admin</a>
+          cuántas unidades de cada variante salen de un rollo de cada material.
+        </div>
+      </div>
     {% endif %}
+  </div>
 
-    {% endif %}
-</div>
+  {% endif %}
 {% endblock %}

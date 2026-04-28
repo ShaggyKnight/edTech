@@ -1,105 +1,121 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block titulo %}Caja{% endblock %}
+{% block titulo %}Caja · Ideas Boutique{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px;">
-    <h2>Movimientos de caja</h2>
-
-    {% if messages %}
-      {% for m in messages %}
-        <div class="alert alert-{{ m.tags|default:'info' }}">{{ m }}</div>
-      {% endfor %}
-    {% endif %}
-
-    <div class="row">
-        <div class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading"><strong>Saldo acumulado</strong></div>
-                <div class="panel-body">
-                    <p>Entradas: <strong>${{ resumen.entradas }}</strong></p>
-                    <p>Salidas: <strong>${{ resumen.salidas }}</strong></p>
-                    <hr>
-                    <h4>Saldo: ${{ resumen.saldo }}</h4>
-                </div>
-            </div>
-
-            <div class="panel panel-warning">
-                <div class="panel-heading"><strong>Registrar salida</strong></div>
-                <div class="panel-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        {% if form.non_field_errors %}
-                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-                        {% endif %}
-                        {% for field in form %}
-                            <div class="form-group">
-                                <label>{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.help_text %}<small class="text-muted">{{ field.help_text }}</small>{% endif %}
-                                {% if field.errors %}<div class="text-danger">{{ field.errors }}</div>{% endif %}
-                            </div>
-                        {% endfor %}
-                        <button type="submit" class="btn btn-warning">Registrar</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-8">
-            <form method="get" class="form-inline" style="margin-bottom: 10px;">
-                <div class="form-group">
-                    <label>Tienda</label>
-                    <select name="tienda" class="form-control">
-                        <option value="">Todas</option>
-                        {% for t in tiendas %}
-                            <option value="{{ t.pk }}" {% if tienda_filtro and tienda_filtro.pk == t.pk %}selected{% endif %}>
-                                {{ t.nombre_organizacion }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-default">Filtrar</button>
-                <a href="{% url 'reportes:dashboard' %}" class="btn btn-link">Volver al dashboard</a>
-            </form>
-
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Tienda</th>
-                        <th>Tipo</th>
-                        <th>Concepto</th>
-                        <th class="text-right">Monto</th>
-                        <th>Usuario</th>
-                        <th>Recibo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for m in movimientos %}
-                    <tr>
-                        <td>{{ m.fecha|date:"d-m-Y H:i" }}</td>
-                        <td>{{ m.tienda.nombre_organizacion }}</td>
-                        <td>
-                            <span class="label label-{% if m.tipo == 'entrada' %}success{% else %}warning{% endif %}">
-                                {{ m.get_tipo_display }}
-                            </span>
-                        </td>
-                        <td>{{ m.concepto }}</td>
-                        <td class="text-right">${{ m.monto }}</td>
-                        <td>{{ m.usuario|default:"—" }}</td>
-                        <td>
-                            {% if m.recibo_venta %}
-                                <a href="{% url 'pos:recibo' m.recibo_venta.pk %}">#{{ m.recibo_venta.pk }}</a>
-                            {% else %}—{% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="7" class="text-center">Sin movimientos aún.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Reportes / Caja</div>
+      <h1>Movimientos de caja</h1>
+      <div class="sub">Entradas y salidas registradas en el período</div>
     </div>
-</div>
+
+    <form method="get" class="bo-form-inline">
+      <div class="bo-field">
+        <label>Tienda</label>
+        <select name="tienda" class="bo-select">
+          <option value="">Todas</option>
+          {% for t in tiendas %}
+            <option value="{{ t.pk }}" {% if tienda_filtro and tienda_filtro.pk == t.pk %}selected{% endif %}>
+              {{ t.nombre_organizacion }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="bo-btn">Filtrar</button>
+    </form>
+  </div>
+
+  <div class="bo-grid cols-3" style="margin-bottom:20px;">
+    <div class="bo-card bo-kpi is-success">
+      <div class="label">Entradas</div>
+      <div class="value">${{ resumen.entradas|floatformat:0|intcomma }}</div>
+    </div>
+    <div class="bo-card bo-kpi is-danger">
+      <div class="label">Salidas</div>
+      <div class="value">${{ resumen.salidas|floatformat:0|intcomma }}</div>
+    </div>
+    <div class="bo-card bo-kpi is-primary">
+      <div class="label">Saldo</div>
+      <div class="value">${{ resumen.saldo|floatformat:0|intcomma }}</div>
+    </div>
+  </div>
+
+  <div class="bo-grid cols-2" style="grid-template-columns: 1fr 2fr;">
+    {# ─── Form de salida manual ─── #}
+    <div class="bo-card">
+      <div class="bo-card-head">
+        <h3>Registrar salida manual</h3>
+      </div>
+      <div class="bo-card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+            <div class="bo-alert bo-alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+          {% for field in form %}
+            <div class="bo-field">
+              <label>{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <small style="color:var(--bo-muted);font-size:12px;">{{ field.help_text }}</small>
+              {% endif %}
+              {% if field.errors %}
+                <div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+          <button type="submit" class="bo-btn bo-btn-primary">Registrar</button>
+        </form>
+      </div>
+    </div>
+
+    {# ─── Tabla de movimientos ─── #}
+    <div class="bo-card">
+      <div class="bo-card-head">
+        <h3>Últimos movimientos ({{ movimientos|length }})</h3>
+      </div>
+      {% if movimientos %}
+        <table class="bo-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tienda</th>
+              <th>Tipo</th>
+              <th>Concepto</th>
+              <th class="num">Monto</th>
+              <th>Usuario</th>
+              <th>Recibo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in movimientos %}
+              <tr>
+                <td>{{ m.fecha|date:"d-m-Y H:i" }}</td>
+                <td>{{ m.tienda.nombre_organizacion }}</td>
+                <td>
+                  {% if m.tipo == 'entrada' %}
+                    <span class="bo-badge bo-badge-success">{{ m.get_tipo_display }}</span>
+                  {% else %}
+                    <span class="bo-badge bo-badge-warning">{{ m.get_tipo_display }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ m.concepto }}</td>
+                <td class="num">${{ m.monto|floatformat:0|intcomma }}</td>
+                <td>{{ m.usuario|default:"—" }}</td>
+                <td>
+                  {% if m.recibo_venta %}
+                    <a href="{% url 'pos:recibo' m.recibo_venta.pk %}" style="color:var(--bo-primary);">#{{ m.recibo_venta.pk }}</a>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="bo-card-body" style="color:var(--bo-muted);">Sin movimientos aún.</div>
+      {% endif %}
+    </div>
+  </div>
 {% endblock %}

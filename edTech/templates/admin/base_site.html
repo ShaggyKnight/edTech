@@ -6,73 +6,48 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-  /* Override Django admin colors con paleta boutique (Fase M).
-     Mantenemos la estructura del admin tal cual y solo retocamos colores +
-     branding para que sea coherente con el backoffice nuevo. */
-  :root {
-    --primary: #1E2129;       /* sidebar dark */
-    --secondary: #1E2129;
-    --accent: #C9A96E;        /* dorado boutique */
-    --header-bg: #1E2129;
-    --header-color: #FFFFFF;
-    --header-link-color: #C9A96E;
-    --link-fg: #1B84FF;
-    --link-hover-color: #1567CC;
-    --link-selected-fg: #C9A96E;
-    --button-bg: #1B84FF;
-    --button-hover-bg: #1567CC;
-    --button-fg: #FFFFFF;
-    --default-button-bg: #1B84FF;
-    --default-button-hover-bg: #1567CC;
-    --close-button-bg: #71717A;
-    --close-button-hover-bg: #52525B;
-    --delete-button-bg: #F8285A;
-    --delete-button-hover-bg: #D9143F;
-    --object-tools-bg: #1B84FF;
-    --object-tools-hover-bg: #1567CC;
-    --body-quiet-color: #71717A;
-    --body-loud-color: #18181B;
-    --darkened-bg: #FAFAFA;
-    --selected-bg: #FFF8DD;
-    --selected-row: #FFF8DD;
-  }
+  /* Override mínimo del Django admin (Fase M.1).
+     Solo retocamos header + breadcrumb + branding para coherencia con el
+     backoffice nuevo. Todo lo demás (tablas, formularios, módulos,
+     botones) queda con los defaults de Django para no comprometer la
+     legibilidad ni cambiar el comportamiento conocido del admin. */
   body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+
   #header {
-    background: var(--header-bg);
-    color: var(--header-color);
+    background: #1E2129;
+    color: #FFFFFF;
     padding: 14px 28px;
   }
   #branding h1 {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 22px; font-style: italic;
-    color: var(--header-link-color);
+    font-size: 22px;
+    font-style: italic;
+    color: #C9A96E;
   }
-  #branding h1 a:link, #branding h1 a:visited {
-    color: var(--header-link-color);
+  #branding h1 a:link,
+  #branding h1 a:visited {
+    color: #C9A96E;
+  }
+  #user-tools a:link,
+  #user-tools a:visited {
+    color: #C9A96E;
+    border-bottom: none;
+  }
+  #user-tools a:hover {
+    color: #FFFFFF;
   }
   div.breadcrumbs {
-    background: #2A2D36; color: #B7B9C5;
-    padding: 10px 28px; font-size: 13px;
+    background: #2A2D36;
+    color: #B7B9C5;
+    padding: 10px 28px;
+    font-size: 13px;
   }
-  div.breadcrumbs a { color: var(--accent); }
-  .module h2, .module caption, .inline-group h2 {
-    background: #1E2129;
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    font-size: 12px;
-    text-transform: uppercase;
+  div.breadcrumbs a {
+    color: #C9A96E;
   }
-  .button, input[type=submit], input[type=button], .submit-row input {
-    border-radius: 8px;
-    font-weight: 500;
-    padding: 9px 16px;
+  div.breadcrumbs a:hover {
+    color: #FFFFFF;
   }
-  .object-tools a:link, .object-tools a:visited {
-    border-radius: 8px;
-    font-weight: 500;
-  }
-  table thead th { font-weight: 600; }
 </style>
 {% endblock %}
 
@@ -82,12 +57,10 @@
 </h1>
 {% endblock %}
 
-{% block nav-global %}{% endblock %}
-
 {% block userlinks %}
 {% if site_url %}
-  <a href="{{ site_url }}" style="color:#C9A96E;">Sitio público</a> /
+  <a href="{{ site_url }}">Sitio público</a> /
 {% endif %}
-<a href="{% url 'reportes:dashboard' %}" style="color:#C9A96E;">Backoffice</a> /
+<a href="{% url 'reportes:dashboard' %}">Backoffice</a> /
 {{ block.super }}
 {% endblock %}

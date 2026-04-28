@@ -1,12 +1,22 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Sin acceso - Ideas 2.0{% endblock %}
+{% block titulo %}Sin acceso · Ideas Boutique{% endblock %}
 
 {% block content %}
-<div class="container" style="margin-top: 60px;">
-    <h2>Tu cuenta no tiene un rol asignado</h2>
-    <p>Pídele al administrador que te asigne al grupo <code>cajero</code>,
-       <code>bodeguero</code> o <code>admin</code> para acceder al sistema.</p>
-    <p><a href="{% url 'logout' %}">Cerrar sesión</a></p>
-</div>
+  <div class="bo-card" style="max-width: 600px; margin: 40px auto;">
+    <div class="bo-card-body">
+      <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:28px; margin: 0 0 12px;">
+        Tu cuenta no tiene un rol asignado
+      </h1>
+      <p style="color: var(--bo-muted);">
+        Pedile al administrador que te asigne al grupo
+        <code>cajero</code>, <code>bodeguero</code> o <code>admin</code>
+        para acceder al sistema.
+      </p>
+      <form method="post" action="{% url 'logout' %}" style="margin-top: 16px;">
+        {% csrf_token %}
+        <button type="submit" class="bo-btn">Cerrar sesión</button>
+      </form>
+    </div>
+  </div>
 {% endblock %}

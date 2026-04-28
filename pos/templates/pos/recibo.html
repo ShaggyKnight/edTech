@@ -1,92 +1,115 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block titulo %}Recibo #{{ recibo.pk }}{% endblock %}
+{% block titulo %}Recibo #{{ recibo.pk }} · Ideas Boutique{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px;">
-    <div class="page-header">
-        <h2>
-            Recibo #{{ recibo.pk }}
-            <small>{{ recibo.creado|date:"d-m-Y H:i" }} · {{ recibo.tienda.nombre_organizacion }}</small>
-        </h2>
-        <span class="label label-{% if recibo.estado == 'pagado' %}success{% elif recibo.estado == 'fallido' %}danger{% else %}default{% endif %}">
-            {{ recibo.get_estado_display }}
-        </span>
-        <span class="label label-info">{{ recibo.get_canal_display }}</span>
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Operación / Ventas / Recibo #{{ recibo.pk }}</div>
+      <h1>Recibo #{{ recibo.pk }}</h1>
+      <div class="sub">
+        {{ recibo.creado|date:"d M Y · H:i" }} · {{ recibo.tienda.nombre_organizacion }}
+        {% if recibo.estado == 'pagado' %}
+          <span class="bo-badge bo-badge-success">{{ recibo.get_estado_display }}</span>
+        {% elif recibo.estado == 'fallido' %}
+          <span class="bo-badge bo-badge-danger">{{ recibo.get_estado_display }}</span>
+        {% else %}
+          <span class="bo-badge bo-badge-warning">{{ recibo.get_estado_display }}</span>
+        {% endif %}
+        <span class="bo-badge bo-badge-info">{{ recibo.get_canal_display }}</span>
+      </div>
     </div>
-
-    {% if recibo.cliente_nombre or recibo.cliente_email or recibo.cliente_rut %}
-    <div class="panel panel-default">
-        <div class="panel-heading">Cliente</div>
-        <div class="panel-body">
-            {% if recibo.cliente_nombre %}<strong>{{ recibo.cliente_nombre }}</strong><br>{% endif %}
-            {% if recibo.cliente_rut %}RUT: {{ recibo.cliente_rut }}<br>{% endif %}
-            {% if recibo.cliente_email %}Email: {{ recibo.cliente_email }}{% endif %}
-        </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-primary">+ Nueva venta</a>
+      <a href="{% url 'pos:ventas' %}" class="bo-btn">Ver ventas</a>
     </div>
-    {% endif %}
+  </div>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Descripción</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-right">Precio unit.</th>
-                <th class="text-right">Descuento</th>
-                <th class="text-right">Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for d in recibo.detalles.all %}
-            <tr>
-                <td>{{ d.descripcion }}</td>
-                <td class="text-center">{{ d.cantidad }}</td>
-                <td class="text-right">${{ d.precio_unitario }}</td>
-                <td class="text-right">{% if d.descuento %}-${{ d.descuento }}{% else %}—{% endif %}</td>
-                <td class="text-right">${{ d.subtotal }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="4" class="text-right">Subtotal</td>
-                <td class="text-right">${{ recibo.subtotal }}</td>
-            </tr>
-            {% if recibo.descuento %}
-            <tr>
-                <td colspan="4" class="text-right">Descuento</td>
-                <td class="text-right">-${{ recibo.descuento }}</td>
-            </tr>
-            {% endif %}
-            <tr>
-                <th colspan="4" class="text-right">TOTAL</th>
-                <th class="text-right"><h3>${{ recibo.total }}</h3></th>
-            </tr>
-        </tfoot>
+  {% if recibo.cliente_nombre or recibo.cliente_email or recibo.cliente_rut %}
+    <div class="bo-card" style="margin-bottom:20px;">
+      <div class="bo-card-head">
+        <h3>Cliente</h3>
+      </div>
+      <div class="bo-card-body">
+        {% if recibo.cliente_nombre %}<strong>{{ recibo.cliente_nombre }}</strong><br>{% endif %}
+        {% if recibo.cliente_rut %}<span style="color:var(--bo-muted);">RUT:</span> {{ recibo.cliente_rut }}<br>{% endif %}
+        {% if recibo.cliente_email %}<span style="color:var(--bo-muted);">Email:</span> {{ recibo.cliente_email }}{% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-head"><h3>Detalle</h3></div>
+    <table class="bo-table">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th class="num">Cantidad</th>
+          <th class="num">Precio unit.</th>
+          <th class="num">Descuento</th>
+          <th class="num">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in recibo.detalles.all %}
+          <tr>
+            <td>{{ d.descripcion }}</td>
+            <td class="num">{{ d.cantidad }}</td>
+            <td class="num">${{ d.precio_unitario|floatformat:0|intcomma }}</td>
+            <td class="num">
+              {% if d.descuento %}<span style="color:var(--bo-vino);">-${{ d.descuento|floatformat:0|intcomma }}</span>{% else %}—{% endif %}
+            </td>
+            <td class="num"><strong>${{ d.subtotal|floatformat:0|intcomma }}</strong></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="num" style="border-top:1px solid var(--bo-border);">Subtotal</td>
+          <td class="num" style="border-top:1px solid var(--bo-border);">${{ recibo.subtotal|floatformat:0|intcomma }}</td>
+        </tr>
+        {% if recibo.descuento %}
+          <tr>
+            <td colspan="4" class="num">Descuento</td>
+            <td class="num" style="color:var(--bo-vino);">-${{ recibo.descuento|floatformat:0|intcomma }}</td>
+          </tr>
+        {% endif %}
+        <tr>
+          <td colspan="4" class="num" style="font-size:18px;font-weight:600;border-top:2px solid var(--bo-text);">TOTAL</td>
+          <td class="num" style="font-size:24px;font-weight:700;border-top:2px solid var(--bo-text);">${{ recibo.total|floatformat:0|intcomma }}</td>
+        </tr>
+      </tfoot>
     </table>
+  </div>
 
-    <div class="row">
-        <div class="col-sm-6">
-            <strong>Pago</strong><br>
-            {% if recibo.payment_provider %}Proveedor: <code>{{ recibo.payment_provider }}</code><br>{% endif %}
-            {% if recibo.payment_reference %}Referencia: <code>{{ recibo.payment_reference }}</code><br>{% endif %}
-        </div>
-        <div class="col-sm-6">
-            {% if recibo.dte_tipo %}
-                <strong>DTE</strong><br>
-                Tipo: {{ recibo.dte_tipo }}<br>
-                {% if recibo.dte_folio %}Folio: {{ recibo.dte_folio }}{% endif %}
-            {% endif %}
-        </div>
+  <div class="bo-grid cols-2">
+    <div class="bo-card">
+      <div class="bo-card-head"><h3>Pago</h3></div>
+      <div class="bo-card-body">
+        {% if recibo.payment_provider %}
+          <div style="margin-bottom:6px;"><span style="color:var(--bo-muted);">Proveedor:</span> <code>{{ recibo.payment_provider }}</code></div>
+        {% endif %}
+        {% if recibo.payment_reference %}
+          <div><span style="color:var(--bo-muted);">Referencia:</span> <code>{{ recibo.payment_reference }}</code></div>
+        {% else %}
+          <div style="color:var(--bo-muted);">Sin información de pago registrada.</div>
+        {% endif %}
+      </div>
     </div>
-
-    <div style="margin-top: 20px;">
-        <a href="{% url 'pos:home' %}" class="btn btn-primary">
-            <span class="glyphicon glyphicon-plus"></span> Nueva venta
-        </a>
-        <a href="{% url 'pos:ventas' %}" class="btn btn-default">
-            <span class="glyphicon glyphicon-list"></span> Ver ventas
-        </a>
+    <div class="bo-card">
+      <div class="bo-card-head"><h3>Documento tributario</h3></div>
+      <div class="bo-card-body">
+        {% if recibo.dte_folio %}
+          <div style="margin-bottom:6px;"><span style="color:var(--bo-muted);">Tipo:</span> {{ recibo.dte_tipo }} (boleta electrónica)</div>
+          <div><span style="color:var(--bo-muted);">Folio:</span> <strong>{{ recibo.dte_folio }}</strong></div>
+          {% if recibo.dte_url_pdf %}
+            <div style="margin-top:8px;"><a href="{{ recibo.dte_url_pdf }}" class="bo-btn bo-btn-sm" target="_blank">Descargar PDF</a></div>
+          {% endif %}
+        {% else %}
+          <div style="color:var(--bo-muted);">Sin DTE emitido aún.</div>
+        {% endif %}
+      </div>
     </div>
-</div>
+  </div>
 {% endblock %}

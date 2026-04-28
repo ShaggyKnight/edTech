@@ -24,14 +24,64 @@
 <body class="bo">
   {% include 'partials/_icons.html' %}
 
-  <div class="bo-shell">
-    {# ─────────── SIDEBAR ─────────── #}
-    <aside class="bo-side" id="boSide">
-      <div class="bo-side-brand">
-        <span class="name">Ideas</span>
-        <span class="sub">Boutique</span>
-      </div>
+  {# ─────────── TOPBAR GLOBAL (full width, oscura) ─────────── #}
+  <header class="bo-bar">
+    <button class="bo-top-burger" type="button" onclick="document.getElementById('boSide').classList.toggle('open')" aria-label="Menú" style="margin-right:12px;color:#fff;">
+      <svg class="ico" style="width:22px;height:22px;"><use href="#ico-menu"/></svg>
+    </button>
+    <a class="bo-bar-brand" href="{% if user.is_authenticated %}{% url 'reportes:dashboard' %}{% else %}{% url 'index' %}{% endif %}">
+      <span class="name">Ideas</span>
+      <span class="sub">Boutique</span>
+    </a>
 
+    <nav class="bo-bar-nav">
+      {% if user.is_authenticated %}
+        <a href="{% url 'index' %}">
+          <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg>
+          Sitio público
+        </a>
+        {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
+          <a href="{% url 'reportes:dashboard' %}" {% if request.resolver_match.namespace == 'reportes' %}class="active"{% endif %}>
+            Reportes
+          </a>
+        {% endif %}
+        {% if perms.pos.add_reciboventa or user.is_superuser %}
+          <a href="{% url 'pos:home' %}" {% if request.resolver_match.namespace == 'pos' %}class="active"{% endif %}>
+            POS
+          </a>
+        {% endif %}
+        {% if perms.bodega.view_stocktienda or user.is_superuser %}
+          <a href="{% url 'bodega:stock' %}" {% if request.resolver_match.namespace == 'bodega' %}class="active"{% endif %}>
+            Bodega
+          </a>
+        {% endif %}
+        {% if user.is_superuser %}
+          <a href="{% url 'admin:index' %}">
+            Admin Django
+          </a>
+        {% endif %}
+      {% endif %}
+    </nav>
+
+    <div class="bo-bar-actions">
+      {% if user.is_authenticated %}
+        <span class="bo-bar-user">
+          <span class="avatar">{{ user.username|slice:":1"|upper }}</span>
+          {{ user.first_name|default:user.username }}
+        </span>
+        <form method="post" action="{% url 'logout' %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="bo-bar-btn">Salir</button>
+        </form>
+      {% else %}
+        <a class="bo-bar-btn" href="{% url 'login' %}">Ingresar</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="bo-shell">
+    {# ─────────── SIDEBAR (secundaria, detalle) ─────────── #}
+    <aside class="bo-side" id="boSide">
       <nav class="bo-side-nav">
         {% if user.is_authenticated %}
           <div class="bo-side-section">Operación</div>
@@ -114,30 +164,6 @@
 
     {# ─────────── MAIN ─────────── #}
     <div class="bo-main">
-      <header class="bo-topbar">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="bo-top-burger" type="button" onclick="document.getElementById('boSide').classList.toggle('open')" aria-label="Menú">
-            <svg class="ico" style="width:22px;height:22px;"><use href="#ico-menu"/></svg>
-          </button>
-          <span class="bo-top-title">{% block topbar_titulo %}{% endblock %}</span>
-        </div>
-
-        <div class="bo-top-actions">
-          {% if user.is_authenticated %}
-            <span class="bo-top-user">
-              <span class="avatar">{{ user.username|slice:":1"|upper }}</span>
-              {{ user.first_name|default:user.username }}
-            </span>
-            <form method="post" action="{% url 'logout' %}" style="margin:0;">
-              {% csrf_token %}
-              <button type="submit" class="bo-btn bo-btn-sm">Salir</button>
-            </form>
-          {% else %}
-            <a class="bo-btn bo-btn-primary bo-btn-sm" href="{% url 'login' %}">Ingresar</a>
-          {% endif %}
-        </div>
-      </header>
-
       <main class="bo-content">
         {% if messages %}
           {% for m in messages %}

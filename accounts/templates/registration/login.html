@@ -1,37 +1,53 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Ingresar - Ideas 2.0{% endblock %}
+{% block titulo %}Ingresar · Ideas Boutique{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 420px; margin-top: 60px;">
-    <h2>Ingresar</h2>
+  <div class="bo-card" style="max-width: 420px; margin: 60px auto;">
+    <div class="bo-card-head">
+      <h3>Ingresar al backoffice</h3>
+    </div>
+    <div class="bo-card-body">
+      {% if form.non_field_errors %}
+        <div class="bo-alert bo-alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
 
-    {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-            {{ form.non_field_errors }}
-        </div>
-    {% endif %}
-
-    <form method="post" action="{% url 'login' %}">
+      <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
 
-        <div class="form-group">
-            <label for="id_username">Usuario</label>
-            <input type="text" name="username" id="id_username"
-                   class="form-control" autofocus required
-                   value="{{ form.username.value|default:'' }}">
-            {{ form.username.errors }}
+        <div class="bo-field">
+          <label for="id_username">Usuario</label>
+          <input type="text" name="username" id="id_username"
+                 class="bo-input" autofocus required
+                 value="{{ form.username.value|default:'' }}">
+          {% if form.username.errors %}
+            <div style="color: var(--bo-danger); font-size: 12px; margin-top: 4px;">
+              {{ form.username.errors|join:", " }}
+            </div>
+          {% endif %}
         </div>
 
-        <div class="form-group">
-            <label for="id_password">Contraseña</label>
-            <input type="password" name="password" id="id_password"
-                   class="form-control" required>
-            {{ form.password.errors }}
+        <div class="bo-field">
+          <label for="id_password">Contraseña</label>
+          <input type="password" name="password" id="id_password"
+                 class="bo-input" required>
+          {% if form.password.errors %}
+            <div style="color: var(--bo-danger); font-size: 12px; margin-top: 4px;">
+              {{ form.password.errors|join:", " }}
+            </div>
+          {% endif %}
         </div>
 
         <input type="hidden" name="next" value="{{ next }}">
-        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-    </form>
-</div>
+        <button type="submit" class="bo-btn bo-btn-primary" style="width: 100%; padding: 11px;">
+          Entrar
+        </button>
+      </form>
+
+      <p style="margin-top: 18px; text-align: center; color: var(--bo-muted); font-size: 13px;">
+        ¿Sos cliente? Tu acceso es por
+        <a href="{% url 'ecommerce:login' %}" style="color: var(--bo-primary); font-weight: 500;">acá</a>.
+      </p>
+    </div>
+  </div>
 {% endblock %}

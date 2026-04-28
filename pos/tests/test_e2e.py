@@ -77,7 +77,7 @@ class PosFlujoCompletoTests(TestCase):
         stock = StockTienda.objects.get(tienda=self.tienda, producto=self.producto)
         self.assertEqual(stock.cantidad, 8)
 
-        # listado de ventas.
+        # listado de ventas: ahora la pk se rendea con prefijo `#` y <strong>.
         resp = self.client.get(reverse('pos:ventas'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, f'<td>{recibo.pk}</td>')
+        self.assertContains(resp, f'#{recibo.pk}')

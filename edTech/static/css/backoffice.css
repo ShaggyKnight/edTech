@@ -43,7 +43,8 @@
 
   /* Layout */
   --bo-side-w: 250px;
-  --bo-top-h: 60px;
+  --bo-top-h: 64px;
+  --bo-bar-h: 56px;
   --bo-radius: 8px;
   --bo-radius-lg: 12px;
   --bo-shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.04);
@@ -63,16 +64,72 @@ body.bo {
 }
 
 /* ---- Layout shell ------------------------------------------------------- */
-.bo-shell { display: flex; min-height: 100vh; }
+.bo-shell { display: flex; min-height: 100vh; padding-top: var(--bo-bar-h); }
+
+/* Topbar global — barra oscura full-width fija arriba con brand + nav.
+   Visible en todo momento, sirve de header del backoffice. */
+.bo-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--bo-bar-h);
+  background: var(--bo-side-bg); color: #fff;
+  border-bottom: 1px solid var(--bo-side-bg-2);
+  display: flex; align-items: center; padding: 0 24px;
+  z-index: 40;
+}
+.bo-bar-brand {
+  display: flex; align-items: baseline; gap: 8px;
+  text-decoration: none; margin-right: 32px;
+  min-width: calc(var(--bo-side-w) - 24px);
+}
+.bo-bar-brand .name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 24px; font-weight: 600; font-style: italic;
+  color: var(--bo-side-active);
+}
+.bo-bar-brand .sub {
+  font-size: 11px; color: var(--bo-side-text-2);
+  text-transform: uppercase; letter-spacing: 0.18em;
+}
+.bo-bar-nav {
+  display: flex; align-items: center; gap: 6px; flex: 1;
+}
+.bo-bar-nav a {
+  color: var(--bo-side-text); text-decoration: none;
+  padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background .12s, color .12s;
+}
+.bo-bar-nav a:hover { background: var(--bo-side-hover); color: #fff; }
+.bo-bar-nav a.active { color: var(--bo-side-active); }
+.bo-bar-actions {
+  display: flex; align-items: center; gap: 12px; margin-left: auto;
+}
+.bo-bar-user {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: #fff;
+}
+.bo-bar-user .avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--bo-gold); color: #fff; display: flex;
+  align-items: center; justify-content: center; font-weight: 600;
+  font-size: 12px;
+}
+.bo-bar-btn {
+  background: transparent; border: 1px solid #ffffff22; color: #fff;
+  padding: 5px 12px; border-radius: 6px; font: inherit; font-size: 12px;
+  cursor: pointer; text-decoration: none;
+}
+.bo-bar-btn:hover { background: #ffffff14; }
+
 .bo-side  { width: var(--bo-side-w); background: var(--bo-side-bg); color: var(--bo-side-text);
-            position: fixed; top: 0; bottom: 0; left: 0; z-index: 30;
-            display: flex; flex-direction: column; }
+            position: fixed; top: var(--bo-bar-h); bottom: 0; left: 0; z-index: 30;
+            display: flex; flex-direction: column;
+            border-right: 1px solid var(--bo-side-bg-2); }
 .bo-main  { flex: 1; margin-left: var(--bo-side-w); display: flex; flex-direction: column; min-width: 0; }
 
 .bo-topbar {
   height: var(--bo-top-h); background: var(--bo-card); border-bottom: 1px solid var(--bo-border);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; position: sticky; top: 0; z-index: 20;
+  padding: 0 24px; position: sticky; top: var(--bo-bar-h); z-index: 20;
 }
 .bo-content { padding: 24px; flex: 1; }
 
@@ -80,6 +137,8 @@ body.bo {
   .bo-side { transform: translateX(-100%); transition: transform .2s; }
   .bo-side.open { transform: translateX(0); }
   .bo-main { margin-left: 0; }
+  .bo-bar-nav { display: none; }
+  .bo-bar-brand { min-width: 0; margin-right: 0; }
 }
 
 /* ---- Sidebar ------------------------------------------------------------ */
@@ -251,6 +310,28 @@ body.bo {
 }
 .bo-form-inline { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
 .bo-form-inline .bo-field { margin-bottom: 0; flex: 1; min-width: 160px; }
+
+/* Fallback: inputs sin clase explícita dentro de un form en .bo-card,
+   para que los formularios de Django (que rinden <input> crudo) queden
+   estilizados sin tocar el form Python. */
+.bo-card form input[type="text"],
+.bo-card form input[type="email"],
+.bo-card form input[type="password"],
+.bo-card form input[type="number"],
+.bo-card form input[type="search"],
+.bo-card form input[type="tel"],
+.bo-card form input[type="url"],
+.bo-card form input:not([type]),
+.bo-card form select,
+.bo-card form textarea {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--bo-border);
+  border-radius: var(--bo-radius); font: inherit; background: var(--bo-card);
+  color: var(--bo-text);
+}
+.bo-card form input:focus, .bo-card form select:focus, .bo-card form textarea:focus {
+  outline: none; border-color: var(--bo-primary);
+  box-shadow: 0 0 0 3px var(--bo-primary-soft);
+}
 
 /* ---- Alerts ------------------------------------------------------------- */
 .bo-alert {

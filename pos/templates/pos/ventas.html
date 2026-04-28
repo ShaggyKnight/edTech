@@ -1,50 +1,62 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block titulo %}Ventas{% endblock %}
+{% block titulo %}Ventas · Ideas Boutique{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px;">
-    <h2>Ventas</h2>
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Operación / Ventas</div>
+      <h1>Ventas registradas</h1>
+      <div class="sub">{{ ventas|length }} venta{{ ventas|length|pluralize:"s" }} en el listado</div>
+    </div>
+    <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-primary">Volver al POS</a>
+  </div>
 
-    <table class="table table-striped table-hover">
+  <div class="bo-card">
+    {% if ventas %}
+      <table class="bo-table">
         <thead>
-            <tr>
-                <th>#</th>
-                <th>Fecha</th>
-                <th>Tienda</th>
-                <th>Canal</th>
-                <th>Cajero</th>
-                <th class="text-right">Total</th>
-                <th>Estado</th>
-                <th></th>
-            </tr>
+          <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Tienda</th>
+            <th>Canal</th>
+            <th>Cajero</th>
+            <th class="num">Total</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
-            {% for v in ventas %}
+          {% for v in ventas %}
             <tr>
-                <td>{{ v.pk }}</td>
-                <td>{{ v.creado|date:"d-m-Y H:i" }}</td>
-                <td>{{ v.tienda.nombre_organizacion }}</td>
-                <td><span class="label label-info">{{ v.get_canal_display }}</span></td>
-                <td>{{ v.vendedor|default:"—" }}</td>
-                <td class="text-right">${{ v.total }}</td>
-                <td>
-                    <span class="label label-{% if v.estado == 'pagado' %}success{% elif v.estado == 'fallido' %}danger{% else %}default{% endif %}">
-                        {{ v.get_estado_display }}
-                    </span>
-                </td>
-                <td>
-                    <a href="{% url 'pos:recibo' v.pk %}" class="btn btn-xs btn-default">Ver</a>
-                </td>
+              <td><strong>#{{ v.pk }}</strong></td>
+              <td>{{ v.creado|date:"d-m-Y H:i" }}</td>
+              <td>{{ v.tienda.nombre_organizacion }}</td>
+              <td><span class="bo-badge bo-badge-info">{{ v.get_canal_display }}</span></td>
+              <td>{{ v.vendedor|default:"—" }}</td>
+              <td class="num">${{ v.total|floatformat:0|intcomma }}</td>
+              <td>
+                {% if v.estado == 'pagado' %}
+                  <span class="bo-badge bo-badge-success">{{ v.get_estado_display }}</span>
+                {% elif v.estado == 'fallido' %}
+                  <span class="bo-badge bo-badge-danger">{{ v.get_estado_display }}</span>
+                {% elif v.estado == 'cancelado' %}
+                  <span class="bo-badge bo-badge-muted">{{ v.get_estado_display }}</span>
+                {% else %}
+                  <span class="bo-badge bo-badge-warning">{{ v.get_estado_display }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'pos:recibo' v.pk %}" class="bo-btn bo-btn-sm">Ver</a>
+              </td>
             </tr>
-            {% empty %}
-            <tr><td colspan="8" class="text-center">Sin ventas aún.</td></tr>
-            {% endfor %}
+          {% endfor %}
         </tbody>
-    </table>
-
-    <a href="{% url 'pos:home' %}" class="btn btn-primary">
-        <span class="glyphicon glyphicon-shopping-cart"></span> Volver al POS
-    </a>
-</div>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color:var(--bo-muted);">Sin ventas aún.</div>
+    {% endif %}
+  </div>
 {% endblock %}

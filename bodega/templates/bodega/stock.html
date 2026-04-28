@@ -1,39 +1,58 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block titulo %}Stock{% endblock %}
+{% block titulo %}Stock · Ideas Boutique{% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 20px;">
-    <h2>Stock por tienda</h2>
-    <table class="table table-striped">
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Bodega / Stock</div>
+      <h1>Stock por tienda</h1>
+      <div class="sub">{{ stock|length }} fila{{ stock|length|pluralize:"s" }} de stock registradas</div>
+    </div>
+  </div>
+
+  <div class="bo-card">
+    {% if stock %}
+      <table class="bo-table">
         <thead>
-            <tr>
-                <th>Tienda</th>
-                <th>Item</th>
-                <th>SKU / tipo</th>
-                <th class="text-right">Cantidad</th>
-            </tr>
+          <tr>
+            <th>Tienda</th>
+            <th>Item</th>
+            <th>SKU / tipo</th>
+            <th class="num">Cantidad</th>
+          </tr>
         </thead>
         <tbody>
-            {% for s in stock %}
+          {% for s in stock %}
             <tr>
-                <td>{{ s.tienda.nombre_organizacion }}</td>
-                <td>
-                    {% if s.variante %}{{ s.variante.producto.nombre }}
-                    {% else %}{{ s.producto.nombre }}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if s.variante %}<code>{{ s.variante.sku }}</code>
-                    {% else %}<em>sin variantes</em>
-                    {% endif %}
-                </td>
-                <td class="text-right">{{ s.cantidad }}</td>
+              <td>{{ s.tienda.nombre_organizacion }}</td>
+              <td>
+                {% if s.variante %}{{ s.variante.producto.nombre }}
+                {% else %}{{ s.producto.nombre }}{% endif %}
+              </td>
+              <td>
+                {% if s.variante %}
+                  <code style="font-size:12px;color:var(--bo-muted);">{{ s.variante.sku }}</code>
+                {% else %}
+                  <em style="color:var(--bo-muted);">sin variantes</em>
+                {% endif %}
+              </td>
+              <td class="num">
+                {% if s.cantidad == 0 %}
+                  <span class="bo-badge bo-badge-warning">{{ s.cantidad }}</span>
+                {% elif s.cantidad < 5 %}
+                  <span class="bo-badge bo-badge-info">{{ s.cantidad }}</span>
+                {% else %}
+                  <strong>{{ s.cantidad }}</strong>
+                {% endif %}
+              </td>
             </tr>
-            {% empty %}
-            <tr><td colspan="4" class="text-center">No hay stock registrado.</td></tr>
-            {% endfor %}
+          {% endfor %}
         </tbody>
-    </table>
-</div>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color:var(--bo-muted);">No hay stock registrado.</div>
+    {% endif %}
+  </div>
 {% endblock %}

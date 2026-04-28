@@ -204,14 +204,14 @@
                 <input type="text" name="cliente_rut" class="bo-input">
               </div>
             </div>
-            <button type="submit" class="bo-btn bo-btn-primary" style="width:100%; padding: 12px; font-size: 15px;">
-              ✓ Cobrar
+            <button type="submit" class="bo-btn bo-btn-primary bo-btn-block bo-btn-lg">
+              Cobrar ${{ total_neto|floatformat:0|intcomma }}
             </button>
           </form>
           <form method="post" action="{% url 'pos:vaciar' %}"
                 onsubmit="return confirm('¿Vaciar carrito?');" style="margin-top:8px;">
             {% csrf_token %}
-            <button type="submit" class="bo-btn bo-btn-sm" style="width:100%;">Vaciar carrito</button>
+            <button type="submit" class="bo-btn bo-btn-block">Vaciar carrito</button>
           </form>
         </div>
       {% endif %}

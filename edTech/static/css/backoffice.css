@@ -8,47 +8,56 @@
    ========================================================================= */
 
 :root {
-  /* Tipografía */
+  /* Tipografía — Inter para todo (Metronic). Sin Cormorant en el backoffice. */
   --bo-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bo-fz:    13px;
+  --bo-fz-sm: 12px;
+  --bo-fz-lg: 15px;
 
-  /* Paleta — Metronic light + acento boutique */
-  --bo-bg:           #F4F4F5;          /* zinc-100, fondo del main */
+  /* Paleta — Metronic 9 light alineada al azul corporativo */
+  --bo-bg:           #F9F9FB;          /* fondo muy claro, zinc-50 */
   --bo-card:         #FFFFFF;
-  --bo-border:       #E4E4E7;          /* zinc-200 */
+  --bo-border:       #E4E6EF;          /* gris frío */
   --bo-border-soft:  #F1F1F4;
-  --bo-text:         #18181B;          /* zinc-900 */
-  --bo-muted:        #71717A;          /* zinc-500 */
-  --bo-muted-soft:   #A1A1AA;          /* zinc-400 */
+  --bo-text:         #1E1E2D;          /* tinta Metronic */
+  --bo-text-2:       #4B5675;
+  --bo-muted:        #78829D;          /* zinc-500 ajustado */
+  --bo-muted-soft:   #B5B5C3;
 
-  /* Sidebar */
-  --bo-side-bg:      #1E2129;          /* casi negro azulado */
-  --bo-side-bg-2:    #16181E;
-  --bo-side-text:    #B7B9C5;
-  --bo-side-text-2:  #71717A;
-  --bo-side-active:  #C9A96E;          /* dorado boutique */
-  --bo-side-hover:   #2A2D36;
+  /* Sidebar oscuro estilo Metronic dark */
+  --bo-side-bg:      #14151A;
+  --bo-side-bg-2:    #0F1014;
+  --bo-side-text:    #9899AC;
+  --bo-side-text-2:  #6D6E7C;
+  --bo-side-active:  #FFFFFF;          /* link activo en blanco */
+  --bo-side-active-bg: #1F2128;
+  --bo-side-hover:   #1B1C22;
 
-  /* Acentos */
-  --bo-primary:      #1B84FF;          /* azul Metronic */
-  --bo-primary-soft: #EBF4FF;
+  /* Acentos — Metronic blue como primario */
+  --bo-primary:      #3E97FF;
+  --bo-primary-2:    #1B84FF;
+  --bo-primary-soft: #EFF6FF;
   --bo-success:      #17C653;
-  --bo-success-soft: #DBF5E1;
+  --bo-success-soft: #DFFFEA;
   --bo-danger:       #F8285A;
-  --bo-danger-soft:  #FDE7EC;
+  --bo-danger-soft:  #FFE2EA;
   --bo-warning:      #F6C000;
   --bo-warning-soft: #FFF8DD;
   --bo-info:         #7239EA;
+  --bo-info-soft:    #F0E7FE;
+
+  /* Acentos boutique — usados solo en branding sutil */
   --bo-gold:         #C9A96E;
   --bo-vino:         #7A1E2B;
 
   /* Layout */
-  --bo-side-w: 250px;
-  --bo-top-h: 64px;
+  --bo-side-w: 240px;
+  --bo-top-h: 60px;
   --bo-bar-h: 56px;
-  --bo-radius: 8px;
-  --bo-radius-lg: 12px;
+  --bo-radius: 6px;
+  --bo-radius-lg: 10px;
   --bo-shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.04);
-  --bo-shadow:    0 4px 16px 0 rgba(24,24,27,0.06);
+  --bo-shadow:    0 4px 16px 0 rgba(0,0,0,0.06);
 }
 
 /* ---- Reset puntual ------------------------------------------------------ */
@@ -56,11 +65,13 @@
 html, body { margin: 0; padding: 0; }
 body.bo {
   font-family: var(--bo-font);
-  font-size: 14px;
+  font-size: var(--bo-fz);
   line-height: 1.5;
   color: var(--bo-text);
   background: var(--bo-bg);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
 /* ---- Layout shell ------------------------------------------------------- */
@@ -76,49 +87,50 @@ body.bo {
   z-index: 40;
 }
 .bo-bar-brand {
-  display: flex; align-items: baseline; gap: 8px;
-  text-decoration: none; margin-right: 32px;
+  display: flex; align-items: center; gap: 8px;
+  text-decoration: none; margin-right: 28px;
   min-width: calc(var(--bo-side-w) - 24px);
 }
 .bo-bar-brand .name {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 24px; font-weight: 600; font-style: italic;
-  color: var(--bo-side-active);
+  font-family: var(--bo-font);
+  font-size: 16px; font-weight: 700; letter-spacing: -0.01em;
+  color: #FFFFFF;
 }
 .bo-bar-brand .sub {
-  font-size: 11px; color: var(--bo-side-text-2);
-  text-transform: uppercase; letter-spacing: 0.18em;
+  font-size: 10px; color: var(--bo-side-text-2);
+  text-transform: uppercase; letter-spacing: 0.16em; font-weight: 600;
 }
 .bo-bar-nav {
-  display: flex; align-items: center; gap: 6px; flex: 1;
+  display: flex; align-items: center; gap: 4px; flex: 1;
 }
 .bo-bar-nav a {
   color: var(--bo-side-text); text-decoration: none;
-  padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;
+  padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: 500;
   display: inline-flex; align-items: center; gap: 6px;
   transition: background .12s, color .12s;
 }
 .bo-bar-nav a:hover { background: var(--bo-side-hover); color: #fff; }
-.bo-bar-nav a.active { color: var(--bo-side-active); }
+.bo-bar-nav a.active { color: #fff; background: var(--bo-side-active-bg); }
 .bo-bar-actions {
-  display: flex; align-items: center; gap: 12px; margin-left: auto;
+  display: flex; align-items: center; gap: 10px; margin-left: auto;
 }
 .bo-bar-user {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; color: #fff;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--bo-side-text); font-weight: 500;
 }
 .bo-bar-user .avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--bo-gold); color: #fff; display: flex;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bo-primary); color: #fff; display: flex;
   align-items: center; justify-content: center; font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
 }
 .bo-bar-btn {
-  background: transparent; border: 1px solid #ffffff22; color: #fff;
-  padding: 5px 12px; border-radius: 6px; font: inherit; font-size: 12px;
-  cursor: pointer; text-decoration: none;
+  background: transparent; border: 1px solid #ffffff1A; color: var(--bo-side-text);
+  padding: 4px 10px; border-radius: 5px; font: inherit; font-size: 12px;
+  font-weight: 500; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center;
 }
-.bo-bar-btn:hover { background: #ffffff14; }
+.bo-bar-btn:hover { background: #ffffff14; color: #fff; border-color: #ffffff2A; }
 
 .bo-side  { width: var(--bo-side-w); background: var(--bo-side-bg); color: var(--bo-side-text);
             position: fixed; top: var(--bo-bar-h); bottom: 0; left: 0; z-index: 30;
@@ -142,49 +154,30 @@ body.bo {
 }
 
 /* ---- Sidebar ------------------------------------------------------------ */
-.bo-side-brand {
-  height: var(--bo-top-h); padding: 0 22px; display: flex; align-items: center;
-  border-bottom: 1px solid var(--bo-side-bg-2); flex-shrink: 0;
-}
-.bo-side-brand .name {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 22px; font-weight: 600; font-style: italic;
-  color: var(--bo-side-active); letter-spacing: 0.02em;
-}
-.bo-side-brand .sub {
-  font-size: 11px; color: var(--bo-side-text-2);
-  text-transform: uppercase; letter-spacing: 0.15em; margin-left: 8px;
-}
-
-.bo-side-nav { padding: 16px 12px; overflow-y: auto; flex: 1; }
+.bo-side-nav { padding: 14px 10px; overflow-y: auto; flex: 1; }
 .bo-side-section {
-  font-size: 11px; font-weight: 600; color: var(--bo-side-text-2);
+  font-size: 10px; font-weight: 700; color: var(--bo-side-text-2);
   text-transform: uppercase; letter-spacing: 0.1em;
-  padding: 16px 12px 8px; margin-top: 4px;
+  padding: 14px 12px 6px; margin-top: 4px;
 }
 .bo-side-section:first-child { padding-top: 4px; }
 .bo-side-link {
-  display: flex; align-items: center; gap: 12px;
-  padding: 9px 12px; border-radius: var(--bo-radius);
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: var(--bo-radius);
   color: var(--bo-side-text); text-decoration: none;
-  font-size: 14px; font-weight: 500;
+  font-size: 13px; font-weight: 500;
   transition: background .12s, color .12s;
 }
 .bo-side-link:hover { background: var(--bo-side-hover); color: #fff; }
 .bo-side-link.active {
-  background: var(--bo-side-hover); color: var(--bo-side-active);
-}
-.bo-side-link.active::before {
-  content: ""; width: 3px; height: 18px;
-  background: var(--bo-side-active); border-radius: 2px;
-  margin-left: -12px; margin-right: 9px;
+  background: var(--bo-side-active-bg); color: #fff;
 }
 .bo-side-link svg, .bo-side-link .ico {
-  width: 18px; height: 18px; flex-shrink: 0; opacity: .8;
+  width: 16px; height: 16px; flex-shrink: 0; opacity: .85;
 }
 .bo-side-foot {
   border-top: 1px solid var(--bo-side-bg-2); padding: 14px 16px;
-  font-size: 12px; color: var(--bo-side-text-2);
+  font-size: 11px; color: var(--bo-side-text-2);
 }
 
 /* ---- Topbar ------------------------------------------------------------- */
@@ -209,33 +202,34 @@ body.bo {
 
 /* ---- Cards / paneles --------------------------------------------------- */
 .bo-card {
-  background: var(--bo-card); border: 1px solid var(--bo-border-soft);
+  background: var(--bo-card); border: 1px solid var(--bo-border);
   border-radius: var(--bo-radius-lg); box-shadow: var(--bo-shadow-sm);
 }
 .bo-card-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid var(--bo-border-soft);
+  padding: 14px 20px; border-bottom: 1px solid var(--bo-border-soft);
+  gap: 12px; flex-wrap: wrap;
 }
 .bo-card-head h3, .bo-card-head .title {
-  margin: 0; font-size: 15px; font-weight: 600; color: var(--bo-text);
+  margin: 0; font-size: 14px; font-weight: 600; color: var(--bo-text);
 }
 .bo-card-body { padding: 20px; }
 .bo-card-stack > * + * { margin-top: 16px; }
 
 /* KPI cards (dashboard) */
-.bo-kpi { padding: 20px; }
+.bo-kpi { padding: 18px 20px; }
 .bo-kpi .label {
-  font-size: 12px; font-weight: 600; color: var(--bo-muted);
-  text-transform: uppercase; letter-spacing: 0.08em;
+  font-size: 11px; font-weight: 600; color: var(--bo-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
 .bo-kpi .value {
-  font-size: 30px; font-weight: 700; color: var(--bo-text);
-  margin-top: 6px; line-height: 1.1;
+  font-size: 26px; font-weight: 700; color: var(--bo-text);
+  margin-top: 4px; line-height: 1.1; letter-spacing: -0.01em;
 }
 .bo-kpi .sub { font-size: 12px; color: var(--bo-muted); margin-top: 6px; }
-.bo-kpi.is-primary .value { color: var(--bo-primary); }
+.bo-kpi.is-primary .value { color: var(--bo-primary-2); }
 .bo-kpi.is-success .value { color: var(--bo-success); }
-.bo-kpi.is-warning .value { color: var(--bo-warning); }
+.bo-kpi.is-warning .value { color: #B5860C; }
 .bo-kpi.is-danger  .value { color: var(--bo-danger);  }
 .bo-kpi.is-gold    .value { color: var(--bo-gold);    }
 
@@ -253,33 +247,40 @@ body.bo {
 }
 
 /* ---- Tablas ------------------------------------------------------------- */
-.bo-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bo-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .bo-table th {
   text-align: left; font-weight: 600; color: var(--bo-muted);
-  text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;
-  padding: 12px 16px; border-bottom: 1px solid var(--bo-border-soft);
+  text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--bo-border-soft);
   background: var(--bo-bg);
 }
-.bo-table td { padding: 12px 16px; border-bottom: 1px solid var(--bo-border-soft); }
+.bo-table td { padding: 11px 16px; border-bottom: 1px solid var(--bo-border-soft); font-size: 13px; }
 .bo-table tr:hover td { background: var(--bo-bg); }
 .bo-table tr:last-child td { border-bottom: none; }
 .bo-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.bo-table code { font-size: 11px; color: var(--bo-muted); }
 
 /* ---- Botones ------------------------------------------------------------ */
 .bo-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 16px; border-radius: var(--bo-radius);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: var(--bo-radius);
   border: 1px solid var(--bo-border); background: var(--bo-card);
-  color: var(--bo-text); font: inherit; font-weight: 500; cursor: pointer;
-  text-decoration: none; transition: all .12s;
+  color: var(--bo-text); font: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer; text-decoration: none; transition: all .12s;
+  line-height: 1.4;
 }
 .bo-btn:hover { background: var(--bo-bg); }
-.bo-btn-primary { background: var(--bo-primary); border-color: var(--bo-primary); color: #fff; }
+.bo-btn-primary { background: var(--bo-primary-2); border-color: var(--bo-primary-2); color: #fff; }
 .bo-btn-primary:hover { background: #1567CC; border-color: #1567CC; }
+.bo-btn-success { background: var(--bo-success); border-color: var(--bo-success); color: #fff; }
+.bo-btn-success:hover { background: #14A848; border-color: #14A848; }
+.bo-btn-danger  { background: var(--bo-danger);  border-color: var(--bo-danger);  color: #fff; }
 .bo-btn-gold { background: var(--bo-gold); border-color: var(--bo-gold); color: #fff; }
 .bo-btn-gold:hover { background: #B89760; border-color: #B89760; }
-.bo-btn-sm { padding: 6px 10px; font-size: 12px; }
-.bo-btn-link { background: none; border: none; padding: 4px 8px; color: var(--bo-primary); }
+.bo-btn-sm { padding: 4px 8px; font-size: 11px; }
+.bo-btn-lg { padding: 8px 16px; font-size: 13px; }
+.bo-btn-block { display: flex; width: 100%; justify-content: center; }
+.bo-btn-link { background: none; border: none; padding: 4px 6px; color: var(--bo-primary-2); font-size: 12px; }
 
 /* ---- Badges ------------------------------------------------------------- */
 .bo-badge {
@@ -300,9 +301,9 @@ body.bo {
   margin-bottom: 6px;
 }
 .bo-input, .bo-select, .bo-textarea {
-  width: 100%; padding: 9px 12px; border: 1px solid var(--bo-border);
-  border-radius: var(--bo-radius); font: inherit; background: var(--bo-card);
-  color: var(--bo-text);
+  width: 100%; padding: 7px 10px; border: 1px solid var(--bo-border);
+  border-radius: var(--bo-radius); font: inherit; font-size: 13px;
+  background: var(--bo-card); color: var(--bo-text); line-height: 1.4;
 }
 .bo-input:focus, .bo-select:focus, .bo-textarea:focus {
   outline: none; border-color: var(--bo-primary);
@@ -350,10 +351,11 @@ body.bo {
   margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
 }
 .bo-page-head h1 {
-  margin: 0; font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 30px; font-weight: 600; color: var(--bo-text);
+  margin: 0; font-family: var(--bo-font);
+  font-size: 22px; font-weight: 600; color: var(--bo-text);
+  letter-spacing: -0.015em;
 }
-.bo-page-head .sub { color: var(--bo-muted); font-size: 13px; margin-top: 2px; }
+.bo-page-head .sub { color: var(--bo-muted); font-size: 12px; margin-top: 4px; }
 
 /* ---- Breadcrumb -------------------------------------------------------- */
 .bo-crumb { color: var(--bo-muted); font-size: 12px; margin-bottom: 4px; }

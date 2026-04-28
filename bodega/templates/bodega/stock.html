@@ -3,24 +3,122 @@
 
 {% block titulo %}Stock · Ideas Boutique{% endblock %}
 
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+{% endblock %}
+
 {% block content %}
   <div class="bo-page-head">
     <div>
       <div class="bo-crumb">Bodega / Stock</div>
       <h1>Stock por tienda</h1>
-      <div class="sub">{{ stock|length }} fila{{ stock|length|pluralize:"s" }} de stock registradas</div>
+      <div class="sub">{{ kpi.n_total }} fila{{ kpi.n_total|pluralize:"s" }} · {{ kpi.unidades }} unidades en total</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{% url 'admin:bodega_stocktienda_add' %}" class="bo-btn bo-btn-primary">+ Cargar stock</a>
+      <a href="{% url 'admin:bodega_movimientostock_changelist' %}" class="bo-btn">Movimientos</a>
     </div>
   </div>
 
+  {# ─── KPIs ─── #}
+  <div class="bo-grid cols-4" style="margin-bottom:20px;">
+    <div class="bo-card bo-kpi is-success">
+      <div class="label">Stock OK</div>
+      <div class="value">{{ kpi.n_ok }}</div>
+      <div class="sub">Items con &gt;{{ umbral_bajo }} unidades</div>
+    </div>
+    <div class="bo-card bo-kpi is-warning">
+      <div class="label">Stock bajo</div>
+      <div class="value">{{ kpi.n_bajo }}</div>
+      <div class="sub">≤{{ umbral_bajo }} unidades · alertar reposición</div>
+    </div>
+    <div class="bo-card bo-kpi is-danger">
+      <div class="label">Agotados</div>
+      <div class="value">{{ kpi.n_agotado }}</div>
+      <div class="sub">Sin stock disponible</div>
+    </div>
+    <div class="bo-card bo-kpi is-gold">
+      <div class="label">Rollos en bodega</div>
+      <div class="value">{{ kpi.rollos_total }}</div>
+      <div class="sub">Materia prima total · todos materiales</div>
+    </div>
+  </div>
+
+  {# ─── Filtros ─── #}
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body">
+      <form method="get" class="bo-form-inline">
+        <div class="bo-field" style="min-width:200px;">
+          <label>Buscar</label>
+          <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
+                 placeholder="Nombre o SKU…">
+        </div>
+        <div class="bo-field">
+          <label>Tienda</label>
+          <select name="tienda" class="bo-select">
+            <option value="">Todas</option>
+            {% for t in tiendas %}
+              <option value="{{ t.pk }}" {% if filtros.tienda == t.pk|stringformat:"s" %}selected{% endif %}>
+                {{ t.nombre_organizacion }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Familia</label>
+          <select name="familia" class="bo-select">
+            <option value="">Todas</option>
+            {% for f in familias %}
+              <option value="{{ f.pk }}" {% if filtros.familia == f.pk|stringformat:"s" %}selected{% endif %}>
+                {{ f.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Mostrar</label>
+          <select name="solo" class="bo-select">
+            <option value="">Todos</option>
+            <option value="bajo" {% if filtros.solo == "bajo" %}selected{% endif %}>Solo stock bajo</option>
+            <option value="cero" {% if filtros.solo == "cero" %}selected{% endif %}>Solo agotados</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
+          <a href="{% url 'bodega:stock' %}" class="bo-btn">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ─── Chart de alertas ─── #}
+  {% if chart_alertas %}
+    <div class="bo-card" style="margin-bottom:20px;">
+      <div class="bo-card-head">
+        <h3>Alertas de stock bajo (15 más críticos)</h3>
+        <a href="?solo=bajo" class="bo-btn bo-btn-sm">Ver todos</a>
+      </div>
+      <div class="bo-card-body">
+        <canvas id="chartAlertas" class="bo-chart"></canvas>
+      </div>
+    </div>
+  {% endif %}
+
+  {# ─── Tabla de stock ─── #}
   <div class="bo-card">
+    <div class="bo-card-head">
+      <h3>Detalle del stock</h3>
+    </div>
     {% if stock %}
       <table class="bo-table">
         <thead>
           <tr>
             <th>Tienda</th>
-            <th>Item</th>
+            <th>Producto</th>
+            <th>Familia</th>
             <th>SKU / tipo</th>
             <th class="num">Cantidad</th>
+            <th>Estado</th>
           </tr>
         </thead>
         <tbody>
@@ -32,19 +130,21 @@
                 {% else %}{{ s.producto.nombre }}{% endif %}
               </td>
               <td>
-                {% if s.variante %}
-                  <code style="font-size:12px;color:var(--bo-muted);">{{ s.variante.sku }}</code>
-                {% else %}
-                  <em style="color:var(--bo-muted);">sin variantes</em>
-                {% endif %}
+                {% if s.variante %}{{ s.variante.producto.familia.nombre }}
+                {% elif s.producto %}{{ s.producto.familia.nombre }}{% endif %}
               </td>
-              <td class="num">
+              <td>
+                {% if s.variante %}<code>{{ s.variante.sku }}</code>
+                {% else %}<em style="color:var(--bo-muted);">sin variantes</em>{% endif %}
+              </td>
+              <td class="num"><strong>{{ s.cantidad }}</strong></td>
+              <td>
                 {% if s.cantidad == 0 %}
-                  <span class="bo-badge bo-badge-warning">{{ s.cantidad }}</span>
-                {% elif s.cantidad < 5 %}
-                  <span class="bo-badge bo-badge-info">{{ s.cantidad }}</span>
+                  <span class="bo-badge bo-badge-danger">Agotado</span>
+                {% elif s.cantidad <= umbral_bajo %}
+                  <span class="bo-badge bo-badge-warning">Bajo</span>
                 {% else %}
-                  <strong>{{ s.cantidad }}</strong>
+                  <span class="bo-badge bo-badge-success">OK</span>
                 {% endif %}
               </td>
             </tr>
@@ -52,7 +152,52 @@
         </tbody>
       </table>
     {% else %}
-      <div class="bo-card-body" style="color:var(--bo-muted);">No hay stock registrado.</div>
+      <div class="bo-card-body" style="color:var(--bo-muted);">No hay stock con los filtros aplicados.</div>
     {% endif %}
   </div>
+
+  {{ chart_alertas|json_script:"data-alertas" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const dataEl = document.getElementById('data-alertas');
+    if (!dataEl || !window.Chart) return;
+    const data = JSON.parse(dataEl.textContent || '[]');
+    const ctx = document.getElementById('chartAlertas');
+    if (!ctx) return;
+    const css = getComputedStyle(document.documentElement);
+    const warning = css.getPropertyValue('--bo-warning').trim() || '#F6C000';
+    const grid    = css.getPropertyValue('--bo-border-soft').trim() || '#F1F1F4';
+    const muted   = css.getPropertyValue('--bo-muted').trim() || '#78829D';
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.nombre),
+        datasets: [{
+          label: 'Unidades restantes', data: data.map(d => d.cantidad),
+          backgroundColor: warning, borderRadius: 4, maxBarThickness: 20,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: ctx => 'En ' + (data[ctx.dataIndex]?.tienda || '')
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: grid }, ticks: { color: muted, precision: 0 } },
+          y: { grid: { display: false }, ticks: { color: muted, font: { size: 11 } } }
+        }
+      }
+    });
+  });
+</script>
 {% endblock %}

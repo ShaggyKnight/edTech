@@ -233,14 +233,105 @@ def ver_recibo(request, pk: int):
 @login_required
 @permission_required('pos.view_reciboventa', raise_exception=True)
 def ventas(request):
+    """Listado de ventas con filtros por tienda, canal, estado y fechas.
+
+    Cajero ve sólo sus ventas; admin/superuser ven todo. KPIs y serie
+    diaria se calculan sobre el queryset YA filtrado para que reflejen
+    lo que ven en la tabla.
+    """
+    from datetime import timedelta
+    from decimal import Decimal as D
+    from django.db.models import Count, Sum, Value, DecimalField
+    from django.db.models.functions import Coalesce, TruncDate
+    from django.utils import timezone
+
     qs = (
         ReciboVenta.objects
         .select_related('tienda', 'vendedor')
         .order_by('-creado')
     )
-    if not request.user.is_superuser and not request.user.groups.filter(name='admin').exists():
+    es_admin = request.user.is_superuser or request.user.groups.filter(name='admin').exists()
+    if not es_admin:
         qs = qs.filter(vendedor=request.user)
-    return render(request, 'pos/ventas.html', {'ventas': qs[:200]})
+
+    # Filtros desde querystring.
+    tienda_id = (request.GET.get('tienda') or '').strip()
+    canal = (request.GET.get('canal') or '').strip()
+    estado = (request.GET.get('estado') or '').strip()
+    desde_str = (request.GET.get('desde') or '').strip()
+    hasta_str = (request.GET.get('hasta') or '').strip()
+
+    if tienda_id.isdigit():
+        qs = qs.filter(tienda_id=int(tienda_id))
+    if canal in {ReciboVenta.CANAL_PRESENCIAL, ReciboVenta.CANAL_ONLINE}:
+        qs = qs.filter(canal=canal)
+    if estado in {'pagado', 'pendiente', 'fallido', 'cancelado'}:
+        qs = qs.filter(estado=estado)
+    if desde_str:
+        try:
+            desde_dt = timezone.make_aware(
+                timezone.datetime.strptime(desde_str, '%Y-%m-%d')
+            )
+            qs = qs.filter(creado__gte=desde_dt)
+        except (ValueError, TypeError):
+            pass
+    if hasta_str:
+        try:
+            hasta_dt = timezone.make_aware(
+                timezone.datetime.strptime(hasta_str, '%Y-%m-%d')
+                + timedelta(days=1)  # incluye todo el día seleccionado
+            )
+            qs = qs.filter(creado__lt=hasta_dt)
+        except (ValueError, TypeError):
+            pass
+
+    # KPIs sobre el queryset filtrado, contando solo ventas pagadas para totales
+    # pero todas para el conteo (así el dueño ve cuántos recibos había en total).
+    pagados = qs.filter(estado=ReciboVenta.ESTADO_PAGADO)
+    n_pagados = pagados.count()
+    n_total = qs.count()
+    n_fallidos = qs.filter(estado__in=[
+        ReciboVenta.ESTADO_FALLIDO, ReciboVenta.ESTADO_CANCELADO,
+    ]).count()
+    n_pendientes = qs.filter(estado=ReciboVenta.ESTADO_PENDIENTE).count()
+    kpi = {
+        'total': pagados.aggregate(
+            t=Coalesce(Sum('total'), Value(D('0')), output_field=DecimalField())
+        )['t'],
+        'n_pagados': n_pagados,
+        'n_total': n_total,
+        'n_fallidos': n_fallidos,
+        'n_pendientes': n_pendientes,
+    }
+    kpi['ticket'] = (kpi['total'] / n_pagados) if n_pagados else D('0')
+
+    # Serie diaria para chart (solo pagados).
+    serie = list(
+        pagados.annotate(dia=TruncDate('creado'))
+        .values('dia')
+        .annotate(
+            n=Count('id'),
+            total=Coalesce(Sum('total'), Value(D('0')), output_field=DecimalField()),
+        )
+        .order_by('dia')
+    )
+
+    return render(request, 'pos/ventas.html', {
+        'ventas': qs[:200],
+        'kpi': kpi,
+        'serie': [{'fecha': r['dia'].isoformat() if r['dia'] else '',
+                   'n': r['n'],
+                   'total': float(r['total'])} for r in serie],
+        'tiendas': Tienda.objects.filter(activa=True).order_by('nombre_organizacion'),
+        'filtros': {
+            'tienda': tienda_id,
+            'canal': canal,
+            'estado': estado,
+            'desde': desde_str,
+            'hasta': hasta_str,
+        },
+        'es_admin': es_admin,
+    })
 
 
 @login_required

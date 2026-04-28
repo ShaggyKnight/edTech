@@ -3,17 +3,114 @@
 
 {% block titulo %}Ventas · Ideas Boutique{% endblock %}
 
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+{% endblock %}
+
 {% block content %}
   <div class="bo-page-head">
     <div>
       <div class="bo-crumb">Operación / Ventas</div>
       <h1>Ventas registradas</h1>
-      <div class="sub">{{ ventas|length }} venta{{ ventas|length|pluralize:"s" }} en el listado</div>
+      <div class="sub">
+        {{ kpi.n_total }} recibo{{ kpi.n_total|pluralize:"s" }} en el filtro actual
+        {% if not es_admin %}· solo tus ventas{% endif %}
+      </div>
     </div>
-    <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-primary">Volver al POS</a>
+    <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-primary">+ Nueva venta</a>
   </div>
 
+  <div class="bo-grid cols-4" style="margin-bottom:20px;">
+    <div class="bo-card bo-kpi is-primary">
+      <div class="label">Ingresos pagados</div>
+      <div class="value">${{ kpi.total|floatformat:0|intcomma }}</div>
+      <div class="sub">{{ kpi.n_pagados }} venta{{ kpi.n_pagados|pluralize:"s" }} confirmada{{ kpi.n_pagados|pluralize:"s" }}</div>
+    </div>
+    <div class="bo-card bo-kpi">
+      <div class="label">Ticket promedio</div>
+      <div class="value">${{ kpi.ticket|floatformat:0|intcomma }}</div>
+      <div class="sub">Total / cantidad pagada</div>
+    </div>
+    <div class="bo-card bo-kpi is-warning">
+      <div class="label">Pendientes</div>
+      <div class="value">{{ kpi.n_pendientes }}</div>
+      <div class="sub">Iniciados pero sin confirmar pago</div>
+    </div>
+    <div class="bo-card bo-kpi is-danger">
+      <div class="label">Fallidos / cancelados</div>
+      <div class="value">{{ kpi.n_fallidos }}</div>
+      <div class="sub">Requieren revisión manual</div>
+    </div>
+  </div>
+
+  {# ─── Filtros ─── #}
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body">
+      <form method="get" class="bo-form-inline">
+        {% if es_admin %}
+          <div class="bo-field">
+            <label>Tienda</label>
+            <select name="tienda" class="bo-select">
+              <option value="">Todas</option>
+              {% for t in tiendas %}
+                <option value="{{ t.pk }}" {% if filtros.tienda == t.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ t.nombre_organizacion }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
+        <div class="bo-field">
+          <label>Canal</label>
+          <select name="canal" class="bo-select">
+            <option value="">Todos</option>
+            <option value="presencial" {% if filtros.canal == "presencial" %}selected{% endif %}>Presencial</option>
+            <option value="online" {% if filtros.canal == "online" %}selected{% endif %}>Online</option>
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Estado</label>
+          <select name="estado" class="bo-select">
+            <option value="">Todos</option>
+            <option value="pagado"    {% if filtros.estado == "pagado" %}selected{% endif %}>Pagado</option>
+            <option value="pendiente" {% if filtros.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
+            <option value="fallido"   {% if filtros.estado == "fallido" %}selected{% endif %}>Fallido</option>
+            <option value="cancelado" {% if filtros.estado == "cancelado" %}selected{% endif %}>Cancelado</option>
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Desde</label>
+          <input type="date" name="desde" class="bo-input" value="{{ filtros.desde }}">
+        </div>
+        <div class="bo-field">
+          <label>Hasta</label>
+          <input type="date" name="hasta" class="bo-input" value="{{ filtros.hasta }}">
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
+          <a href="{% url 'pos:ventas' %}" class="bo-btn">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ─── Chart ─── #}
+  {% if serie %}
+    <div class="bo-card" style="margin-bottom:20px;">
+      <div class="bo-card-head">
+        <h3>Ventas pagadas por día</h3>
+      </div>
+      <div class="bo-card-body">
+        <canvas id="chartVentas" class="bo-chart bo-chart-sm"></canvas>
+      </div>
+    </div>
+  {% endif %}
+
+  {# ─── Tabla ─── #}
   <div class="bo-card">
+    <div class="bo-card-head">
+      <h3>Detalle</h3>
+    </div>
     {% if ventas %}
       <table class="bo-table">
         <thead>
@@ -22,7 +119,7 @@
             <th>Fecha</th>
             <th>Tienda</th>
             <th>Canal</th>
-            <th>Cajero</th>
+            <th>Cliente</th>
             <th class="num">Total</th>
             <th>Estado</th>
             <th></th>
@@ -35,7 +132,7 @@
               <td>{{ v.creado|date:"d-m-Y H:i" }}</td>
               <td>{{ v.tienda.nombre_organizacion }}</td>
               <td><span class="bo-badge bo-badge-info">{{ v.get_canal_display }}</span></td>
-              <td>{{ v.vendedor|default:"—" }}</td>
+              <td>{{ v.cliente_nombre|default:"—" }}</td>
               <td class="num">${{ v.total|floatformat:0|intcomma }}</td>
               <td>
                 {% if v.estado == 'pagado' %}
@@ -56,7 +153,45 @@
         </tbody>
       </table>
     {% else %}
-      <div class="bo-card-body" style="color:var(--bo-muted);">Sin ventas aún.</div>
+      <div class="bo-card-body" style="color:var(--bo-muted);">Sin ventas para los filtros aplicados.</div>
     {% endif %}
   </div>
+
+  {{ serie|json_script:"data-ventas-serie" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const dataEl = document.getElementById('data-ventas-serie');
+    if (!dataEl || !window.Chart) return;
+    const serie = JSON.parse(dataEl.textContent || '[]');
+    const ctx = document.getElementById('chartVentas');
+    if (!ctx) return;
+    const css = getComputedStyle(document.documentElement);
+    const primary = css.getPropertyValue('--bo-primary-2').trim() || '#1B84FF';
+    const grid    = css.getPropertyValue('--bo-border-soft').trim() || '#F1F1F4';
+    const muted   = css.getPropertyValue('--bo-muted').trim() || '#78829D';
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: serie.map(d => d.fecha),
+        datasets: [{
+          label: 'Total $', data: serie.map(d => d.total),
+          backgroundColor: primary + 'BF',
+          borderRadius: 6, maxBarThickness: 28,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: muted } },
+          y: { grid: { color: grid }, ticks: { color: muted,
+               callback: v => '$' + v.toLocaleString('es-CL') } }
+        }
+      }
+    });
+  });
+</script>
 {% endblock %}

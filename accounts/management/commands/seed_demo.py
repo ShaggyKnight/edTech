@@ -95,10 +95,23 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('\nListo. Acceso:'))
         self.stdout.write('  Admin Django:    http://127.0.0.1:8000/admin/  (admin / admin)')
         self.stdout.write('  Reportes:        http://127.0.0.1:8000/reportes/')
-        self.stdout.write('  Producción:      http://127.0.0.1:8000/reportes/produccion/')
+        self.stdout.write('  Produccion:      http://127.0.0.1:8000/reportes/produccion/')
         self.stdout.write('  Caja:            http://127.0.0.1:8000/reportes/caja/')
         self.stdout.write('  Tienda online:   http://127.0.0.1:8000/tienda/')
         self.stdout.write('  Cliente demo:    cliente@demo.cl / demo12345')
+
+        # Aviso para que /tienda/ no quede vacia: el .env tiene que apuntar
+        # a "Ideas Boutique" (la tienda con stock real del seed). Si quedo
+        # un seed viejo con otra tienda, la online se ve vacia aunque hay
+        # productos sembrados.
+        boutique = Tienda.objects.filter(nombre_organizacion='Ideas Boutique').first()
+        from django.conf import settings as _s
+        actual_pk = getattr(_s, 'ECOMMERCE_TIENDA_ID', None)
+        if boutique and actual_pk != boutique.pk:
+            self.stdout.write(self.style.WARNING(
+                f'\n[!] Para que /tienda/ muestre productos: en tu .env pone '
+                f'ECOMMERCE_TIENDA_ID={boutique.pk} (ahora = {actual_pk}).'
+            ))
 
     # -------- helpers --------------------------------------------------------
 

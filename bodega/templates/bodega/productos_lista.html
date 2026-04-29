@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Productos · Ideas Boutique{% endblock %}
+
+{% block extra_head %}
+<style>
+  .prod-thumb { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; }
+  .prod-placeholder {
+    width: 36px; height: 36px; border-radius: 6px;
+    background: var(--bo-bg); display: flex; align-items: center; justify-content: center;
+    color: var(--bo-muted); font-size: 14px;
+  }
+  .prod-actions { display: inline-flex; gap: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Bodega / Productos</div>
+      <h1>Catálogo de productos</h1>
+      <div class="sub">{{ productos|length }} producto{{ productos|length|pluralize:"s" }} en el filtro</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>
+      <a href="{% url 'bodega:stock' %}" class="bo-btn">Ver stock</a>
+    </div>
+  </div>
+
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body">
+      <form method="get" class="bo-form-inline">
+        <div class="bo-field" style="min-width:200px;">
+          <label>Buscar</label>
+          <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
+                 placeholder="Nombre o descripción…">
+        </div>
+        <div class="bo-field">
+          <label>Familia</label>
+          <select name="familia" class="bo-select">
+            <option value="">Todas</option>
+            {% for f in familias %}
+              <option value="{{ f.pk }}" {% if filtros.familia == f.pk|stringformat:"s" %}selected{% endif %}>
+                {{ f.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Colegio</label>
+          <select name="colegio" class="bo-select">
+            <option value="">Todos</option>
+            {% for c in colegios %}
+              <option value="{{ c.pk }}" {% if filtros.colegio == c.pk|stringformat:"s" %}selected{% endif %}>
+                {{ c.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Estado</label>
+          <select name="estado" class="bo-select">
+            <option value="">Todos</option>
+            <option value="activos" {% if filtros.estado == "activos" %}selected{% endif %}>Solo activos</option>
+            <option value="inactivos" {% if filtros.estado == "inactivos" %}selected{% endif %}>Solo inactivos</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
+          <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="bo-card">
+    {% if productos %}
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Nombre</th>
+            <th>Familia</th>
+            <th>Colegio</th>
+            <th class="num">Precio</th>
+            <th class="num">Variantes</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in productos %}
+            <tr {% if not p.activo %}style="opacity:.5;"{% endif %}>
+              <td>
+                {% if p.imagen %}
+                  <img class="prod-thumb" src="{{ p.imagen.url }}" alt="">
+                {% else %}
+                  <div class="prod-placeholder">·</div>
+                {% endif %}
+              </td>
+              <td>
+                <strong>{{ p.nombre }}</strong>
+                {% if p.descripcion %}
+                  <div style="font-size:11px;color:var(--bo-muted);">{{ p.descripcion|truncatechars:60 }}</div>
+                {% endif %}
+              </td>
+              <td>{{ p.familia.nombre }}</td>
+              <td>
+                {% if p.colegio %}
+                  <span class="bo-badge bo-badge-info">{{ p.colegio.nombre }}</span>
+                {% else %}
+                  <span style="color:var(--bo-muted);">—</span>
+                {% endif %}
+              </td>
+              <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
+              <td class="num">
+                {% if p.tiene_variantes %}
+                  <a href="{% url 'bodega:variantes' p.pk %}" style="color:var(--bo-primary-2);">
+                    {{ p.n_variantes }}
+                  </a>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                {% if p.activo %}
+                  <span class="bo-badge bo-badge-success">Activo</span>
+                {% else %}
+                  <span class="bo-badge bo-badge-muted">Inactivo</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="prod-actions">
+                  <a href="{% url 'bodega:producto_editar' p.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                  {% if p.tiene_variantes %}
+                    <a href="{% url 'bodega:variantes' p.pk %}" class="bo-btn bo-btn-sm">Variantes</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color:var(--bo-muted);">
+        No hay productos con los filtros aplicados.
+        <a href="{% url 'bodega:producto_nuevo' %}" style="color:var(--bo-primary-2);font-weight:600;">Creá uno →</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

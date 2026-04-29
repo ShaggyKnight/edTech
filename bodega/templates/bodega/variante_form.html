@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} · Ideas Boutique{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:lista_productos' %}">Productos</a> /
+        <a href="{% url 'bodega:variantes' producto.pk %}">{{ producto.nombre }}</a> /
+        {{ titulo }}
+      </div>
+      <h1>{{ titulo }}</h1>
+    </div>
+    <a href="{% url 'bodega:variantes' producto.pk %}" class="bo-btn">← Volver</a>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="bo-card" style="max-width:640px;">
+      <div class="bo-card-head"><h3>Datos de la variante</h3></div>
+      <div class="bo-card-body">
+        {% if form.non_field_errors %}
+          <div class="bo-alert bo-alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="bo-field">
+          <label for="{{ form.sku.id_for_label }}">SKU *</label>
+          {{ form.sku }}
+          {% if form.sku.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.sku.help_text }}</small>
+          {% endif %}
+          {% if form.sku.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.sku.errors }}</div>{% endif %}
+        </div>
+
+        {# Atributos dinámicos: campos attr_<id> que el form genera. #}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+          {% for field in form %}
+            {% if field.name|slice:":5" == "attr_" %}
+              <div class="bo-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ field.errors }}</div>{% endif %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="bo-field">
+          <label for="{{ form.precio_override.id_for_label }}">Precio de esta variante</label>
+          {{ form.precio_override }}
+          {% if form.precio_override.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.precio_override.help_text }}</small>
+          {% endif %}
+        </div>
+
+        <div class="bo-field" style="display:flex;gap:8px;align-items:center;">
+          {{ form.activa }}
+          <label for="{{ form.activa.id_for_label }}" style="margin:0;">Activa</label>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:8px;">
+      <button type="submit" class="bo-btn bo-btn-primary">
+        {% if modo == 'crear' %}Crear variante{% else %}Guardar cambios{% endif %}
+      </button>
+      <a href="{% url 'bodega:variantes' producto.pk %}" class="bo-btn">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

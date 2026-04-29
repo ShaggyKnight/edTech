@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} · Ideas Boutique{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:lista_productos' %}">Productos</a> /
+        {{ titulo }}
+      </div>
+      <h1>{{ titulo }}</h1>
+    </div>
+    <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">← Volver</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="bo-grid cols-2" style="grid-template-columns: 2fr 1fr; align-items: start;">
+      {# ── Datos del producto ── #}
+      <div class="bo-card">
+        <div class="bo-card-head"><h3>Datos del producto</h3></div>
+        <div class="bo-card-body">
+          {% if form.non_field_errors %}
+            <div class="bo-alert bo-alert-danger">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="bo-field">
+            <label for="{{ form.nombre.id_for_label }}">Nombre *</label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.nombre.errors }}</div>{% endif %}
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="bo-field">
+              <label for="{{ form.familia.id_for_label }}">Familia *</label>
+              {{ form.familia }}
+              {% if form.familia.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.familia.errors }}</div>{% endif %}
+            </div>
+            <div class="bo-field">
+              <label for="{{ form.colegio.id_for_label }}">Colegio</label>
+              {{ form.colegio }}
+              {% if form.colegio.help_text %}
+                <small style="color:var(--bo-muted);font-size:11px;">{{ form.colegio.help_text }}</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="bo-field">
+            <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+            {{ form.descripcion }}
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="bo-field">
+              <label for="{{ form.precio_base.id_for_label }}">Precio venta *</label>
+              {{ form.precio_base }}
+            </div>
+            <div class="bo-field">
+              <label for="{{ form.precio_costo.id_for_label }}">Costo unitario</label>
+              {{ form.precio_costo }}
+              {% if form.precio_costo.help_text %}
+                <small style="color:var(--bo-muted);font-size:11px;">{{ form.precio_costo.help_text }}</small>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# ── Configuración + imagen ── #}
+      <div class="bo-card-stack">
+        <div class="bo-card">
+          <div class="bo-card-head"><h3>Configuración</h3></div>
+          <div class="bo-card-body">
+            <div class="bo-field" style="display:flex;gap:8px;align-items:start;">
+              {{ form.tiene_variantes }}
+              <div>
+                <label for="{{ form.tiene_variantes.id_for_label }}" style="margin:0;">Tiene variantes</label>
+                {% if form.tiene_variantes.help_text %}
+                  <small style="color:var(--bo-muted);font-size:11px;display:block;">{{ form.tiene_variantes.help_text }}</small>
+                {% endif %}
+              </div>
+            </div>
+            <div class="bo-field" style="display:flex;gap:8px;align-items:center;">
+              {{ form.activo }}
+              <label for="{{ form.activo.id_for_label }}" style="margin:0;">Activo</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="bo-card">
+          <div class="bo-card-head"><h3>Imagen</h3></div>
+          <div class="bo-card-body">
+            {% if producto.imagen %}
+              <img src="{{ producto.imagen.url }}" style="max-width:100%;border-radius:8px;margin-bottom:10px;">
+            {% endif %}
+            {{ form.imagen }}
+            <small style="color:var(--bo-muted);font-size:11px;display:block;margin-top:6px;">
+              Opcional. Recomendado 600×600px o más, fondo neutro.
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:8px;">
+      <button type="submit" class="bo-btn bo-btn-primary">
+        {% if modo == 'crear' %}Crear producto{% else %}Guardar cambios{% endif %}
+      </button>
+      <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

@@ -45,7 +45,8 @@
     </div>
     <div style="display:flex; gap:8px;">
       {% if puede_reponer %}
-        <a href="{% url 'admin:catalogo_producto_add' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>
+        <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>
+        <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Catálogo</a>
       {% endif %}
       <a href="{% url 'admin:bodega_movimientostock_changelist' %}" class="bo-btn">Movimientos</a>
     </div>

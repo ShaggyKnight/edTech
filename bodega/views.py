@@ -1,16 +1,23 @@
-"""Vistas de bodega: stock por tienda con filtros + reposición."""
+"""Vistas de bodega: stock por tienda + CRUD de catálogo desde el backoffice.
+
+La intención es que el bodeguero/admin no tenga que entrar al Django admin
+para gestionar productos día a día — esos son flujos repetitivos del
+negocio. /admin/ queda para el superusuario en casos especiales.
+"""
 
 from __future__ import annotations
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
-from django.db.models import F, Q, Sum
-from django.shortcuts import redirect, render
+from django.db.models import Count, F, Q, Sum
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views import generic
 from django.views.decorators.http import require_POST
 
+from bodega.forms import ProductoForm, ProductoVarianteForm, StockInicialForm
 from bodega.models import (
     MovimientoStock,
     StockMaterial,
@@ -209,3 +216,158 @@ def reponer_stock(request):
     if qs and '/bodega/' in qs:
         return redirect(qs)
     return redirect('bodega:stock')
+
+
+# ============================================================================
+# CRUD de productos desde la pantalla de bodega (Fase Ñ)
+# ============================================================================
+
+reponer_required = user_passes_test(_puede_reponer, login_url='login')
+
+
+@login_required
+@reponer_required
+def lista_productos(request):
+    """Listado de productos con filtros para gestión rápida."""
+    qs = (
+        Producto.objects.all()
+        .select_related('familia', 'colegio')
+        .annotate(n_variantes=Count('variantes'))
+    )
+    q = (request.GET.get('q') or '').strip()
+    familia_id = (request.GET.get('familia') or '').strip()
+    colegio_id = (request.GET.get('colegio') or '').strip()
+    estado = (request.GET.get('estado') or '').strip()
+
+    if q:
+        qs = qs.filter(Q(nombre__icontains=q) | Q(descripcion__icontains=q))
+    if familia_id.isdigit():
+        qs = qs.filter(familia_id=int(familia_id))
+    if colegio_id.isdigit():
+        qs = qs.filter(colegio_id=int(colegio_id))
+    if estado == 'activos':
+        qs = qs.filter(activo=True)
+    elif estado == 'inactivos':
+        qs = qs.filter(activo=False)
+
+    return render(request, 'bodega/productos_lista.html', {
+        'productos': qs.order_by('familia__nombre', 'nombre'),
+        'familias': Familia.objects.order_by('nombre'),
+        'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
+        'filtros': {
+            'q': q, 'familia': familia_id, 'colegio': colegio_id, 'estado': estado,
+        },
+    })
+
+
+@login_required
+@reponer_required
+def producto_nuevo(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            p = form.save()
+            messages.success(request, f'Producto "{p.nombre}" creado.')
+            if p.tiene_variantes:
+                return redirect('bodega:variantes', pk=p.pk)
+            return redirect('bodega:lista_productos')
+    else:
+        form = ProductoForm(initial={'activo': True})
+    return render(request, 'bodega/producto_form.html', {
+        'form': form, 'modo': 'crear',
+        'titulo': 'Nuevo producto',
+    })
+
+
+@login_required
+@reponer_required
+def producto_editar(request, pk):
+    p = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=p)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Producto "{p.nombre}" actualizado.')
+            return redirect('bodega:lista_productos')
+    else:
+        form = ProductoForm(instance=p)
+    return render(request, 'bodega/producto_form.html', {
+        'form': form, 'modo': 'editar', 'producto': p,
+        'titulo': f'Editar — {p.nombre}',
+    })
+
+
+@login_required
+@reponer_required
+def variantes_lista(request, pk):
+    """Lista las variantes de un producto y permite agregar/editar/eliminar."""
+    p = get_object_or_404(Producto, pk=pk)
+    variantes = (
+        p.variantes.all()
+        .prefetch_related('valores__atributo')
+        .order_by('sku')
+    )
+    return render(request, 'bodega/variantes_lista.html', {
+        'producto': p,
+        'variantes': variantes,
+    })
+
+
+@login_required
+@reponer_required
+def variante_nueva(request, pk):
+    p = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        form = ProductoVarianteForm(request.POST)
+        if form.is_valid():
+            v = form.save(producto=p)
+            messages.success(request, f'Variante {v.sku} creada.')
+            return redirect('bodega:variantes', pk=p.pk)
+    else:
+        form = ProductoVarianteForm()
+    return render(request, 'bodega/variante_form.html', {
+        'form': form, 'producto': p, 'modo': 'crear',
+        'titulo': f'Nueva variante de {p.nombre}',
+    })
+
+
+@login_required
+@reponer_required
+def variante_editar(request, pk, var_pk):
+    p = get_object_or_404(Producto, pk=pk)
+    v = get_object_or_404(ProductoVariante, pk=var_pk, producto=p)
+    if request.method == 'POST':
+        form = ProductoVarianteForm(request.POST, instance=v)
+        if form.is_valid():
+            form.save(producto=p)
+            messages.success(request, f'Variante {v.sku} actualizada.')
+            return redirect('bodega:variantes', pk=p.pk)
+    else:
+        form = ProductoVarianteForm(instance=v)
+    return render(request, 'bodega/variante_form.html', {
+        'form': form, 'producto': p, 'modo': 'editar', 'variante': v,
+        'titulo': f'Editar variante {v.sku}',
+    })
+
+
+@login_required
+@reponer_required
+@require_POST
+def variante_borrar(request, pk, var_pk):
+    """Borra (o desactiva si tiene movimientos asociados) una variante."""
+    p = get_object_or_404(Producto, pk=pk)
+    v = get_object_or_404(ProductoVariante, pk=var_pk, producto=p)
+    # Si tiene stock o movimientos, desactivamos en lugar de borrar para no
+    # romper integridad histórica.
+    tiene_historia = (
+        v.stock_tienda.exists() or v.movimientostock_set.exists() if hasattr(v, 'movimientostock_set') else False
+    )
+    if v.stock_tienda.exists():
+        v.activa = False
+        v.save(update_fields=['activa'])
+        messages.warning(request, f'{v.sku} tiene stock — se marcó como inactiva en lugar de borrar.')
+    else:
+        nombre = v.sku
+        v.delete()
+        messages.success(request, f'Variante {nombre} eliminada.')
+    return redirect('bodega:variantes', pk=p.pk)

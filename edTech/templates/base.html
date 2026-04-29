@@ -132,18 +132,19 @@
             </a>
           {% endif %}
 
-          <div class="bo-side-section">Catálogo & Sistema</div>
-          {% if perms.catalogo.view_producto or user.is_superuser %}
-            <a class="bo-side-link" href="{% url 'admin:catalogo_producto_changelist' %}">
+          <div class="bo-side-section">Catálogo</div>
+          {% if perms.catalogo.change_producto or user.is_superuser %}
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_productos' %}active{% endif %}"
+               href="{% url 'bodega:lista_productos' %}">
               <svg class="ico"><use href="#ico-sparkle"/></svg>
               Productos
             </a>
+          {% endif %}
+          {% if user.is_superuser %}
             <a class="bo-side-link" href="{% url 'admin:bodega_material_changelist' %}">
               <svg class="ico"><use href="#ico-pin"/></svg>
               Materiales
             </a>
-          {% endif %}
-          {% if user.is_superuser %}
             <a class="bo-side-link" href="{% url 'admin:index' %}">
               <svg class="ico"><use href="#ico-shield"/></svg>
               Admin Django

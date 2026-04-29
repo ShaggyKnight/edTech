@@ -21,8 +21,8 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from bodega.models import StockTienda, Tienda
-from catalogo.models import Producto, ProductoVariante
+from bodega.models import MovimientoStock, StockTienda, Tienda
+from catalogo.models import Familia, Producto, ProductoVariante
 from pos.cart import Cart
 from pos.forms import (
     ActualizarCantidadForm,
@@ -53,6 +53,19 @@ def _stock_subquery(tienda, campo):
     )
 
 
+def _puede_admin_stock(user) -> bool:
+    """¿Este user puede agregar stock desde el POS?
+
+    Solo superusers o miembros del grupo `admin`. Cajeros y bodegueros
+    NO pueden — el cajero opera ventas, el bodeguero usa el admin Django.
+    """
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user.groups.filter(name='admin').exists()
+
+
 @login_required
 @permission_required('pos.add_reciboventa', raise_exception=True)
 def home(request):
@@ -63,6 +76,9 @@ def home(request):
         }, status=200)
 
     query = request.GET.get('q', '').strip()
+    familia_id = (request.GET.get('familia') or '').strip()
+    # Default: solo con stock. `?stock=todos` para ver agotados también.
+    mostrar_todos = request.GET.get('stock') == 'todos'
 
     productos_qs = (
         Producto.objects
@@ -86,6 +102,14 @@ def home(request):
             | Q(sku__icontains=query)
             | Q(valores__valor__icontains=query)
         ).distinct()
+    if familia_id.isdigit():
+        f = int(familia_id)
+        productos_qs = productos_qs.filter(familia_id=f)
+        variantes_qs = variantes_qs.filter(producto__familia_id=f)
+    if not mostrar_todos:
+        # Default ON: filtra agotados (stock NULL o 0).
+        productos_qs = productos_qs.filter(stock__gt=0)
+        variantes_qs = variantes_qs.filter(stock__gt=0)
 
     cart = Cart(request.session)
     lineas = list(cart.lineas(canal=CANAL))
@@ -95,6 +119,9 @@ def home(request):
         'tienda': tienda,
         'tiendas_disponibles': Tienda.objects.filter(activa=True).exclude(pk=tienda.pk),
         'query': query,
+        'familias': Familia.objects.order_by('nombre'),
+        'familia_activa': int(familia_id) if familia_id.isdigit() else None,
+        'mostrar_todos': mostrar_todos,
         'productos': productos_qs.order_by('nombre'),
         'variantes': variantes_qs.order_by('producto__nombre', 'sku'),
         'lineas': lineas,
@@ -102,7 +129,84 @@ def home(request):
         'descuento_total': descuento_total,
         'total_neto': total_neto,
         'items_count': cart.items_count,
+        'puede_agregar_stock': _puede_admin_stock(request.user),
     })
+
+
+@login_required
+@require_POST
+def agregar_stock(request):
+    """Suma stock a un producto/variante en la tienda activa.
+
+    Endpoint operativo para admins: cuando llega mercadería al POS, en
+    vez de ir al Django admin, se carga directo desde la tabla.
+    Cajero y bodeguero no tienen acceso (los gates están acá adentro).
+    """
+    if not _puede_admin_stock(request.user):
+        messages.error(request, 'No tenés permisos para cargar stock desde el POS.')
+        return redirect('pos:home')
+
+    tienda = get_active_tienda(request)
+    if tienda is None:
+        messages.error(request, 'Seleccioná una tienda primero.')
+        return redirect('pos:home')
+
+    tipo = request.POST.get('tipo', '')
+    try:
+        item_id = int(request.POST.get('item_id', 0))
+        cantidad = int(request.POST.get('cantidad', 0))
+    except (TypeError, ValueError):
+        messages.error(request, 'Datos inválidos.')
+        return redirect('pos:home')
+
+    if cantidad <= 0:
+        messages.error(request, 'La cantidad a sumar debe ser mayor a 0.')
+        return redirect('pos:home')
+
+    from django.db import transaction
+    from django.db.models import F
+
+    with transaction.atomic():
+        if tipo == 'v':
+            if not ProductoVariante.objects.filter(pk=item_id, activa=True).exists():
+                messages.error(request, 'Variante no disponible.')
+                return redirect('pos:home')
+            fila, _ = StockTienda.objects.select_for_update().get_or_create(
+                tienda=tienda, variante_id=item_id, defaults={'cantidad': 0},
+            )
+        elif tipo == 'p':
+            if not Producto.objects.filter(
+                pk=item_id, activo=True, tiene_variantes=False,
+            ).exists():
+                messages.error(request, 'Producto no disponible.')
+                return redirect('pos:home')
+            fila, _ = StockTienda.objects.select_for_update().get_or_create(
+                tienda=tienda, producto_id=item_id, defaults={'cantidad': 0},
+            )
+        else:
+            messages.error(request, 'Tipo inválido.')
+            return redirect('pos:home')
+
+        StockTienda.objects.filter(pk=fila.pk).update(
+            cantidad=F('cantidad') + cantidad,
+        )
+        mov_kwargs = {
+            'tienda': tienda, 'tipo': MovimientoStock.ENTRADA,
+            'cantidad': cantidad, 'usuario': request.user,
+            'referencia': f'Carga rápida POS por {request.user.username}',
+        }
+        if tipo == 'v':
+            mov_kwargs['variante_id'] = item_id
+        else:
+            mov_kwargs['producto_id'] = item_id
+        MovimientoStock.objects.create(**mov_kwargs)
+
+    messages.success(request, f'+{cantidad} unidades agregadas al stock.')
+    # Preserva los filtros/query del referer si los hay.
+    qs = request.META.get('HTTP_REFERER', '')
+    if qs and 'pos' in qs:
+        return redirect(qs)
+    return redirect('pos:home')
 
 
 @login_required

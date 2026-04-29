@@ -14,4 +14,5 @@ urlpatterns = [
     path('recibo/<int:pk>/', views.ver_recibo, name='recibo'),
     path('ventas/', views.ventas, name='ventas'),
     path('tienda/seleccionar/', views.seleccionar_tienda, name='seleccionar_tienda'),
+    path('agregar-stock/', views.agregar_stock, name='agregar_stock'),
 ]

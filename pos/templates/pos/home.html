@@ -19,9 +19,45 @@
   .pos-totals { padding: 16px; background: var(--bo-bg); border-top: 1px solid var(--bo-border-soft); }
   .pos-totals .line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
   .pos-totals .line.total { padding-top: 12px; border-top: 1px solid var(--bo-border); margin-top: 8px; font-size: 18px; font-weight: 600; }
-  .pos-search-input { padding-left: 38px; }
+  .pos-search-input { padding-left: 32px; }
   .pos-search-wrap { position: relative; }
-  .pos-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--bo-muted); }
+  .pos-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--bo-muted); }
+  /* Filtros */
+  .pos-filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .pos-chip {
+    padding: 5px 11px; border: 1px solid var(--bo-border); border-radius: 999px;
+    background: var(--bo-card); color: var(--bo-text); font-size: 12px; font-weight: 500;
+    cursor: pointer; text-decoration: none; transition: all .12s; white-space: nowrap;
+  }
+  .pos-chip:hover { border-color: var(--bo-primary); color: var(--bo-primary-2); }
+  .pos-chip.active {
+    background: var(--bo-primary-2); color: #fff; border-color: var(--bo-primary-2);
+  }
+  .pos-toggle {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    padding: 5px 10px; border: 1px solid var(--bo-border); border-radius: 6px;
+    background: var(--bo-card); font-size: 12px; font-weight: 500; user-select: none;
+  }
+  .pos-toggle.on {
+    background: var(--bo-success-soft); border-color: var(--bo-success);
+    color: #0E7B3F;
+  }
+  .pos-toggle.on::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--bo-success);
+  }
+  /* Form de carga rápida de stock (admin) */
+  .pos-stock-form { display: inline-flex; gap: 4px; align-items: center; }
+  .pos-stock-form input[type="number"] {
+    width: 48px; padding: 4px 6px; font-size: 11px; border: 1px solid var(--bo-border);
+    border-radius: 4px; text-align: center;
+  }
+  .pos-stock-form button {
+    padding: 4px 8px; background: var(--bo-success-soft); color: #0E7B3F;
+    border: 1px solid var(--bo-success); border-radius: 4px; font-size: 11px;
+    font-weight: 600; cursor: pointer;
+  }
+  .pos-stock-form button:hover { background: var(--bo-success); color: #fff; }
 </style>
 {% endblock %}
 
@@ -52,19 +88,58 @@
   </div>
 
   <div class="pos-grid">
-    {# ─── Buscador + tabla productos ─── #}
+    {# ─── Buscador + filtros + tabla productos ─── #}
     <div class="bo-card">
       <div class="bo-card-head">
         <h3>Productos</h3>
-        <form method="get" action="{% url 'pos:home' %}" class="pos-search-wrap" style="flex:1; max-width:400px; margin-left:16px;">
+        <form method="get" action="{% url 'pos:home' %}" class="pos-search-wrap" style="flex:1; max-width:340px;">
+          {# Persistimos los filtros activos durante la búsqueda #}
+          {% if familia_activa %}<input type="hidden" name="familia" value="{{ familia_activa }}">{% endif %}
+          {% if mostrar_todos %}<input type="hidden" name="stock" value="todos">{% endif %}
           <svg class="ico ico--16"><use href="#ico-search"/></svg>
           <input type="text" name="q" value="{{ query }}" class="bo-input pos-search-input"
                  placeholder="Nombre, SKU o talla…" autofocus>
-          {% if query %}
-            <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-sm" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);">×</a>
-          {% endif %}
         </form>
       </div>
+
+      {# ─── Filtros: chips de familia + toggle stock ─── #}
+      <div class="bo-card-body" style="padding-top:14px; padding-bottom:14px; border-bottom:1px solid var(--bo-border-soft);">
+        <div class="pos-filters">
+          {# Chip "Todas las familias" #}
+          <a class="pos-chip {% if not familia_activa %}active{% endif %}"
+             href="?{% if query %}q={{ query }}&{% endif %}{% if mostrar_todos %}stock=todos{% endif %}">
+            Todas
+          </a>
+          {% for f in familias %}
+            <a class="pos-chip {% if familia_activa == f.pk %}active{% endif %}"
+               href="?familia={{ f.pk }}{% if query %}&q={{ query }}{% endif %}{% if mostrar_todos %}&stock=todos{% endif %}">
+              {{ f.nombre }}
+            </a>
+          {% endfor %}
+
+          <div style="flex:1;"></div>
+
+          {# Toggle stock #}
+          {% if mostrar_todos %}
+            <a class="pos-toggle"
+               href="?{% if familia_activa %}familia={{ familia_activa }}&{% endif %}{% if query %}q={{ query }}{% endif %}"
+               title="Mostrando todos. Click para volver al filtro por defecto.">
+              Todos los productos
+            </a>
+          {% else %}
+            <a class="pos-toggle on"
+               href="?stock=todos{% if familia_activa %}&familia={{ familia_activa }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+               title="Solo productos con stock. Click para mostrar agotados también.">
+              Solo con stock
+            </a>
+          {% endif %}
+
+          {% if query or familia_activa or mostrar_todos %}
+            <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-sm">Limpiar</a>
+          {% endif %}
+        </div>
+      </div>
+
       <div style="max-height: 600px; overflow-y: auto;">
         <table class="bo-table">
           <thead>
@@ -75,21 +150,30 @@
               <th class="num">Precio</th>
               <th class="num">Stock</th>
               <th></th>
+              {% if puede_agregar_stock %}<th>Cargar</th>{% endif %}
             </tr>
           </thead>
           <tbody>
             {% for v in variantes %}
-              <tr {% if not v.stock %}style="opacity:.5;"{% endif %}>
+              <tr {% if not v.stock %}style="opacity:.6;"{% endif %}>
                 <td>{{ v.producto.nombre }}</td>
                 <td>
-                  <code style="font-size:12px;color:var(--bo-muted);">{{ v.sku }}</code>
+                  <code>{{ v.sku }}</code>
                   {% for val in v.valores.all %}
                     <span class="bo-badge bo-badge-muted">{{ val.valor }}</span>
                   {% endfor %}
                 </td>
                 <td>{{ v.producto.familia.nombre }}</td>
                 <td class="num">${{ v.precio|floatformat:0|intcomma }}</td>
-                <td class="num">{{ v.stock|default:0 }}</td>
+                <td class="num">
+                  {% if not v.stock %}
+                    <span class="bo-badge bo-badge-danger">0</span>
+                  {% elif v.stock <= 5 %}
+                    <span class="bo-badge bo-badge-warning">{{ v.stock }}</span>
+                  {% else %}
+                    {{ v.stock }}
+                  {% endif %}
+                </td>
                 <td>
                   <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;">
                     {% csrf_token %}
@@ -99,15 +183,34 @@
                     <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not v.stock %}disabled{% endif %}>+ Agregar</button>
                   </form>
                 </td>
+                {% if puede_agregar_stock %}
+                  <td>
+                    <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
+                      {% csrf_token %}
+                      <input type="hidden" name="tipo" value="v">
+                      <input type="hidden" name="item_id" value="{{ v.pk }}">
+                      <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
+                      <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
+                    </form>
+                  </td>
+                {% endif %}
               </tr>
             {% endfor %}
             {% for p in productos %}
-              <tr {% if not p.stock %}style="opacity:.5;"{% endif %}>
+              <tr {% if not p.stock %}style="opacity:.6;"{% endif %}>
                 <td>{{ p.nombre }}</td>
                 <td><em style="color:var(--bo-muted);">sin variantes</em></td>
                 <td>{{ p.familia.nombre }}</td>
                 <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
-                <td class="num">{{ p.stock|default:0 }}</td>
+                <td class="num">
+                  {% if not p.stock %}
+                    <span class="bo-badge bo-badge-danger">0</span>
+                  {% elif p.stock <= 5 %}
+                    <span class="bo-badge bo-badge-warning">{{ p.stock }}</span>
+                  {% else %}
+                    {{ p.stock }}
+                  {% endif %}
+                </td>
                 <td>
                   <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;">
                     {% csrf_token %}
@@ -117,10 +220,26 @@
                     <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not p.stock %}disabled{% endif %}>+ Agregar</button>
                   </form>
                 </td>
+                {% if puede_agregar_stock %}
+                  <td>
+                    <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
+                      {% csrf_token %}
+                      <input type="hidden" name="tipo" value="p">
+                      <input type="hidden" name="item_id" value="{{ p.pk }}">
+                      <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
+                      <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
+                    </form>
+                  </td>
+                {% endif %}
               </tr>
             {% empty %}
               {% if not variantes %}
-                <tr><td colspan="6" style="text-align:center;color:var(--bo-muted);padding:30px;">No hay productos que coincidan.</td></tr>
+                <tr>
+                  <td colspan="{% if puede_agregar_stock %}7{% else %}6{% endif %}"
+                      style="text-align:center;color:var(--bo-muted);padding:30px;">
+                    No hay productos que coincidan con los filtros.
+                  </td>
+                </tr>
               {% endif %}
             {% endfor %}
           </tbody>

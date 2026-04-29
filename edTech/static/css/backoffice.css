@@ -63,6 +63,20 @@
 /* ---- Reset puntual ------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+
+/* Iconos del sprite SVG (definidos en partials/_icons.html). El backoffice
+   reusa el mismo set que el front público; las clases `.ico` y `.ico--N`
+   garantizan que aunque el <svg> no traiga width/height inline, no
+   renderee gigante. */
+.bo .ico, .bo-bar .ico {
+  width: 16px; height: 16px; flex-shrink: 0; fill: currentColor;
+  display: inline-block; vertical-align: middle;
+}
+.bo .ico--14, .bo-bar .ico--14 { width: 14px; height: 14px; }
+.bo .ico--16, .bo-bar .ico--16 { width: 16px; height: 16px; }
+.bo .ico--18, .bo-bar .ico--18 { width: 18px; height: 18px; }
+.bo .ico--22, .bo-bar .ico--22 { width: 22px; height: 22px; }
+.bo .ico--28, .bo-bar .ico--28 { width: 28px; height: 28px; }
 body.bo {
   font-family: var(--bo-font);
   font-size: var(--bo-fz);

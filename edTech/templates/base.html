@@ -149,12 +149,13 @@
               <svg class="ico"><use href="#ico-sparkle"/></svg>
               Productos
             </a>
-          {% endif %}
-          {% if user.is_superuser %}
-            <a class="bo-side-link" href="{% url 'admin:bodega_material_changelist' %}">
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_materiales' %}active{% endif %}"
+               href="{% url 'bodega:lista_materiales' %}">
               <svg class="ico"><use href="#ico-pin"/></svg>
               Materiales
             </a>
+          {% endif %}
+          {% if user.is_superuser %}
             <a class="bo-side-link" href="{% url 'admin:index' %}">
               <svg class="ico"><use href="#ico-shield"/></svg>
               Admin Django

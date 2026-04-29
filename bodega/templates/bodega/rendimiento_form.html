@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} · Ideas Boutique{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:lista_materiales' %}">Materiales</a> /
+        <a href="{% url 'bodega:rendimientos' material.pk %}">{{ material.nombre }}</a> /
+        {{ titulo }}
+      </div>
+      <h1>{{ titulo }}</h1>
+    </div>
+    <a href="{% url 'bodega:rendimientos' material.pk %}" class="bo-btn">← Volver</a>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="bo-card" style="max-width:640px;">
+      <div class="bo-card-head"><h3>Datos del rendimiento</h3></div>
+      <div class="bo-card-body">
+        {% if form.non_field_errors %}
+          <div class="bo-alert bo-alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="bo-field">
+          <label for="{{ form.variante.id_for_label }}">Variante de producto *</label>
+          {{ form.variante }}
+          {% if form.variante.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.variante.help_text }}</small>
+          {% endif %}
+          {% if form.variante.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.variante.errors }}</div>{% endif %}
+        </div>
+
+        <div class="bo-field">
+          <label for="{{ form.unidades_por_rollo.id_for_label }}">Unidades por rollo *</label>
+          {{ form.unidades_por_rollo }}
+          {% if form.unidades_por_rollo.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.unidades_por_rollo.help_text }}</small>
+          {% endif %}
+          {% if form.unidades_por_rollo.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.unidades_por_rollo.errors }}</div>{% endif %}
+        </div>
+
+        <div class="bo-alert bo-alert-info" style="margin-bottom:0;font-size:12px;">
+          Tip: si la talla XL consume más tela, suele rendir menos unidades por rollo
+          que la talla S del mismo producto.
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:8px;">
+      <button type="submit" class="bo-btn bo-btn-primary">
+        {% if modo == 'crear' %}Crear rendimiento{% else %}Guardar cambios{% endif %}
+      </button>
+      <a href="{% url 'bodega:rendimientos' material.pk %}" class="bo-btn">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

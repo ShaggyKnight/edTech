@@ -10,6 +10,7 @@ from __future__ import annotations
 from django import forms
 from django.core.exceptions import ValidationError
 
+from bodega.models import Material, Proveedor, Rendimiento
 from catalogo.models import (
     Atributo,
     Colegio,
@@ -135,3 +136,63 @@ class StockInicialForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'bo-input', 'min': 0}),
         help_text='Unidades en stock inicial. Cero si todavía no llegó mercadería.',
     )
+
+
+class MaterialForm(forms.ModelForm):
+    """Crea o edita un Material (rollo de tela, accesorios, etc)."""
+
+    class Meta:
+        model = Material
+        fields = [
+            'nombre', 'descripcion', 'proveedor',
+            'costo_unitario_referencia', 'activo',
+        ]
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'bo-input'}),
+            'descripcion': forms.Textarea(attrs={'class': 'bo-textarea', 'rows': 3}),
+            'proveedor': forms.Select(attrs={'class': 'bo-select'}),
+            'costo_unitario_referencia': forms.NumberInput(attrs={'class': 'bo-input', 'min': 0}),
+            'activo': forms.CheckboxInput(),
+        }
+        help_texts = {
+            'nombre': 'Nombre identificable. Ej: "Tela franela silvia (buzos SFJ)".',
+            'descripcion': 'Descripción técnica del material — color, peso, uso.',
+            'costo_unitario_referencia': 'Costo aproximado por rollo. Cada compra registra '
+                                          'su costo real exacto en MovimientoMaterial.',
+        }
+
+
+class RendimientoForm(forms.ModelForm):
+    """Crea o edita un Rendimiento (cuántas unidades de una variante salen
+    de un rollo de cierto material)."""
+
+    class Meta:
+        model = Rendimiento
+        fields = ['variante', 'unidades_por_rollo']
+        widgets = {
+            'variante': forms.Select(attrs={'class': 'bo-select'}),
+            'unidades_por_rollo': forms.NumberInput(attrs={'class': 'bo-input', 'min': 1}),
+        }
+        help_texts = {
+            'variante': 'A qué variante de producto se le aplica este rendimiento.',
+            'unidades_por_rollo': 'Cuántas unidades de esa variante salen de un rollo.',
+        }
+
+    def __init__(self, *args, material=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo variantes activas, ordenadas por producto.
+        self.fields['variante'].queryset = (
+            ProductoVariante.objects
+            .filter(activa=True, producto__activo=True)
+            .select_related('producto')
+            .order_by('producto__nombre', 'sku')
+        )
+        self.material = material
+
+    def save(self, commit=True):
+        rend = super().save(commit=False)
+        if self.material:
+            rend.material = self.material
+        if commit:
+            rend.save()
+        return rend

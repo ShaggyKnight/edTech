@@ -167,7 +167,7 @@
   </div>
 
   {# ─── Chart de evolución mensual ─── #}
-  <div class="bo-card">
+  <div class="bo-card" style="margin-bottom:20px;">
     <div class="bo-card-head">
       <h3>Evolución mensual (últimos 12 meses)</h3>
     </div>
@@ -175,6 +175,51 @@
       <canvas id="chartEvolucion" class="bo-chart"></canvas>
     </div>
   </div>
+
+  {# ─── Potencial: lo que la materia prima ya comprada permitiría ─── #}
+  {% if potencial.capacidad_unidades %}
+    <div class="bo-card" style="border-left: 4px solid var(--bo-gold);">
+      <div class="bo-card-head">
+        <h3>Potencial de confección con la materia prima en bodega</h3>
+        <a href="{% url 'reportes:produccion' %}" class="bo-btn bo-btn-sm">Ver detalle por variante →</a>
+      </div>
+      <div class="bo-card-body">
+        <p style="margin-top:0; color: var(--bo-muted);">
+          Si confeccionás y vendés todo lo que tu tela actual permite,
+          podés sumar este margen adicional al EERR de los próximos meses.
+          La materia prima ya está pagada (se ve en el balance como activo).
+        </p>
+        <div class="bo-grid cols-4">
+          <div>
+            <div class="bo-kpi-label" style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Capacidad total</div>
+            <div style="font-size:22px;font-weight:700;margin-top:4px;">{{ potencial.capacidad_unidades }}</div>
+            <div style="color:var(--bo-muted);font-size:12px;">prendas confeccionables</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Ingreso potencial</div>
+            <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--bo-primary-2);">
+              ${{ potencial.valor_potencial_total|floatformat:0|intcomma }}
+            </div>
+            <div style="color:var(--bo-muted);font-size:12px;">a precio de venta</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Costo potencial</div>
+            <div style="font-size:22px;font-weight:700;margin-top:4px;color:#B5860C;">
+              ${{ potencial.costo_potencial_total|floatformat:0|intcomma }}
+            </div>
+            <div style="color:var(--bo-muted);font-size:12px;">tela + confección + accesorios</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Margen potencial</div>
+            <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--bo-success);">
+              ${{ potencial.margen_potencial_total|floatformat:0|intcomma }}
+            </div>
+            <div style="color:var(--bo-muted);font-size:12px;">se sumaría a la utilidad</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
   {{ serie|json_script:"data-eerr-serie" }}
 {% endblock %}

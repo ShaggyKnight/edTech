@@ -11,15 +11,21 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, F, Q, Sum, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import generic
 from django.views.decorators.http import require_POST
 
-from bodega.forms import ProductoForm, ProductoVarianteForm, StockInicialForm
+from bodega.forms import (
+    MaterialForm, ProductoForm, ProductoVarianteForm, RendimientoForm,
+    StockInicialForm,
+)
 from bodega.models import (
+    Material,
     MovimientoStock,
+    Rendimiento,
     StockMaterial,
     StockTienda,
     Tienda,
@@ -371,3 +377,133 @@ def variante_borrar(request, pk, var_pk):
         v.delete()
         messages.success(request, f'Variante {nombre} eliminada.')
     return redirect('bodega:variantes', pk=p.pk)
+
+
+# ============================================================================
+# CRUD de materiales y rendimientos (Fase Ñ.2)
+# ============================================================================
+
+@login_required
+@reponer_required
+def lista_materiales(request):
+    """Listado de materiales con stock total, costo y rendimientos."""
+    qs = (
+        Material.objects.all()
+        .select_related('proveedor')
+        .annotate(
+            stock_total=Coalesce(Sum('stock_bodegas__cantidad'), 0),
+            n_rendimientos=Count('rendimientos', distinct=True),
+        )
+    )
+    q = (request.GET.get('q') or '').strip()
+    estado = (request.GET.get('estado') or '').strip()
+    if q:
+        qs = qs.filter(Q(nombre__icontains=q) | Q(descripcion__icontains=q))
+    if estado == 'activos':
+        qs = qs.filter(activo=True)
+    elif estado == 'inactivos':
+        qs = qs.filter(activo=False)
+    return render(request, 'bodega/materiales_lista.html', {
+        'materiales': qs.order_by('nombre'),
+        'filtros': {'q': q, 'estado': estado},
+    })
+
+
+@login_required
+@reponer_required
+def material_nuevo(request):
+    if request.method == 'POST':
+        form = MaterialForm(request.POST)
+        if form.is_valid():
+            m = form.save()
+            messages.success(request, f'Material "{m.nombre}" creado.')
+            return redirect('bodega:lista_materiales')
+    else:
+        form = MaterialForm(initial={'activo': True})
+    return render(request, 'bodega/material_form.html', {
+        'form': form, 'modo': 'crear',
+        'titulo': 'Nuevo material',
+    })
+
+
+@login_required
+@reponer_required
+def material_editar(request, pk):
+    m = get_object_or_404(Material, pk=pk)
+    if request.method == 'POST':
+        form = MaterialForm(request.POST, instance=m)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Material "{m.nombre}" actualizado.')
+            return redirect('bodega:lista_materiales')
+    else:
+        form = MaterialForm(instance=m)
+    return render(request, 'bodega/material_form.html', {
+        'form': form, 'modo': 'editar', 'material': m,
+        'titulo': f'Editar — {m.nombre}',
+    })
+
+
+@login_required
+@reponer_required
+def rendimientos_lista(request, pk):
+    """Lista los rendimientos de un material (qué variantes y cuántas u/rollo)."""
+    m = get_object_or_404(Material, pk=pk)
+    rendimientos = (
+        m.rendimientos.all()
+        .select_related('variante__producto', 'variante__producto__colegio')
+        .prefetch_related('variante__valores__atributo')
+        .order_by('variante__producto__nombre', 'variante__sku')
+    )
+    return render(request, 'bodega/rendimientos_lista.html', {
+        'material': m,
+        'rendimientos': rendimientos,
+    })
+
+
+@login_required
+@reponer_required
+def rendimiento_nuevo(request, pk):
+    m = get_object_or_404(Material, pk=pk)
+    if request.method == 'POST':
+        form = RendimientoForm(request.POST, material=m)
+        if form.is_valid():
+            r = form.save()
+            messages.success(request, f'Rendimiento agregado: {r.unidades_por_rollo} u/rollo.')
+            return redirect('bodega:rendimientos', pk=m.pk)
+    else:
+        form = RendimientoForm(material=m)
+    return render(request, 'bodega/rendimiento_form.html', {
+        'form': form, 'material': m, 'modo': 'crear',
+        'titulo': f'Nuevo rendimiento de {m.nombre}',
+    })
+
+
+@login_required
+@reponer_required
+def rendimiento_editar(request, pk, rend_pk):
+    m = get_object_or_404(Material, pk=pk)
+    r = get_object_or_404(Rendimiento, pk=rend_pk, material=m)
+    if request.method == 'POST':
+        form = RendimientoForm(request.POST, instance=r, material=m)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Rendimiento actualizado.')
+            return redirect('bodega:rendimientos', pk=m.pk)
+    else:
+        form = RendimientoForm(instance=r, material=m)
+    return render(request, 'bodega/rendimiento_form.html', {
+        'form': form, 'material': m, 'modo': 'editar', 'rendimiento': r,
+        'titulo': 'Editar rendimiento',
+    })
+
+
+@login_required
+@reponer_required
+@require_POST
+def rendimiento_borrar(request, pk, rend_pk):
+    m = get_object_or_404(Material, pk=pk)
+    r = get_object_or_404(Rendimiento, pk=rend_pk, material=m)
+    r.delete()
+    messages.success(request, 'Rendimiento eliminado.')
+    return redirect('bodega:rendimientos', pk=m.pk)

@@ -211,14 +211,18 @@ class CapacidadVariante:
     material_nombre: str
     rollos_disponibles: int
     unidades_por_rollo: int
-    capacidad: int  # floor(rollos × unidades_por_rollo)
+    capacidad: int                   # floor(rollos × unidades_por_rollo)
     precio_venta: Decimal
-    valor_potencial: Decimal  # capacidad × precio_venta
+    precio_costo: Decimal            # producto.precio_costo (incluye tela + confección + accesorios)
+    valor_potencial: Decimal         # capacidad × precio_venta
+    costo_potencial: Decimal         # capacidad × precio_costo
+    margen_potencial: Decimal        # valor_potencial − costo_potencial
 
 
 def capacidad_por_variante(bodega: Bodega) -> list[CapacidadVariante]:
     """Para cada variante con `Rendimiento`, calcula cuántas unidades se
-    pueden producir dado el stock actual de su material en `bodega`.
+    pueden producir dado el stock actual de su material en `bodega`,
+    junto con su valor potencial de venta, costo total y margen.
 
     Las variantes sin rendimiento configurado quedan fuera del listado.
     """
@@ -239,7 +243,10 @@ def capacidad_por_variante(bodega: Bodega) -> list[CapacidadVariante]:
         rollos = stocks.get(r.material_id, 0)
         capacidad = rollos * r.unidades_por_rollo
         precio = r.variante.precio_override or r.variante.producto.precio_base
+        costo = r.variante.producto.precio_costo
         valor_potencial = Decimal(capacidad) * precio
+        costo_potencial = Decimal(capacidad) * costo
+        margen_potencial = valor_potencial - costo_potencial
         valores = ', '.join(str(v) for v in r.variante.valores.all())
         label = f'{r.variante.producto.nombre} [{r.variante.sku}]'
         if valores:
@@ -252,7 +259,10 @@ def capacidad_por_variante(bodega: Bodega) -> list[CapacidadVariante]:
             unidades_por_rollo=r.unidades_por_rollo,
             capacidad=capacidad,
             precio_venta=precio,
+            precio_costo=costo,
             valor_potencial=valor_potencial,
+            costo_potencial=costo_potencial,
+            margen_potencial=margen_potencial,
         ))
     return out
 
@@ -261,8 +271,11 @@ def capacidad_por_variante(bodega: Bodega) -> list[CapacidadVariante]:
 class ResumenProduccion:
     bodega: Bodega
     capacidades: list[CapacidadVariante]
-    valor_materiales: Decimal       # costo (referencia) de los rollos en bodega
-    valor_potencial_total: Decimal  # Σ capacidad × precio venta
+    valor_materiales: Decimal           # costo (referencia) de los rollos en bodega
+    valor_potencial_total: Decimal      # Σ capacidad × precio venta
+    costo_potencial_total: Decimal      # Σ capacidad × precio costo
+    margen_potencial_total: Decimal     # valor_potencial − costo_potencial
+    capacidad_unidades: int             # Σ capacidad de todas las variantes
 
 
 def resumen_produccion(bodega: Bodega) -> ResumenProduccion:
@@ -270,6 +283,11 @@ def resumen_produccion(bodega: Bodega) -> ResumenProduccion:
     valor_potencial_total = sum(
         (c.valor_potencial for c in capacidades), Decimal('0')
     )
+    costo_potencial_total = sum(
+        (c.costo_potencial for c in capacidades), Decimal('0')
+    )
+    margen_potencial_total = valor_potencial_total - costo_potencial_total
+    capacidad_unidades = sum(c.capacidad for c in capacidades)
     valor_materiales = Decimal('0')
     for sm in StockMaterial.objects.filter(bodega=bodega).select_related('material'):
         valor_materiales += Decimal(sm.cantidad) * sm.material.costo_unitario_referencia
@@ -278,4 +296,35 @@ def resumen_produccion(bodega: Bodega) -> ResumenProduccion:
         capacidades=capacidades,
         valor_materiales=valor_materiales,
         valor_potencial_total=valor_potencial_total,
+        costo_potencial_total=costo_potencial_total,
+        margen_potencial_total=margen_potencial_total,
+        capacidad_unidades=capacidad_unidades,
+    )
+
+
+def resumen_produccion_global() -> ResumenProduccion:
+    """Mismo cálculo pero agregando todas las bodegas. Para el EERR
+    que mira el potencial del negocio entero, no de una bodega puntual."""
+    from bodega.models import Bodega as _Bodega
+    bodegas = list(_Bodega.objects.all())
+    if not bodegas:
+        return ResumenProduccion(
+            bodega=None,  # type: ignore
+            capacidades=[],
+            valor_materiales=Decimal('0'),
+            valor_potencial_total=Decimal('0'),
+            costo_potencial_total=Decimal('0'),
+            margen_potencial_total=Decimal('0'),
+            capacidad_unidades=0,
+        )
+    # Sumamos los resúmenes por bodega.
+    resumenes = [resumen_produccion(b) for b in bodegas]
+    return ResumenProduccion(
+        bodega=bodegas[0],
+        capacidades=[c for r in resumenes for c in r.capacidades],
+        valor_materiales=sum((r.valor_materiales for r in resumenes), Decimal('0')),
+        valor_potencial_total=sum((r.valor_potencial_total for r in resumenes), Decimal('0')),
+        costo_potencial_total=sum((r.costo_potencial_total for r in resumenes), Decimal('0')),
+        margen_potencial_total=sum((r.margen_potencial_total for r in resumenes), Decimal('0')),
+        capacidad_unidades=sum(r.capacidad_unidades for r in resumenes),
     )

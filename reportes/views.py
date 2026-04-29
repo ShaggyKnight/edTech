@@ -192,10 +192,12 @@ def eerr(request):
     """Estado de Resultados: ingresos − costo de ventas − gastos = utilidad.
 
     Filtros: período (mes/anio/rango) + tienda. Default mes actual.
-    Incluye chart de evolución últimos 12 meses.
+    Incluye chart de evolución últimos 12 meses + sección de potencial
+    de confección con la materia prima en bodega.
     """
     from datetime import datetime, timedelta
     from django.utils import timezone
+    from bodega.services import resumen_produccion_global
 
     desde, hasta, modo, anio, mes, label = _parse_periodo(request)
 
@@ -214,8 +216,16 @@ def eerr(request):
     inicio = timezone.make_aware(datetime(inicio.year, inicio.month, 1))
     serie = serie_mensual(desde=inicio, hasta=fin, tienda=tienda)
 
+    # Potencial: lo que se podría sumar al margen si confeccionás y
+    # vendés todo lo que la tela actual permite. Es snapshot — no depende
+    # del período del EERR — pero se muestra al lado para tener
+    # contexto: "el margen del mes fue X, además podrías generar Y más
+    # con la materia prima que ya pagaste".
+    potencial = resumen_produccion_global()
+
     return render(request, 'reportes/eerr.html', {
         'eerr': eerr_dato,
+        'potencial': potencial,
         'serie': [{
             'label': p.label,
             'ingresos': float(p.ingresos),

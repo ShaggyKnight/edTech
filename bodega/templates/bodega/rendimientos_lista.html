@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Rendimientos de {{ material.nombre }}{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:lista_materiales' %}">Materiales</a> /
+        {{ material.nombre }} /
+        Rendimientos
+      </div>
+      <h1>Rendimientos de {{ material.nombre }}</h1>
+      <div class="sub">
+        Cuántas unidades de cada variante salen de un rollo de este material.
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{% url 'bodega:rendimiento_nuevo' material.pk %}" class="bo-btn bo-btn-primary">+ Nuevo rendimiento</a>
+      <a href="{% url 'bodega:material_editar' material.pk %}" class="bo-btn">Editar material</a>
+    </div>
+  </div>
+
+  <div class="bo-card">
+    {% if rendimientos %}
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Variante</th>
+            <th>Atributos</th>
+            <th class="num">Unidades por rollo</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rendimientos %}
+            <tr>
+              <td>
+                <strong>{{ r.variante.producto.nombre }}</strong>
+                {% if r.variante.producto.colegio %}
+                  <div style="font-size:11px;">
+                    <span class="bo-badge bo-badge-info">{{ r.variante.producto.colegio.nombre }}</span>
+                  </div>
+                {% endif %}
+              </td>
+              <td><code>{{ r.variante.sku }}</code></td>
+              <td>
+                {% for val in r.variante.valores.all %}
+                  <span class="bo-badge bo-badge-muted">{{ val.atributo.nombre }}: {{ val.valor }}</span>
+                {% endfor %}
+              </td>
+              <td class="num"><strong>{{ r.unidades_por_rollo }}</strong></td>
+              <td>
+                <div style="display:inline-flex;gap:4px;">
+                  <a href="{% url 'bodega:rendimiento_editar' material.pk r.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                  <form method="post"
+                        action="{% url 'bodega:rendimiento_borrar' material.pk r.pk %}"
+                        style="display:inline;margin:0;"
+                        onsubmit="return confirm('¿Eliminar este rendimiento?');">
+                    {% csrf_token %}
+                    <button type="submit" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);">Eliminar</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color:var(--bo-muted);">
+        Este material no tiene rendimientos configurados.
+        <a href="{% url 'bodega:rendimiento_nuevo' material.pk %}" style="color:var(--bo-primary-2);font-weight:600;">
+          Agregar el primero →
+        </a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

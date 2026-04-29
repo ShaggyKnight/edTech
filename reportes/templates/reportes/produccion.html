@@ -35,22 +35,34 @@
     </div>
   {% else %}
 
-  <div class="bo-grid cols-3" style="margin-bottom:20px;">
+  <div class="bo-grid cols-4" style="margin-bottom:20px;">
     <div class="bo-card bo-kpi">
-      <div class="label">Costo de materiales</div>
+      <div class="label">Costo materiales en bodega</div>
       <div class="value">${{ resumen.valor_materiales|floatformat:0|intcomma }}</div>
-      <div class="sub">A costo unitario de referencia</div>
+      <div class="sub">Rollos × costo unitario de referencia</div>
+    </div>
+    <div class="bo-card bo-kpi is-primary">
+      <div class="label">Ingreso potencial</div>
+      <div class="value">${{ resumen.valor_potencial_total|floatformat:0|intcomma }}</div>
+      <div class="sub">{{ resumen.capacidad_unidades }} unidades × precio venta</div>
+    </div>
+    <div class="bo-card bo-kpi is-warning">
+      <div class="label">Costo potencial total</div>
+      <div class="value">${{ resumen.costo_potencial_total|floatformat:0|intcomma }}</div>
+      <div class="sub">Capacidad × precio_costo (tela + confección + accesorios)</div>
     </div>
     <div class="bo-card bo-kpi is-success">
-      <div class="label">Valor potencial</div>
-      <div class="value">${{ resumen.valor_potencial_total|floatformat:0|intcomma }}</div>
+      <div class="label">Margen potencial</div>
+      <div class="value">${{ resumen.margen_potencial_total|floatformat:0|intcomma }}</div>
       <div class="sub">Si confeccionás y vendés todo lo que la tela permite</div>
     </div>
-    <div class="bo-card bo-kpi is-gold">
-      <div class="label">Bodega activa</div>
-      <div class="value" style="font-size:22px;">{{ bodega.nombre }}</div>
-      <div class="sub">
-        {% if bodega.tienda %}{{ bodega.tienda.nombre_organizacion }}{% endif %}
+  </div>
+
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body" style="display:flex;align-items:center;gap:16px;">
+      <div style="flex:1;">
+        <strong>Bodega activa:</strong> {{ bodega.nombre }}
+        {% if bodega.tienda %} · {{ bodega.tienda.nombre_organizacion }}{% endif %}
         {% if bodega.ubicacion %} · {{ bodega.ubicacion }}{% endif %}
       </div>
     </div>
@@ -70,7 +82,9 @@
             <th class="num">U/rollo</th>
             <th class="num">Capacidad</th>
             <th class="num">Precio venta</th>
-            <th class="num">Valor potencial</th>
+            <th class="num">Costo</th>
+            <th class="num">Ingreso potencial</th>
+            <th class="num">Margen potencial</th>
           </tr>
         </thead>
         <tbody>
@@ -88,7 +102,13 @@
                 {% endif %}
               </td>
               <td class="num">${{ c.precio_venta|floatformat:0|intcomma }}</td>
-              <td class="num"><strong>${{ c.valor_potencial|floatformat:0|intcomma }}</strong></td>
+              <td class="num" style="color:var(--bo-muted);">${{ c.precio_costo|floatformat:0|intcomma }}</td>
+              <td class="num">${{ c.valor_potencial|floatformat:0|intcomma }}</td>
+              <td class="num">
+                <strong style="color:{% if c.margen_potencial > 0 %}var(--bo-success){% else %}var(--bo-muted){% endif %};">
+                  ${{ c.margen_potencial|floatformat:0|intcomma }}
+                </strong>
+              </td>
             </tr>
           {% endfor %}
         </tbody>

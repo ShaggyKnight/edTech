@@ -18,4 +18,16 @@ urlpatterns = [
          views.variante_editar, name='variante_editar'),
     path('productos/<int:pk>/variantes/<int:var_pk>/borrar/',
          views.variante_borrar, name='variante_borrar'),
+
+    # Materiales (Fase Ñ.2).
+    path('materiales/', views.lista_materiales, name='lista_materiales'),
+    path('materiales/nuevo/', views.material_nuevo, name='material_nuevo'),
+    path('materiales/<int:pk>/editar/', views.material_editar, name='material_editar'),
+    path('materiales/<int:pk>/rendimientos/', views.rendimientos_lista, name='rendimientos'),
+    path('materiales/<int:pk>/rendimientos/nuevo/',
+         views.rendimiento_nuevo, name='rendimiento_nuevo'),
+    path('materiales/<int:pk>/rendimientos/<int:rend_pk>/editar/',
+         views.rendimiento_editar, name='rendimiento_editar'),
+    path('materiales/<int:pk>/rendimientos/<int:rend_pk>/borrar/',
+         views.rendimiento_borrar, name='rendimiento_borrar'),
 ]

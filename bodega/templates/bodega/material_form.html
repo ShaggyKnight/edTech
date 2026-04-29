@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} · Ideas Boutique{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:lista_materiales' %}">Materiales</a> / {{ titulo }}
+      </div>
+      <h1>{{ titulo }}</h1>
+    </div>
+    <a href="{% url 'bodega:lista_materiales' %}" class="bo-btn">← Volver</a>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="bo-card" style="max-width:720px;">
+      <div class="bo-card-head"><h3>Datos del material</h3></div>
+      <div class="bo-card-body">
+        {% if form.non_field_errors %}
+          <div class="bo-alert bo-alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="bo-field">
+          <label for="{{ form.nombre.id_for_label }}">Nombre *</label>
+          {{ form.nombre }}
+          {% if form.nombre.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.nombre.help_text }}</small>
+          {% endif %}
+          {% if form.nombre.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.nombre.errors }}</div>{% endif %}
+        </div>
+
+        <div class="bo-field">
+          <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+          {{ form.descripcion }}
+          {% if form.descripcion.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.descripcion.help_text }}</small>
+          {% endif %}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="bo-field">
+            <label for="{{ form.proveedor.id_for_label }}">Proveedor</label>
+            {{ form.proveedor }}
+          </div>
+          <div class="bo-field">
+            <label for="{{ form.costo_unitario_referencia.id_for_label }}">Costo de referencia (CLP/rollo)</label>
+            {{ form.costo_unitario_referencia }}
+            {% if form.costo_unitario_referencia.help_text %}
+              <small style="color:var(--bo-muted);font-size:11px;">{{ form.costo_unitario_referencia.help_text }}</small>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="bo-field" style="display:flex;gap:8px;align-items:center;">
+          {{ form.activo }}
+          <label for="{{ form.activo.id_for_label }}" style="margin:0;">Activo</label>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:8px;">
+      <button type="submit" class="bo-btn bo-btn-primary">
+        {% if modo == 'crear' %}Crear material{% else %}Guardar cambios{% endif %}
+      </button>
+      <a href="{% url 'bodega:lista_materiales' %}" class="bo-btn">Cancelar</a>
+      {% if modo == 'editar' %}
+        <a href="{% url 'bodega:rendimientos' material.pk %}" class="bo-btn">Gestionar rendimientos →</a>
+      {% endif %}
+    </div>
+  </form>
+{% endblock %}

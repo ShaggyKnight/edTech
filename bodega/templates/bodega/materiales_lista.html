@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Materiales · Ideas Boutique{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Bodega / Materiales</div>
+      <h1>Materiales (telas y materia prima)</h1>
+      <div class="sub">{{ materiales|length }} material{{ materiales|length|pluralize:"es" }} en el filtro</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{% url 'bodega:material_nuevo' %}" class="bo-btn bo-btn-primary">+ Nuevo material</a>
+      <a href="{% url 'bodega:stock' %}" class="bo-btn">Stock terminado</a>
+    </div>
+  </div>
+
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body">
+      <form method="get" class="bo-form-inline">
+        <div class="bo-field" style="min-width:240px;">
+          <label>Buscar</label>
+          <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
+                 placeholder="Nombre o descripción…">
+        </div>
+        <div class="bo-field">
+          <label>Estado</label>
+          <select name="estado" class="bo-select">
+            <option value="">Todos</option>
+            <option value="activos"   {% if filtros.estado == "activos" %}selected{% endif %}>Solo activos</option>
+            <option value="inactivos" {% if filtros.estado == "inactivos" %}selected{% endif %}>Solo inactivos</option>
+          </select>
+        </div>
+        <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
+        <a href="{% url 'bodega:lista_materiales' %}" class="bo-btn">Limpiar</a>
+      </form>
+    </div>
+  </div>
+
+  <div class="bo-card">
+    {% if materiales %}
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Proveedor</th>
+            <th class="num">Costo ref. / rollo</th>
+            <th class="num">Stock total</th>
+            <th class="num">Variantes ligadas</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in materiales %}
+            <tr {% if not m.activo %}style="opacity:.5;"{% endif %}>
+              <td>
+                <strong>{{ m.nombre }}</strong>
+                {% if m.descripcion %}
+                  <div style="font-size:11px;color:var(--bo-muted);">{{ m.descripcion|truncatechars:80 }}</div>
+                {% endif %}
+              </td>
+              <td>{{ m.proveedor|default:"—" }}</td>
+              <td class="num">${{ m.costo_unitario_referencia|floatformat:0|intcomma }}</td>
+              <td class="num">
+                {% if m.stock_total == 0 %}
+                  <span class="bo-badge bo-badge-warning">0 rollos</span>
+                {% else %}
+                  <strong>{{ m.stock_total }}</strong> rollos
+                {% endif %}
+              </td>
+              <td class="num">
+                {% if m.n_rendimientos %}
+                  <a href="{% url 'bodega:rendimientos' m.pk %}" style="color:var(--bo-primary-2);">
+                    {{ m.n_rendimientos }}
+                  </a>
+                {% else %}
+                  <a href="{% url 'bodega:rendimientos' m.pk %}" style="color:var(--bo-muted);font-size:11px;">
+                    sin rendimientos
+                  </a>
+                {% endif %}
+              </td>
+              <td>
+                {% if m.activo %}
+                  <span class="bo-badge bo-badge-success">Activo</span>
+                {% else %}
+                  <span class="bo-badge bo-badge-muted">Inactivo</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display:inline-flex;gap:4px;">
+                  <a href="{% url 'bodega:material_editar' m.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                  <a href="{% url 'bodega:rendimientos' m.pk %}" class="bo-btn bo-btn-sm">Rendimientos</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color:var(--bo-muted);">
+        No hay materiales con los filtros aplicados.
+        <a href="{% url 'bodega:material_nuevo' %}" style="color:var(--bo-primary-2);font-weight:600;">Creá uno →</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

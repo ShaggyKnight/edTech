@@ -500,40 +500,66 @@ class Command(BaseCommand):
         return prov
 
     def _materiales(self, proveedor):
+        """Telas reales que se compran para confección.
+
+        - Buzos SFJ: tela franela color silvia (gris medio).
+        - Chalecos SFJ invierno: tela polar color negro.
+        - Poleras SFJ + DP + Lohse + Almagro: tela piqué (gris perla SFJ).
+        - Faldas SFJ: tela escocesa (rojizo cuadrillé).
+        """
         out = {}
-        out['tela_buzo'], c1 = Material.objects.get_or_create(
-            nombre='Tela polar buzo SFJ',
+
+        # Migración del nombre viejo si existe.
+        viejo = Material.objects.filter(nombre='Tela polar buzo SFJ').first()
+        if viejo:
+            viejo.nombre = 'Tela polar negra (chalecos SFJ)'
+            viejo.descripcion = 'Polar negro para chalecos SFJ de invierno. Bordado con insignia.'
+            viejo.save(update_fields=['nombre', 'descripcion'])
+
+        out['tela_polar_chaleco'], c1 = Material.objects.get_or_create(
+            nombre='Tela polar negra (chalecos SFJ)',
             defaults={
-                'descripcion': 'Polar reforzado azul marino oficial SFJ.',
+                'descripcion': 'Polar negro para chalecos SFJ de invierno. Bordado con insignia.',
                 'proveedor': proveedor,
                 'costo_unitario_referencia': Decimal('42000'),
             },
         )
-        out['tela_pique'], c2 = Material.objects.get_or_create(
-            nombre='Tela piqué SFJ blanca',
+        out['tela_franela_buzo'], c2 = Material.objects.get_or_create(
+            nombre='Tela franela silvia (buzos SFJ)',
             defaults={
-                'descripcion': 'Piqué blanco para poleras SFJ.',
-                'proveedor': proveedor,
-                'costo_unitario_referencia': Decimal('35000'),
-            },
-        )
-        out['tela_falda'], c3 = Material.objects.get_or_create(
-            nombre='Tela escocesa SFJ',
-            defaults={
-                'descripcion': 'Tartán para faldas SFJ.',
+                'descripcion': 'Franela color silvia (gris medio brillante) para pantalón y chaqueta de buzo SFJ.',
                 'proveedor': proveedor,
                 'costo_unitario_referencia': Decimal('38000'),
             },
         )
-        for n, c in (('Tela polar buzo SFJ', c1), ('Tela piqué SFJ', c2), ('Tela escocesa SFJ', c3)):
+        out['tela_pique'], c3 = Material.objects.get_or_create(
+            nombre='Tela piqué SFJ blanca',
+            defaults={
+                'descripcion': 'Piqué blanco gris perla para poleras SFJ.',
+                'proveedor': proveedor,
+                'costo_unitario_referencia': Decimal('35000'),
+            },
+        )
+        out['tela_falda'], c4 = Material.objects.get_or_create(
+            nombre='Tela escocesa SFJ',
+            defaults={
+                'descripcion': 'Tartán rojizo cuadrillé para faldas SFJ.',
+                'proveedor': proveedor,
+                'costo_unitario_referencia': Decimal('38000'),
+            },
+        )
+        for n, c in (
+            ('Tela polar negra (chalecos SFJ)', c1),
+            ('Tela franela silvia (buzos SFJ)', c2),
+            ('Tela piqué SFJ', c3),
+            ('Tela escocesa SFJ', c4),
+        ):
             self._say(f'Material: {n}', creado=c)
         return out
 
     def _rendimientos(self, materiales, productos, atrs):
-        # Buzos: la talla XL consume más tela, así que rinden menos.
-        # Aplica a las dos piezas individuales (pantalón + chaqueta);
-        # el "Buzo Completo" no tiene rendimiento de tela porque su stock
-        # se arma combinando una unidad de cada pieza individual.
+        # Buzos SFJ (pantalón + chaqueta): franela color silvia.
+        # Talla XL consume más tela → rinde menos por rollo.
         rinde_pant = {'XS': 80, 'S': 70, 'M': 65, 'L': 55, 'XL': 45, 'XXL': 38}
         rinde_chaq = {'XS': 70, 'S': 60, 'M': 55, 'L': 48, 'XL': 40, 'XXL': 34}
         for key, mapa in (
@@ -543,10 +569,25 @@ class Command(BaseCommand):
             for v in productos[key]['variantes']:
                 talla = next((vl.valor for vl in v.valores.all()
                               if vl.atributo.nombre == 'Talla'), None)
-                Rendimiento.objects.get_or_create(
-                    material=materiales['tela_buzo'], variante=v,
+                # Si tenía rendimiento con polar (seed viejo), lo borra
+                # y lo crea con franela.
+                Rendimiento.objects.filter(
+                    variante=v, material=materiales['tela_polar_chaleco'],
+                ).delete()
+                Rendimiento.objects.update_or_create(
+                    material=materiales['tela_franela_buzo'], variante=v,
                     defaults={'unidades_por_rollo': mapa.get(talla, 40)},
                 )
+
+        # Chalecos SFJ: polar negro. Tela más densa, rinden menos.
+        rinde_chaleco = {'XS': 50, 'S': 45, 'M': 40, 'L': 36, 'XL': 32}
+        for v in productos['chaleco_sfj']['variantes']:
+            talla = next((vl.valor for vl in v.valores.all()
+                          if vl.atributo.nombre == 'Talla'), None)
+            Rendimiento.objects.update_or_create(
+                material=materiales['tela_polar_chaleco'], variante=v,
+                defaults={'unidades_por_rollo': rinde_chaleco.get(talla, 38)},
+            )
 
         # Poleras piqué SFJ: rinden más unidades por rollo (tela más liviana).
         rinde_polera = {'XS': 90, 'S': 80, 'M': 70, 'L': 60, 'XL': 50}
@@ -573,28 +614,24 @@ class Command(BaseCommand):
             self._say('Movimientos de material', creado=False)
             return
 
-        # 1. Compra inicial de los 3 tipos de tela (5 + 4 + 3 rollos).
-        comprar_material(
-            material=materiales['tela_buzo'], bodega=bodega,
-            cantidad=5, costo_total=Decimal('220000'),
-            tienda_caja=tienda, referencia='Factura 2024-008',
-            usuario=admin,
-        )
-        comprar_material(
-            material=materiales['tela_pique'], bodega=bodega,
-            cantidad=4, costo_total=Decimal('148000'),
-            tienda_caja=tienda, referencia='Factura 2024-008',
-            usuario=admin,
-        )
-        comprar_material(
-            material=materiales['tela_falda'], bodega=bodega,
-            cantidad=3, costo_total=Decimal('120000'),
-            tienda_caja=tienda, referencia='Factura 2024-008',
-            usuario=admin,
-        )
-        self._say('Compra inicial: 12 rollos en bodega + asientos de caja')
+        # 1. Compras iniciales: 4 telas distintas para diferentes prendas.
+        compras = [
+            ('tela_franela_buzo',  5, Decimal('190000'), 'Franela silvia para buzos'),
+            ('tela_polar_chaleco', 2, Decimal('84000'),  'Polar negro para chalecos invierno'),
+            ('tela_pique',         4, Decimal('140000'), 'Piqué para poleras (SFJ + DP + Lohse + Almagro)'),
+            ('tela_falda',         3, Decimal('114000'), 'Tartán para faldas SFJ'),
+        ]
+        for key, qty, costo, descripcion in compras:
+            comprar_material(
+                material=materiales[key], bodega=bodega,
+                cantidad=qty, costo_total=costo,
+                tienda_caja=tienda,
+                referencia=f'Compra inicial — {descripcion}',
+                usuario=admin,
+            )
+        self._say(f'Compra inicial: {sum(q for _,q,_,_ in compras)} rollos en bodega + asientos de caja')
 
-        # 2. Recepción de lote: 2 rollos de tela buzo → pantalones M/L.
+        # 2. Recepción de lote: 2 rollos de franela → pantalones M/L del buzo SFJ.
         def _por_talla(key, talla):
             for v in productos[key]['variantes']:
                 if any(val.valor == talla for val in v.valores.all()
@@ -604,7 +641,7 @@ class Command(BaseCommand):
         var_pant_m = _por_talla('buzo_sfj_pantalon', 'M')
         var_pant_l = _por_talla('buzo_sfj_pantalon', 'L')
         recibir_lote(
-            material=materiales['tela_buzo'], bodega=bodega,
+            material=materiales['tela_franela_buzo'], bodega=bodega,
             rollos_consumidos=2,
             lineas=[
                 LineaProduccion(variante_id=var_pant_m.pk, cantidad=65),

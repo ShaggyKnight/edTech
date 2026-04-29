@@ -260,64 +260,105 @@ class Command(BaseCommand):
             viejo.colegio = sfj
             viejo.save()
 
+        # Descripciones con los textos reales del negocio (palabras de Blanca,
+        # abril 2026): tela mandada hacer especialmente, durabilidad, cuellos
+        # confeccionados a tono, lana que no hace pelotitas, etc.
+        DESC_BUZO_GENERAL = (
+            'Buzo escolar oficial SFJ. Tela franela color silvia hecha '
+            'especialmente para el colegio: semi-elástica para dar libertad '
+            'de movimiento, no se mancha con agua y es muy duradera — tan '
+            'durable que las familias suelen heredarlo entre hermanos. '
+            'Confección con costuras firmes que no se abren. Bordado con '
+            'insignia oficial.'
+        )
+
         out['buzo_sfj_completo'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Buzo SFJ Completo',
-            descripcion='Buzo escolar oficial SFJ. Set: pantalón + chaqueta. '
-                        'Tela polar reforzada gris brillante. Bordado con insignia.',
+            descripcion=DESC_BUZO_GENERAL + ' Set completo: pantalón + chaqueta.',
             precio_base=Decimal('38990'), precio_costo=Decimal('15000'),
             sku_prefix='BZSFJ-CMP', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
         )
         out['buzo_sfj_pantalon'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Buzo SFJ Pantalón',
-            descripcion='Pantalón del buzo SFJ. Tela polar gris brillante. Pieza individual.',
+            descripcion=DESC_BUZO_GENERAL + ' Pieza individual: pantalón.',
             precio_base=Decimal('21990'), precio_costo=Decimal('9000'),
             sku_prefix='BZSFJ-PAN', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
         )
         out['buzo_sfj_chaqueta'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Buzo SFJ Chaqueta',
-            descripcion='Chaqueta del buzo SFJ. Tela polar gris brillante con cierre. Pieza individual.',
+            descripcion=DESC_BUZO_GENERAL + ' Pieza individual: chaqueta con cierre.',
             precio_base=Decimal('22990'), precio_costo=Decimal('9500'),
             sku_prefix='BZSFJ-CHQ', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
         )
         out['polera_pique_sfj'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Polera piqué SFJ',
-            descripcion='Polera piqué gris perla con bordado SFJ. Cuellos confeccionados a medida.',
+            descripcion=(
+                'Polera piqué oficial SFJ, gris perla. Tejida en algodón con '
+                'un pequeño porcentaje de fibra que evita la deformación con '
+                'el uso. Los cuellos se confeccionan junto con la tela del '
+                'cuerpo, así que el tono es exactamente el mismo (no esa '
+                'diferencia que se nota cuando son cuellos comprados aparte). '
+                'Bordado con insignia SFJ.'
+            ),
             precio_base=Decimal('12990'), precio_costo=Decimal('5000'),
             sku_prefix='PQSFJ', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
         )
+
+        # Renombre histórico: "Falda escocesa SFJ" → tela real es Casimir Garib.
+        falda_vieja = Producto.objects.filter(nombre='Falda escocesa SFJ').first()
+        if falda_vieja:
+            falda_vieja.nombre = 'Falda Casimir Garib SFJ'
+            falda_vieja.save(update_fields=['nombre', 'modificado'])
+
         out['falda_sfj'] = self._producto_con_tallas(
-            familia=unif, colegio=sfj, nombre='Falda escocesa SFJ',
-            descripcion='Falda tartán SFJ rojizo con cuadrillé. Largo escolar.',
+            familia=unif, colegio=sfj, nombre='Falda Casimir Garib SFJ',
+            descripcion=(
+                'Falda escolar oficial SFJ en tela Casimir Garib color rojizo '
+                'con cuadrillé. El Casimir Garib tiende a no arrugarse: '
+                'mantiene la forma después de cada lavado y no se ve como '
+                'trapo viejo con el uso. Largo escolar.'
+            ),
             precio_base=Decimal('19990'), precio_costo=Decimal('8000'),
             sku_prefix='FLSFJ', tallas=['S', 'M', 'L', 'XL'], atrs=atrs,
         )
         out['chaleco_sfj'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Chaleco SFJ',
-            descripcion='Chaleco oficial SFJ. Lana rojo italiano, bordado con insignia.',
+            descripcion=(
+                'Chaleco oficial SFJ confeccionado a medida. Lana de buena '
+                'calidad color rojo italiano que NO hace pelotitas en las '
+                'mangas ni en el cuerpo y no se deforma con el uso. Bordado '
+                'con insignia oficial.'
+            ),
             precio_base=Decimal('24990'), precio_costo=Decimal('11000'),
             sku_prefix='CHSFJ', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
         )
 
-        # --- Uniformes Divina Providencia ---
+        # --- Uniformes otros colegios (DP, Lohse, Almagro) ---
+        # Misma calidad de tela piqué, distintas insignias bordadas. Cada
+        # colegio tiene su variante de cuello/puños propia.
+        DESC_POLERA_OTRO = (
+            'Polera piqué oficial confeccionada con tela 100% algodón con un '
+            'porcentaje de fibra para que no se deforme. Cuellos del mismo '
+            'tono que el cuerpo. Bordado con la insignia del colegio.'
+        )
+
         out['polera_dp'] = self._producto_con_tallas(
             familia=unif, colegio=dp, nombre='Polera piqué Divina Providencia',
-            descripcion='Polera piqué blanca con bordado DP. Tela y puños distintos a SFJ.',
+            descripcion=DESC_POLERA_OTRO,
             precio_base=Decimal('11990'), precio_costo=Decimal('4800'),
             sku_prefix='PQDP', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
         )
 
-        # --- Uniformes Nicolás F. Lohse ---
         out['polera_lohse'] = self._producto_con_tallas(
             familia=unif, colegio=lohse, nombre='Polera piqué Nicolás F. Lohse',
-            descripcion='Polera oficial Lohse, bordado con insignia.',
+            descripcion=DESC_POLERA_OTRO,
             precio_base=Decimal('11990'), precio_costo=Decimal('4800'),
             sku_prefix='PQLHS', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
         )
 
-        # --- Uniformes Diego de Almagro ---
         out['polera_almagro'] = self._producto_con_tallas(
             familia=unif, colegio=almagro, nombre='Polera piqué Diego de Almagro',
-            descripcion='Polera oficial Diego de Almagro, bordado con insignia.',
+            descripcion=DESC_POLERA_OTRO,
             precio_base=Decimal('11990'), precio_costo=Decimal('4800'),
             sku_prefix='PQDA', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
         )
@@ -399,11 +440,23 @@ class Command(BaseCommand):
                 'tiene_variantes': True, 'activo': True,
             },
         )
-        # Si ya existía, actualizamos colegio/familia por idempotencia.
-        if not c and (p.colegio_id != (colegio.pk if colegio else None) or p.familia_id != familia.pk):
-            p.colegio = colegio
-            p.familia = familia
-            p.save(update_fields=['colegio', 'familia', 'modificado'])
+        # Si ya existía, actualizamos colegio/familia/descripción para que el
+        # seed sea fuente de verdad — si cambiás los textos acá y re-corrés,
+        # la DB queda al día sin tener que tocar admin Django.
+        if not c:
+            cambios = []
+            if p.colegio_id != (colegio.pk if colegio else None):
+                p.colegio = colegio
+                cambios.append('colegio')
+            if p.familia_id != familia.pk:
+                p.familia = familia
+                cambios.append('familia')
+            if p.descripcion != descripcion:
+                p.descripcion = descripcion
+                cambios.append('descripcion')
+            if cambios:
+                cambios.append('modificado')
+                p.save(update_fields=cambios)
         variantes = []
         for t in tallas:
             v, _ = ProductoVariante.objects.get_or_create(
@@ -516,6 +569,16 @@ class Command(BaseCommand):
             viejo.descripcion = 'Polar negro para chalecos SFJ de invierno. Bordado con insignia.'
             viejo.save(update_fields=['nombre', 'descripcion'])
 
+        # Idem para la falda: el nombre real de la tela es Casimir Garib.
+        viejo_falda = Material.objects.filter(nombre='Tela escocesa SFJ').first()
+        if viejo_falda:
+            viejo_falda.nombre = 'Tela Casimir Garib SFJ'
+            viejo_falda.descripcion = (
+                'Casimir Garib color rojizo con cuadrillé para faldas SFJ. '
+                'No se arruga, mantiene la forma después de cada lavado.'
+            )
+            viejo_falda.save(update_fields=['nombre', 'descripcion'])
+
         out['tela_polar_chaleco'], c1 = Material.objects.get_or_create(
             nombre='Tela polar negra (chalecos SFJ)',
             defaults={
@@ -541,9 +604,12 @@ class Command(BaseCommand):
             },
         )
         out['tela_falda'], c4 = Material.objects.get_or_create(
-            nombre='Tela escocesa SFJ',
+            nombre='Tela Casimir Garib SFJ',
             defaults={
-                'descripcion': 'Tartán rojizo cuadrillé para faldas SFJ.',
+                'descripcion': (
+                    'Casimir Garib color rojizo con cuadrillé para faldas SFJ. '
+                    'No se arruga, mantiene la forma después de cada lavado.'
+                ),
                 'proveedor': proveedor,
                 'costo_unitario_referencia': Decimal('38000'),
             },
@@ -552,7 +618,7 @@ class Command(BaseCommand):
             ('Tela polar negra (chalecos SFJ)', c1),
             ('Tela franela silvia (buzos SFJ)', c2),
             ('Tela piqué SFJ', c3),
-            ('Tela escocesa SFJ', c4),
+            ('Tela Casimir Garib SFJ', c4),
         ):
             self._say(f'Material: {n}', creado=c)
         return out
@@ -619,7 +685,7 @@ class Command(BaseCommand):
             ('tela_franela_buzo',  5, Decimal('190000'), 'Franela silvia para buzos'),
             ('tela_polar_chaleco', 2, Decimal('84000'),  'Polar negro para chalecos invierno'),
             ('tela_pique',         4, Decimal('140000'), 'Piqué para poleras (SFJ + DP + Lohse + Almagro)'),
-            ('tela_falda',         3, Decimal('114000'), 'Tartán para faldas SFJ'),
+            ('tela_falda',         3, Decimal('114000'), 'Casimir Garib para faldas SFJ'),
         ]
         for key, qty, costo, descripcion in compras:
             comprar_material(

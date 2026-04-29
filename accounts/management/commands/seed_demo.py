@@ -40,6 +40,7 @@ from bodega.models import (
 from bodega.services import LineaProduccion, comprar_material, recibir_lote
 from catalogo.models import (
     Atributo,
+    Colegio,
     Familia,
     Oferta,
     Producto,
@@ -61,20 +62,27 @@ class Command(BaseCommand):
             '--reset', action='store_true',
             help='Borra recibos, asientos y movimientos antes de sembrar.',
         )
+        parser.add_argument(
+            '--reset-passwords', action='store_true',
+            help='Reescribe las contraseñas de los usuarios demo a los valores '
+                 'documentados (útil cuando perdés acceso o cambiaron los hashes).',
+        )
 
     @transaction.atomic
     def handle(self, *args, **opts):
         if opts['reset']:
             self._reset()
 
+        self.reset_passwords = opts.get('reset_passwords', False)
         self.now = timezone.now()
         self.stdout.write(self.style.NOTICE('Sembrando datos demo…'))
 
         admin = self._usuarios()
         tienda, bodega = self._tienda_y_bodega()
         familias = self._familias()
+        colegios = self._colegios()
         atrs = self._atributos()
-        productos = self._productos(familias, atrs)
+        productos = self._productos(familias, colegios, atrs)
         self._ofertas(productos)
         self._stock_inicial(tienda, productos)
         proveedor = self._proveedor()
@@ -117,10 +125,10 @@ class Command(BaseCommand):
             username='admin',
             defaults={'email': 'admin@ideas.local', 'is_staff': True, 'is_superuser': True},
         )
-        if c:
+        if c or self.reset_passwords:
             admin.set_password('admin')
             admin.save()
-        self._say(f'Superuser admin/admin', creado=c)
+        self._say('Superuser admin / admin', creado=c)
 
         # Cajero y bodeguero, sumados al grupo correspondiente.
         from django.contrib.auth.models import Group
@@ -131,13 +139,13 @@ class Command(BaseCommand):
             user, c = User.objects.get_or_create(
                 username=username, defaults={'is_staff': True},
             )
-            if c:
+            if c or self.reset_passwords:
                 user.set_password(password)
                 user.save()
             grupo = Group.objects.filter(name=rol).first()
             if grupo:
                 user.groups.add(grupo)
-            self._say(f'Usuario {username}/{password} ({rol})', creado=c)
+            self._say(f'Usuario {username} / {password} ({rol})', creado=c)
 
         # Cliente de la tienda online.
         cliente, c = User.objects.get_or_create(
@@ -147,7 +155,7 @@ class Command(BaseCommand):
                 'first_name': 'Carla', 'last_name': 'Soto',
             },
         )
-        if c:
+        if c or self.reset_passwords:
             cliente.set_password('demo12345')
             cliente.save()
         self._say('Cliente cliente@demo.cl / demo12345', creado=c)
@@ -182,58 +190,178 @@ class Command(BaseCommand):
             self._say(f'Familia: {n}', creado=c)
         return out
 
+    def _colegios(self):
+        """4 colegios de la comuna que ya tienen productos en la tienda."""
+        datos = [
+            ('sfj',    'San Francisco Javier',  'Caupolicán 920, Los Vilos'),
+            ('dp',     'Divina Providencia',    'Av. Caupolicán 1234, Los Vilos'),
+            ('lohse',  'Nicolás F. Lohse',      'Av. Costanera 80, Los Vilos'),
+            ('almagro','Diego de Almagro',      'Pasaje Almagro 230, Los Vilos'),
+        ]
+        out = {}
+        for slug, nombre, direccion in datos:
+            col, c = Colegio.objects.get_or_create(
+                nombre=nombre,
+                defaults={'direccion': direccion, 'activo': True},
+            )
+            out[slug] = col
+            self._say(f'Colegio: {nombre}', creado=c)
+        return out
+
     def _atributos(self):
+        """Tres atributos: Talla (uniformes/moda), Volumen (perfumes), Concentración (perfumes)."""
         talla, _ = Atributo.objects.get_or_create(nombre='Talla')
         tallas = {}
         for t in ['XS', 'S', 'M', 'L', 'XL', 'XXL']:
             v, _ = ValorAtributo.objects.get_or_create(atributo=talla, valor=t)
             tallas[t] = v
-        return {'talla': talla, 'tallas': tallas}
 
-    def _productos(self, fam, atrs):
+        volumen, _ = Atributo.objects.get_or_create(nombre='Volumen')
+        volumenes = {}
+        for v_str, orden in [('5 ml', 1), ('30 ml', 2), ('50 ml', 3),
+                             ('100 ml', 4), ('200 ml', 5)]:
+            obj, _ = ValorAtributo.objects.get_or_create(
+                atributo=volumen, valor=v_str, defaults={'orden': orden},
+            )
+            volumenes[v_str] = obj
+
+        concentracion, _ = Atributo.objects.get_or_create(nombre='Concentración')
+        concentraciones = {}
+        for c_str, orden in [
+            ('Cologne', 1), ('Eau de Toilette', 2),
+            ('Eau de Parfum', 3), ('Elixir', 4),
+        ]:
+            obj, _ = ValorAtributo.objects.get_or_create(
+                atributo=concentracion, valor=c_str, defaults={'orden': orden},
+            )
+            concentraciones[c_str] = obj
+
+        return {
+            'talla': talla, 'tallas': tallas,
+            'volumen': volumen, 'volumenes': volumenes,
+            'concentracion': concentracion, 'concentraciones': concentraciones,
+        }
+
+    def _productos(self, fam, colegios, atrs):
         out = {}
-
-        # --- Uniformes con variantes por talla ---
         unif = fam['Uniformes Escolares']
-        out['buzo_sfj'] = self._producto_con_tallas(
-            familia=unif, nombre='Buzo San Francisco Javier',
-            descripcion='Buzo escolar oficial del Colegio San Francisco Javier. Tela polar reforzada.',
-            precio_base=Decimal('28990'), precio_costo=Decimal('11000'),
-            sku_prefix='BZSFJ', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
+        sfj = colegios['sfj']
+        dp = colegios['dp']
+        lohse = colegios['lohse']
+        almagro = colegios['almagro']
+
+        # --- Uniformes San Francisco Javier ---
+        # Compatibilidad: si quedó del seed anterior un "Buzo San Francisco
+        # Javier" que ahora reemplazamos, lo renombramos en lugar de crear
+        # uno nuevo (preserva variantes/stock/movimientos previos).
+        viejo = Producto.objects.filter(nombre='Buzo San Francisco Javier').first()
+        if viejo:
+            viejo.nombre = 'Buzo SFJ Completo'
+            viejo.colegio = sfj
+            viejo.save()
+
+        out['buzo_sfj_completo'] = self._producto_con_tallas(
+            familia=unif, colegio=sfj, nombre='Buzo SFJ Completo',
+            descripcion='Buzo escolar oficial SFJ. Set: pantalón + chaqueta. '
+                        'Tela polar reforzada gris brillante. Bordado con insignia.',
+            precio_base=Decimal('38990'), precio_costo=Decimal('15000'),
+            sku_prefix='BZSFJ-CMP', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
+        )
+        out['buzo_sfj_pantalon'] = self._producto_con_tallas(
+            familia=unif, colegio=sfj, nombre='Buzo SFJ Pantalón',
+            descripcion='Pantalón del buzo SFJ. Tela polar gris brillante. Pieza individual.',
+            precio_base=Decimal('21990'), precio_costo=Decimal('9000'),
+            sku_prefix='BZSFJ-PAN', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
+        )
+        out['buzo_sfj_chaqueta'] = self._producto_con_tallas(
+            familia=unif, colegio=sfj, nombre='Buzo SFJ Chaqueta',
+            descripcion='Chaqueta del buzo SFJ. Tela polar gris brillante con cierre. Pieza individual.',
+            precio_base=Decimal('22990'), precio_costo=Decimal('9500'),
+            sku_prefix='BZSFJ-CHQ', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
         )
         out['polera_pique_sfj'] = self._producto_con_tallas(
-            familia=unif, nombre='Polera piqué SFJ',
-            descripcion='Polera piqué blanca con bordado SFJ.',
+            familia=unif, colegio=sfj, nombre='Polera piqué SFJ',
+            descripcion='Polera piqué gris perla con bordado SFJ. Cuellos confeccionados a medida.',
             precio_base=Decimal('12990'), precio_costo=Decimal('5000'),
             sku_prefix='PQSFJ', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
         )
         out['falda_sfj'] = self._producto_con_tallas(
-            familia=unif, nombre='Falda escocesa SFJ',
-            descripcion='Falda tartán oficial SFJ.',
+            familia=unif, colegio=sfj, nombre='Falda escocesa SFJ',
+            descripcion='Falda tartán SFJ rojizo con cuadrillé. Largo escolar.',
             precio_base=Decimal('19990'), precio_costo=Decimal('8000'),
             sku_prefix='FLSFJ', tallas=['S', 'M', 'L', 'XL'], atrs=atrs,
         )
+        out['chaleco_sfj'] = self._producto_con_tallas(
+            familia=unif, colegio=sfj, nombre='Chaleco SFJ',
+            descripcion='Chaleco oficial SFJ. Lana rojo italiano, bordado con insignia.',
+            precio_base=Decimal('24990'), precio_costo=Decimal('11000'),
+            sku_prefix='CHSFJ', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
+        )
 
-        # --- Perfumes (sin variantes) ---
-        out['perfume_50'] = self._producto_simple(
-            familia=fam['Perfumes'], nombre='Eau de Toilette Clásico 50ml',
-            descripcion='Fragancia floral clásica.',
+        # --- Uniformes Divina Providencia ---
+        out['polera_dp'] = self._producto_con_tallas(
+            familia=unif, colegio=dp, nombre='Polera piqué Divina Providencia',
+            descripcion='Polera piqué blanca con bordado DP. Tela y puños distintos a SFJ.',
+            precio_base=Decimal('11990'), precio_costo=Decimal('4800'),
+            sku_prefix='PQDP', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
+        )
+
+        # --- Uniformes Nicolás F. Lohse ---
+        out['polera_lohse'] = self._producto_con_tallas(
+            familia=unif, colegio=lohse, nombre='Polera piqué Nicolás F. Lohse',
+            descripcion='Polera oficial Lohse, bordado con insignia.',
+            precio_base=Decimal('11990'), precio_costo=Decimal('4800'),
+            sku_prefix='PQLHS', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
+        )
+
+        # --- Uniformes Diego de Almagro ---
+        out['polera_almagro'] = self._producto_con_tallas(
+            familia=unif, colegio=almagro, nombre='Polera piqué Diego de Almagro',
+            descripcion='Polera oficial Diego de Almagro, bordado con insignia.',
+            precio_base=Decimal('11990'), precio_costo=Decimal('4800'),
+            sku_prefix='PQDA', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
+        )
+
+        # --- Perfumes con atributos volumen + concentración ---
+        out['yara'] = self._producto_perfume(
+            familia=fam['Perfumes'], nombre='Lattafa Yara',
+            descripcion='Notas dulces orientales (vainilla, ámbar, rosa).',
+            precio_base=Decimal('29990'), precio_costo=Decimal('11000'),
+            sku_prefix='YARA',
+            variantes=[
+                ('5 ml',   'Eau de Parfum',   Decimal('4990')),
+                ('30 ml',  'Eau de Parfum',   Decimal('19990')),
+                ('100 ml', 'Eau de Parfum',   Decimal('29990')),
+            ],
+            atrs=atrs,
+        )
+        out['oud'] = self._producto_perfume(
+            familia=fam['Fragancias premium'], nombre='Oud Royal Elixir',
+            descripcion='Edición especial. Madera de oud, especias, intensidad alta.',
+            precio_base=Decimal('64990'), precio_costo=Decimal('25000'),
+            sku_prefix='OUD',
+            variantes=[
+                ('30 ml',  'Elixir',          Decimal('44990')),
+                ('100 ml', 'Elixir',          Decimal('64990')),
+            ],
+            atrs=atrs,
+        )
+        out['floral_clasico'] = self._producto_perfume(
+            familia=fam['Perfumes'], nombre='Floral Clásico',
+            descripcion='Fragancia floral suave para uso diario.',
             precio_base=Decimal('18990'), precio_costo=Decimal('7500'),
-        )
-        out['decant_5'] = self._producto_simple(
-            familia=fam['Perfumes'], nombre='Decant 5ml',
-            descripcion='Decant para probar antes de la botella completa.',
-            precio_base=Decimal('4990'), precio_costo=Decimal('1500'),
-        )
-        out['perfume_premium'] = self._producto_simple(
-            familia=fam['Fragancias premium'], nombre='Perfume premium 100ml',
-            descripcion='Edición especial. Notas amaderadas.',
-            precio_base=Decimal('48990'), precio_costo=Decimal('20000'),
+            sku_prefix='FLO',
+            variantes=[
+                ('50 ml',  'Eau de Toilette', Decimal('14990')),
+                ('100 ml', 'Eau de Toilette', Decimal('18990')),
+                ('100 ml', 'Eau de Parfum',   Decimal('22990')),
+            ],
+            atrs=atrs,
         )
 
         # --- Moda con variantes ---
         out['polera_basica'] = self._producto_con_tallas(
-            familia=fam['Moda'], nombre='Polera básica unisex',
+            familia=fam['Moda'], colegio=None, nombre='Polera básica unisex',
             descripcion='Polera de algodón 100%, corte recto.',
             precio_base=Decimal('9990'), precio_costo=Decimal('3500'),
             sku_prefix='PB', tallas=['S', 'M', 'L', 'XL'], atrs=atrs,
@@ -261,15 +389,21 @@ class Command(BaseCommand):
         return {'producto': p, 'variantes': []}
 
     def _producto_con_tallas(self, *, familia, nombre, descripcion, precio_base,
-                              precio_costo, sku_prefix, tallas, atrs):
+                              precio_costo, sku_prefix, tallas, atrs, colegio=None):
         p, c = Producto.objects.get_or_create(
             nombre=nombre,
             defaults={
-                'familia': familia, 'descripcion': descripcion,
+                'familia': familia, 'colegio': colegio,
+                'descripcion': descripcion,
                 'precio_base': precio_base, 'precio_costo': precio_costo,
                 'tiene_variantes': True, 'activo': True,
             },
         )
+        # Si ya existía, actualizamos colegio/familia por idempotencia.
+        if not c and (p.colegio_id != (colegio.pk if colegio else None) or p.familia_id != familia.pk):
+            p.colegio = colegio
+            p.familia = familia
+            p.save(update_fields=['colegio', 'familia', 'modificado'])
         variantes = []
         for t in tallas:
             v, _ = ProductoVariante.objects.get_or_create(
@@ -280,10 +414,39 @@ class Command(BaseCommand):
         self._say(f'Producto: {nombre} ({len(variantes)} variantes)', creado=c)
         return {'producto': p, 'variantes': variantes}
 
+    def _producto_perfume(self, *, familia, nombre, descripcion, precio_base,
+                          precio_costo, sku_prefix, variantes, atrs):
+        """Crea un perfume con variantes (volumen + concentración).
+
+        `variantes`: lista de tuplas (volumen_str, concentracion_str, precio).
+        Cada tupla genera una variante con SKU = `<prefix>-<vol_clean>-<conc_clean>`.
+        """
+        p, c = Producto.objects.get_or_create(
+            nombre=nombre,
+            defaults={
+                'familia': familia, 'descripcion': descripcion,
+                'precio_base': precio_base, 'precio_costo': precio_costo,
+                'tiene_variantes': True, 'activo': True,
+            },
+        )
+        var_objs = []
+        for vol_str, conc_str, precio_v in variantes:
+            vol_clean = vol_str.replace(' ', '').upper()
+            conc_clean = ''.join(w[0] for w in conc_str.split()).upper()  # EdT, EdP, ELX
+            sku = f'{sku_prefix}-{vol_clean}-{conc_clean}'
+            v, _ = ProductoVariante.objects.get_or_create(
+                producto=p, sku=sku,
+                defaults={'precio_override': precio_v},
+            )
+            v.valores.add(atrs['volumenes'][vol_str], atrs['concentraciones'][conc_str])
+            var_objs.append(v)
+        self._say(f'Perfume: {nombre} ({len(var_objs)} variantes)', creado=c)
+        return {'producto': p, 'variantes': var_objs}
+
     def _ofertas(self, productos):
         Oferta.objects.get_or_create(
-            producto=productos['perfume_premium']['producto'],
-            nombre='10% perfume premium',
+            producto=productos['oud']['producto'],
+            nombre='10% Oud Royal Elixir',
             defaults={
                 'canal': Oferta.CANAL_AMBOS,
                 'tipo': Oferta.TIPO_PORCENTAJE,
@@ -293,21 +456,33 @@ class Command(BaseCommand):
                 'activa': True,
             },
         )
-        self._say('Oferta vigente: 10% en perfume premium')
+        self._say('Oferta vigente: 10% en Oud Royal Elixir')
 
     def _stock_inicial(self, tienda, productos):
-        # Stock para lo terminado (los uniformes los modelaremos producidos en lote).
-        for p in (productos['perfume_50'], productos['decant_5'], productos['perfume_premium'],
-                  productos['calzon']):
-            StockTienda.objects.get_or_create(
-                tienda=tienda, producto=p['producto'],
-                defaults={'cantidad': 30},
-            )
+        # Calzón sin variantes.
+        StockTienda.objects.get_or_create(
+            tienda=tienda, producto=productos['calzon']['producto'],
+            defaults={'cantidad': 30},
+        )
+        # Perfumes con variantes: stock por variante (botellas + decants).
+        for key, cantidad in (('yara', 12), ('oud', 5), ('floral_clasico', 18)):
+            for v in productos[key]['variantes']:
+                StockTienda.objects.get_or_create(
+                    tienda=tienda, variante=v,
+                    defaults={'cantidad': cantidad},
+                )
         # Polera básica (Moda) con stock por talla.
         for v in productos['polera_basica']['variantes']:
             StockTienda.objects.get_or_create(
                 tienda=tienda, variante=v, defaults={'cantidad': 12},
             )
+        # Poleras de otros colegios (DP, Lohse, Almagro): unas pocas por talla
+        # como existencias iniciales (los SFJ los recibimos del taller).
+        for key in ('polera_dp', 'polera_lohse', 'polera_almagro'):
+            for v in productos[key]['variantes']:
+                StockTienda.objects.get_or_create(
+                    tienda=tienda, variante=v, defaults={'cantidad': 8},
+                )
         self._say('Stock inicial sembrado en tienda')
 
     def _proveedor(self):
@@ -356,13 +531,22 @@ class Command(BaseCommand):
 
     def _rendimientos(self, materiales, productos, atrs):
         # Buzos: la talla XL consume más tela, así que rinden menos.
-        rinde_buzo = {'XS': 60, 'S': 55, 'M': 50, 'L': 42, 'XL': 35, 'XXL': 30}
-        for v in productos['buzo_sfj']['variantes']:
-            talla = v.valores.first().valor
-            Rendimiento.objects.get_or_create(
-                material=materiales['tela_buzo'], variante=v,
-                defaults={'unidades_por_rollo': rinde_buzo.get(talla, 40)},
-            )
+        # Aplica a las dos piezas individuales (pantalón + chaqueta);
+        # el "Buzo Completo" no tiene rendimiento de tela porque su stock
+        # se arma combinando una unidad de cada pieza individual.
+        rinde_pant = {'XS': 80, 'S': 70, 'M': 65, 'L': 55, 'XL': 45, 'XXL': 38}
+        rinde_chaq = {'XS': 70, 'S': 60, 'M': 55, 'L': 48, 'XL': 40, 'XXL': 34}
+        for key, mapa in (
+            ('buzo_sfj_pantalon', rinde_pant),
+            ('buzo_sfj_chaqueta', rinde_chaq),
+        ):
+            for v in productos[key]['variantes']:
+                talla = next((vl.valor for vl in v.valores.all()
+                              if vl.atributo.nombre == 'Talla'), None)
+                Rendimiento.objects.get_or_create(
+                    material=materiales['tela_buzo'], variante=v,
+                    defaults={'unidades_por_rollo': mapa.get(talla, 40)},
+                )
 
         # Poleras piqué SFJ: rinden más unidades por rollo (tela más liviana).
         rinde_polera = {'XS': 90, 'S': 80, 'M': 70, 'L': 60, 'XL': 50}
@@ -410,54 +594,75 @@ class Command(BaseCommand):
         )
         self._say('Compra inicial: 12 rollos en bodega + asientos de caja')
 
-        # 2. Una recepción de lote: usamos 2 rollos de tela buzo y recibimos prendas.
-        # Variantes M (50/rollo) y L (42/rollo) → consumimos 1 rollo de cada.
-        var_m = next(v for v in productos['buzo_sfj']['variantes']
-                     if v.valores.first().valor == 'M')
-        var_l = next(v for v in productos['buzo_sfj']['variantes']
-                     if v.valores.first().valor == 'L')
+        # 2. Recepción de lote: 2 rollos de tela buzo → pantalones M/L.
+        def _por_talla(key, talla):
+            for v in productos[key]['variantes']:
+                if any(val.valor == talla for val in v.valores.all()
+                       if val.atributo.nombre == 'Talla'):
+                    return v
+            raise ValueError(f'No se encontró variante {talla} en {key}')
+        var_pant_m = _por_talla('buzo_sfj_pantalon', 'M')
+        var_pant_l = _por_talla('buzo_sfj_pantalon', 'L')
         recibir_lote(
             material=materiales['tela_buzo'], bodega=bodega,
             rollos_consumidos=2,
             lineas=[
-                LineaProduccion(variante_id=var_m.pk, cantidad=50),
-                LineaProduccion(variante_id=var_l.pk, cantidad=42),
+                LineaProduccion(variante_id=var_pant_m.pk, cantidad=65),
+                LineaProduccion(variante_id=var_pant_l.pk, cantidad=55),
             ],
             tienda=tienda,
             costo_confeccion=Decimal('276000'),  # confección + accesorios
-            referencia='Lote A — taller Don Mario, marzo 2026',
+            referencia='Lote pantalones SFJ — taller Don Mario, marzo 2026',
             usuario=admin,
         )
-        self._say('Recepción de lote: 92 buzos confeccionados + asiento')
+        self._say('Recepción de lote: 120 pantalones SFJ confeccionados + asiento')
 
     def _ventas_demo(self, tienda, productos):
         if ReciboVenta.objects.filter(payment_provider='mock').exists():
             self._say('Ventas demo', creado=False)
             return
 
-        var_buzo_m = next(v for v in productos['buzo_sfj']['variantes']
-                          if v.valores.first().valor == 'M')
-        var_buzo_l = next(v for v in productos['buzo_sfj']['variantes']
-                          if v.valores.first().valor == 'L')
-        var_polera_m = productos['polera_basica']['variantes'][1]
+        # Helpers de variante por talla / volumen-concentración.
+        def _var_talla(key, talla):
+            for v in productos[key]['variantes']:
+                if any(val.valor == talla for val in v.valores.all()
+                       if val.atributo.nombre == 'Talla'):
+                    return v
+            return productos[key]['variantes'][0]
+
+        def _var_perfume(key, vol, conc):
+            for v in productos[key]['variantes']:
+                vols = [val.valor for val in v.valores.all() if val.atributo.nombre == 'Volumen']
+                concs = [val.valor for val in v.valores.all() if val.atributo.nombre == 'Concentración']
+                if vol in vols and conc in concs:
+                    return v
+            return productos[key]['variantes'][0]
+
+        var_pant_m = _var_talla('buzo_sfj_pantalon', 'M')
+        var_pant_l = _var_talla('buzo_sfj_pantalon', 'L')
+        var_polera_m = _var_talla('polera_basica', 'M')
+        var_yara_30 = _var_perfume('yara', '30 ml', 'Eau de Parfum')
+        var_yara_5 = _var_perfume('yara', '5 ml', 'Eau de Parfum')
+        var_oud_30 = _var_perfume('oud', '30 ml', 'Elixir')
+        var_floral_50 = _var_perfume('floral_clasico', '50 ml', 'Eau de Toilette')
 
         ventas = [
-            (ReciboVenta.CANAL_PRESENCIAL, Decimal('28990'), 0,
-             'Sra. Rojas', [(var_buzo_m, 1, Decimal('28990'))]),
-            (ReciboVenta.CANAL_PRESENCIAL, Decimal('37980'), 1,
-             'Cliente mostrador', [(productos['perfume_50']['producto'], 2, Decimal('18990'))]),
-            (ReciboVenta.CANAL_PRESENCIAL, Decimal('57980'), 2,
+            (ReciboVenta.CANAL_PRESENCIAL, Decimal('21990'), 0,
+             'Sra. Rojas', [(var_pant_m, 1, Decimal('21990'))]),
+            (ReciboVenta.CANAL_PRESENCIAL, Decimal('29980'), 1,
+             'Cliente mostrador', [(var_floral_50, 2, Decimal('14990'))]),
+            (ReciboVenta.CANAL_PRESENCIAL, Decimal('43980'), 2,
              'Sr. Pérez',
-             [(var_buzo_m, 1, Decimal('28990')),
-              (var_buzo_l, 1, Decimal('28990'))]),
-            (ReciboVenta.CANAL_ONLINE, Decimal('44091'), 3,
-             'Carla Soto',
-             [(productos['perfume_premium']['producto'], 1, Decimal('44091'))]),
-            (ReciboVenta.CANAL_ONLINE, Decimal('19980'), 4,
-             'Pedro Soto',
-             [(productos['decant_5']['producto'], 4, Decimal('4990'))]),
-            (ReciboVenta.CANAL_ONLINE, Decimal('9990'), 6,
-             'María Vidal', [(var_polera_m, 1, Decimal('9990'))]),
+             [(var_pant_m, 1, Decimal('21990')),
+              (var_pant_l, 1, Decimal('21990'))]),
+            (ReciboVenta.CANAL_ONLINE, Decimal('40491'), 3,
+             'Carla Soto', [(var_oud_30, 1, Decimal('40491'))]),
+            (ReciboVenta.CANAL_ONLINE, Decimal('19960'), 4,
+             'Pedro Soto', [(var_yara_5, 4, Decimal('4990'))]),
+            (ReciboVenta.CANAL_ONLINE, Decimal('19990'), 6,
+             'María Vidal', [(var_yara_30, 1, Decimal('19990'))]),
+            (ReciboVenta.CANAL_ONLINE, Decimal('9990'), 7,
+             'Ana Maldonado', [(var_polera_m, 1, Decimal('9990'))]),
         ]
 
         for canal, total, dias, cliente, items in ventas:

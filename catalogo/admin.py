@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Atributo, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
+from .models import Atributo, Colegio, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
 
 
 class ValorAtributoInline(admin.TabularInline):
@@ -21,16 +21,23 @@ class ProductoVarianteInline(admin.TabularInline):
     filter_horizontal = ['valores']
 
 
+@admin.register(Colegio)
+class ColegioAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'direccion', 'telefono_contacto', 'activo']
+    list_filter = ['activo']
+    search_fields = ['nombre']
+
+
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['thumb', 'nombre', 'familia', 'precio_base', 'precio_costo', 'tiene_variantes', 'activo']
+    list_display = ['thumb', 'nombre', 'familia', 'colegio', 'precio_base', 'precio_costo', 'tiene_variantes', 'activo']
     list_display_links = ['nombre']
-    list_filter = ['familia', 'activo', 'tiene_variantes']
+    list_filter = ['familia', 'colegio', 'activo', 'tiene_variantes']
     search_fields = ['nombre', 'descripcion']
     inlines = [ProductoVarianteInline]
     readonly_fields = ['preview']
     fieldsets = (
-        (None, {'fields': ('nombre', 'familia', 'descripcion', 'activo')}),
+        (None, {'fields': ('nombre', 'familia', 'colegio', 'descripcion', 'activo')}),
         ('Precios', {'fields': ('precio_base', 'precio_costo')}),
         ('Imagen', {'fields': ('imagen', 'preview')}),
         ('Variantes', {'fields': ('tiene_variantes',)}),

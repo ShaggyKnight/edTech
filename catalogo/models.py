@@ -20,6 +20,34 @@ class Familia(models.Model):
         return self.nombre
 
 
+class Colegio(models.Model):
+    """Institución educativa para la que confeccionamos uniformes.
+
+    Los uniformes están bordados con la insignia, así que el colegio es
+    estructural, no un texto suelto. Permite filtros precisos y catálogo
+    público por colegio.
+    """
+    nombre = models.CharField(max_length=120, unique=True)
+    direccion = models.CharField(max_length=200, blank=True)
+    telefono_contacto = models.CharField(max_length=30, blank=True)
+    email_contacto = models.EmailField(blank=True)
+    logo = models.ImageField(
+        upload_to='colegios/', null=True, blank=True,
+        help_text='Insignia del colegio para mostrar en el catálogo público',
+    )
+    activo = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    modificado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['nombre']
+        verbose_name = 'Colegio'
+        verbose_name_plural = 'Colegios'
+
+    def __str__(self):
+        return self.nombre
+
+
 class Atributo(models.Model):
     """Eje de variante de un producto (ej: Talla, Color, Tamaño)."""
     nombre = models.CharField(max_length=30, unique=True)
@@ -48,6 +76,13 @@ class ValorAtributo(models.Model):
 class Producto(models.Model):
     """Producto base del catálogo. Puede tener variantes o venderse tal cual."""
     familia = models.ForeignKey(Familia, on_delete=models.PROTECT, related_name='productos')
+    colegio = models.ForeignKey(
+        Colegio,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='productos',
+        help_text='Solo para uniformes escolares — colegio cuya insignia llevan bordada',
+    )
     nombre = models.CharField(max_length=200, unique=True)
     descripcion = models.TextField(blank=True)
     precio_base = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))

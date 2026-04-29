@@ -33,6 +33,7 @@ ROLE_PERMISSIONS = {
             'producto': ['add', 'change', 'view'],
             'productovariante': ['add', 'change', 'view'],
             'familia': ['add', 'change', 'view'],
+            'colegio': ['view'],  # ver pero no editar; el dueño los gestiona
             'atributo': ['add', 'change', 'view'],
             'valoratributo': ['add', 'change', 'delete', 'view'],
             'oferta': ['add', 'change', 'view'],

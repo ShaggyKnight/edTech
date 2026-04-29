@@ -4,7 +4,36 @@
 {% block titulo %}Stock · Ideas Boutique{% endblock %}
 
 {% block extra_head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<style>
+  .stock-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .stock-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stock-toggle {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    padding: 5px 10px; border: 1px solid var(--bo-border); border-radius: 6px;
+    background: var(--bo-card); font-size: 12px; font-weight: 500; user-select: none;
+    text-decoration: none; color: var(--bo-text);
+  }
+  .stock-toggle.on {
+    background: var(--bo-success-soft); border-color: var(--bo-success);
+    color: #0E7B3F;
+  }
+  .stock-toggle.on::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--bo-success);
+  }
+  /* Form de reposición rápida */
+  .stock-reponer { display: inline-flex; gap: 4px; align-items: center; margin: 0; }
+  .stock-reponer input[type="number"] {
+    width: 56px; padding: 4px 6px; font-size: 11px; border: 1px solid var(--bo-border);
+    border-radius: 4px; text-align: center;
+  }
+  .stock-reponer button {
+    padding: 4px 10px; background: var(--bo-success-soft); color: #0E7B3F;
+    border: 1px solid var(--bo-success); border-radius: 4px; font-size: 11px;
+    font-weight: 600; cursor: pointer;
+  }
+  .stock-reponer button:hover { background: var(--bo-success); color: #fff; }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -12,10 +41,12 @@
     <div>
       <div class="bo-crumb">Bodega / Stock</div>
       <h1>Stock por tienda</h1>
-      <div class="sub">{{ kpi.n_total }} fila{{ kpi.n_total|pluralize:"s" }} · {{ kpi.unidades }} unidades en total</div>
+      <div class="sub">{{ stock|length }} fila{{ stock|length|pluralize:"s" }} en el filtro · {{ kpi.unidades_totales }} unidades en total</div>
     </div>
     <div style="display:flex; gap:8px;">
-      <a href="{% url 'admin:bodega_stocktienda_add' %}" class="bo-btn bo-btn-primary">+ Cargar stock</a>
+      {% if puede_reponer %}
+        <a href="{% url 'admin:catalogo_producto_add' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>
+      {% endif %}
       <a href="{% url 'admin:bodega_movimientostock_changelist' %}" class="bo-btn">Movimientos</a>
     </div>
   </div>
@@ -40,74 +71,86 @@
     <div class="bo-card bo-kpi is-gold">
       <div class="label">Rollos en bodega</div>
       <div class="value">{{ kpi.rollos_total }}</div>
-      <div class="sub">Materia prima total · todos materiales</div>
+      <div class="sub">Materia prima total</div>
     </div>
   </div>
 
   {# ─── Filtros ─── #}
   <div class="bo-card" style="margin-bottom:20px;">
     <div class="bo-card-body">
-      <form method="get" class="bo-form-inline">
-        <div class="bo-field" style="min-width:200px;">
-          <label>Buscar</label>
-          <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
-                 placeholder="Nombre o SKU…">
+      <form method="get">
+        <div class="stock-filters">
+          <div class="bo-field">
+            <label>Buscar</label>
+            <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
+                   placeholder="Nombre o SKU…">
+          </div>
+          <div class="bo-field">
+            <label>Tienda</label>
+            <select name="tienda" class="bo-select">
+              <option value="">Todas</option>
+              {% for t in tiendas %}
+                <option value="{{ t.pk }}" {% if filtros.tienda == t.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ t.nombre_organizacion }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="bo-field">
+            <label>Familia</label>
+            <select name="familia" class="bo-select">
+              <option value="">Todas</option>
+              {% for f in familias %}
+                <option value="{{ f.pk }}" {% if filtros.familia == f.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ f.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="bo-field">
+            <label>Colegio</label>
+            <select name="colegio" class="bo-select">
+              <option value="">Todos</option>
+              {% for c in colegios %}
+                <option value="{{ c.pk }}" {% if filtros.colegio == c.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ c.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="bo-field">
+            <label>Mostrar</label>
+            <select name="solo" class="bo-select">
+              <option value="">Default (con stock)</option>
+              <option value="bajo" {% if filtros.solo == "bajo" %}selected{% endif %}>Solo stock bajo</option>
+              <option value="cero" {% if filtros.solo == "cero" %}selected{% endif %}>Solo agotados</option>
+            </select>
+          </div>
         </div>
-        <div class="bo-field">
-          <label>Tienda</label>
-          <select name="tienda" class="bo-select">
-            <option value="">Todas</option>
-            {% for t in tiendas %}
-              <option value="{{ t.pk }}" {% if filtros.tienda == t.pk|stringformat:"s" %}selected{% endif %}>
-                {{ t.nombre_organizacion }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="bo-field">
-          <label>Familia</label>
-          <select name="familia" class="bo-select">
-            <option value="">Todas</option>
-            {% for f in familias %}
-              <option value="{{ f.pk }}" {% if filtros.familia == f.pk|stringformat:"s" %}selected{% endif %}>
-                {{ f.nombre }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="bo-field">
-          <label>Mostrar</label>
-          <select name="solo" class="bo-select">
-            <option value="">Todos</option>
-            <option value="bajo" {% if filtros.solo == "bajo" %}selected{% endif %}>Solo stock bajo</option>
-            <option value="cero" {% if filtros.solo == "cero" %}selected{% endif %}>Solo agotados</option>
-          </select>
-        </div>
-        <div style="display:flex; gap:6px;">
+        <div class="stock-actions-row" style="margin-top: 14px;">
           <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
           <a href="{% url 'bodega:stock' %}" class="bo-btn">Limpiar</a>
+          <div style="flex:1;"></div>
+          {% if mostrar_todos %}
+            <a class="stock-toggle"
+               href="?{% if filtros.tienda %}tienda={{ filtros.tienda }}&{% endif %}{% if filtros.familia %}familia={{ filtros.familia }}&{% endif %}{% if filtros.colegio %}colegio={{ filtros.colegio }}&{% endif %}{% if filtros.q %}q={{ filtros.q }}{% endif %}">
+              Mostrando agotados
+            </a>
+          {% else %}
+            <a class="stock-toggle on"
+               href="?stock=todos{% if filtros.tienda %}&tienda={{ filtros.tienda }}{% endif %}{% if filtros.familia %}&familia={{ filtros.familia }}{% endif %}{% if filtros.colegio %}&colegio={{ filtros.colegio }}{% endif %}{% if filtros.q %}&q={{ filtros.q }}{% endif %}">
+              Solo con stock
+            </a>
+          {% endif %}
         </div>
       </form>
     </div>
   </div>
 
-  {# ─── Chart de alertas ─── #}
-  {% if chart_alertas %}
-    <div class="bo-card" style="margin-bottom:20px;">
-      <div class="bo-card-head">
-        <h3>Alertas de stock bajo (15 más críticos)</h3>
-        <a href="?solo=bajo" class="bo-btn bo-btn-sm">Ver todos</a>
-      </div>
-      <div class="bo-card-body">
-        <canvas id="chartAlertas" class="bo-chart"></canvas>
-      </div>
-    </div>
-  {% endif %}
-
-  {# ─── Tabla de stock ─── #}
+  {# ─── Tabla detalle ─── #}
   <div class="bo-card">
     <div class="bo-card-head">
-      <h3>Detalle del stock</h3>
+      <h3>Detalle</h3>
     </div>
     {% if stock %}
       <table class="bo-table">
@@ -116,9 +159,11 @@
             <th>Tienda</th>
             <th>Producto</th>
             <th>Familia</th>
+            <th>Colegio</th>
             <th>SKU / tipo</th>
             <th class="num">Cantidad</th>
             <th>Estado</th>
+            {% if puede_reponer %}<th>Reponer</th>{% endif %}
           </tr>
         </thead>
         <tbody>
@@ -134,6 +179,15 @@
                 {% elif s.producto %}{{ s.producto.familia.nombre }}{% endif %}
               </td>
               <td>
+                {% if s.variante and s.variante.producto.colegio %}
+                  <span class="bo-badge bo-badge-info">{{ s.variante.producto.colegio.nombre }}</span>
+                {% elif s.producto and s.producto.colegio %}
+                  <span class="bo-badge bo-badge-info">{{ s.producto.colegio.nombre }}</span>
+                {% else %}
+                  <span style="color:var(--bo-muted);">—</span>
+                {% endif %}
+              </td>
+              <td>
                 {% if s.variante %}<code>{{ s.variante.sku }}</code>
                 {% else %}<em style="color:var(--bo-muted);">sin variantes</em>{% endif %}
               </td>
@@ -147,6 +201,23 @@
                   <span class="bo-badge bo-badge-success">OK</span>
                 {% endif %}
               </td>
+              {% if puede_reponer %}
+                <td>
+                  <form method="post" action="{% url 'bodega:reponer' %}" class="stock-reponer">
+                    {% csrf_token %}
+                    <input type="hidden" name="tienda_id" value="{{ s.tienda.pk }}">
+                    {% if s.variante %}
+                      <input type="hidden" name="tipo" value="v">
+                      <input type="hidden" name="item_id" value="{{ s.variante.pk }}">
+                    {% else %}
+                      <input type="hidden" name="tipo" value="p">
+                      <input type="hidden" name="item_id" value="{{ s.producto.pk }}">
+                    {% endif %}
+                    <input type="number" name="cantidad" value="1" min="1" max="9999" title="Unidades a sumar">
+                    <button type="submit" title="Sumar al stock">+ Reponer</button>
+                  </form>
+                </td>
+              {% endif %}
             </tr>
           {% endfor %}
         </tbody>
@@ -155,49 +226,4 @@
       <div class="bo-card-body" style="color:var(--bo-muted);">No hay stock con los filtros aplicados.</div>
     {% endif %}
   </div>
-
-  {{ chart_alertas|json_script:"data-alertas" }}
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const dataEl = document.getElementById('data-alertas');
-    if (!dataEl || !window.Chart) return;
-    const data = JSON.parse(dataEl.textContent || '[]');
-    const ctx = document.getElementById('chartAlertas');
-    if (!ctx) return;
-    const css = getComputedStyle(document.documentElement);
-    const warning = css.getPropertyValue('--bo-warning').trim() || '#F6C000';
-    const grid    = css.getPropertyValue('--bo-border-soft').trim() || '#F1F1F4';
-    const muted   = css.getPropertyValue('--bo-muted').trim() || '#78829D';
-
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: data.map(d => d.nombre),
-        datasets: [{
-          label: 'Unidades restantes', data: data.map(d => d.cantidad),
-          backgroundColor: warning, borderRadius: 4, maxBarThickness: 20,
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              afterLabel: ctx => 'En ' + (data[ctx.dataIndex]?.tienda || '')
-            }
-          }
-        },
-        scales: {
-          x: { grid: { color: grid }, ticks: { color: muted, precision: 0 } },
-          y: { grid: { display: false }, ticks: { color: muted, font: { size: 11 } } }
-        }
-      }
-    });
-  });
-</script>
 {% endblock %}

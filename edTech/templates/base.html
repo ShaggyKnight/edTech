@@ -125,6 +125,16 @@
               <svg class="ico"><use href="#ico-shield"/></svg>
               Caja
             </a>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'eerr' %}active{% endif %}"
+               href="{% url 'reportes:eerr' %}">
+              <svg class="ico"><use href="#ico-sparkle"/></svg>
+              Estado de Resultados
+            </a>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'balance' %}active{% endif %}"
+               href="{% url 'reportes:balance' %}">
+              <svg class="ico"><use href="#ico-check"/></svg>
+              Balance General
+            </a>
             <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'produccion' %}active{% endif %}"
                href="{% url 'reportes:produccion' %}">
               <svg class="ico"><use href="#ico-scissors"/></svg>

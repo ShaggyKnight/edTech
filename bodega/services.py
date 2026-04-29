@@ -93,13 +93,16 @@ def comprar_material(
     )
 
     if costo_total > 0:
-        # Asiento contable: salida de caja por la compra.
+        # Asiento contable: salida de caja por la compra. NO es gasto del
+        # período — es adquisición de inventario (activo).
         from contabilidad.services import registrar_salida
+        from contabilidad.models import MovimientoCaja
         registrar_salida(
             tienda=tienda_caja,
             monto=costo_total,
             concepto=f'Compra material: {material.nombre} (×{cantidad} rollos)',
             usuario=usuario,
+            categoria=MovimientoCaja.COSTO_INVENTARIO,
         )
 
     return mov
@@ -181,13 +184,17 @@ def recibir_lote(
         )
 
     # 3. Asiento contable: pago al confeccionista (incluye accesorios).
+    # NO es gasto del período — su costo se activa en precio_costo de
+    # cada prenda terminada, y aparece en EERR cuando se vende.
     if costo_confeccion > 0:
         from contabilidad.services import registrar_salida
+        from contabilidad.models import MovimientoCaja
         registrar_salida(
             tienda=tienda,
             monto=costo_confeccion,
             concepto=f'Confección lote: {sum(ln.cantidad for ln in lineas)} prendas',
             usuario=usuario,
+            categoria=MovimientoCaja.COSTO_PRODUCCION,
         )
 
     return mov_material

@@ -42,6 +42,12 @@
       </div>
       <button type="submit" class="bo-btn bo-btn-primary">Actualizar</button>
     </form>
+    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+      <a href="{% url 'reportes:eerr' %}" class="bo-btn bo-btn-sm">Estado de Resultados</a>
+      <a href="{% url 'reportes:balance' %}" class="bo-btn bo-btn-sm">Balance General</a>
+      <a href="{% url 'reportes:caja' %}" class="bo-btn bo-btn-sm">Caja</a>
+      <a href="{% url 'reportes:produccion' %}" class="bo-btn bo-btn-sm">Producción</a>
+    </div>
   </div>
 
   {# ─────────── KPI cards ─────────── #}

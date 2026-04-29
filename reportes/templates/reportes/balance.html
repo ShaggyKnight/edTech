@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Balance General · Ideas Boutique{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Reportes / Balance General</div>
+      <h1>Balance General</h1>
+      <div class="sub">Snapshot patrimonial al <strong>{{ balance.fecha|date:"d M Y H:i" }}</strong></div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="{% url 'reportes:eerr' %}" class="bo-btn">Estado de Resultados</a>
+      <a href="{% url 'reportes:dashboard' %}" class="bo-btn">Dashboard</a>
+    </div>
+  </div>
+
+  {# ─── Filtros ─── #}
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body">
+      <form method="get" class="bo-form-inline">
+        <div class="bo-field">
+          <label>Fecha de corte</label>
+          <input type="date" name="fecha" class="bo-input" value="{{ fecha_str }}">
+        </div>
+        <div class="bo-field">
+          <label>Tienda</label>
+          <select name="tienda" class="bo-select">
+            <option value="">Todas</option>
+            {% for t in tiendas %}
+              <option value="{{ t.pk }}" {% if tienda_filtro and tienda_filtro.pk == t.pk %}selected{% endif %}>
+                {{ t.nombre_organizacion }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="bo-btn bo-btn-primary">Aplicar</button>
+        <a href="{% url 'reportes:balance' %}" class="bo-btn">Hoy</a>
+      </form>
+    </div>
+  </div>
+
+  {# ─── KPIs principales ─── #}
+  <div class="bo-grid cols-3" style="margin-bottom:20px;">
+    <div class="bo-card bo-kpi is-primary">
+      <div class="label">Total activos</div>
+      <div class="value">${{ balance.total_activos|floatformat:0|intcomma }}</div>
+      <div class="sub">Caja + inventario terminado + materia prima</div>
+    </div>
+    <div class="bo-card bo-kpi">
+      <div class="label">Pasivos</div>
+      <div class="value">${{ balance.total_pasivos|floatformat:0|intcomma }}</div>
+      <div class="sub">Cuentas por pagar (no modeladas todavía)</div>
+    </div>
+    <div class="bo-card bo-kpi is-success">
+      <div class="label">Patrimonio</div>
+      <div class="value">${{ balance.patrimonio|floatformat:0|intcomma }}</div>
+      <div class="sub">Activos − pasivos</div>
+    </div>
+  </div>
+
+  <div class="bo-grid cols-2">
+    {# ─── Detalle activos ─── #}
+    <div class="bo-card">
+      <div class="bo-card-head"><h3>Activos</h3></div>
+      <table class="bo-table">
+        <tbody>
+          <tr>
+            <td>
+              <strong>Caja</strong>
+              <div style="font-size:11px;color:var(--bo-muted);">Saldo histórico (entradas − salidas)</div>
+            </td>
+            <td class="num"><strong>${{ balance.caja|floatformat:0|intcomma }}</strong></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Inventario terminado</strong>
+              <div style="font-size:11px;color:var(--bo-muted);">Productos en tienda × precio costo</div>
+            </td>
+            <td class="num"><strong>${{ balance.inventario_terminado|floatformat:0|intcomma }}</strong></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Materia prima</strong>
+              <div style="font-size:11px;color:var(--bo-muted);">Rollos en bodega × costo unitario</div>
+            </td>
+            <td class="num"><strong>${{ balance.inventario_materia_prima|floatformat:0|intcomma }}</strong></td>
+          </tr>
+          <tr style="background:var(--bo-bg); border-top:2px solid var(--bo-text);">
+            <td><strong>Total activos</strong></td>
+            <td class="num" style="font-size:16px;color:var(--bo-primary-2);">
+              <strong>${{ balance.total_activos|floatformat:0|intcomma }}</strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {# ─── Donut composición ─── #}
+    <div class="bo-card">
+      <div class="bo-card-head"><h3>Composición de activos</h3></div>
+      <div class="bo-card-body">
+        <canvas id="chartActivos" class="bo-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script id="data-balance" type="application/json">
+    {
+      "labels":  ["Caja", "Inventario terminado", "Materia prima"],
+      "valores": [
+        {{ balance.caja|stringformat:"f"|floatformat:0|default:"0" }},
+        {{ balance.inventario_terminado|stringformat:"f"|floatformat:0|default:"0" }},
+        {{ balance.inventario_materia_prima|stringformat:"f"|floatformat:0|default:"0" }}
+      ]
+    }
+  </script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const dataEl = document.getElementById('data-balance');
+    if (!dataEl || !window.Chart) return;
+    const data = JSON.parse(dataEl.textContent);
+    const ctx = document.getElementById('chartActivos');
+    if (!ctx) return;
+    const css = getComputedStyle(document.documentElement);
+    const primary = css.getPropertyValue('--bo-primary-2').trim() || '#1B84FF';
+    const success = css.getPropertyValue('--bo-success').trim() || '#17C653';
+    const gold    = css.getPropertyValue('--bo-gold').trim()    || '#C9A96E';
+    const muted   = css.getPropertyValue('--bo-muted').trim()   || '#78829D';
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          data: data.valores,
+          backgroundColor: [primary, success, gold],
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: muted } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.label + ': $' + (ctx.parsed || 0).toLocaleString('es-CL'),
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -112,8 +112,16 @@
       </aside>
     </div>
 
-    <div style="margin-top:32px;">
+    <div style="margin-top:32px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
       <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline">← Seguir comprando</a>
+      <form method="post" action="{% url 'ecommerce:vaciar' %}" style="margin:0;"
+            onsubmit="return confirm('¿Vaciar el carrito? Esta acción no se puede deshacer.');">
+        {% csrf_token %}
+        <button type="submit" class="btn-outline"
+                style="color: var(--vino); border-color: var(--vino); background: transparent;">
+          Vaciar carrito
+        </button>
+      </form>
     </div>
   {% endif %}
 </main>

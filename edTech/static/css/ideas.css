@@ -239,8 +239,26 @@ input, select { font-family: inherit; }
 .filter-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .filter-group label { display: block; padding: 6px 0; font-size: 13px; }
 .size-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.size-chip { width: 40px; height: 36px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; font-weight: 500; background: var(--cream); transition: all .2s; }
+.size-chip {
+  min-width: 40px; height: 36px;
+  padding: 4px 10px;
+  border: 1px solid var(--line); border-radius: 6px;
+  font-size: 12px; font-weight: 500; line-height: 1.15;
+  background: var(--cream); color: var(--ink);
+  transition: all .2s; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  text-align: center;
+}
 .size-chip:hover, .size-chip.active { border-color: var(--ink); background: var(--ink); color: var(--cream); }
+/* Variante "ancha": para perfumes (Volumen + Concentración) y otros con
+   más de un atributo, los chips toman 2 líneas y bordes más holgados. */
+.size-chips.wide-chips .size-chip {
+  min-width: 110px;
+  height: auto;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+}
 .range-labs { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-60); margin-top: 6px; }
 .range-row input { width: 100%; }
 

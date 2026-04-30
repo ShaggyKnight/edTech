@@ -63,12 +63,14 @@
           <input type="hidden" name="cantidad" value="1">
 
           <div class="pdp-opts">
-            <div class="pdp-opt-label">Elegí tu talla</div>
-            <div class="size-chips" id="pdp-chips">
+            <div class="pdp-opt-label">Elegí tu {{ label_eleccion|default:"variante" }}</div>
+            <div class="size-chips {% if chips_anchos %}wide-chips{% endif %}" id="pdp-chips">
               {% comment %}
                 Cada chip lleva los datos de la variante en data-attrs.
                 Click = marca como activa + actualiza precio + habilita botón.
                 Las agotadas van abajo en pequeño para no estorbar.
+                Para perfumes (Volumen + Concentración) usamos chips anchos
+                con texto en dos líneas.
               {% endcomment %}
               {% for v in variantes %}
                 {% if v.stock %}
@@ -76,22 +78,21 @@
                           data-variante-id="{{ v.pk }}"
                           data-precio="{{ v.precio|floatformat:0 }}"
                           data-stock="{{ v.stock }}"
-                          data-label="{% for val in v.valores.all %}{{ val.valor }} {% endfor %}">
-                    {% for val in v.valores.all %}{{ val.valor }} {% endfor %}
+                          data-label="{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}">
+                    {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                   </button>
                 {% endif %}
               {% endfor %}
             </div>
             <div style="margin-top:8px;font-size:12px;color:var(--ink-60);" id="pdp-stock-info"></div>
-            {% with agotadas_count=0 %}{% endwith %}
             <div style="margin-top:10px;font-size:12px;color:var(--ink-60);">
-              {% for v in variantes %}{% if not v.stock %}{% if forloop.counter == 1 %}<span>Agotadas: </span>{% endif %}<span style="text-decoration:line-through;margin-right:6px;">{% for val in v.valores.all %}{{ val.valor }}{% endfor %}</span>{% endif %}{% endfor %}
+              {% for v in variantes %}{% if not v.stock %}{% if forloop.counter == 1 %}<span>Agotadas: </span>{% endif %}<span style="text-decoration:line-through;margin-right:6px;">{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}</span>{% endif %}{% endfor %}
             </div>
           </div>
 
           <div class="pdp-ctas" style="margin-top:18px;">
             <button type="submit" class="btn-primary lg" id="pdp-add-btn" disabled>
-              <span id="pdp-add-label">Elegí una talla primero</span>
+              <span id="pdp-add-label">Elegí tu {{ label_eleccion|default:"variante" }} primero</span>
               <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
             </button>
           </div>
@@ -107,6 +108,9 @@
             var installments = document.getElementById('pdp-installments');
             var stockInfo = document.getElementById('pdp-stock-info');
             var hidden = document.getElementById('pdp-item-id');
+            var labelEleccion = "{{ label_eleccion|escapejs }}";
+            // Capitalizar primer letra: "talla" → "Talla", "formato" → "Formato".
+            var labelCap = labelEleccion.charAt(0).toUpperCase() + labelEleccion.slice(1);
 
             function fmt(n) {
               return Number(n).toLocaleString('es-CL');
@@ -127,13 +131,13 @@
                 installments.textContent = 'o 3 cuotas sin interés de $' +
                   fmt(Math.floor(precio / 3));
 
-                // Quita el "Desde" cuando ya hay talla elegida.
+                // Quita el "Desde" cuando ya hay variante elegida.
                 var fromTag = priceBlock.querySelector('div');
                 if (fromTag && fromTag.textContent.trim() === 'Desde') {
                   fromTag.style.display = 'none';
                 }
 
-                stockInfo.textContent = 'Talla ' + label + ' · stock ' + stock;
+                stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
                 btn.disabled = false;
                 btnLabel.textContent = 'Agregar al carrito · $' + fmt(precio);
               });

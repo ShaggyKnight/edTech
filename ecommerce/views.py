@@ -184,13 +184,19 @@ def catalogo(request):
     ]
     cat_info = CAT_SLUGS.get(cat_slug) if cat_slug in CAT_SLUGS else None
 
-    # Tallas disponibles según stock real en la tienda — no listamos
-    # tallas que no existen para nada o están agotadas.
+    # Tallas disponibles para el filtro lateral. Solo de los productos
+    # actualmente visibles en el catálogo filtrado — así el filtro no
+    # aparece en /tienda/?cat=perfumes (donde no aplica) y solo se ven
+    # tallas que el cliente realmente puede comprar.
+    productos_visibles_ids = list(
+        productos_qs.distinct().values_list('pk', flat=True)
+    )
     tallas_disponibles = list(
         ValorAtributo.objects
         .filter(
             atributo__nombre__iexact='Talla',
             variantes__activa=True,
+            variantes__producto_id__in=productos_visibles_ids,
             variantes__stock_tienda__tienda=tienda,
             variantes__stock_tienda__cantidad__gt=0,
         )
@@ -255,12 +261,42 @@ def detalle_producto(request, pk: int):
     else:
         variantes = producto.variantes.none()
 
+    # Label dinámico para el selector. Una polera tiene atributos {Talla},
+    # un perfume {Volumen, Concentración} — el cliente pelo "Elegí tu talla"
+    # como si fuera el mismo producto, así que adaptamos el copy.
+    nombres_atributos = set()
+    for v in variantes:
+        for val in v.valores.all():
+            nombres_atributos.add(val.atributo.nombre)
+    if not nombres_atributos:
+        label_eleccion = 'variante'
+    elif nombres_atributos == {'Talla'}:
+        label_eleccion = 'talla'
+    elif nombres_atributos == {'Volumen'}:
+        label_eleccion = 'formato'
+    elif nombres_atributos == {'Volumen', 'Concentración'}:
+        label_eleccion = 'formato'
+    elif len(nombres_atributos) == 1:
+        # Único atributo desconocido: usar su nombre minúsculo.
+        label_eleccion = next(iter(nombres_atributos)).lower()
+    else:
+        label_eleccion = 'variante'
+
+    # ¿Las variantes tienen labels largos? Sirve para que el template aplique
+    # estilos más anchos en el chip (perfumes con "30 ml Eau de Parfum").
+    chips_anchos = any(
+        len(' · '.join(str(val.valor) for val in v.valores.all())) > 5
+        for v in variantes
+    )
+
     cart = Cart(request.session)
     return render(request, 'ecommerce/producto.html', {
         'producto': producto,
         'variantes': variantes,
         'stock_directo': stock_directo,
         'items_count': cart.items_count,
+        'label_eleccion': label_eleccion,
+        'chips_anchos': chips_anchos,
     })
 
 

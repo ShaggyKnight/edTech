@@ -14,7 +14,15 @@
       <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>
       <div class="pcard-name">{{ producto.nombre }}</div>
       <div class="pcard-price-row">
-        <span class="pcard-price">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+        {% if producto.precios_varian_por_variante %}
+          <span class="pcard-price-from"
+                style="font-size:10px;color:var(--ink-60);font-weight:600;
+                       text-transform:uppercase;letter-spacing:0.08em;
+                       margin-right:4px;">desde</span>
+          <span class="pcard-price">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+        {% else %}
+          <span class="pcard-price">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+        {% endif %}
         {% if producto.precio_old %}
           <span class="pcard-old">${{ producto.precio_old|floatformat:0|intcomma }}</span>
         {% endif %}

@@ -20,6 +20,20 @@
       <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar por colegio, marca o producto…">
     </form>
     <div class="shop-actions">
+      {% if user.is_authenticated and user.is_staff %}
+        {# Acceso rápido al backoffice para staff/admin/cajero/bodeguero
+           sin tener que volver a la landing. #}
+        <a href="{% url 'reportes:dashboard' %}" class="shop-staff-link"
+           title="Ir al backoffice"
+           style="display:inline-flex;align-items:center;gap:6px;
+                  padding:6px 12px;background:var(--ink);color:var(--gold);
+                  border-radius:6px;font-size:12px;font-weight:600;
+                  letter-spacing:0.04em;text-transform:uppercase;
+                  text-decoration:none;">
+          <svg class="ico ico--14"><use href="#ico-shield"/></svg>
+          Backoffice
+        </a>
+      {% endif %}
       {% if user.is_authenticated %}
         <a href="{% url 'ecommerce:mis_pedidos' %}" aria-label="Mis pedidos" title="Hola, {{ user.first_name|default:user.username }}">
           <svg class="ico ico--18"><use href="#ico-user"/></svg>

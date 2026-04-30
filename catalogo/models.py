@@ -127,6 +127,35 @@ class Producto(models.Model):
         self.descripcion_buscable = normalize_text(self.descripcion)
         super().save(*args, **kwargs)
 
+    @property
+    def precio_minimo(self):
+        """Precio mínimo entre variantes activas (override) o precio_base.
+
+        Útil para mostrar "Desde $X" en el catálogo cuando los precios
+        varían por talla. Si no tiene variantes o todas usan precio_base,
+        devuelve precio_base.
+        """
+        if not self.tiene_variantes:
+            return self.precio_base
+        precios = []
+        for v in self.variantes.filter(activa=True):
+            precios.append(v.precio_override or self.precio_base)
+        return min(precios) if precios else self.precio_base
+
+    @property
+    def precios_varian_por_variante(self):
+        """True si las variantes activas tienen precios distintos entre sí.
+
+        Permite mostrar "Desde $X" solo cuando aporta info: si todas las
+        tallas cuestan lo mismo, mostramos el precio único.
+        """
+        if not self.tiene_variantes:
+            return False
+        precios = set()
+        for v in self.variantes.filter(activa=True):
+            precios.add(v.precio_override or self.precio_base)
+        return len(precios) > 1
+
 
 class ProductoVariante(models.Model):
     """SKU vendible. Cada combinación de valores de atributo es una variante."""

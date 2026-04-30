@@ -222,12 +222,29 @@ class Command(BaseCommand):
         return out
 
     def _atributos(self):
-        """Tres atributos: Talla (uniformes/moda), Volumen (perfumes), Concentración (perfumes)."""
+        """Tres atributos: Talla (uniformes/moda), Volumen (perfumes), Concentración (perfumes).
+
+        Talla soporta tallas numéricas (3-16, escolares) y letras (XS-XXL,
+        tallas adultos) — los precios reales del Excel del negocio usan
+        ambos sistemas.
+        """
         talla, _ = Atributo.objects.get_or_create(nombre='Talla')
         tallas = {}
-        for t in ['XS', 'S', 'M', 'L', 'XL', 'XXL']:
-            v, _ = ValorAtributo.objects.get_or_create(atributo=talla, valor=t)
-            tallas[t] = v
+        # Tallas numéricas + letras, en el orden en que las muestra el negocio.
+        tallas_orden = [
+            ('3', 1), ('4', 2), ('6', 3), ('8', 4), ('10', 5), ('12', 6),
+            ('14', 7), ('16', 8),
+            ('XS', 9), ('S', 10), ('M', 11), ('L', 12), ('XL', 13), ('XXL', 14),
+        ]
+        for t_str, orden_n in tallas_orden:
+            v, _ = ValorAtributo.objects.get_or_create(
+                atributo=talla, valor=t_str, defaults={'orden': orden_n},
+            )
+            # Si ya existía con orden 0, lo corregimos.
+            if v.orden != orden_n:
+                v.orden = orden_n
+                v.save(update_fields=['orden'])
+            tallas[t_str] = v
 
         volumen, _ = Atributo.objects.get_or_create(nombre='Volumen')
         volumenes = {}
@@ -285,23 +302,47 @@ class Command(BaseCommand):
             'insignia oficial.'
         )
 
+        # Tallas y precios reales del negocio (Excel "Lista de precios SFJ"
+        # 2023-08-07). Las tallas chicas (4-16) son escolares; XL/L/M/S
+        # son adultos. Cada talla tiene su propio precio porque la cantidad
+        # de tela cambia bastante entre extremos.
+        TALLAS_BUZO = ['4', '6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL']
+
         out['buzo_sfj_completo'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Buzo SFJ Completo',
             descripcion=DESC_BUZO_GENERAL + ' Set completo: pantalón + chaqueta.',
-            precio_base=Decimal('38990'), precio_costo=Decimal('15000'),
-            sku_prefix='BZSFJ-CMP', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
+            precio_base=Decimal('28900'), precio_costo=Decimal('15000'),
+            sku_prefix='BZSFJ-CMP', tallas=TALLAS_BUZO, atrs=atrs,
+            precios_por_talla={
+                '4':  Decimal('16900'), '6':  Decimal('17900'), '8':  Decimal('18900'),
+                '10': Decimal('19900'), '12': Decimal('21900'), '14': Decimal('23900'),
+                '16': Decimal('25900'), 'S':  Decimal('26900'), 'M':  Decimal('28900'),
+                'L':  Decimal('28900'), 'XL': Decimal('29900'),
+            },
         )
         out['buzo_sfj_pantalon'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Buzo SFJ Pantalón',
             descripcion=DESC_BUZO_GENERAL + ' Pieza individual: pantalón.',
-            precio_base=Decimal('21990'), precio_costo=Decimal('9000'),
-            sku_prefix='BZSFJ-PAN', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
+            precio_base=Decimal('14900'), precio_costo=Decimal('7500'),
+            sku_prefix='BZSFJ-PAN', tallas=TALLAS_BUZO, atrs=atrs,
+            precios_por_talla={
+                '4':  Decimal('8900'),  '6':  Decimal('9900'),  '8':  Decimal('10900'),
+                '10': Decimal('10900'), '12': Decimal('11900'), '14': Decimal('12900'),
+                '16': Decimal('13900'), 'S':  Decimal('13900'), 'M':  Decimal('14900'),
+                'L':  Decimal('14900'), 'XL': Decimal('15900'),
+            },
         )
         out['buzo_sfj_chaqueta'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Buzo SFJ Chaqueta',
             descripcion=DESC_BUZO_GENERAL + ' Pieza individual: chaqueta con cierre.',
-            precio_base=Decimal('22990'), precio_costo=Decimal('9500'),
-            sku_prefix='BZSFJ-CHQ', tallas=['XS', 'S', 'M', 'L', 'XL', 'XXL'], atrs=atrs,
+            precio_base=Decimal('15900'), precio_costo=Decimal('8000'),
+            sku_prefix='BZSFJ-CHQ', tallas=TALLAS_BUZO, atrs=atrs,
+            precios_por_talla={
+                '4':  Decimal('10500'), '6':  Decimal('10500'), '8':  Decimal('11900'),
+                '10': Decimal('11900'), '12': Decimal('12900'), '14': Decimal('13900'),
+                '16': Decimal('13900'), 'S':  Decimal('14900'), 'M':  Decimal('15900'),
+                'L':  Decimal('15900'), 'XL': Decimal('15900'),
+            },
         )
         out['polera_pique_sfj'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Polera piqué SFJ',
@@ -337,13 +378,18 @@ class Command(BaseCommand):
         out['chaleco_sfj'] = self._producto_con_tallas(
             familia=unif, colegio=sfj, nombre='Chaleco SFJ',
             descripcion=(
-                'Chaleco oficial SFJ confeccionado a medida. Lana de buena '
-                'calidad color rojo italiano que NO hace pelotitas en las '
-                'mangas ni en el cuerpo y no se deforma con el uso. Bordado '
-                'con insignia oficial.'
+                'Chaleco oficial SFJ — polar negro con bordado de la '
+                'insignia. Confeccionado a medida con tela duradera que '
+                'no hace pelotitas ni se deforma con el uso.'
             ),
-            precio_base=Decimal('24990'), precio_costo=Decimal('11000'),
-            sku_prefix='CHSFJ', tallas=['XS', 'S', 'M', 'L', 'XL'], atrs=atrs,
+            precio_base=Decimal('18000'), precio_costo=Decimal('9000'),
+            sku_prefix='CHSFJ', tallas=TALLAS_BUZO, atrs=atrs,
+            precios_por_talla={
+                '4':  Decimal('11900'), '6':  Decimal('11900'), '8':  Decimal('12900'),
+                '10': Decimal('14000'), '12': Decimal('17000'), '14': Decimal('17000'),
+                '16': Decimal('17000'), 'S':  Decimal('18000'), 'M':  Decimal('18000'),
+                'L':  Decimal('18000'), 'XL': Decimal('20000'),
+            },
         )
 
         # --- Uniformes otros colegios (DP, Lohse, Almagro) ---
@@ -443,7 +489,15 @@ class Command(BaseCommand):
         return {'producto': p, 'variantes': []}
 
     def _producto_con_tallas(self, *, familia, nombre, descripcion, precio_base,
-                              precio_costo, sku_prefix, tallas, atrs, colegio=None):
+                              precio_costo, sku_prefix, tallas, atrs, colegio=None,
+                              precios_por_talla=None):
+        """Crea/actualiza un producto con sus variantes por talla.
+
+        Si `precios_por_talla` (dict[talla, Decimal]) está presente, cada
+        variante recibe ese precio como `precio_override`. Útil cuando los
+        precios del negocio varían por talla (ej: buzo XL cuesta más que
+        buzo talla 4). Si no, todas las variantes usan precio_base.
+        """
         p, c = Producto.objects.get_or_create(
             nombre=nombre,
             defaults={
@@ -453,9 +507,8 @@ class Command(BaseCommand):
                 'tiene_variantes': True, 'activo': True,
             },
         )
-        # Si ya existía, actualizamos colegio/familia/descripción para que el
-        # seed sea fuente de verdad — si cambiás los textos acá y re-corrés,
-        # la DB queda al día sin tener que tocar admin Django.
+        # Si ya existía, actualizamos colegio/familia/descripción/precio_base
+        # para que el seed sea fuente de verdad.
         if not c:
             cambios = []
             if p.colegio_id != (colegio.pk if colegio else None):
@@ -467,6 +520,9 @@ class Command(BaseCommand):
             if p.descripcion != descripcion:
                 p.descripcion = descripcion
                 cambios.append('descripcion')
+            if p.precio_base != precio_base:
+                p.precio_base = precio_base
+                cambios.append('precio_base')
             if cambios:
                 cambios.append('modificado')
                 p.save(update_fields=cambios)
@@ -476,6 +532,13 @@ class Command(BaseCommand):
                 producto=p, sku=f'{sku_prefix}-{t}',
             )
             v.valores.add(atrs['tallas'][t])
+            # Si hay precio específico para esa talla, lo aplicamos como
+            # override. Lo seteamos siempre (idempotente) para que el seed
+            # se mantenga como fuente de verdad de precios.
+            if precios_por_talla and t in precios_por_talla:
+                if v.precio_override != precios_por_talla[t]:
+                    v.precio_override = precios_por_talla[t]
+                    v.save(update_fields=['precio_override', 'modificado'])
             variantes.append(v)
         self._say(f'Producto: {nombre} ({len(variantes)} variantes)', creado=c)
         return {'producto': p, 'variantes': variantes}
@@ -548,6 +611,32 @@ class Command(BaseCommand):
             for v in productos[key]['variantes']:
                 StockTienda.objects.get_or_create(
                     tienda=tienda, variante=v, defaults={'cantidad': 8},
+                )
+        # Stock inicial de buzos SFJ y chaleco para que la tienda muestre
+        # variedad de tallas. Las tallas más vendidas (M, L, 12, 14) más
+        # holgadas; las tallas extremas (4, XL) más bajas.
+        STOCK_BUZO_DEFAULT = {
+            '4': 4, '6': 6, '8': 8, '10': 10, '12': 12, '14': 12, '16': 8,
+            'S': 6, 'M': 10, 'L': 8, 'XL': 4,
+        }
+        for key in ('buzo_sfj_completo', 'buzo_sfj_pantalon',
+                    'buzo_sfj_chaqueta', 'chaleco_sfj'):
+            for v in productos[key]['variantes']:
+                # Encontrar la talla del valor.
+                talla_val = None
+                for val in v.valores.all():
+                    if val.atributo.nombre == 'Talla':
+                        talla_val = val.valor
+                        break
+                cantidad = STOCK_BUZO_DEFAULT.get(talla_val, 5)
+                StockTienda.objects.get_or_create(
+                    tienda=tienda, variante=v, defaults={'cantidad': cantidad},
+                )
+        # Polera piqué SFJ y Falda Casimir Garib SFJ (tallas que ya tienen).
+        for key in ('polera_pique_sfj', 'falda_sfj'):
+            for v in productos[key]['variantes']:
+                StockTienda.objects.get_or_create(
+                    tienda=tienda, variante=v, defaults={'cantidad': 6},
                 )
         self._say('Stock inicial sembrado en tienda')
 
@@ -639,8 +728,17 @@ class Command(BaseCommand):
     def _rendimientos(self, materiales, productos, atrs):
         # Buzos SFJ (pantalón + chaqueta): franela color silvia.
         # Talla XL consume más tela → rinde menos por rollo.
-        rinde_pant = {'XS': 80, 'S': 70, 'M': 65, 'L': 55, 'XL': 45, 'XXL': 38}
-        rinde_chaq = {'XS': 70, 'S': 60, 'M': 55, 'L': 48, 'XL': 40, 'XXL': 34}
+        # Rendimiento por talla (unidades/rollo). Tallas escolares 4-16
+        # rinden más unidades que las adultos. Las XL/XXL más tela = menos
+        # unidades por rollo.
+        rinde_pant = {
+            '4': 110, '6': 100, '8': 90, '10': 85, '12': 78, '14': 72, '16': 66,
+            'XS': 80, 'S': 70, 'M': 65, 'L': 55, 'XL': 45, 'XXL': 38,
+        }
+        rinde_chaq = {
+            '4': 95, '6': 85, '8': 75, '10': 70, '12': 65, '14': 60, '16': 55,
+            'XS': 70, 'S': 60, 'M': 55, 'L': 48, 'XL': 40, 'XXL': 34,
+        }
         for key, mapa in (
             ('buzo_sfj_pantalon', rinde_pant),
             ('buzo_sfj_chaqueta', rinde_chaq),
@@ -659,7 +757,10 @@ class Command(BaseCommand):
                 )
 
         # Chalecos SFJ: polar negro. Tela más densa, rinden menos.
-        rinde_chaleco = {'XS': 50, 'S': 45, 'M': 40, 'L': 36, 'XL': 32}
+        rinde_chaleco = {
+            '4': 75, '6': 70, '8': 60, '10': 55, '12': 50, '14': 45, '16': 42,
+            'XS': 50, 'S': 45, 'M': 40, 'L': 36, 'XL': 32,
+        }
         for v in productos['chaleco_sfj']['variantes']:
             talla = next((vl.valor for vl in v.valores.all()
                           if vl.atributo.nombre == 'Talla'), None)

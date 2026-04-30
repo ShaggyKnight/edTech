@@ -68,8 +68,10 @@
           </label>
         </div>
 
-        {# Colegio: visible siempre que haya colegios. Tiene más sentido
-           cuando estás filtrando uniformes pero no es exclusivo de eso. #}
+        {% comment %}
+          Colegio: visible siempre que haya colegios. Tiene más sentido
+          cuando estás filtrando uniformes pero no es exclusivo de eso.
+        {% endcomment %}
         {% if colegios %}
           <div class="filter-group">
             <div class="filter-title">Colegio</div>
@@ -90,8 +92,10 @@
           </div>
         {% endif %}
 
-        {# Talle: solo muestra los que existen con stock. Filtra productos
-           que tienen al menos una variante de esa talla disponible. #}
+        {% comment %}
+          Talle: solo muestra los que existen con stock. Filtra productos
+          que tienen al menos una variante de esa talla disponible.
+        {% endcomment %}
         {% if tallas_disponibles %}
           <div class="filter-group">
             <div class="filter-title">Talle</div>

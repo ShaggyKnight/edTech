@@ -21,17 +21,19 @@
     </form>
     <div class="shop-actions">
       {% if user.is_authenticated and user.is_staff %}
-        {# Acceso rápido al backoffice para staff/admin/cajero/bodeguero
-           sin tener que volver a la landing. #}
+        {% comment %}
+          Acceso rápido al panel privado para staff (admin/cajero/bodeguero)
+          sin tener que volver a la landing.
+        {% endcomment %}
         <a href="{% url 'reportes:dashboard' %}" class="shop-staff-link"
-           title="Ir al backoffice"
-           style="display:inline-flex;align-items:center;gap:6px;
-                  padding:6px 12px;background:var(--ink);color:var(--gold);
-                  border-radius:6px;font-size:12px;font-weight:600;
-                  letter-spacing:0.04em;text-transform:uppercase;
-                  text-decoration:none;">
+           title="Ir al panel privado"
+           aria-label="Panel privado"
+           style="display:inline-flex;align-items:center;gap:5px;
+                  padding:4px 9px;background:var(--ink);color:var(--gold);
+                  border-radius:5px;font-size:11px;font-weight:600;
+                  letter-spacing:0.04em;text-decoration:none;line-height:1.2;">
           <svg class="ico ico--14"><use href="#ico-shield"/></svg>
-          Backoffice
+          Panel
         </a>
       {% endif %}
       {% if user.is_authenticated %}

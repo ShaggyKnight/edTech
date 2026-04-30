@@ -233,13 +233,24 @@ def detalle_producto(request, pk: int):
     )
 
     if producto.tiene_variantes:
+        from django.db.models import Min
         stock_sq = StockTienda.objects.filter(
             tienda=tienda, variante=OuterRef('pk')
         ).values('cantidad')[:1]
+        # Annotate `orden_talla` con el `orden` del valor cuyo atributo es
+        # "Talla" — eso permite mostrar 4,6,8,10,12,14,16,S,M,L,XL,XXL en
+        # el orden natural en lugar de orden alfabético del SKU.
         variantes = (
             producto.variantes.filter(activa=True)
             .prefetch_related('valores__atributo')
-            .annotate(stock=Subquery(stock_sq))
+            .annotate(
+                stock=Subquery(stock_sq),
+                orden_talla=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Talla'),
+                ),
+            )
+            .order_by('orden_talla', 'sku')
         )
     else:
         variantes = producto.variantes.none()

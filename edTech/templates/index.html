@@ -21,13 +21,13 @@
     <div style="display:flex;align-items:center;gap:10px;">
       {% if user.is_authenticated and user.is_staff %}
         <a href="{% url 'reportes:dashboard' %}"
-           style="display:inline-flex;align-items:center;gap:6px;
-                  padding:6px 12px;background:var(--ink);color:var(--gold);
-                  border-radius:6px;font-size:12px;font-weight:600;
-                  letter-spacing:0.04em;text-transform:uppercase;
-                  text-decoration:none;">
+           title="Ir al panel privado"
+           style="display:inline-flex;align-items:center;gap:5px;
+                  padding:5px 10px;background:var(--ink);color:var(--gold);
+                  border-radius:5px;font-size:12px;font-weight:600;
+                  letter-spacing:0.04em;text-decoration:none;line-height:1.2;">
           <svg class="ico ico--14"><use href="#ico-shield"/></svg>
-          Backoffice
+          Panel
         </a>
       {% endif %}
       <a class="btn-ghost" href="{% url 'ecommerce:catalogo' %}">

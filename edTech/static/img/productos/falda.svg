@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <rect width="400" height="500" fill="#EFE7D7"/>
+  <!-- patrón cuadrillé -->
+  <defs>
+    <pattern id="tartan" patternUnits="userSpaceOnUse" width="24" height="24">
+      <rect width="24" height="24" fill="#7A1E2B"/>
+      <rect x="0" y="0" width="12" height="24" fill="#5C1620"/>
+      <rect x="0" y="0" width="24" height="12" fill="#5C1620" opacity="0.4"/>
+      <line x1="0" y1="12" x2="24" y2="12" stroke="#C9A96E" stroke-width="0.8"/>
+      <line x1="12" y1="0" x2="12" y2="24" stroke="#C9A96E" stroke-width="0.8"/>
+    </pattern>
+  </defs>
+  <!-- silueta de falda -->
+  <path d="M140 130 L260 130 L300 400 L100 400 Z" fill="url(#tartan)"/>
+  <!-- pretina -->
+  <rect x="140" y="120" width="120" height="22" fill="#1A1A1A"/>
+  <text x="200" y="455" font-family="Inter,sans-serif" font-size="14"
+        font-weight="700" fill="#8B7A5A" text-anchor="middle"
+        letter-spacing="0.15em">FALDA</text>
+</svg>

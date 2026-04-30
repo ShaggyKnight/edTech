@@ -1,5 +1,5 @@
 {% extends 'base_public.html' %}
-{% load static humanize %}
+{% load static humanize catalogo_extras %}
 
 {% block titulo %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
 
@@ -14,25 +14,16 @@
   </div>
 
   <div class="pdp-main">
+    {% imagen_producto producto as pdp_img %}
     <div class="pdp-gallery">
       <div class="pdp-thumbs">
-        {% if producto.imagen %}
-          <div class="pdp-thumb active">
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
-          </div>
-        {% else %}
-          <div class="pdp-thumb active">
-            <div class="pdp-placeholder"></div>
-          </div>
-        {% endif %}
+        <div class="pdp-thumb active">
+          <img src="{{ pdp_img }}" alt="{{ producto.nombre }}">
+        </div>
         {# Thumbs adicionales: cuando haya galería los iteramos aquí #}
       </div>
       <div class="pdp-big">
-        {% if producto.imagen %}
-          <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
-        {% else %}
-          <div class="pdp-placeholder" style="aspect-ratio:1/1;"></div>
-        {% endif %}
+        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}">
       </div>
     </div>
 
@@ -58,6 +49,8 @@
         <div class="pdp-opts">
           <div class="pdp-opt-label">Elegí tu variante</div>
           <div class="size-chips">
+            {# Solo mostramos variantes con stock — las agotadas van abajo
+               en pequeño para que no estorben la elección del cliente. #}
             {% for v in variantes %}
               {% if v.stock %}
                 <form method="post" action="{% url 'ecommerce:agregar' %}" style="display:inline-block;margin:0;">
@@ -70,12 +63,13 @@
                     <small style="display:block;opacity:.6;font-size:10px;">stock {{ v.stock }}</small>
                   </button>
                 </form>
-              {% else %}
-                <span class="size-chip" style="opacity:.35;text-decoration:line-through;">
-                  {% for val in v.valores.all %}{{ val.valor }} {% endfor %}
-                </span>
               {% endif %}
             {% endfor %}
+          </div>
+          {# Listado de agotadas en pequeño abajo, solo si hay alguna. #}
+          {% with hay_agotadas=False %}{% endwith %}
+          <div style="margin-top:10px;font-size:12px;color:var(--ink-60);">
+            {% for v in variantes %}{% if not v.stock %}{% if forloop.counter == 1 %}<span>Agotadas: </span>{% endif %}<span style="text-decoration:line-through;margin-right:6px;">{% for val in v.valores.all %}{{ val.valor }}{% endfor %}</span>{% endif %}{% endfor %}
           </div>
         </div>
       {% else %}

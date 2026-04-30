@@ -44,54 +44,97 @@
 
   <div class="shop-cat-body">
     <aside class="shop-filters">
-      <h4>Filtrar</h4>
-      <div class="filter-group">
-        <div class="filter-title">Categoría</div>
-        {% for c in categorias %}
+      <form method="get" action="{% url 'ecommerce:catalogo' %}">
+        {# Búsqueda + ordenamiento se mantienen al cambiar filtros. #}
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+        <h4>Filtrar</h4>
+
+        <div class="filter-group">
+          <div class="filter-title">Categoría</div>
+          {% for c in categorias %}
+            <label style="display:block;padding:4px 0;">
+              <input type="radio" name="cat" value="{{ c.slug }}"
+                     onchange="this.form.submit()"
+                     {% if cat_activa == c.slug %}checked{% endif %}>
+              {{ c.title }}
+            </label>
+          {% endfor %}
           <label style="display:block;padding:4px 0;">
-            <input type="radio" name="catopt" value="{{ c.slug }}"
-                   onchange="location.href='{% url 'ecommerce:catalogo' %}?cat={{ c.slug }}'"
-                   {% if cat_activa == c.slug %}checked{% endif %}>
-            {{ c.title }}
+            <input type="radio" name="cat" value=""
+                   onchange="this.form.submit()"
+                   {% if not cat_activa %}checked{% endif %}>
+            Todas
           </label>
-        {% endfor %}
-        <label style="display:block;padding:4px 0;">
-          <input type="radio" name="catopt" value=""
-                 onchange="location.href='{% url 'ecommerce:catalogo' %}'"
-                 {% if not cat_activa %}checked{% endif %}>
-          Todas
-        </label>
-      </div>
-
-      {% if cat_activa == 'uniformes' %}
-        <div class="filter-group">
-          <div class="filter-title">Colegio</div>
-          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> San Francisco Javier</label>
-          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> Divina Providencia</label>
-          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> Nicolás F. Lohse</label>
-          <label style="display:block;padding:4px 0;"><input type="checkbox" disabled> Diego de Almagro</label>
         </div>
-        <div class="filter-group">
-          <div class="filter-title">Talle</div>
-          <div class="size-chips">
-            <button type="button" class="size-chip">4</button>
-            <button type="button" class="size-chip">6</button>
-            <button type="button" class="size-chip">8</button>
-            <button type="button" class="size-chip">10</button>
-            <button type="button" class="size-chip">12</button>
-            <button type="button" class="size-chip">14</button>
-            <button type="button" class="size-chip">S</button>
-            <button type="button" class="size-chip">M</button>
-            <button type="button" class="size-chip">L</button>
-            <button type="button" class="size-chip">XL</button>
+
+        {# Colegio: visible siempre que haya colegios. Tiene más sentido
+           cuando estás filtrando uniformes pero no es exclusivo de eso. #}
+        {% if colegios %}
+          <div class="filter-group">
+            <div class="filter-title">Colegio</div>
+            <label style="display:block;padding:4px 0;">
+              <input type="radio" name="colegio" value=""
+                     onchange="this.form.submit()"
+                     {% if not colegio_activo %}checked{% endif %}>
+              Todos
+            </label>
+            {% for col in colegios %}
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="colegio" value="{{ col.pk }}"
+                       onchange="this.form.submit()"
+                       {% if colegio_activo == col.pk %}checked{% endif %}>
+                {{ col.nombre }}
+              </label>
+            {% endfor %}
           </div>
-        </div>
-      {% endif %}
+        {% endif %}
 
-      <div class="filter-group">
-        <div class="filter-title">Precio</div>
-        <div class="range-labs"><span>$0</span><span>$500.000</span></div>
-      </div>
+        {# Talle: solo muestra los que existen con stock. Filtra productos
+           que tienen al menos una variante de esa talla disponible. #}
+        {% if tallas_disponibles %}
+          <div class="filter-group">
+            <div class="filter-title">Talle</div>
+            <div class="size-chips">
+              {% for t in tallas_disponibles %}
+                <button type="submit" name="talla" value="{{ t }}"
+                        class="size-chip {% if talla_activa == t %}active{% endif %}">
+                  {{ t }}
+                </button>
+              {% endfor %}
+              {% if talla_activa %}
+                <button type="submit" name="talla" value=""
+                        class="size-chip" style="border-style:dashed;">
+                  Limpiar
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="filter-group">
+          <div class="filter-title">Precio</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" name="precio_min" min="0" step="1000"
+                   value="{{ precio_min }}" placeholder="Mín"
+                   style="width:0;flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
+            <span style="color:var(--ink-60);">—</span>
+            <input type="number" name="precio_max" min="0" step="1000"
+                   value="{{ precio_max }}" placeholder="Máx"
+                   style="width:0;flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
+          </div>
+          <button type="submit" class="btn-outline" style="margin-top:8px;width:100%;font-size:12px;padding:6px 10px;">
+            Aplicar precio
+          </button>
+        </div>
+
+        {% if cat_activa or colegio_activo or talla_activa or precio_min or precio_max or query %}
+          <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline"
+             style="display:block;text-align:center;margin-top:12px;font-size:12px;padding:6px 10px;">
+            Limpiar todos los filtros
+          </a>
+        {% endif %}
+      </form>
     </aside>
 
     <div class="shop-grid four">

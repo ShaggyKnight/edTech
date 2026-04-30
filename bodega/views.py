@@ -104,9 +104,11 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
             # Default: oculta agotados.
             qs = qs.filter(cantidad__gt=0)
         if q:
+            from edTech.search import normalize_text
+            q_norm = normalize_text(q)
             qs = qs.filter(
-                Q(producto__nombre__icontains=q)
-                | Q(variante__producto__nombre__icontains=q)
+                Q(producto__nombre_buscable__contains=q_norm)
+                | Q(variante__producto__nombre_buscable__contains=q_norm)
                 | Q(variante__sku__icontains=q)
             )
 
@@ -246,7 +248,12 @@ def lista_productos(request):
     estado = (request.GET.get('estado') or '').strip()
 
     if q:
-        qs = qs.filter(Q(nombre__icontains=q) | Q(descripcion__icontains=q))
+        from edTech.search import normalize_text
+        q_norm = normalize_text(q)
+        qs = qs.filter(
+            Q(nombre_buscable__contains=q_norm)
+            | Q(descripcion_buscable__contains=q_norm)
+        )
     if familia_id.isdigit():
         qs = qs.filter(familia_id=int(familia_id))
     if colegio_id.isdigit():
@@ -398,7 +405,14 @@ def lista_materiales(request):
     q = (request.GET.get('q') or '').strip()
     estado = (request.GET.get('estado') or '').strip()
     if q:
-        qs = qs.filter(Q(nombre__icontains=q) | Q(descripcion__icontains=q))
+        from edTech.search import normalize_text
+        q_norm = normalize_text(q)
+        # Material no tiene descripcion_buscable porque es CharField corto;
+        # buscamos por nombre_buscable y por descripción case-insensitive.
+        qs = qs.filter(
+            Q(nombre_buscable__contains=q_norm)
+            | Q(descripcion__icontains=q)
+        )
     if estado == 'activos':
         qs = qs.filter(activo=True)
     elif estado == 'inactivos':

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <rect width="400" height="500" fill="#FBF8F3"/>
+  <!-- silueta chaleco lana rojo italiano -->
+  <g fill="#A0202B" stroke="#7A1E2B" stroke-width="3">
+    <path d="M120 110 L150 95 L165 130 L235 130 L250 95 L280 110 L300 220 L290 380 L110 380 L100 220 Z"/>
+  </g>
+  <!-- escote V -->
+  <polygon points="165,130 200,200 235,130" fill="#FBF8F3" stroke="none"/>
+  <!-- bordado insignia -->
+  <circle cx="160" cy="240" r="20" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+  <text x="160" y="247" font-family="Inter,sans-serif" font-size="14"
+        font-weight="700" fill="#FFFFFF" text-anchor="middle">★</text>
+  <text x="200" y="455" font-family="Inter,sans-serif" font-size="14"
+        font-weight="700" fill="#8B7A5A" text-anchor="middle"
+        letter-spacing="0.15em">CHALECO</text>
+</svg>

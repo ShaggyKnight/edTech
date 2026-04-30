@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <rect width="400" height="500" fill="#EFE7D7"/>
+  <g fill="#1A1A1A" opacity="0.85">
+    <!-- chaqueta -->
+    <path d="M120 110 L140 90 L180 80 L220 80 L260 90 L280 110 L290 200 L260 220 L260 320 L140 320 L140 220 L110 200 Z"/>
+    <line x1="200" y1="80" x2="200" y2="320" stroke="#C9A96E" stroke-width="2"/>
+    <!-- pantalón -->
+    <path d="M150 320 L160 470 L195 470 L200 340 L205 470 L240 470 L250 320 Z"/>
+  </g>
+  <text x="200" y="475" font-family="Inter,sans-serif" font-size="14"
+        font-weight="700" fill="#8B7A5A" text-anchor="middle"
+        letter-spacing="0.15em">BUZO</text>
+</svg>

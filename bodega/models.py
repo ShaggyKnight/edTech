@@ -69,6 +69,7 @@ class Material(models.Model):
     en cada compra (MovimientoMaterial) y aquí queda solo como referencia.
     """
     nombre = models.CharField(max_length=80, unique=True)
+    nombre_buscable = models.CharField(max_length=80, db_index=True, blank=True)
     descripcion = models.CharField(max_length=200, blank=True)
     proveedor = models.ForeignKey(
         Proveedor, on_delete=models.SET_NULL, null=True, blank=True,
@@ -87,6 +88,11 @@ class Material(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        from edTech.search import normalize_text
+        self.nombre_buscable = normalize_text(self.nombre)
+        super().save(*args, **kwargs)
 
 
 class StockTienda(models.Model):

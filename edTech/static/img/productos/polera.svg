@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <rect width="400" height="500" fill="#FBF8F3"/>
+  <g fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3">
+    <!-- polera silueta -->
+    <path d="M110 130 L160 95 L185 110 L215 110 L240 95 L290 130 L310 200 L260 215 L260 380 L140 380 L140 215 L90 200 Z"/>
+  </g>
+  <!-- cuello -->
+  <path d="M170 110 Q200 130 230 110" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+  <!-- bordado redondo (insignia) -->
+  <circle cx="170" cy="200" r="22" fill="none" stroke="#7A1E2B" stroke-width="2"/>
+  <text x="170" y="207" font-family="Inter,sans-serif" font-size="14"
+        font-weight="700" fill="#7A1E2B" text-anchor="middle">★</text>
+  <text x="200" y="455" font-family="Inter,sans-serif" font-size="14"
+        font-weight="700" fill="#8B7A5A" text-anchor="middle"
+        letter-spacing="0.15em">POLERA</text>
+</svg>

@@ -9,6 +9,7 @@ from django.utils import timezone
 class Familia(models.Model):
     """Categoría de productos (ej: Buzos, Poleras, Perfumes)."""
     nombre = models.CharField(max_length=60, unique=True)
+    nombre_buscable = models.CharField(max_length=60, db_index=True, blank=True)
     descripcion = models.TextField(blank=True)
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)
@@ -19,6 +20,11 @@ class Familia(models.Model):
     def __str__(self):
         return self.nombre
 
+    def save(self, *args, **kwargs):
+        from edTech.search import normalize_text
+        self.nombre_buscable = normalize_text(self.nombre)
+        super().save(*args, **kwargs)
+
 
 class Colegio(models.Model):
     """Institución educativa para la que confeccionamos uniformes.
@@ -28,6 +34,7 @@ class Colegio(models.Model):
     público por colegio.
     """
     nombre = models.CharField(max_length=120, unique=True)
+    nombre_buscable = models.CharField(max_length=120, db_index=True, blank=True)
     direccion = models.CharField(max_length=200, blank=True)
     telefono_contacto = models.CharField(max_length=30, blank=True)
     email_contacto = models.EmailField(blank=True)
@@ -46,6 +53,11 @@ class Colegio(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        from edTech.search import normalize_text
+        self.nombre_buscable = normalize_text(self.nombre)
+        super().save(*args, **kwargs)
 
 
 class Atributo(models.Model):
@@ -84,6 +96,8 @@ class Producto(models.Model):
         help_text='Solo para uniformes escolares — colegio cuya insignia llevan bordada',
     )
     nombre = models.CharField(max_length=200, unique=True)
+    nombre_buscable = models.CharField(max_length=200, db_index=True, blank=True)
+    descripcion_buscable = models.TextField(blank=True, db_index=False)
     descripcion = models.TextField(blank=True)
     precio_base = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
     precio_costo = models.DecimalField(
@@ -106,6 +120,12 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        from edTech.search import normalize_text
+        self.nombre_buscable = normalize_text(self.nombre)
+        self.descripcion_buscable = normalize_text(self.descripcion)
+        super().save(*args, **kwargs)
 
 
 class ProductoVariante(models.Model):

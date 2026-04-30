@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="rayas-default" patternUnits="userSpaceOnUse" width="20" height="20" patternTransform="rotate(45)">
+      <rect width="20" height="20" fill="#EFE7D7"/>
+      <rect width="10" height="20" fill="#E8DFC9"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="500" fill="url(#rayas-default)"/>
+  <!-- monograma I dorada -->
+  <text x="200" y="290" font-family="Cormorant Garamond,Georgia,serif"
+        font-size="160" font-style="italic" font-weight="600"
+        fill="#C9A96E" text-anchor="middle" opacity="0.6">I</text>
+  <text x="200" y="350" font-family="Inter,sans-serif"
+        font-size="13" fill="#8B7A5A" text-anchor="middle"
+        letter-spacing="0.2em">IDEAS BOUTIQUE</text>
+</svg>

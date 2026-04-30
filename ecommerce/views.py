@@ -19,15 +19,17 @@ from __future__ import annotations
 
 import logging
 
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
-from django.db.models import Exists, OuterRef, Subquery
+from django.db.models import Exists, OuterRef, Q, Subquery
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from bodega.models import StockTienda
-from catalogo.models import Familia, Producto, ProductoVariante
+from catalogo.models import Colegio, Familia, Producto, ProductoVariante, ValorAtributo
 from ecommerce.cart import CANAL, Cart
 from ecommerce.emails import enviar_boleta
 from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm
@@ -91,18 +93,27 @@ def _familias_por_slug(slug: str):
 
 
 def catalogo(request):
-    """Listado público de productos con stock > 0 en la tienda online."""
+    """Listado público de productos con stock > 0 en la tienda online.
+
+    Filtros vía querystring:
+      cat=<slug> | familia=<pk> | colegio=<pk> | talla=<valor>
+      precio_min, precio_max | q=<texto>  (accent + case insensitive)
+    """
+    from edTech.search import normalize_text
+
     try:
         tienda = get_tienda_online()
     except TiendaOnlineNoConfigurada:
         return render(request, 'ecommerce/sin_tienda.html', status=503)
 
-    familia_id = request.GET.get('familia')
+    familia_id = (request.GET.get('familia') or '').strip()
     cat_slug = (request.GET.get('cat') or '').strip().lower()
-    query = request.GET.get('q', '').strip()
+    colegio_id = (request.GET.get('colegio') or '').strip()
+    talla = (request.GET.get('talla') or '').strip()
+    precio_min = (request.GET.get('precio_min') or '').strip()
+    precio_max = (request.GET.get('precio_max') or '').strip()
+    query = (request.GET.get('q') or '').strip()
 
-    # Producto activo que tenga al menos una variante con stock, o que sea
-    # sin-variantes con stock propio.
     tiene_stock_variante = StockTienda.objects.filter(
         tienda=tienda, variante__producto=OuterRef('pk'), cantidad__gt=0
     )
@@ -113,7 +124,7 @@ def catalogo(request):
     productos_qs = (
         Producto.objects
         .filter(activo=True)
-        .select_related('familia')
+        .select_related('familia', 'colegio')
         .annotate(
             hay_stock_variante=Exists(tiene_stock_variante),
             hay_stock_directo=Exists(tiene_stock_directo),
@@ -122,29 +133,85 @@ def catalogo(request):
     productos_qs = productos_qs.filter(hay_stock_variante=True) | productos_qs.filter(
         hay_stock_directo=True
     )
-    if familia_id:
-        productos_qs = productos_qs.filter(familia_id=familia_id)
+
+    if familia_id.isdigit():
+        productos_qs = productos_qs.filter(familia_id=int(familia_id))
     elif cat_slug in CAT_SLUGS:
         productos_qs = productos_qs.filter(familia__in=_familias_por_slug(cat_slug))
+
+    if colegio_id.isdigit():
+        productos_qs = productos_qs.filter(colegio_id=int(colegio_id))
+
+    if talla:
+        # Solo productos con al menos una variante de esa talla, activa, y
+        # con stock > 0 en la tienda online.
+        variantes_con_talla = StockTienda.objects.filter(
+            tienda=tienda, cantidad__gt=0,
+            variante__activa=True,
+            variante__producto=OuterRef('pk'),
+            variante__valores__atributo__nombre__iexact='Talla',
+            variante__valores__valor__iexact=talla,
+        )
+        productos_qs = productos_qs.annotate(
+            hay_stock_talla=Exists(variantes_con_talla),
+        ).filter(hay_stock_talla=True)
+
+    if precio_min:
+        try:
+            productos_qs = productos_qs.filter(precio_base__gte=Decimal(precio_min))
+        except (InvalidOperation, ValueError):
+            pass
+    if precio_max:
+        try:
+            productos_qs = productos_qs.filter(precio_base__lte=Decimal(precio_max))
+        except (InvalidOperation, ValueError):
+            pass
+
     if query:
-        productos_qs = productos_qs.filter(nombre__icontains=query)
+        # Accent-insensitive: comparamos contra los campos buscables que
+        # mantenemos normalizados al guardar (lowercase + sin acentos).
+        q_norm = normalize_text(query)
+        productos_qs = productos_qs.filter(
+            Q(nombre_buscable__contains=q_norm)
+            | Q(descripcion_buscable__contains=q_norm)
+        )
 
     cart = Cart(request.session)
 
-    # Categorías para el listado lateral / chips.
     categorias = [
         {'slug': slug, 'title': info['title'], 'desc': info['desc'], 'accent': info['accent']}
         for slug, info in CAT_SLUGS.items()
     ]
     cat_info = CAT_SLUGS.get(cat_slug) if cat_slug in CAT_SLUGS else None
 
+    # Tallas disponibles según stock real en la tienda — no listamos
+    # tallas que no existen para nada o están agotadas.
+    tallas_disponibles = list(
+        ValorAtributo.objects
+        .filter(
+            atributo__nombre__iexact='Talla',
+            variantes__activa=True,
+            variantes__stock_tienda__tienda=tienda,
+            variantes__stock_tienda__cantidad__gt=0,
+        )
+        .order_by('orden', 'valor')
+        .values_list('valor', flat=True)
+        .distinct()
+    )
+
     return render(request, 'ecommerce/catalogo.html', {
         'productos': productos_qs.order_by('familia__nombre', 'nombre').distinct(),
         'familias': Familia.objects.all(),
-        'familia_activa': int(familia_id) if familia_id and familia_id.isdigit() else None,
+        'familia_activa': int(familia_id) if familia_id.isdigit() else None,
         'categorias': categorias,
         'cat_activa': cat_slug if cat_slug in CAT_SLUGS else '',
         'cat_info': cat_info,
+        'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
+        'colegio_activo': int(colegio_id) if colegio_id.isdigit() else None,
+        'tallas_disponibles': tallas_disponibles,
+        'talla_activa': talla,
+        'precio_min': precio_min,
+        'precio_max': precio_max,
         'query': query,
         'items_count': cart.items_count,
     })

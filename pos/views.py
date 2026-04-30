@@ -94,11 +94,18 @@ def home(request):
         .annotate(stock=_stock_subquery(tienda, 'variante'))
     )
     if query:
+        # Accent + case insensitive: usamos los campos `nombre_buscable` y
+        # `descripcion_buscable` que se mantienen normalizados al guardar.
+        # SKU y valores de atributo se normalizan inline porque son cortos y
+        # rara vez tienen acentos.
+        from edTech.search import normalize_text
+        q_norm = normalize_text(query)
         productos_qs = productos_qs.filter(
-            Q(nombre__icontains=query) | Q(descripcion__icontains=query)
+            Q(nombre_buscable__contains=q_norm)
+            | Q(descripcion_buscable__contains=q_norm)
         )
         variantes_qs = variantes_qs.filter(
-            Q(producto__nombre__icontains=query)
+            Q(producto__nombre_buscable__contains=q_norm)
             | Q(sku__icontains=query)
             | Q(valores__valor__icontains=query)
         ).distinct()

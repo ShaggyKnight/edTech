@@ -48,6 +48,7 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         port = opts['port']
         ips = _ips_locales()
+        firewall_ok = self._regla_firewall_existe(port)
         self.stdout.write(self.style.NOTICE(
             '\n══════════════════════════════════════════════════════════'
         ))
@@ -58,6 +59,12 @@ class Command(BaseCommand):
         self.stdout.write(f'  Local:    http://127.0.0.1:{port}/')
         for ip in ips:
             self.stdout.write(self.style.SUCCESS(f'  Red LAN:  http://{ip}:{port}/'))
+        if firewall_ok is False:
+            self.stdout.write(self.style.WARNING(
+                '\n  [!] Firewall de Windows: no veo regla para el puerto.\n'
+                '      Ejecutá scripts/firewall_open_8000.bat como Administrador.\n'
+                '      Sin esa regla, otros dispositivos no van a poder conectar.'
+            ))
         self.stdout.write(self.style.NOTICE(
             '\n  Desde otro dispositivo en la misma red, abrí cualquiera de\n'
             '  las URLs "Red LAN" — celular, otra laptop, tablet.\n'
@@ -65,3 +72,21 @@ class Command(BaseCommand):
             '══════════════════════════════════════════════════════════\n'
         ))
         call_command('runserver', f'0.0.0.0:{port}')
+
+    def _regla_firewall_existe(self, port: str):
+        """Best-effort: revisa si Windows Firewall tiene regla abriendo el
+        puerto. Devuelve True/False/None (None si no podemos detectar)."""
+        import platform, subprocess
+        if platform.system() != 'Windows':
+            return None
+        try:
+            r = subprocess.run(
+                ['netsh', 'advfirewall', 'firewall', 'show', 'rule', 'name=all'],
+                capture_output=True, text=True, timeout=10,
+            )
+            if r.returncode != 0:
+                return None
+            return f'LocalPort:                            {port}' in r.stdout \
+                or f'Local Port:                           {port}' in r.stdout
+        except Exception:
+            return None

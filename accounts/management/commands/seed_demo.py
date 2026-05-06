@@ -467,11 +467,23 @@ class Command(BaseCommand):
             sku_prefix='PB', tallas=['S', 'M', 'L', 'XL'], atrs=atrs,
         )
 
-        # --- Lencería simple ---
-        out['calzon'] = self._producto_simple(
+        # --- Lencería con tallas ---
+        # Migración del calzón sin variantes (seed viejo) a versión con tallas:
+        # cambiamos `tiene_variantes` a True y borramos el stock directo (que
+        # ya no aplica — pasa a registrarse por variante).
+        viejo_calzon = Producto.objects.filter(
+            nombre='Calzón básico algodón', tiene_variantes=False,
+        ).first()
+        if viejo_calzon:
+            StockTienda.objects.filter(producto=viejo_calzon).delete()
+            viejo_calzon.tiene_variantes = True
+            viejo_calzon.save(update_fields=['tiene_variantes', 'modificado'])
+
+        out['calzon'] = self._producto_con_tallas(
             familia=fam['Lencería'], nombre='Calzón básico algodón',
-            descripcion='Pack 3 unidades.',
+            descripcion='Pack 3 unidades. Algodón 100%, corte clásico.',
             precio_base=Decimal('6990'), precio_costo=Decimal('2500'),
+            sku_prefix='CALZ', tallas=['S', 'M', 'L', 'XL'], atrs=atrs,
         )
 
         return out
@@ -588,11 +600,11 @@ class Command(BaseCommand):
         self._say('Oferta vigente: 10% en Oud Royal Elixir')
 
     def _stock_inicial(self, tienda, productos):
-        # Calzón sin variantes.
-        StockTienda.objects.get_or_create(
-            tienda=tienda, producto=productos['calzon']['producto'],
-            defaults={'cantidad': 30},
-        )
+        # Calzón con variantes por talla.
+        for v in productos['calzon']['variantes']:
+            StockTienda.objects.get_or_create(
+                tienda=tienda, variante=v, defaults={'cantidad': 8},
+            )
         # Perfumes con variantes: stock por variante (botellas + decants).
         for key, cantidad in (('yara', 12), ('oud', 5), ('floral_clasico', 18)):
             for v in productos[key]['variantes']:

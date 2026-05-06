@@ -49,27 +49,26 @@ class Command(BaseCommand):
         port = opts['port']
         ips = _ips_locales()
         firewall_ok = self._regla_firewall_existe(port)
-        self.stdout.write(self.style.NOTICE(
-            '\n══════════════════════════════════════════════════════════'
-        ))
-        self.stdout.write(self.style.SUCCESS('  Ideas Boutique — dev en red local'))
-        self.stdout.write(self.style.NOTICE(
-            '──────────────────────────────────────────────────────────'
-        ))
+        # Solo ASCII en stdout — en Windows cmd.exe el codec cp1252 no
+        # acepta caracteres como ═ y revienta el comando.
+        sep = '=' * 60
+        self.stdout.write(self.style.NOTICE('\n' + sep))
+        self.stdout.write(self.style.SUCCESS('  Ideas Boutique - dev en red local'))
+        self.stdout.write(self.style.NOTICE('-' * 60))
         self.stdout.write(f'  Local:    http://127.0.0.1:{port}/')
         for ip in ips:
             self.stdout.write(self.style.SUCCESS(f'  Red LAN:  http://{ip}:{port}/'))
         if firewall_ok is False:
             self.stdout.write(self.style.WARNING(
-                '\n  [!] Firewall de Windows: no veo regla para el puerto.\n'
-                '      Ejecutá scripts/firewall_open_8000.bat como Administrador.\n'
-                '      Sin esa regla, otros dispositivos no van a poder conectar.'
+                '\n  [!] Firewall de Windows: no veo regla para el puerto.'
+                '\n      Ejecuta scripts/firewall_open_8000.bat como Administrador.'
+                '\n      Sin esa regla, otros dispositivos no van a poder conectar.'
             ))
         self.stdout.write(self.style.NOTICE(
-            '\n  Desde otro dispositivo en la misma red, abrí cualquiera de\n'
-            '  las URLs "Red LAN" — celular, otra laptop, tablet.\n'
-            '  Asegurate que tu .env permita la IP en ALLOWED_HOSTS.\n'
-            '══════════════════════════════════════════════════════════\n'
+            '\n  Desde otro dispositivo en la misma red, abri cualquiera de'
+            '\n  las URLs "Red LAN" - celular, otra laptop, tablet.'
+            '\n  Asegurate que tu .env permita la IP en ALLOWED_HOSTS.'
+            '\n' + sep + '\n'
         ))
         call_command('runserver', f'0.0.0.0:{port}')
 

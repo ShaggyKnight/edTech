@@ -797,3 +797,23 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
   .strip { grid-template-columns: 1fr; }
   .palette-row { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ==================================================================
+   Iconos del sprite SVG (partials/_icons.html).
+   Sin estas reglas, el <svg> sin width/height inline rendea a tamaño
+   nativo del viewBox (gigante). `currentColor` deja que herede el
+   color del texto del contenedor.
+   ================================================================== */
+.ico {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+}
+.ico--14 { width: 14px; height: 14px; }
+.ico--16 { width: 16px; height: 16px; }
+.ico--18 { width: 18px; height: 18px; }
+.ico--22 { width: 22px; height: 22px; }
+.ico--28 { width: 28px; height: 28px; }
+

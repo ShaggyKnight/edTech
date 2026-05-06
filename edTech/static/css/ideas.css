@@ -368,6 +368,10 @@ input, select { font-family: inherit; }
 .shop-section-head a { font-size: 13px; color: var(--gold-2); font-weight: 500; }
 .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .shop-grid.four { grid-template-columns: repeat(3, 1fr); }
+/* Estado mientras se aplican filtros AJAX: dim sutil + bloquea clicks
+   para que el cliente no agregue al carrito una card que esta a punto
+   de ser reemplazada. Transition rapida porque la red es local. */
+.shop-grid.is-loading { opacity: .55; pointer-events: none; transition: opacity .15s ease; }
 .clickable { cursor: pointer; }
 
 .shop-banner { background: var(--ink); color: var(--cream); border-radius: var(--radius-lg); padding: 40px; margin-bottom: 56px; display: grid; grid-template-columns: 1fr 2fr; gap: 40px; align-items: center; }

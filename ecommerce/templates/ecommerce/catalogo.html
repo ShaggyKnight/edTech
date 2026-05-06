@@ -19,7 +19,7 @@
   </div>
 
   <header class="shop-cat-head" style="--cat-accent: {% if cat_info %}{{ cat_info.accent }}{% else %}var(--gold){% endif %};">
-    <div>
+    <div id="shop-cat-info">
       <div class="eyebrow">{% if cat_info %}Categoría{% else %}Catálogo{% endif %}</div>
       <h1>{% if cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
       <p>
@@ -44,9 +44,12 @@
 
   <div class="shop-cat-body">
     <aside class="shop-filters">
-      <form method="get" action="{% url 'ecommerce:catalogo' %}">
-        {# Búsqueda + ordenamiento se mantienen al cambiar filtros. #}
+      <form id="shop-filters-form" method="get" action="{% url 'ecommerce:catalogo' %}">
+        {# Búsqueda + talla se mantienen al cambiar filtros. La talla vive
+           en un hidden fuera de los grupos dinámicos para no perderse en
+           los swaps AJAX. #}
         {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+        <input type="hidden" name="talla" value="{{ talla_activa }}">
 
         <h4>Filtrar</h4>
 
@@ -55,67 +58,67 @@
           {% for c in categorias %}
             <label style="display:block;padding:4px 0;">
               <input type="radio" name="cat" value="{{ c.slug }}"
-                     onchange="this.form.submit()"
                      {% if cat_activa == c.slug %}checked{% endif %}>
               {{ c.title }}
             </label>
           {% endfor %}
           <label style="display:block;padding:4px 0;">
             <input type="radio" name="cat" value=""
-                   onchange="this.form.submit()"
                    {% if not cat_activa %}checked{% endif %}>
             Todas
           </label>
         </div>
 
-        {% comment %}
-          Colegio: solo aplica a uniformes — perfumes, moda y ropa íntima
-          no tienen colegio asociado, así que esconde el filtro cuando esas
-          categorías están activas para que no quede engañando al cliente.
-        {% endcomment %}
-        {% if colegios and colegio_aplicable %}
-          <div class="filter-group">
-            <div class="filter-title">Colegio</div>
-            <label style="display:block;padding:4px 0;">
-              <input type="radio" name="colegio" value=""
-                     onchange="this.form.submit()"
-                     {% if not colegio_activo %}checked{% endif %}>
-              Todos
-            </label>
-            {% for col in colegios %}
+        <div id="filter-colegio">
+          {% comment %}
+            Colegio: solo aplica a uniformes — perfumes, moda y ropa íntima
+            no tienen colegio asociado, así que esconde el filtro cuando esas
+            categorías están activas para que no quede engañando al cliente.
+          {% endcomment %}
+          {% if colegios and colegio_aplicable %}
+            <div class="filter-group">
+              <div class="filter-title">Colegio</div>
               <label style="display:block;padding:4px 0;">
-                <input type="radio" name="colegio" value="{{ col.pk }}"
-                       onchange="this.form.submit()"
-                       {% if colegio_activo == col.pk %}checked{% endif %}>
-                {{ col.nombre }}
+                <input type="radio" name="colegio" value=""
+                       {% if not colegio_activo %}checked{% endif %}>
+                Todos
               </label>
-            {% endfor %}
-          </div>
-        {% endif %}
-
-        {% comment %}
-          Talle: solo muestra los que existen con stock. Filtra productos
-          que tienen al menos una variante de esa talla disponible.
-        {% endcomment %}
-        {% if tallas_disponibles %}
-          <div class="filter-group">
-            <div class="filter-title">Talle</div>
-            <div class="size-chips">
-              {% for t in tallas_disponibles %}
-                <button type="submit" name="talla" value="{{ t }}"
-                        class="size-chip {% if talla_activa == t %}active{% endif %}">
-                  {{ t }}
-                </button>
+              {% for col in colegios %}
+                <label style="display:block;padding:4px 0;">
+                  <input type="radio" name="colegio" value="{{ col.pk }}"
+                         {% if colegio_activo == col.pk %}checked{% endif %}>
+                  {{ col.nombre }}
+                </label>
               {% endfor %}
-              {% if talla_activa %}
-                <button type="submit" name="talla" value=""
-                        class="size-chip" style="border-style:dashed;">
-                  Limpiar
-                </button>
-              {% endif %}
             </div>
-          </div>
-        {% endif %}
+          {% endif %}
+        </div>
+
+        <div id="filter-talla">
+          {% comment %}
+            Talle: solo muestra los que existen con stock. Filtra productos
+            que tienen al menos una variante de esa talla disponible.
+          {% endcomment %}
+          {% if tallas_disponibles %}
+            <div class="filter-group">
+              <div class="filter-title">Talle</div>
+              <div class="size-chips">
+                {% for t in tallas_disponibles %}
+                  <button type="button" data-talla="{{ t }}"
+                          class="size-chip {% if talla_activa == t %}active{% endif %}">
+                    {{ t }}
+                  </button>
+                {% endfor %}
+                {% if talla_activa %}
+                  <button type="button" data-talla=""
+                          class="size-chip" style="border-style:dashed;">
+                    Limpiar
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
 
         <div class="filter-group">
           <div class="filter-title">Precio</div>
@@ -133,16 +136,18 @@
           </button>
         </div>
 
-        {% if cat_activa or colegio_activo or talla_activa or precio_min or precio_max or query %}
-          <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline"
-             style="display:block;text-align:center;margin-top:12px;font-size:12px;padding:6px 10px;">
-            Limpiar todos los filtros
-          </a>
-        {% endif %}
+        <div id="filter-limpiar">
+          {% if cat_activa or colegio_activo or talla_activa or precio_min or precio_max or query %}
+            <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline"
+               style="display:block;text-align:center;margin-top:12px;font-size:12px;padding:6px 10px;">
+              Limpiar todos los filtros
+            </a>
+          {% endif %}
+        </div>
       </form>
     </aside>
 
-    <div class="shop-grid four">
+    <div class="shop-grid four" id="shop-grid">
       {% for producto in productos %}
         {% include 'ecommerce/_pcard.html' with producto=producto %}
       {% empty %}
@@ -154,6 +159,124 @@
     </div>
   </div>
 </main>
+
+{# ============================================================
+   Filtros AJAX: cuando cambia un radio / chip de talla / precio,
+   hace fetch a la misma URL del catálogo, parsea la respuesta y
+   reemplaza solo el grid + los filtros dinámicos. Sin reload, sin
+   salto de scroll. Si JS falla cae al reload completo (fallback).
+   ============================================================ #}
+<script>
+(function() {
+  var form = document.getElementById('shop-filters-form');
+  var grid = document.getElementById('shop-grid');
+  if (!form || !grid) return;
+
+  var info = document.getElementById('shop-cat-info');
+  var abortCtrl = null;
+
+  function buildUrl() {
+    var fd = new FormData(form);
+    var params = new URLSearchParams();
+    fd.forEach(function(v, k) {
+      if (String(v).trim() !== '') params.append(k, v);
+    });
+    var action = form.getAttribute('action') || window.location.pathname;
+    var qs = params.toString();
+    return qs ? (action + '?' + qs) : action;
+  }
+
+  function swapInner(targetId, doc) {
+    var cur = document.getElementById(targetId);
+    var next = doc.getElementById(targetId);
+    if (!cur) return;
+    cur.innerHTML = next ? next.innerHTML : '';
+  }
+
+  function applyFilters() {
+    var url = buildUrl();
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+    grid.classList.add('is-loading');
+    fetch(url, {signal: abortCtrl.signal, credentials: 'same-origin'})
+      .then(function(resp) {
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.text();
+      })
+      .then(function(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        swapInner('shop-grid', doc);
+        swapInner('filter-colegio', doc);
+        swapInner('filter-talla', doc);
+        swapInner('filter-limpiar', doc);
+        if (info) swapInner('shop-cat-info', doc);
+        // Sincroniza el title del navegador y la URL.
+        var t = doc.querySelector('title');
+        if (t) document.title = t.textContent;
+        window.history.pushState({}, '', url);
+      })
+      .catch(function(e) {
+        if (e.name === 'AbortError') return;
+        // Fallback: reload completo si el fetch fallo.
+        window.location.href = url;
+      })
+      .finally(function() {
+        grid.classList.remove('is-loading');
+      });
+  }
+
+  // Radios (categoria, colegio): cambio aplica directo.
+  form.addEventListener('change', function(e) {
+    if (!e.target.matches('input[type="radio"]')) return;
+    if (e.target.name === 'cat') {
+      // Cambiar de categoria descarta la talla — las tallas dependen
+      // del subset de productos visibles y muchas veces no aplican
+      // a la otra categoria.
+      var t = form.querySelector('input[name="talla"][type="hidden"]');
+      if (t) t.value = '';
+    }
+    applyFilters();
+  });
+
+  // Chips de talla.
+  form.addEventListener('click', function(e) {
+    var btn = e.target.closest('button[data-talla]');
+    if (!btn) return;
+    e.preventDefault();
+    var hidden = form.querySelector('input[name="talla"][type="hidden"]');
+    if (hidden) hidden.value = btn.dataset.talla;
+    applyFilters();
+  });
+
+  // Submit (Enter / boton "Aplicar precio").
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    applyFilters();
+  });
+
+  // "Limpiar todos los filtros" — link normal pero lo interceptamos
+  // para no recargar la pagina.
+  document.addEventListener('click', function(e) {
+    var clear = e.target.closest('#filter-limpiar a');
+    if (!clear) return;
+    e.preventDefault();
+    form.querySelectorAll('input[type="radio"]').forEach(function(r) {
+      r.checked = (r.value === '');
+    });
+    form.querySelectorAll('input[type="number"]').forEach(function(n) {
+      n.value = '';
+    });
+    var t = form.querySelector('input[name="talla"][type="hidden"]');
+    if (t) t.value = '';
+    applyFilters();
+  });
+
+  // Back / forward del navegador.
+  window.addEventListener('popstate', function() {
+    window.location.reload();
+  });
+})();
+</script>
 
 {% include 'ecommerce/_shop_footer.html' %}
 {% endblock %}

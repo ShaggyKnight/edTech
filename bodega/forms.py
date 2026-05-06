@@ -15,6 +15,7 @@ from catalogo.models import (
     Atributo,
     Colegio,
     Familia,
+    Oferta,
     Producto,
     ProductoVariante,
     ValorAtributo,
@@ -160,6 +161,100 @@ class MaterialForm(forms.ModelForm):
             'costo_unitario_referencia': 'Costo aproximado por rollo. Cada compra registra '
                                           'su costo real exacto en MovimientoMaterial.',
         }
+
+
+class OfertaForm(forms.ModelForm):
+    """Crea o edita una Oferta (descuento aplicado a producto o variante).
+
+    Validaciones:
+    - Debe seleccionarse producto o variante (al menos uno).
+    - Si se elige variante y producto, la variante debe pertenecer al
+      producto. En cualquier caso si hay variante, el producto se ignora
+      (la oferta queda anclada a la variante).
+    - valor > 0. Si tipo=Porcentaje, valor <= 100.
+    - fecha_fin posterior a fecha_inicio.
+    """
+
+    class Meta:
+        model = Oferta
+        fields = [
+            'nombre', 'producto', 'variante', 'tipo', 'valor',
+            'canal', 'fecha_inicio', 'fecha_fin', 'activa',
+        ]
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'bo-input'}),
+            'producto': forms.Select(attrs={'class': 'bo-select'}),
+            'variante': forms.Select(attrs={'class': 'bo-select'}),
+            'tipo': forms.Select(attrs={'class': 'bo-select'}),
+            'valor': forms.NumberInput(attrs={'class': 'bo-input', 'min': '0', 'step': '0.01'}),
+            'canal': forms.Select(attrs={'class': 'bo-select'}),
+            'fecha_inicio': forms.DateTimeInput(
+                attrs={'class': 'bo-input', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
+            ),
+            'fecha_fin': forms.DateTimeInput(
+                attrs={'class': 'bo-input', 'type': 'datetime-local'},
+                format='%Y-%m-%dT%H:%M',
+            ),
+            'activa': forms.CheckboxInput(),
+        }
+        help_texts = {
+            'nombre': 'Identificable. Ej. "Black Friday 2026", "SFJ uniforme -10%".',
+            'producto': 'Aplica a todas las variantes del producto. Vacío si la oferta es por variante específica.',
+            'variante': 'Solo si la oferta aplica a una variante puntual (ej. solo el Yara 30 ml). Si elegís variante, ignora el producto de arriba.',
+            'valor': 'Si tipo=Porcentaje: 0-100. Si tipo=Monto fijo: pesos a descontar.',
+            'canal': 'Donde aplica: solo en la tienda fisica, solo online, o en ambos.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['producto'].queryset = (
+            Producto.objects.filter(activo=True)
+            .select_related('familia')
+            .order_by('familia__nombre', 'nombre')
+        )
+        self.fields['producto'].required = False
+        self.fields['variante'].queryset = (
+            ProductoVariante.objects
+            .filter(activa=True, producto__activo=True)
+            .select_related('producto')
+            .order_by('producto__nombre', 'sku')
+        )
+        self.fields['variante'].required = False
+        self.fields['fecha_inicio'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S']
+        self.fields['fecha_fin'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S']
+
+    def clean(self):
+        cleaned = super().clean()
+        producto = cleaned.get('producto')
+        variante = cleaned.get('variante')
+
+        if not producto and not variante:
+            raise ValidationError(
+                'Tenés que elegir un producto o una variante específica.'
+            )
+        if producto and variante and variante.producto_id != producto.pk:
+            raise ValidationError(
+                f'La variante {variante.sku} no pertenece al producto {producto.nombre}.'
+            )
+        # Si la oferta es por variante, el producto queda en None — la
+        # variante ya determina a qué producto pertenece.
+        if variante:
+            cleaned['producto'] = None
+
+        tipo = cleaned.get('tipo')
+        valor = cleaned.get('valor')
+        if valor is not None and valor <= 0:
+            self.add_error('valor', 'Tiene que ser mayor a 0.')
+        if tipo == Oferta.TIPO_PORCENTAJE and valor is not None and valor > 100:
+            self.add_error('valor', 'El porcentaje no puede ser mayor a 100.')
+
+        fi = cleaned.get('fecha_inicio')
+        ff = cleaned.get('fecha_fin')
+        if fi and ff and ff <= fi:
+            self.add_error('fecha_fin', 'Tiene que ser posterior a la fecha de inicio.')
+
+        return cleaned
 
 
 class RendimientoForm(forms.ModelForm):

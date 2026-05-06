@@ -19,8 +19,8 @@ from django.views import generic
 from django.views.decorators.http import require_POST
 
 from bodega.forms import (
-    MaterialForm, ProductoForm, ProductoVarianteForm, RendimientoForm,
-    StockInicialForm,
+    MaterialForm, OfertaForm, ProductoForm, ProductoVarianteForm,
+    RendimientoForm, StockInicialForm,
 )
 from bodega.models import (
     Material,
@@ -30,7 +30,7 @@ from bodega.models import (
     StockTienda,
     Tienda,
 )
-from catalogo.models import Colegio, Familia, Producto, ProductoVariante
+from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante
 
 
 # Umbrales de alerta de stock.
@@ -49,6 +49,16 @@ def _puede_reponer(user) -> bool:
     if user.is_superuser:
         return True
     return user.groups.filter(name__in=['admin', 'bodeguero']).exists()
+
+
+def _puede_gestionar_ofertas(user) -> bool:
+    """Solo admin (grupo) o superuser. El bodeguero no decide ofertas —
+    es una decisión comercial, no de stock."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user.groups.filter(name='admin').exists()
 
 
 class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateView):
@@ -521,3 +531,130 @@ def rendimiento_borrar(request, pk, rend_pk):
     r.delete()
     messages.success(request, 'Rendimiento eliminado.')
     return redirect('bodega:rendimientos', pk=m.pk)
+
+
+# ============================================================================
+# CRUD de ofertas (Fase O.1)
+# ============================================================================
+
+ofertas_required = user_passes_test(_puede_gestionar_ofertas, login_url='login')
+
+
+def _estado_oferta(oferta, ahora):
+    """Calcula el estado visible de una oferta para el badge."""
+    if not oferta.activa:
+        return 'pausada'
+    if oferta.fecha_fin < ahora:
+        return 'vencida'
+    if oferta.fecha_inicio > ahora:
+        return 'programada'
+    return 'vigente'
+
+
+@login_required
+@ofertas_required
+def lista_ofertas(request):
+    """Listado de ofertas con filtros por estado / canal / búsqueda libre."""
+    from django.utils import timezone
+    ahora = timezone.now()
+
+    qs = (
+        Oferta.objects
+        .select_related('producto', 'producto__familia',
+                        'variante', 'variante__producto')
+    )
+
+    q = (request.GET.get('q') or '').strip()
+    estado = (request.GET.get('estado') or '').strip()
+    canal = (request.GET.get('canal') or '').strip()
+
+    if q:
+        qs = qs.filter(
+            Q(nombre__icontains=q)
+            | Q(producto__nombre__icontains=q)
+            | Q(variante__sku__icontains=q)
+            | Q(variante__producto__nombre__icontains=q)
+        )
+    if canal in (Oferta.CANAL_PRESENCIAL, Oferta.CANAL_ONLINE, Oferta.CANAL_AMBOS):
+        qs = qs.filter(canal=canal)
+    if estado == 'vigentes':
+        qs = qs.filter(activa=True, fecha_inicio__lte=ahora, fecha_fin__gte=ahora)
+    elif estado == 'programadas':
+        qs = qs.filter(activa=True, fecha_inicio__gt=ahora)
+    elif estado == 'vencidas':
+        qs = qs.filter(fecha_fin__lt=ahora)
+    elif estado == 'pausadas':
+        qs = qs.filter(activa=False)
+
+    ofertas = []
+    for o in qs.order_by('-fecha_inicio'):
+        o.estado_visual = _estado_oferta(o, ahora)
+        ofertas.append(o)
+
+    return render(request, 'bodega/ofertas_lista.html', {
+        'ofertas': ofertas,
+        'filtros': {'q': q, 'estado': estado, 'canal': canal},
+        'canal_choices': Oferta.CANAL_CHOICES,
+    })
+
+
+@login_required
+@ofertas_required
+def oferta_nueva(request):
+    if request.method == 'POST':
+        form = OfertaForm(request.POST)
+        if form.is_valid():
+            o = form.save()
+            messages.success(request, f'Oferta "{o.nombre}" creada.')
+            return redirect('bodega:lista_ofertas')
+    else:
+        form = OfertaForm(initial={'activa': True, 'canal': Oferta.CANAL_AMBOS,
+                                   'tipo': Oferta.TIPO_PORCENTAJE})
+    return render(request, 'bodega/oferta_form.html', {
+        'form': form, 'modo': 'crear',
+        'titulo': 'Nueva oferta',
+    })
+
+
+@login_required
+@ofertas_required
+def oferta_editar(request, pk):
+    o = get_object_or_404(Oferta, pk=pk)
+    if request.method == 'POST':
+        form = OfertaForm(request.POST, instance=o)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Oferta "{o.nombre}" actualizada.')
+            return redirect('bodega:lista_ofertas')
+    else:
+        form = OfertaForm(instance=o)
+    return render(request, 'bodega/oferta_form.html', {
+        'form': form, 'modo': 'editar', 'oferta': o,
+        'titulo': f'Editar — {o.nombre}',
+    })
+
+
+@login_required
+@ofertas_required
+@require_POST
+def oferta_borrar(request, pk):
+    o = get_object_or_404(Oferta, pk=pk)
+    nombre = o.nombre
+    o.delete()
+    messages.success(request, f'Oferta "{nombre}" eliminada.')
+    return redirect('bodega:lista_ofertas')
+
+
+@login_required
+@ofertas_required
+@require_POST
+def oferta_toggle(request, pk):
+    """Pausa o reactiva una oferta sin tener que entrar al form."""
+    o = get_object_or_404(Oferta, pk=pk)
+    o.activa = not o.activa
+    o.save(update_fields=['activa', 'modificado'])
+    messages.success(
+        request,
+        f'Oferta "{o.nombre}" {"reactivada" if o.activa else "pausada"}.',
+    )
+    return redirect('bodega:lista_ofertas')

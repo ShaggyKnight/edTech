@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Ofertas · Ideas Boutique{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Catálogo / Ofertas</div>
+      <h1>Ofertas y descuentos</h1>
+      <div class="sub">{{ ofertas|length }} oferta{{ ofertas|length|pluralize:"s" }} en el filtro</div>
+    </div>
+    <a href="{% url 'bodega:oferta_nueva' %}" class="bo-btn bo-btn-primary">+ Nueva oferta</a>
+  </div>
+
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body">
+      <form method="get" class="bo-form-inline">
+        <div class="bo-field" style="min-width:200px;">
+          <label>Buscar</label>
+          <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
+                 placeholder="Nombre de oferta, producto o SKU…">
+        </div>
+        <div class="bo-field">
+          <label>Estado</label>
+          <select name="estado" class="bo-select">
+            <option value="">Todos</option>
+            <option value="vigentes"    {% if filtros.estado == "vigentes" %}selected{% endif %}>Vigentes</option>
+            <option value="programadas" {% if filtros.estado == "programadas" %}selected{% endif %}>Programadas</option>
+            <option value="vencidas"    {% if filtros.estado == "vencidas" %}selected{% endif %}>Vencidas</option>
+            <option value="pausadas"    {% if filtros.estado == "pausadas" %}selected{% endif %}>Pausadas</option>
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Canal</label>
+          <select name="canal" class="bo-select">
+            <option value="">Todos</option>
+            {% for val, label in canal_choices %}
+              <option value="{{ val }}" {% if filtros.canal == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
+          <a href="{% url 'bodega:lista_ofertas' %}" class="bo-btn">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="bo-card">
+    {% if ofertas %}
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Aplica a</th>
+            <th class="num">Descuento</th>
+            <th>Canal</th>
+            <th>Vigencia</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in ofertas %}
+            <tr {% if not o.activa %}style="opacity:.55;"{% endif %}>
+              <td><strong>{{ o.nombre }}</strong></td>
+              <td>
+                {% if o.variante %}
+                  <div>{{ o.variante.producto.nombre }}</div>
+                  <div style="font-size:11px;color:var(--bo-muted);">SKU {{ o.variante.sku }}</div>
+                {% elif o.producto %}
+                  <div>{{ o.producto.nombre }}</div>
+                  <div style="font-size:11px;color:var(--bo-muted);">Todas las variantes</div>
+                {% else %}
+                  <span style="color:var(--bo-muted);">—</span>
+                {% endif %}
+              </td>
+              <td class="num">
+                {% if o.tipo == 'porcentaje' %}
+                  −{{ o.valor|floatformat:0 }}%
+                {% else %}
+                  −${{ o.valor|floatformat:0|intcomma }}
+                {% endif %}
+              </td>
+              <td>
+                <span class="bo-badge bo-badge-info">{{ o.get_canal_display }}</span>
+              </td>
+              <td style="font-size:12px;">
+                {{ o.fecha_inicio|date:"d/m/Y H:i" }}<br>
+                <span style="color:var(--bo-muted);">→ {{ o.fecha_fin|date:"d/m/Y H:i" }}</span>
+              </td>
+              <td>
+                {% if o.estado_visual == 'vigente' %}
+                  <span class="bo-badge bo-badge-success">Vigente</span>
+                {% elif o.estado_visual == 'programada' %}
+                  <span class="bo-badge bo-badge-info">Programada</span>
+                {% elif o.estado_visual == 'vencida' %}
+                  <span class="bo-badge bo-badge-muted">Vencida</span>
+                {% else %}
+                  <span class="bo-badge bo-badge-warning">Pausada</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display:inline-flex;gap:4px;">
+                  <a href="{% url 'bodega:oferta_editar' o.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                  <form method="post" action="{% url 'bodega:oferta_toggle' o.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="bo-btn bo-btn-sm">
+                      {% if o.activa %}Pausar{% else %}Reactivar{% endif %}
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'bodega:oferta_borrar' o.pk %}" style="display:inline;"
+                        onsubmit="return confirm('¿Eliminar la oferta &quot;{{ o.nombre|escapejs }}&quot;? Esta acción no se puede deshacer.');">
+                    {% csrf_token %}
+                    <button type="submit" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);">Borrar</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color:var(--bo-muted);">
+        No hay ofertas con los filtros aplicados.
+        <a href="{% url 'bodega:oferta_nueva' %}" style="color:var(--bo-primary-2);font-weight:600;">Creá la primera →</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

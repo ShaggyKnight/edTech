@@ -155,6 +155,13 @@
               Materiales
             </a>
           {% endif %}
+          {% if perms.catalogo.change_oferta or user.is_superuser %}
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_ofertas' %}active{% endif %}"
+               href="{% url 'bodega:lista_ofertas' %}">
+              <svg class="ico"><use href="#ico-bag"/></svg>
+              Ofertas
+            </a>
+          {% endif %}
           {% if user.is_superuser %}
             <a class="bo-side-link" href="{% url 'admin:index' %}">
               <svg class="ico"><use href="#ico-shield"/></svg>

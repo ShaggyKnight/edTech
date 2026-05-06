@@ -30,4 +30,11 @@ urlpatterns = [
          views.rendimiento_editar, name='rendimiento_editar'),
     path('materiales/<int:pk>/rendimientos/<int:rend_pk>/borrar/',
          views.rendimiento_borrar, name='rendimiento_borrar'),
+
+    # Ofertas (Fase O.1).
+    path('ofertas/', views.lista_ofertas, name='lista_ofertas'),
+    path('ofertas/nueva/', views.oferta_nueva, name='oferta_nueva'),
+    path('ofertas/<int:pk>/editar/', views.oferta_editar, name='oferta_editar'),
+    path('ofertas/<int:pk>/borrar/', views.oferta_borrar, name='oferta_borrar'),
+    path('ofertas/<int:pk>/toggle/', views.oferta_toggle, name='oferta_toggle'),
 ]

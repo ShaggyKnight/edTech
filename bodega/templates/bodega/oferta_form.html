@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} · Ideas Boutique{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:lista_ofertas' %}">Ofertas</a> / {{ titulo }}
+      </div>
+      <h1>{{ titulo }}</h1>
+    </div>
+    <a href="{% url 'bodega:lista_ofertas' %}" class="bo-btn">← Volver</a>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="bo-card" style="max-width:780px;">
+      <div class="bo-card-head"><h3>Datos de la oferta</h3></div>
+      <div class="bo-card-body">
+        {% if form.non_field_errors %}
+          <div class="bo-alert bo-alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="bo-field">
+          <label for="{{ form.nombre.id_for_label }}">Nombre *</label>
+          {{ form.nombre }}
+          {% if form.nombre.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.nombre.help_text }}</small>
+          {% endif %}
+          {% if form.nombre.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.nombre.errors }}</div>{% endif %}
+        </div>
+
+        <div class="bo-card-head" style="border-top:1px solid var(--bo-border);padding-top:16px;margin-top:8px;">
+          <h3 style="font-size:14px;">¿A qué aplica la oferta?</h3>
+        </div>
+
+        <div class="bo-field">
+          <label for="{{ form.producto.id_for_label }}">Producto</label>
+          {{ form.producto }}
+          {% if form.producto.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.producto.help_text }}</small>
+          {% endif %}
+          {% if form.producto.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.producto.errors }}</div>{% endif %}
+        </div>
+
+        <div class="bo-field">
+          <label for="{{ form.variante.id_for_label }}">Variante específica</label>
+          {{ form.variante }}
+          {% if form.variante.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.variante.help_text }}</small>
+          {% endif %}
+          {% if form.variante.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.variante.errors }}</div>{% endif %}
+        </div>
+
+        <div class="bo-card-head" style="border-top:1px solid var(--bo-border);padding-top:16px;margin-top:8px;">
+          <h3 style="font-size:14px;">Descuento</h3>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="bo-field">
+            <label for="{{ form.tipo.id_for_label }}">Tipo *</label>
+            {{ form.tipo }}
+          </div>
+          <div class="bo-field">
+            <label for="{{ form.valor.id_for_label }}">Valor *</label>
+            {{ form.valor }}
+            {% if form.valor.help_text %}
+              <small style="color:var(--bo-muted);font-size:11px;">{{ form.valor.help_text }}</small>
+            {% endif %}
+            {% if form.valor.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.valor.errors }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="bo-field">
+          <label for="{{ form.canal.id_for_label }}">Canal *</label>
+          {{ form.canal }}
+          {% if form.canal.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.canal.help_text }}</small>
+          {% endif %}
+        </div>
+
+        <div class="bo-card-head" style="border-top:1px solid var(--bo-border);padding-top:16px;margin-top:8px;">
+          <h3 style="font-size:14px;">Vigencia</h3>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="bo-field">
+            <label for="{{ form.fecha_inicio.id_for_label }}">Inicio *</label>
+            {{ form.fecha_inicio }}
+            {% if form.fecha_inicio.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.fecha_inicio.errors }}</div>{% endif %}
+          </div>
+          <div class="bo-field">
+            <label for="{{ form.fecha_fin.id_for_label }}">Fin *</label>
+            {{ form.fecha_fin }}
+            {% if form.fecha_fin.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.fecha_fin.errors }}</div>{% endif %}
+          </div>
+        </div>
+
+        <div class="bo-field" style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+          {{ form.activa }}
+          <label for="{{ form.activa.id_for_label }}" style="margin:0;">Activa</label>
+          <small style="color:var(--bo-muted);font-size:11px;">
+            Desmarcar pausa la oferta sin borrarla.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:8px;">
+      <button type="submit" class="bo-btn bo-btn-primary">
+        {% if modo == 'crear' %}Crear oferta{% else %}Guardar cambios{% endif %}
+      </button>
+      <a href="{% url 'bodega:lista_ofertas' %}" class="bo-btn">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

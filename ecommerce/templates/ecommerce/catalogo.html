@@ -29,8 +29,10 @@
     </div>
     <div class="sort-sel">
       <span>Ordenar:</span>
-      {# El form="..." engancha el select al form de filtros aunque
-         este visualmente afuera, asi se aplica junto con el resto. #}
+      {% comment %}
+        El form="..." engancha el select al form de filtros aunque este
+        visualmente afuera, asi se aplica junto con el resto.
+      {% endcomment %}
       <select name="sort" form="shop-filters-form">
         <option value="relevant" {% if sort == 'relevant' %}selected{% endif %}>Más relevantes</option>
         <option value="low" {% if sort == 'low' %}selected{% endif %}>Menor precio</option>

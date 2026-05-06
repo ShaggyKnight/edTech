@@ -361,9 +361,11 @@ def detalle_producto(request, pk: int):
         stock_sq = StockTienda.objects.filter(
             tienda=tienda, variante=OuterRef('pk')
         ).values('cantidad')[:1]
-        # Annotate `orden_talla` con el `orden` del valor cuyo atributo es
-        # "Talla" — eso permite mostrar 4,6,8,10,12,14,16,S,M,L,XL,XXL en
-        # el orden natural en lugar de orden alfabético del SKU.
+        # Annotate los `orden` de cada valor por atributo — eso permite
+        # mostrar las variantes en orden natural en vez de alfabético del
+        # SKU. Tallas: 4,6,8,10,12,14,16,S,M,L,XL,XXL. Perfumes: por
+        # volumen creciente (5ml -> 200ml) y dentro de cada volumen por
+        # concentración (Cologne -> Elixir).
         variantes = (
             producto.variantes.filter(activa=True)
             .prefetch_related('valores__atributo')
@@ -373,8 +375,16 @@ def detalle_producto(request, pk: int):
                     'valores__orden',
                     filter=Q(valores__atributo__nombre__iexact='Talla'),
                 ),
+                orden_volumen=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Volumen'),
+                ),
+                orden_concentracion=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Concentración'),
+                ),
             )
-            .order_by('orden_talla', 'sku')
+            .order_by('orden_talla', 'orden_volumen', 'orden_concentracion', 'sku')
         )
     else:
         variantes = producto.variantes.none()

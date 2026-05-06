@@ -15,9 +15,20 @@
       <a href="{% url 'ecommerce:catalogo' %}?cat=intima" {% if cat_activa == 'intima' %}class="active"{% endif %}>Íntima</a>
       <a href="{% url 'ecommerce:catalogo' %}?oferta=1" class="sale">OFERTAS</a>
     </nav>
-    <form class="shop-search" method="get" action="{% url 'ecommerce:catalogo' %}">
+    <form class="shop-search" method="get" action="{% url 'ecommerce:catalogo' %}"
+          id="shop-search-form" autocomplete="off"
+          data-buscar-url="{% url 'ecommerce:buscar_json' %}"
+          data-catalogo-url="{% url 'ecommerce:catalogo' %}">
       <svg class="ico ico--16"><use href="#ico-search"/></svg>
-      <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar por colegio, marca o producto…">
+      <input type="text" name="q" id="shop-search-input"
+             value="{{ query|default:'' }}"
+             placeholder="Buscar por colegio, marca o producto…"
+             aria-label="Buscar productos">
+      <button type="button" class="search-clear" id="shop-search-clear"
+              aria-label="Limpiar búsqueda" hidden>
+        <svg class="ico ico--14"><use href="#ico-close"/></svg>
+      </button>
+      <div class="search-dropdown" id="shop-search-dropdown" role="listbox" hidden></div>
     </form>
     <div class="shop-actions">
       {% if user.is_authenticated and user.is_staff %}
@@ -56,3 +67,156 @@
     Envío gratis en compras sobre $50.000 · Ajustes de uniforme sin cargo
   </div>
 </header>
+
+<script>
+  (function () {
+    var form = document.getElementById('shop-search-form');
+    if (!form) return;
+    var input = document.getElementById('shop-search-input');
+    var dropdown = document.getElementById('shop-search-dropdown');
+    var clearBtn = document.getElementById('shop-search-clear');
+    var buscarUrl = form.dataset.buscarUrl;
+    var catalogoUrl = form.dataset.catalogoUrl;
+
+    var debounceId = null;
+    var lastQ = '';
+    var ultimoResultados = null;
+
+    function fmtPrecio(n) {
+      return '$' + Number(n).toLocaleString('es-CL');
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);
+      });
+    }
+
+    function renderEmpty(q) {
+      return '<div class="search-empty">' +
+        '<span>Sin resultados para <strong>"' + escapeHtml(q) + '"</strong></span>' +
+        '<button type="button" data-go-cat="uniformes">Ver uniformes</button>' +
+        '</div>';
+    }
+
+    function renderColegios(colegios) {
+      if (!colegios.length) return '';
+      var items = colegios.map(function (c) {
+        return '<a class="search-row school" href="' + c.url + '">' +
+          '<svg class="ico ico--14"><use href="#ico-pin"/></svg>' +
+          '<span>Uniformes — <strong>' + escapeHtml(c.nombre) + '</strong></span>' +
+          '</a>';
+      }).join('');
+      return '<div class="search-group">' +
+        '<div class="search-group-head">Colegios</div>' +
+        items + '</div>';
+    }
+
+    function renderProductos(productos) {
+      if (!productos.length) return '';
+      var items = productos.map(function (p) {
+        var precio = p.precios_varian
+          ? '<small style="font-size:10px;color:var(--ink-60);font-weight:600;display:block;letter-spacing:.06em;">DESDE</small>' + fmtPrecio(p.precio)
+          : fmtPrecio(p.precio);
+        return '<a class="search-row" href="' + p.url + '">' +
+          '<div class="search-thumb"><img src="' + p.img + '" alt=""></div>' +
+          '<div class="search-meta">' +
+            '<div class="search-name">' + escapeHtml(p.nombre) + '</div>' +
+            '<div class="search-cat">' +
+              escapeHtml(p.colegio || p.categoria) +
+            '</div>' +
+          '</div>' +
+          '<div class="search-price">' + precio + '</div>' +
+        '</a>';
+      }).join('');
+      return '<div class="search-group">' +
+        '<div class="search-group-head">Productos · ' + productos.length + '</div>' +
+        items + '</div>';
+    }
+
+    function setOpen(open) {
+      dropdown.hidden = !open;
+    }
+
+    function pintarResultados(data, q) {
+      var hayProds = (data.productos || []).length > 0;
+      var hayCols  = (data.colegios  || []).length > 0;
+      if (!hayProds && !hayCols) {
+        dropdown.innerHTML = renderEmpty(q);
+      } else {
+        dropdown.innerHTML = renderColegios(data.colegios) + renderProductos(data.productos);
+      }
+      setOpen(true);
+      ultimoResultados = data;
+    }
+
+    function buscar(q) {
+      if (q === lastQ) return;
+      lastQ = q;
+      if (q.length < 2) {
+        setOpen(false);
+        return;
+      }
+      fetch(buscarUrl + '?q=' + encodeURIComponent(q), {
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (input.value.trim() === q) pintarResultados(data, q);
+        })
+        .catch(function () { /* silencioso */ });
+    }
+
+    input.addEventListener('input', function () {
+      var q = input.value.trim();
+      clearBtn.hidden = !q;
+      if (debounceId) clearTimeout(debounceId);
+      debounceId = setTimeout(function () { buscar(q); }, 180);
+    });
+
+    input.addEventListener('focus', function () {
+      var q = input.value.trim();
+      if (q.length >= 2 && ultimoResultados) {
+        setOpen(true);
+      }
+    });
+
+    clearBtn.addEventListener('click', function () {
+      input.value = '';
+      clearBtn.hidden = true;
+      setOpen(false);
+      lastQ = '';
+      input.focus();
+    });
+
+    // Click fuera cierra el dropdown.
+    document.addEventListener('mousedown', function (e) {
+      if (!form.contains(e.target)) setOpen(false);
+    });
+
+    // Escape cierra; Enter en input sigue al primer resultado si existe.
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        input.blur();
+      }
+    });
+
+    // Botón "Ver uniformes" del estado vacío.
+    dropdown.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.dataset && t.dataset.goCat) {
+        e.preventDefault();
+        window.location.href = catalogoUrl + '?cat=' + t.dataset.goCat;
+      }
+    });
+
+    // Submit del form (Enter sin elegir resultado): catálogo con ?q.
+    form.addEventListener('submit', function () {
+      // Deja que la acción default vaya a /tienda/?q=...
+    });
+
+    // Si la página carga con ?q=..., mostrar la X de limpiar.
+    if (input.value.trim()) clearBtn.hidden = false;
+  })();
+</script>

@@ -223,6 +223,101 @@ def catalogo(request):
     })
 
 
+@require_GET
+def buscar_json(request):
+    """Endpoint para el live search dropdown de la tienda.
+
+    Devuelve hasta 6 productos y hasta 2 colegios que coincidan con el
+    query, accent + case insensitive. Solo productos con stock visible
+    en la tienda online configurada.
+
+    Esquema:
+        {
+          "productos": [{id, nombre, categoria, colegio, precio, img}],
+          "colegios":  [{id, nombre}]
+        }
+    """
+    from django.http import JsonResponse
+    from django.templatetags.static import static
+    from edTech.search import normalize_text
+    from catalogo.templatetags.catalogo_extras import imagen_producto
+
+    q = (request.GET.get('q') or '').strip()
+    if len(q) < 2:
+        return JsonResponse({'productos': [], 'colegios': []})
+
+    try:
+        tienda = get_tienda_online()
+    except TiendaOnlineNoConfigurada:
+        return JsonResponse({'productos': [], 'colegios': []})
+
+    q_norm = normalize_text(q)
+
+    # Productos con stock real en la tienda online.
+    tiene_stock_variante = StockTienda.objects.filter(
+        tienda=tienda, variante__producto=OuterRef('pk'), cantidad__gt=0
+    )
+    tiene_stock_directo = StockTienda.objects.filter(
+        tienda=tienda, producto=OuterRef('pk'), cantidad__gt=0
+    )
+    productos_qs = (
+        Producto.objects
+        .filter(activo=True)
+        .select_related('familia', 'colegio')
+        .annotate(
+            hay_stock_variante=Exists(tiene_stock_variante),
+            hay_stock_directo=Exists(tiene_stock_directo),
+        )
+        .filter(
+            Q(hay_stock_variante=True) | Q(hay_stock_directo=True)
+        )
+        .filter(
+            Q(nombre_buscable__contains=q_norm)
+            | Q(descripcion_buscable__contains=q_norm)
+        )
+        .distinct()[:12]  # tomamos un poco mas para poder rankear
+    )
+
+    # Score: prefix-match en nombre suma muchos puntos; match en
+    # descripcion suma uno. Asi "buzo" rankea Buzo SFJ Completo arriba
+    # antes que un perfume cuya descripcion mencione "buzo".
+    productos_score = []
+    for p in productos_qs:
+        nombre_n = p.nombre_buscable or ''
+        score = 0
+        if nombre_n.startswith(q_norm):
+            score += 10
+        elif q_norm in nombre_n:
+            score += 5
+        if q_norm in (p.descripcion_buscable or ''):
+            score += 1
+        productos_score.append((score, p))
+    productos_score.sort(key=lambda x: -x[0])
+    top = [p for _, p in productos_score[:6]]
+
+    productos_data = [{
+        'id': p.pk,
+        'nombre': p.nombre,
+        'categoria': p.familia.nombre,
+        'colegio': p.colegio.nombre if p.colegio_id else '',
+        'precio': float(p.precio_minimo),
+        'precios_varian': p.precios_varian_por_variante,
+        'img': imagen_producto(p),
+        'url': f'/tienda/p/{p.pk}/',
+    } for p in top]
+
+    colegios_qs = (
+        Colegio.objects
+        .filter(activo=True, nombre_buscable__contains=q_norm)[:2]
+    )
+    colegios_data = [
+        {'id': c.pk, 'nombre': c.nombre, 'url': f'/tienda/?colegio={c.pk}'}
+        for c in colegios_qs
+    ]
+
+    return JsonResponse({'productos': productos_data, 'colegios': colegios_data})
+
+
 def detalle_producto(request, pk: int):
     producto = get_object_or_404(Producto, pk=pk, activo=True)
     try:

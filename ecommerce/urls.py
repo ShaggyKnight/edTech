@@ -6,6 +6,7 @@ app_name = 'ecommerce'
 
 urlpatterns = [
     path('', views.catalogo, name='catalogo'),
+    path('buscar.json', views.buscar_json, name='buscar_json'),
     path('p/<int:pk>/', views.detalle_producto, name='producto'),
     path('carrito/', views.ver_carrito, name='carrito'),
     path('agregar/', views.agregar, name='agregar'),

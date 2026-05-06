@@ -45,9 +45,11 @@
   <div class="shop-cat-body">
     <aside class="shop-filters">
       <form id="shop-filters-form" method="get" action="{% url 'ecommerce:catalogo' %}">
-        {# Búsqueda + talla se mantienen al cambiar filtros. La talla vive
-           en un hidden fuera de los grupos dinámicos para no perderse en
-           los swaps AJAX. #}
+        {% comment %}
+          Búsqueda + talla se mantienen al cambiar filtros. La talla vive
+          en un hidden fuera de los grupos dinámicos para no perderse en
+          los swaps AJAX.
+        {% endcomment %}
         {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
         <input type="hidden" name="talla" value="{{ talla_activa }}">
 
@@ -160,12 +162,12 @@
   </div>
 </main>
 
-{# ============================================================
-   Filtros AJAX: cuando cambia un radio / chip de talla / precio,
-   hace fetch a la misma URL del catálogo, parsea la respuesta y
-   reemplaza solo el grid + los filtros dinámicos. Sin reload, sin
-   salto de scroll. Si JS falla cae al reload completo (fallback).
-   ============================================================ #}
+{% comment %}
+  Filtros AJAX: cuando cambia un radio / chip de talla / precio,
+  hace fetch a la misma URL del catálogo, parsea la respuesta y
+  reemplaza solo el grid + los filtros dinámicos. Sin reload, sin
+  salto de scroll. Si JS falla cae al reload completo (fallback).
+{% endcomment %}
 <script>
 (function() {
   var form = document.getElementById('shop-filters-form');

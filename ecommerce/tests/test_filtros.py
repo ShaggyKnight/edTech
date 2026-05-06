@@ -137,3 +137,40 @@ class CatalogoFiltrosTests(TestCase):
         self.assertIn('M', tallas)
         self.assertIn('L', tallas)
         self.assertNotIn('XL', tallas)
+
+    def test_cat_perfumes_con_colegio_ignora_colegio(self):
+        """Si el cliente venía mirando uniformes con un colegio activo y
+        cambia a perfumes, el filtro de colegio se descarta — sino el
+        catálogo saldría vacío porque los perfumes no tienen colegio."""
+        resp = self.client.get(
+            reverse('ecommerce:catalogo')
+            + f'?cat=perfumes&colegio={self.sfj.pk}'
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Perfume Av')
+        self.assertNotContains(resp, 'Buzo SFJ')
+        # El contexto refleja que el colegio ya no está activo, así el
+        # sidebar no muestra el filtro como seleccionado.
+        self.assertIsNone(resp.context['colegio_activo'])
+        self.assertFalse(resp.context['colegio_aplicable'])
+
+    def test_cat_uniformes_con_colegio_si_filtra(self):
+        """En uniformes el filtro de colegio sí debe aplicar."""
+        resp = self.client.get(
+            reverse('ecommerce:catalogo')
+            + f'?cat=uniformes&colegio={self.sfj.pk}'
+        )
+        self.assertContains(resp, 'Buzo SFJ')
+        self.assertNotContains(resp, 'Polera DP')
+        self.assertNotContains(resp, 'Perfume Av')
+        self.assertEqual(resp.context['colegio_activo'], self.sfj.pk)
+        self.assertTrue(resp.context['colegio_aplicable'])
+
+    def test_cat_perfumes_no_muestra_filtro_colegio(self):
+        """En perfumes el sidebar no debe ofrecer el filtro de colegio."""
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?cat=perfumes')
+        self.assertNotContains(resp, '<div class="filter-title">Colegio</div>')
+
+    def test_cat_uniformes_si_muestra_filtro_colegio(self):
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?cat=uniformes')
+        self.assertContains(resp, '<div class="filter-title">Colegio</div>')

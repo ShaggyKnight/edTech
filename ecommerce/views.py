@@ -139,7 +139,15 @@ def catalogo(request):
     elif cat_slug in CAT_SLUGS:
         productos_qs = productos_qs.filter(familia__in=_familias_por_slug(cat_slug))
 
-    if colegio_id.isdigit():
+    # El filtro por colegio solo aplica a uniformes — perfumes, moda y
+    # ropa íntima no tienen colegio asociado, así que combinar
+    # `cat=perfumes&colegio=X` daría 0 resultados. Cuando el usuario
+    # cambia de categoría manteniendo un colegio seleccionado, ignoramos
+    # silenciosamente el filtro y limpiamos `colegio_activo` para que el
+    # sidebar tampoco lo muestre como activo.
+    colegio_aplicable = cat_slug in ('', 'uniformes')
+    aplicar_filtro_colegio = colegio_id.isdigit() and colegio_aplicable
+    if aplicar_filtro_colegio:
         productos_qs = productos_qs.filter(colegio_id=int(colegio_id))
 
     if talla:
@@ -213,7 +221,8 @@ def catalogo(request):
         'cat_activa': cat_slug if cat_slug in CAT_SLUGS else '',
         'cat_info': cat_info,
         'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
-        'colegio_activo': int(colegio_id) if colegio_id.isdigit() else None,
+        'colegio_activo': int(colegio_id) if aplicar_filtro_colegio else None,
+        'colegio_aplicable': colegio_aplicable,
         'tallas_disponibles': tallas_disponibles,
         'talla_activa': talla,
         'precio_min': precio_min,

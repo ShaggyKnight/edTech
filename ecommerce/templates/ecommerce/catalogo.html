@@ -69,10 +69,11 @@
         </div>
 
         {% comment %}
-          Colegio: visible siempre que haya colegios. Tiene más sentido
-          cuando estás filtrando uniformes pero no es exclusivo de eso.
+          Colegio: solo aplica a uniformes — perfumes, moda y ropa íntima
+          no tienen colegio asociado, así que esconde el filtro cuando esas
+          categorías están activas para que no quede engañando al cliente.
         {% endcomment %}
-        {% if colegios %}
+        {% if colegios and colegio_aplicable %}
           <div class="filter-group">
             <div class="filter-title">Colegio</div>
             <label style="display:block;padding:4px 0;">

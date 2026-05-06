@@ -29,16 +29,14 @@
     </div>
     <div class="sort-sel">
       <span>Ordenar:</span>
-      <form method="get" style="display:inline;">
-        {% if cat_activa %}<input type="hidden" name="cat" value="{{ cat_activa }}">{% endif %}
-        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
-        <select name="sort" onchange="this.form.submit()">
-          <option value="relevant">Más relevantes</option>
-          <option value="low">Menor precio</option>
-          <option value="high">Mayor precio</option>
-          <option value="new">Más nuevos</option>
-        </select>
-      </form>
+      {# El form="..." engancha el select al form de filtros aunque
+         este visualmente afuera, asi se aplica junto con el resto. #}
+      <select name="sort" form="shop-filters-form">
+        <option value="relevant" {% if sort == 'relevant' %}selected{% endif %}>Más relevantes</option>
+        <option value="low" {% if sort == 'low' %}selected{% endif %}>Menor precio</option>
+        <option value="high" {% if sort == 'high' %}selected{% endif %}>Mayor precio</option>
+        <option value="new" {% if sort == 'new' %}selected{% endif %}>Más nuevos</option>
+      </select>
     </div>
   </header>
 
@@ -239,6 +237,13 @@
     }
     applyFilters();
   });
+
+  // Select de "Ordenar": esta fuera del form via form="shop-filters-form"
+  // y por eso el change no burbujea al form — listener directo.
+  var sortSelect = document.querySelector('select[name="sort"][form="shop-filters-form"]');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() { applyFilters(); });
+  }
 
   // Chips de talla.
   form.addEventListener('click', function(e) {

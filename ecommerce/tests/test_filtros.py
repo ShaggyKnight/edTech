@@ -174,3 +174,33 @@ class CatalogoFiltrosTests(TestCase):
     def test_cat_uniformes_si_muestra_filtro_colegio(self):
         resp = self.client.get(reverse('ecommerce:catalogo') + '?cat=uniformes')
         self.assertContains(resp, '<div class="filter-title">Colegio</div>')
+
+    def test_sort_default_es_relevante(self):
+        resp = self.client.get(reverse('ecommerce:catalogo'))
+        self.assertEqual(resp.context['sort'], 'relevant')
+
+    def test_sort_low_ordena_por_precio_asc(self):
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?sort=low')
+        nombres = [p.nombre for p in resp.context['productos']]
+        # Precios: Polera DP $12k, Buzo SFJ $30k, Perfume $50k.
+        self.assertEqual(nombres, ['Polera DP', 'Buzo SFJ', 'Perfume Avéllá'])
+
+    def test_sort_high_ordena_por_precio_desc(self):
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?sort=high')
+        nombres = [p.nombre for p in resp.context['productos']]
+        self.assertEqual(nombres, ['Perfume Avéllá', 'Buzo SFJ', 'Polera DP'])
+
+    def test_sort_new_ordena_por_creado_desc(self):
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?sort=new')
+        nombres = [p.nombre for p in resp.context['productos']]
+        # Orden de creacion en setUpTestData: Buzo SFJ, Polera DP, Perfume.
+        # "Mas nuevos" = mas reciente primero = Perfume, Polera DP, Buzo SFJ.
+        self.assertEqual(nombres, ['Perfume Avéllá', 'Polera DP', 'Buzo SFJ'])
+
+    def test_sort_invalido_cae_a_relevante(self):
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?sort=hackme')
+        self.assertEqual(resp.context['sort'], 'relevant')
+
+    def test_sort_se_marca_como_selected(self):
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?sort=high')
+        self.assertContains(resp, '<option value="high" selected>')

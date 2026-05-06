@@ -92,12 +92,22 @@ def _familias_por_slug(slug: str):
     return q
 
 
+SORT_OPTIONS = {
+    # slug -> tupla de campos para order_by()
+    'relevant': ('familia__nombre', 'nombre'),
+    'low':      ('precio_base', 'nombre'),
+    'high':     ('-precio_base', 'nombre'),
+    'new':      ('-creado',),
+}
+
+
 def catalogo(request):
     """Listado público de productos con stock > 0 en la tienda online.
 
     Filtros vía querystring:
       cat=<slug> | familia=<pk> | colegio=<pk> | talla=<valor>
       precio_min, precio_max | q=<texto>  (accent + case insensitive)
+      sort=relevant|low|high|new
     """
     from edTech.search import normalize_text
 
@@ -113,6 +123,9 @@ def catalogo(request):
     precio_min = (request.GET.get('precio_min') or '').strip()
     precio_max = (request.GET.get('precio_max') or '').strip()
     query = (request.GET.get('q') or '').strip()
+    sort = (request.GET.get('sort') or 'relevant').strip()
+    if sort not in SORT_OPTIONS:
+        sort = 'relevant'
 
     tiene_stock_variante = StockTienda.objects.filter(
         tienda=tienda, variante__producto=OuterRef('pk'), cantidad__gt=0
@@ -214,7 +227,8 @@ def catalogo(request):
     )
 
     return render(request, 'ecommerce/catalogo.html', {
-        'productos': productos_qs.order_by('familia__nombre', 'nombre').distinct(),
+        'productos': productos_qs.order_by(*SORT_OPTIONS[sort]).distinct(),
+        'sort': sort,
         'familias': Familia.objects.all(),
         'familia_activa': int(familia_id) if familia_id.isdigit() else None,
         'categorias': categorias,

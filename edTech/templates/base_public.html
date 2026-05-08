@@ -31,10 +31,20 @@
     {# Hoja de estilos del sistema Ideas Boutique #}
     <link rel="stylesheet" href="{% static 'css/ideas.css' %}">
 
+    {# HTMX: AJAX declarativo. Alpine: estado local pequeño. Defer
+       para no bloquear el primer render del catálogo / landing. #}
+    <script defer src="{% static 'lib/htmx/htmx.min.js' %}"></script>
+    <script defer src="{% static 'lib/alpine/alpine.min.js' %}"></script>
+
     {% block extra_head %}{% endblock %}
   </head>
   <body>
     {% include 'partials/_icons.html' %}
+
+    {# Container global para toasts (HTMX inyecta aca via hx-swap-oob). #}
+    <div id="toast-container" class="toast-container" aria-live="polite">
+      {% include 'partials/_toasts.html' %}
+    </div>
 
     {% block body %}{% endblock %}
 

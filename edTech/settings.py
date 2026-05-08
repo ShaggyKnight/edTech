@@ -77,6 +77,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Marca request.htmx para que views/templates puedan ajustar su salida.
+    'edTech.middleware.HtmxMiddleware',
 ]
 
 ROOT_URLCONF = 'edTech.urls'

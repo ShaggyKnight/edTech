@@ -821,3 +821,57 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
 .ico--22 { width: 22px; height: 22px; }
 .ico--28 { width: 28px; height: 28px; }
 
+/* ============================================================
+   Toasts (top-right, auto-dismiss via Alpine) — tienda publica
+   ============================================================ */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--cream, #fff);
+  border-left: 4px solid var(--toast-color, var(--gold, #C9A96E));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 12px 14px 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink, #1f2937);
+  animation: toast-in 0.25s ease-out;
+}
+.toast-success { --toast-color: #2f7a4d; }
+.toast-error,
+.toast-danger  { --toast-color: #7A1E2B; }
+.toast-warning { --toast-color: #b87f1a; }
+.toast-info    { --toast-color: var(--gold-2, #b08951); }
+.toast-msg { flex: 1; }
+.toast-close {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ink-60, #888);
+  margin-left: 4px;
+  padding: 0 4px;
+}
+.toast-close:hover { color: var(--ink, #1f2937); }
+.toast-leave         { transition: all 0.3s ease-in; }
+.toast-leave-start   { opacity: 1; transform: translateX(0); }
+.toast-leave-end     { opacity: 0; transform: translateX(20px); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+

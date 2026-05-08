@@ -1,0 +1,32 @@
+{% comment %}
+  Toasts no-bloqueantes que aparecen arriba a la derecha y desaparecen
+  solos. Se renderizan a partir del Django messages framework.
+
+  - Para flows tradicionales (POST → redirect → render), aparecen al
+    cargar la pagina siguiente.
+  - Para flows HTMX, las views pueden incluir este partial al final del
+    fragment de respuesta con `hx-swap-oob="beforeend"` apuntando a
+    `#toast-container` para insertar nuevos toasts sin reemplazar el
+    contenido principal.
+
+  Auto-dismiss via Alpine.js: 4s para info / success / warning, 8s para
+  errores. La animacion in viene del CSS (.toast tiene keyframe).
+{% endcomment %}
+{% if messages %}
+  {% for m in messages %}
+    {% with tag=m.tags|default:"info" %}
+      <div class="toast toast-{{ tag }}"
+           role="status"
+           x-data="{show: true}"
+           x-init="setTimeout(() => show = false, {% if tag == 'error' or tag == 'danger' %}8000{% else %}4000{% endif %})"
+           x-show="show"
+           x-transition:leave="toast-leave"
+           x-transition:leave-start="toast-leave-start"
+           x-transition:leave-end="toast-leave-end">
+        <span class="toast-msg">{{ m }}</span>
+        <button type="button" class="toast-close" aria-label="Cerrar"
+                @click="show = false">×</button>
+      </div>
+    {% endwith %}
+  {% endfor %}
+{% endif %}

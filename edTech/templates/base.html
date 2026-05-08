@@ -19,10 +19,21 @@
   <link rel="stylesheet" href="{% static 'css/backoffice.css' %}">
   {# Sprite de íconos compartido con el front público #}
 
+  {# HTMX: AJAX declarativo para acciones in-place (toasts, modales,
+     edición inline, scroll infinito). Alpine: estado local pequeño
+     (apertura de modales, dropdowns). Defer para no bloquear el render. #}
+  <script defer src="{% static 'lib/htmx/htmx.min.js' %}"></script>
+  <script defer src="{% static 'lib/alpine/alpine.min.js' %}"></script>
+
   {% block extra_head %}{% endblock %}
 </head>
 <body class="bo">
   {% include 'partials/_icons.html' %}
+
+  {# Container global para toasts (HTMX inyecta aca via hx-swap-oob). #}
+  <div id="toast-container" class="toast-container" aria-live="polite">
+    {% include 'partials/_toasts.html' %}
+  </div>
 
   {# ─────────── TOPBAR GLOBAL (full width, oscura) ─────────── #}
   <header class="bo-bar">
@@ -184,12 +195,9 @@
     {# ─────────── MAIN ─────────── #}
     <div class="bo-main">
       <main class="bo-content">
-        {% if messages %}
-          {% for m in messages %}
-            <div class="bo-alert bo-alert-{{ m.tags|default:'info' }}">{{ m }}</div>
-          {% endfor %}
-        {% endif %}
-
+        {# Los messages ahora salen como toasts (top-right, auto-dismiss).
+           Si querés un alert persistente para algo crítico de la
+           página, lo podés meter directo en el bloque content. #}
         {% block content %}{% endblock content %}
       </main>
     </div>

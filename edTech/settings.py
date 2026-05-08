@@ -130,6 +130,20 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+# --- Limites de upload (DoS hardening) ------------------------------------
+# Las imagenes de producto rondan 200-800 KB. Cap en 5 MB cubre con holgura
+# y bloquea uploads abusivos que podrian llenar /media o saturar memoria.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024   # 5 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024   # 5 MB
+
+
+# --- Cookies y sesion (siempre activas, no solo en prod) ------------------
+SESSION_COOKIE_HTTPONLY = True   # JS no puede leer la cookie de sesion
+CSRF_COOKIE_HTTPONLY = False     # JS si necesita leer el CSRF para AJAX
+SESSION_COOKIE_SAMESITE = 'Lax'  # Bloquea CSRF cross-site sin romper login OAuth
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+
 # --- Seguridad de producción ----------------------------------------------
 # Todo lo que sigue sólo tiene efecto cuando DEBUG=False. En dev queda inerte
 # para no romper el runserver ni Django admin local sobre http.

@@ -13,6 +13,7 @@ admin.site.index_title = 'Panel de control'
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('robots.txt', views.robots_txt, name='robots_txt'),
     path('cuenta/', include('django.contrib.auth.urls')),
     path('cuenta/', include('accounts.urls')),
     path('bodega/', include('bodega.urls')),

@@ -1,13 +1,17 @@
+# ── Framework ────────────────────────────────────────────────────────
 Django>=5.2,<5.3
-django-environ>=0.12
-djangorestframework>=3.15
-Pillow>=10.4
+django-environ>=0.12          # 12-factor config: lee .env / DATABASE_URL
+djangorestframework>=3.15     # instalado pero hoy solo se usan endpoints DRF puntuales
+Pillow>=10.4                  # ImageField (productos) y manipulación basica
 
-# Producción: servidor WSGI y serving de static files sin nginx.
+# ── HTTP cliente (gateways de pago: TUU, Webpay, OpenFactura) ────────
+requests>=2.32
+
+# ── Producción: WSGI y static sin nginx ──────────────────────────────
 gunicorn>=22.0
 whitenoise>=6.7
 
-# Postgres en prod (dev sigue con SQLite por DATABASE_URL=sqlite:///).
-# Dejamos psycopg2-binary para simplificar el deploy en plataformas sin
-# toolchain de build (Railway, Fly.io, etc).
+# ── Base de datos en prod ────────────────────────────────────────────
+# Dev sigue con SQLite por DATABASE_URL=sqlite:///.
+# psycopg2-binary evita necesitar toolchain de build en Railway / Fly.
 psycopg2-binary>=2.9

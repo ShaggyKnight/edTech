@@ -30,8 +30,10 @@
   </td>
   <td class="num">
     {% if puede_reponer %}
-      {# Edicion inline con Alpine: click en el numero -> input -> Enter
-         dispara el form HTMX que actualiza la fila in-place. #}
+      {% comment %}
+        Edicion inline con Alpine: click en el numero -> input -> Enter
+        dispara el form HTMX que actualiza la fila in-place.
+      {% endcomment %}
       <span class="stock-cell"
             x-data="{editing: false}"
             x-init="$watch('editing', v => v && $nextTick(() => $refs.input.select()))">

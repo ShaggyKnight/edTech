@@ -188,8 +188,10 @@
             </a>
           {% endif %}
 
-          {# Acceso directo a la tienda — separado del resto para que sea
-             facil de encontrar cuando se quiere "salir" del backoffice. #}
+          {% comment %}
+            Acceso directo a la tienda — separado del resto para que sea
+            facil de encontrar cuando se quiere "salir" del backoffice.
+          {% endcomment %}
           <div class="bo-side-section">Tienda online</div>
           <a class="bo-side-link" href="{% url 'ecommerce:catalogo' %}">
             <svg class="ico"><use href="#ico-bag"/></svg>
@@ -211,9 +213,11 @@
     {# ─────────── MAIN ─────────── #}
     <div class="bo-main">
       <main class="bo-content">
-        {# Los messages ahora salen como toasts (top-right, auto-dismiss).
-           Si querés un alert persistente para algo crítico de la
-           página, lo podés meter directo en el bloque content. #}
+        {% comment %}
+          Los messages ahora salen como toasts (top-right, auto-dismiss).
+          Si querés un alert persistente para algo crítico de la
+          página, lo podés meter directo en el bloque content.
+        {% endcomment %}
         {% block content %}{% endblock content %}
       </main>
     </div>

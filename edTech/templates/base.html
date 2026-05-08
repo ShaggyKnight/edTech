@@ -35,6 +35,10 @@
     {% include 'partials/_toasts.html' %}
   </div>
 
+  {# Modal de confirmacion reusable: cualquier boton lo abre con
+     ideasConfirm({title, message, confirmText, formAction, danger}). #}
+  {% include 'partials/_confirm_modal.html' %}
+
   {# ─────────── TOPBAR GLOBAL (full width, oscura) ─────────── #}
   <header class="bo-bar">
     <button class="bo-top-burger" type="button" onclick="document.getElementById('boSide').classList.toggle('open')" aria-label="Menú" style="margin-right:12px;color:#fff;">

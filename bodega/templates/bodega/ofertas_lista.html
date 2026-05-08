@@ -111,11 +111,16 @@
                       {% if o.activa %}Pausar{% else %}Reactivar{% endif %}
                     </button>
                   </form>
-                  <form method="post" action="{% url 'bodega:oferta_borrar' o.pk %}" style="display:inline;"
-                        onsubmit="return confirm('¿Eliminar la oferta &quot;{{ o.nombre|escapejs }}&quot;? Esta acción no se puede deshacer.');">
-                    {% csrf_token %}
-                    <button type="submit" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);">Borrar</button>
-                  </form>
+                  <button type="button" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);"
+                          onclick="ideasConfirm({
+                            title: 'Eliminar oferta',
+                            message: '¿Eliminar la oferta &quot;{{ o.nombre|escapejs }}&quot;?\n\nEsta acción no se puede deshacer.',
+                            confirmText: 'Eliminar',
+                            danger: true,
+                            formAction: '{% url 'bodega:oferta_borrar' o.pk %}',
+                          })">
+                    Borrar
+                  </button>
                 </div>
               </td>
             </tr>

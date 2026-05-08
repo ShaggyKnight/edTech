@@ -1,0 +1,57 @@
+{% comment %}
+  Modal de confirmacion reutilizable con <dialog> nativo. Una sola
+  instancia en el body, cualquier boton puede abrirlo via:
+
+    onclick="ideasConfirm({
+      title: 'Eliminar producto',
+      message: '¿Confirmas?',
+      confirmText: 'Eliminar',
+      formAction: '/url/',
+      danger: true,
+    })"
+
+  El form mantiene el {% csrf_token %} de Django asi cualquier POST que
+  origine es valido sin truchear el token desde JS.
+{% endcomment %}
+<dialog id="confirm-modal" class="modal-confirm" aria-labelledby="confirm-title">
+  <form method="post" id="confirm-form">
+    {% csrf_token %}
+    <h3 id="confirm-title" class="modal-title"></h3>
+    <p id="confirm-message" class="modal-message"></p>
+    <div class="modal-actions">
+      <button type="button" class="modal-btn modal-btn-secondary"
+              onclick="document.getElementById('confirm-modal').close()">
+        Cancelar
+      </button>
+      <button type="submit" class="modal-btn modal-btn-primary" id="confirm-btn">
+        Confirmar
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  // Helper global. Lo dejamos en window para que cualquier template lo
+  // pueda llamar sin import. Vanilla JS, sin Alpine — mas simple para
+  // este caso.
+  window.ideasConfirm = function (opts) {
+    var dlg = document.getElementById('confirm-modal');
+    var form = document.getElementById('confirm-form');
+    document.getElementById('confirm-title').textContent = opts.title || 'Confirmar';
+    document.getElementById('confirm-message').textContent = opts.message || '';
+    var btn = document.getElementById('confirm-btn');
+    btn.textContent = opts.confirmText || 'Confirmar';
+    btn.classList.toggle('modal-btn-danger', !!opts.danger);
+    btn.classList.toggle('modal-btn-primary', !opts.danger);
+    form.action = opts.formAction || '';
+    form.method = (opts.formMethod || 'post').toLowerCase();
+    dlg.showModal();
+  };
+
+  // Cierra el modal con Escape (default del <dialog>) y al hacer click
+  // en el backdrop (no es default — hay que detectarlo).
+  document.addEventListener('click', function (e) {
+    var dlg = document.getElementById('confirm-modal');
+    if (e.target === dlg) dlg.close();
+  });
+</script>

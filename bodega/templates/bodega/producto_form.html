@@ -110,4 +110,74 @@
       <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Cancelar</a>
     </div>
   </form>
+
+  {% comment %}
+    Panel inline de ofertas que afectan a este producto. Va fuera del
+    form de arriba para que los botones de acción (crear oferta, pausar,
+    borrar) no envíen accidentalmente el form del producto. Solo visible
+    para admin/superuser — el bodeguero no gestiona ofertas.
+  {% endcomment %}
+  {% if modo == 'editar' and puede_gestionar_ofertas %}
+    <div class="bo-card" style="margin-top:24px;">
+      <div class="bo-card-head" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>Ofertas que afectan a este producto</h3>
+        <a href="{% url 'bodega:oferta_nueva' %}?producto={{ producto.pk }}"
+           class="bo-btn bo-btn-sm bo-btn-primary">+ Nueva oferta</a>
+      </div>
+      {% if ofertas %}
+        <table class="bo-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Aplica a</th>
+              <th class="num">Descuento</th>
+              <th>Vigencia</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in ofertas %}
+              <tr {% if not o.activa %}style="opacity:.55;"{% endif %}>
+                <td><strong>{{ o.nombre }}</strong></td>
+                <td>
+                  {% if o.variante %}
+                    <span style="font-size:11px;color:var(--bo-muted);">SKU {{ o.variante.sku }}</span>
+                  {% else %}
+                    <span style="font-size:11px;color:var(--bo-muted);">Todas las variantes</span>
+                  {% endif %}
+                </td>
+                <td class="num">
+                  {% if o.tipo == 'porcentaje' %}−{{ o.valor|floatformat:0 }}%{% else %}−${{ o.valor|floatformat:0 }}{% endif %}
+                </td>
+                <td style="font-size:12px;">
+                  {{ o.fecha_inicio|date:"d/m/Y" }} → {{ o.fecha_fin|date:"d/m/Y" }}
+                </td>
+                <td>
+                  {% if o.estado_visual == 'vigente' %}
+                    <span class="bo-badge bo-badge-success">Vigente</span>
+                  {% elif o.estado_visual == 'programada' %}
+                    <span class="bo-badge bo-badge-info">Programada</span>
+                  {% elif o.estado_visual == 'vencida' %}
+                    <span class="bo-badge bo-badge-muted">Vencida</span>
+                  {% else %}
+                    <span class="bo-badge bo-badge-warning">Pausada</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'bodega:oferta_editar' o.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="bo-card-body" style="color:var(--bo-muted);">
+          Este producto no tiene ofertas todavía.
+          <a href="{% url 'bodega:oferta_nueva' %}?producto={{ producto.pk }}"
+             style="color:var(--bo-primary-2);font-weight:600;">Crear la primera →</a>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
 {% endblock %}

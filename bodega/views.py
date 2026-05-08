@@ -305,6 +305,8 @@ def producto_nuevo(request):
 @login_required
 @reponer_required
 def producto_editar(request, pk):
+    from django.utils import timezone
+
     p = get_object_or_404(Producto, pk=pk)
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES, instance=p)
@@ -314,9 +316,29 @@ def producto_editar(request, pk):
             return redirect('bodega:lista_productos')
     else:
         form = ProductoForm(instance=p)
+
+    # Ofertas que afectan a este producto: ya sea directas (Oferta.producto)
+    # o vía variante (Oferta.variante.producto). Solo se muestran a quien
+    # ya tiene permisos para ver/cambiar ofertas — no es información que
+    # un bodeguero de stock necesite ver.
+    ofertas = []
+    if _puede_gestionar_ofertas(request.user):
+        ahora = timezone.now()
+        ofertas_qs = (
+            Oferta.objects
+            .filter(Q(producto=p) | Q(variante__producto=p))
+            .select_related('producto', 'variante', 'variante__producto')
+            .order_by('-fecha_inicio')
+        )
+        for o in ofertas_qs:
+            o.estado_visual = _estado_oferta(o, ahora)
+            ofertas.append(o)
+
     return render(request, 'bodega/producto_form.html', {
         'form': form, 'modo': 'editar', 'producto': p,
         'titulo': f'Editar — {p.nombre}',
+        'ofertas': ofertas,
+        'puede_gestionar_ofertas': _puede_gestionar_ofertas(request.user),
     })
 
 
@@ -608,8 +630,18 @@ def oferta_nueva(request):
             messages.success(request, f'Oferta "{o.nombre}" creada.')
             return redirect('bodega:lista_ofertas')
     else:
-        form = OfertaForm(initial={'activa': True, 'canal': Oferta.CANAL_AMBOS,
-                                   'tipo': Oferta.TIPO_PORCENTAJE})
+        # Permite que la pantalla de editar producto enlace a
+        # `?producto=<pk>` y caigamos con el producto pre-seleccionado.
+        initial = {
+            'activa': True,
+            'canal': Oferta.CANAL_AMBOS,
+            'tipo': Oferta.TIPO_PORCENTAJE,
+        }
+        producto_pk = (request.GET.get('producto') or '').strip()
+        if producto_pk.isdigit():
+            if Producto.objects.filter(pk=producto_pk, activo=True).exists():
+                initial['producto'] = int(producto_pk)
+        form = OfertaForm(initial=initial)
     return render(request, 'bodega/oferta_form.html', {
         'form': form, 'modo': 'crear',
         'titulo': 'Nueva oferta',

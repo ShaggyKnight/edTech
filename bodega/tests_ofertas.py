@@ -263,3 +263,103 @@ class OfertasCrudTests(TestCase):
         self.client.post(reverse('bodega:oferta_toggle', args=[o.pk]))
         o.refresh_from_db()
         self.assertTrue(o.activa)
+
+
+class OfertasInlineProductoTests(TestCase):
+    """Panel inline de ofertas en la pantalla de editar producto."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = _crear_user('adm', 'admin')
+        cls.bodeguero = _crear_user('bod', 'bodeguero')
+
+        cls.fam = Familia.objects.create(nombre='Perfumes')
+        cls.producto = Producto.objects.create(
+            familia=cls.fam, nombre='Perfume Z',
+            precio_base=Decimal('20000'), tiene_variantes=True,
+        )
+        cls.atr = Atributo.objects.create(nombre='Volumen')
+        cls.v_30 = ValorAtributo.objects.create(atributo=cls.atr, valor='30 ml', orden=2)
+        cls.var_30 = ProductoVariante.objects.create(producto=cls.producto, sku='Z-30')
+        cls.var_30.valores.add(cls.v_30)
+
+        cls.otro = Producto.objects.create(
+            familia=cls.fam, nombre='Otro perfume',
+            precio_base=Decimal('15000'), tiene_variantes=False,
+        )
+
+    def setUp(self):
+        self.ahora = timezone.now()
+
+    def _oferta(self, **kw):
+        defaults = dict(
+            tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('10'),
+            canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=self.ahora - timedelta(days=1),
+            fecha_fin=self.ahora + timedelta(days=5),
+            activa=True,
+        )
+        defaults.update(kw)
+        return Oferta.objects.create(**defaults)
+
+    def test_admin_ve_oferta_directa_del_producto(self):
+        self._oferta(nombre='Promo-Z-Directa', producto=self.producto)
+        self.client.force_login(self.admin)
+        resp = self.client.get(reverse('bodega:producto_editar', args=[self.producto.pk]))
+        self.assertContains(resp, 'Promo-Z-Directa')
+
+    def test_admin_ve_oferta_via_variante_del_producto(self):
+        """Si la oferta está atada a una variante, también debe aparecer
+        en la pantalla del producto padre."""
+        self._oferta(nombre='Promo-Z-Variante', variante=self.var_30)
+        self.client.force_login(self.admin)
+        resp = self.client.get(reverse('bodega:producto_editar', args=[self.producto.pk]))
+        self.assertContains(resp, 'Promo-Z-Variante')
+        self.assertContains(resp, 'SKU Z-30')
+
+    def test_admin_no_ve_oferta_de_otro_producto(self):
+        self._oferta(nombre='Promo-De-Otro', producto=self.otro)
+        self.client.force_login(self.admin)
+        resp = self.client.get(reverse('bodega:producto_editar', args=[self.producto.pk]))
+        self.assertNotContains(resp, 'Promo-De-Otro')
+
+    def test_bodeguero_no_ve_panel_de_ofertas(self):
+        """El bodeguero gestiona stock; no debería ver el panel de
+        ofertas con sus precios y vigencias."""
+        self._oferta(nombre='Promo-Oculta', producto=self.producto)
+        self.client.force_login(self.bodeguero)
+        resp = self.client.get(reverse('bodega:producto_editar', args=[self.producto.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'Promo-Oculta')
+        self.assertNotContains(resp, 'Ofertas que afectan')
+
+    def test_admin_ve_panel_vacio_con_atajo_para_crear(self):
+        self.client.force_login(self.admin)
+        resp = self.client.get(reverse('bodega:producto_editar', args=[self.producto.pk]))
+        self.assertContains(resp, 'Ofertas que afectan a este producto')
+        self.assertContains(resp, 'no tiene ofertas')
+        # El atajo lleva al form de oferta_nueva con el pk como query.
+        url_esperada = reverse('bodega:oferta_nueva') + f'?producto={self.producto.pk}'
+        self.assertContains(resp, url_esperada)
+
+    def test_oferta_nueva_pre_selecciona_producto_via_query(self):
+        self.client.force_login(self.admin)
+        url = reverse('bodega:oferta_nueva') + f'?producto={self.producto.pk}'
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context['form'].initial.get('producto'), self.producto.pk)
+
+    def test_oferta_nueva_ignora_producto_inexistente(self):
+        self.client.force_login(self.admin)
+        url = reverse('bodega:oferta_nueva') + '?producto=999999'
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn('producto', resp.context['form'].initial)
+
+    def test_oferta_nueva_ignora_producto_no_numerico(self):
+        """Robustez frente a query strings malformadas."""
+        self.client.force_login(self.admin)
+        url = reverse('bodega:oferta_nueva') + '?producto=abc'
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn('producto', resp.context['form'].initial)

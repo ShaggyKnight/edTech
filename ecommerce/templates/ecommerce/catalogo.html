@@ -24,7 +24,7 @@
       <h1>{% if cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
       <p>
         {% if cat_info %}{{ cat_info.desc }} · {% endif %}
-        {{ productos|length }} producto{{ productos|length|pluralize:"s" }}
+        {{ total_productos }} producto{{ total_productos|pluralize:"s" }}
       </p>
     </div>
     <div class="sort-sel">
@@ -150,14 +150,14 @@
     </aside>
 
     <div class="shop-grid four" id="shop-grid">
-      {% for producto in productos %}
-        {% include 'ecommerce/_pcard.html' with producto=producto %}
-      {% empty %}
+      {% if productos %}
+        {% include 'ecommerce/_catalogo_pagina.html' with productos=productos next_page_url=next_page_url %}
+      {% else %}
         <div style="grid-column: 1 / -1; padding: 80px 20px; text-align:center; color: var(--ink-60);">
           <p style="font-size:18px;margin-bottom:12px;">No hay productos disponibles con esos filtros.</p>
           <a class="btn-outline" href="{% url 'ecommerce:catalogo' %}">Ver toda la tienda</a>
         </div>
-      {% endfor %}
+      {% endif %}
     </div>
   </div>
 </main>

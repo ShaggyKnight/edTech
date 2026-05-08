@@ -226,8 +226,40 @@ def catalogo(request):
         .distinct()
     )
 
+    # Paginacion para scroll infinito. La primera carga trae PAGE_SIZE
+    # productos; las siguientes paginas se cargan via HTMX cuando el
+    # cliente llega al final de la grilla.
+    from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+    PAGE_SIZE = 12  # 3 columnas x 4 filas en desktop, equilibrado movil
+    productos_ordenados = productos_qs.order_by(*SORT_OPTIONS[sort]).distinct()
+    paginator = Paginator(productos_ordenados, PAGE_SIZE)
+    page_num = (request.GET.get('page') or '1').strip()
+    try:
+        page_obj = paginator.page(int(page_num) if page_num.isdigit() else 1)
+    except (EmptyPage, PageNotAnInteger):
+        page_obj = paginator.page(1)
+
+    # URL de la pagina siguiente preservando todos los filtros activos.
+    next_page_url = ''
+    if page_obj.has_next():
+        qd = request.GET.copy()
+        qd['page'] = page_obj.next_page_number()
+        next_page_url = f'{request.path}?{qd.urlencode()}'
+
+    # Cuando HTMX pide una pagina > 1, devolvemos solo el fragment de
+    # productos (mas el sentinel de la siguiente pagina si existe). El
+    # cliente lo intercala en la grilla via hx-swap=outerHTML del sentinel.
+    if request.htmx and page_obj.number > 1:
+        return render(request, 'ecommerce/_catalogo_pagina.html', {
+            'productos': page_obj.object_list,
+            'next_page_url': next_page_url,
+        })
+
     return render(request, 'ecommerce/catalogo.html', {
-        'productos': productos_qs.order_by(*SORT_OPTIONS[sort]).distinct(),
+        'productos': page_obj.object_list,
+        'next_page_url': next_page_url,
+        'page_obj': page_obj,
+        'total_productos': paginator.count,
         'sort': sort,
         'familias': Familia.objects.all(),
         'familia_activa': int(familia_id) if familia_id.isdigit() else None,

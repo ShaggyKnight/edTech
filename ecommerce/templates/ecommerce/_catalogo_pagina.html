@@ -1,0 +1,24 @@
+{% comment %}
+  Fragment de una pagina de productos para scroll infinito.
+
+  - Renderiza las cards de la pagina actual.
+  - Si hay siguiente pagina, agrega un "sentinel" al final con
+    hx-trigger="revealed": cuando el navegador lo trae a viewport,
+    HTMX hace fetch del fragment siguiente y lo reemplaza con
+    outerHTML — eso intercala mas cards y, si hay mas paginas, otro
+    sentinel.
+
+  El sentinel ocupa la fila completa del grid via grid-column: 1/-1.
+{% endcomment %}
+{% for producto in productos %}
+  {% include 'ecommerce/_pcard.html' with producto=producto %}
+{% endfor %}
+{% if next_page_url %}
+  <div class="shop-grid-loader"
+       hx-get="{{ next_page_url }}"
+       hx-trigger="revealed"
+       hx-swap="outerHTML"
+       style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--ink-60);">
+    <span class="shop-grid-spinner">Cargando más productos…</span>
+  </div>
+{% endif %}

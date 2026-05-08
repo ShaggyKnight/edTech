@@ -31,8 +31,10 @@
     {# Hoja de estilos del sistema Ideas Boutique #}
     <link rel="stylesheet" href="{% static 'css/ideas.css' %}">
 
-    {# HTMX: AJAX declarativo. Alpine: estado local pequeño. Defer
-       para no bloquear el primer render del catálogo / landing. #}
+    {% comment %}
+      HTMX: AJAX declarativo. Alpine: estado local pequeño. Defer
+      para no bloquear el primer render del catálogo / landing.
+    {% endcomment %}
     <script defer src="{% static 'lib/htmx/htmx.min.js' %}"></script>
     <script defer src="{% static 'lib/alpine/alpine.min.js' %}"></script>
 
@@ -45,6 +47,9 @@
     <div id="toast-container" class="toast-container" aria-live="polite">
       {% include 'partials/_toasts.html' %}
     </div>
+
+    {# Modal de confirmacion reusable (mismo helper que el backoffice). #}
+    {% include 'partials/_confirm_modal.html' %}
 
     {% block body %}{% endblock %}
 

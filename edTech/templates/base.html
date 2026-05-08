@@ -19,9 +19,11 @@
   <link rel="stylesheet" href="{% static 'css/backoffice.css' %}">
   {# Sprite de íconos compartido con el front público #}
 
-  {# HTMX: AJAX declarativo para acciones in-place (toasts, modales,
-     edición inline, scroll infinito). Alpine: estado local pequeño
-     (apertura de modales, dropdowns). Defer para no bloquear el render. #}
+  {% comment %}
+    HTMX: AJAX declarativo para acciones in-place (toasts, modales,
+    edición inline, scroll infinito). Alpine: estado local pequeño
+    (apertura de modales, dropdowns). Defer para no bloquear el render.
+  {% endcomment %}
   <script defer src="{% static 'lib/htmx/htmx.min.js' %}"></script>
   <script defer src="{% static 'lib/alpine/alpine.min.js' %}"></script>
 
@@ -35,8 +37,10 @@
     {% include 'partials/_toasts.html' %}
   </div>
 
-  {# Modal de confirmacion reusable: cualquier boton lo abre con
-     ideasConfirm({title, message, confirmText, formAction, danger}). #}
+  {% comment %}
+    Modal de confirmacion reusable: cualquier boton lo abre con
+    ideasConfirm({title, message, confirmText, formAction, danger}).
+  {% endcomment %}
   {% include 'partials/_confirm_modal.html' %}
 
   {# ─────────── TOPBAR GLOBAL (full width, oscura) ─────────── #}
@@ -51,9 +55,9 @@
 
     <nav class="bo-bar-nav">
       {% if user.is_authenticated %}
-        <a href="{% url 'index' %}">
-          <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg>
-          Sitio público
+        <a href="{% url 'ecommerce:catalogo' %}" title="Ver la tienda como cliente">
+          <svg class="ico ico--14"><use href="#ico-bag"/></svg>
+          Tienda
         </a>
         {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
           <a href="{% url 'reportes:dashboard' %}" {% if request.resolver_match.namespace == 'reportes' %}class="active"{% endif %}>
@@ -183,9 +187,17 @@
               Admin Django
             </a>
           {% endif %}
-          <a class="bo-side-link" href="{% url 'index' %}">
+
+          {# Acceso directo a la tienda — separado del resto para que sea
+             facil de encontrar cuando se quiere "salir" del backoffice. #}
+          <div class="bo-side-section">Tienda online</div>
+          <a class="bo-side-link" href="{% url 'ecommerce:catalogo' %}">
+            <svg class="ico"><use href="#ico-bag"/></svg>
+            Ir a la tienda
+          </a>
+          <a class="bo-side-link" href="{% url 'index' %}" style="font-size:12px;color:var(--bo-muted);">
             <svg class="ico"><use href="#ico-arrow-right"/></svg>
-            Ir al sitio público
+            Ver landing
           </a>
         {% endif %}
       </nav>

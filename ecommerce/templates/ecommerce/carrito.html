@@ -7,6 +7,13 @@
 {% include 'ecommerce/_shop_header.html' with items_count=items_count %}
 
 <main class="cart">
+  <div class="cart-breadcrumb">
+    <a href="{% url 'ecommerce:catalogo' %}" class="cart-back-link">
+      <svg class="ico ico--16" style="transform: scaleX(-1);"><use href="#ico-arrow-right"/></svg>
+      <span>Volver a la tienda</span>
+    </a>
+  </div>
+
   <h1>Tu carrito <span class="muted">({{ items_count }} producto{{ items_count|pluralize:"s" }})</span></h1>
 
   {% if messages %}
@@ -114,14 +121,17 @@
 
     <div style="margin-top:32px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
       <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline">← Seguir comprando</a>
-      <form method="post" action="{% url 'ecommerce:vaciar' %}" style="margin:0;"
-            onsubmit="return confirm('¿Vaciar el carrito? Esta acción no se puede deshacer.');">
-        {% csrf_token %}
-        <button type="submit" class="btn-outline"
-                style="color: var(--vino); border-color: var(--vino); background: transparent;">
-          Vaciar carrito
-        </button>
-      </form>
+      <button type="button" class="btn-outline"
+              style="color: var(--vino); border-color: var(--vino); background: transparent;"
+              onclick="ideasConfirm({
+                title: 'Vaciar carrito',
+                message: '¿Vaciar el carrito por completo?\n\nEsta acción no se puede deshacer.',
+                confirmText: 'Vaciar carrito',
+                danger: true,
+                formAction: '{% url 'ecommerce:vaciar' %}',
+              })">
+        Vaciar carrito
+      </button>
     </div>
   {% endif %}
 </main>

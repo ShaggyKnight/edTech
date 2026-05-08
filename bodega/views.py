@@ -165,6 +165,67 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
 
 @login_required
 @require_POST
+def set_stock(request, pk):
+    """Setea el stock absoluto de una fila StockTienda existente.
+
+    Pensado para edicion inline desde la pantalla de stock: el usuario
+    clickea el numero, lo edita, presiona Enter. La diferencia con la
+    cantidad anterior se registra como MovimientoStock (ENTRADA o
+    SALIDA segun signo) para preservar la auditoria.
+
+    Si el request viene de HTMX, devuelve solo la fila actualizada.
+    """
+    if not _puede_reponer(request.user):
+        messages.error(request, 'No tenés permisos para editar stock.')
+        return redirect('bodega:stock')
+
+    fila = get_object_or_404(
+        StockTienda.objects.select_related('tienda', 'producto', 'variante__producto'),
+        pk=pk,
+    )
+
+    try:
+        nueva = int(request.POST.get('cantidad', '-1'))
+    except (TypeError, ValueError):
+        messages.error(request, 'Cantidad inválida.')
+        return redirect('bodega:stock')
+
+    if nueva < 0 or nueva > 99999:
+        messages.error(request, 'La cantidad debe estar entre 0 y 99.999.')
+        return redirect('bodega:stock')
+
+    with transaction.atomic():
+        bloqueada = StockTienda.objects.select_for_update().get(pk=fila.pk)
+        delta = nueva - bloqueada.cantidad
+        StockTienda.objects.filter(pk=fila.pk).update(cantidad=nueva)
+        if delta != 0:
+            MovimientoStock.objects.create(
+                tienda=bloqueada.tienda,
+                variante=bloqueada.variante,
+                producto=bloqueada.producto,
+                tipo=MovimientoStock.ENTRADA if delta > 0 else MovimientoStock.SALIDA,
+                cantidad=abs(delta),
+                referencia=f'Ajuste manual por {request.user.username}',
+                usuario=request.user,
+            )
+
+    fila.refresh_from_db()
+    messages.success(
+        request,
+        f'Stock actualizado: {fila.cantidad} unidad{"es" if fila.cantidad != 1 else ""}.',
+    )
+
+    if request.htmx:
+        return render(request, 'bodega/_stock_fila.html', {
+            's': fila,
+            'umbral_bajo': STOCK_BAJO,
+            'puede_reponer': True,
+        })
+    return redirect('bodega:stock')
+
+
+@login_required
+@require_POST
 def reponer_stock(request):
     """Suma stock de un producto/variante en una tienda.
 

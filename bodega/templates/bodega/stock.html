@@ -169,57 +169,7 @@
         </thead>
         <tbody>
           {% for s in stock %}
-            <tr>
-              <td>{{ s.tienda.nombre_organizacion }}</td>
-              <td>
-                {% if s.variante %}{{ s.variante.producto.nombre }}
-                {% else %}{{ s.producto.nombre }}{% endif %}
-              </td>
-              <td>
-                {% if s.variante %}{{ s.variante.producto.familia.nombre }}
-                {% elif s.producto %}{{ s.producto.familia.nombre }}{% endif %}
-              </td>
-              <td>
-                {% if s.variante and s.variante.producto.colegio %}
-                  <span class="bo-badge bo-badge-info">{{ s.variante.producto.colegio.nombre }}</span>
-                {% elif s.producto and s.producto.colegio %}
-                  <span class="bo-badge bo-badge-info">{{ s.producto.colegio.nombre }}</span>
-                {% else %}
-                  <span style="color:var(--bo-muted);">—</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if s.variante %}<code>{{ s.variante.sku }}</code>
-                {% else %}<em style="color:var(--bo-muted);">sin variantes</em>{% endif %}
-              </td>
-              <td class="num"><strong>{{ s.cantidad }}</strong></td>
-              <td>
-                {% if s.cantidad == 0 %}
-                  <span class="bo-badge bo-badge-danger">Agotado</span>
-                {% elif s.cantidad <= umbral_bajo %}
-                  <span class="bo-badge bo-badge-warning">Bajo</span>
-                {% else %}
-                  <span class="bo-badge bo-badge-success">OK</span>
-                {% endif %}
-              </td>
-              {% if puede_reponer %}
-                <td>
-                  <form method="post" action="{% url 'bodega:reponer' %}" class="stock-reponer">
-                    {% csrf_token %}
-                    <input type="hidden" name="tienda_id" value="{{ s.tienda.pk }}">
-                    {% if s.variante %}
-                      <input type="hidden" name="tipo" value="v">
-                      <input type="hidden" name="item_id" value="{{ s.variante.pk }}">
-                    {% else %}
-                      <input type="hidden" name="tipo" value="p">
-                      <input type="hidden" name="item_id" value="{{ s.producto.pk }}">
-                    {% endif %}
-                    <input type="number" name="cantidad" value="1" min="1" max="9999" title="Unidades a sumar">
-                    <button type="submit" title="Sumar al stock">+ Reponer</button>
-                  </form>
-                </td>
-              {% endif %}
-            </tr>
+            {% include 'bodega/_stock_fila.html' with s=s umbral_bajo=umbral_bajo puede_reponer=puede_reponer %}
           {% endfor %}
         </tbody>
       </table>

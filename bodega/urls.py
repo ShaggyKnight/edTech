@@ -7,6 +7,7 @@ app_name = 'bodega'
 urlpatterns = [
     path('', views.StockView.as_view(), name='stock'),
     path('reponer/', views.reponer_stock, name='reponer'),
+    path('stock/<int:pk>/set/', views.set_stock, name='set_stock'),
 
     # Catálogo (CRUD desde el backoffice — Fase Ñ).
     path('productos/', views.lista_productos, name='lista_productos'),

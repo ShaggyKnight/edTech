@@ -1,0 +1,92 @@
+{% comment %}
+  Fila de la tabla de stock. Extraida del listado para que el endpoint
+  set_stock pueda devolverla individualmente y HTMX la swappee
+  in-place sin recargar la pagina entera.
+
+  Espera en el contexto: s (StockTienda), umbral_bajo, puede_reponer.
+{% endcomment %}
+<tr id="row-stock-{{ s.pk }}">
+  <td>{{ s.tienda.nombre_organizacion }}</td>
+  <td>
+    {% if s.variante %}{{ s.variante.producto.nombre }}
+    {% else %}{{ s.producto.nombre }}{% endif %}
+  </td>
+  <td>
+    {% if s.variante %}{{ s.variante.producto.familia.nombre }}
+    {% elif s.producto %}{{ s.producto.familia.nombre }}{% endif %}
+  </td>
+  <td>
+    {% if s.variante and s.variante.producto.colegio %}
+      <span class="bo-badge bo-badge-info">{{ s.variante.producto.colegio.nombre }}</span>
+    {% elif s.producto and s.producto.colegio %}
+      <span class="bo-badge bo-badge-info">{{ s.producto.colegio.nombre }}</span>
+    {% else %}
+      <span style="color:var(--bo-muted);">—</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if s.variante %}<code>{{ s.variante.sku }}</code>
+    {% else %}<em style="color:var(--bo-muted);">sin variantes</em>{% endif %}
+  </td>
+  <td class="num">
+    {% if puede_reponer %}
+      {# Edicion inline con Alpine: click en el numero -> input -> Enter
+         dispara el form HTMX que actualiza la fila in-place. #}
+      <span class="stock-cell"
+            x-data="{editing: false}"
+            x-init="$watch('editing', v => v && $nextTick(() => $refs.input.select()))">
+        <strong x-show="!editing"
+                @click="editing = true"
+                style="cursor: pointer; padding: 2px 8px; border-radius: 4px;"
+                title="Click para editar">{{ s.cantidad }}</strong>
+        <form x-show="editing"
+              x-cloak
+              hx-post="{% url 'bodega:set_stock' s.pk %}"
+              hx-target="#row-stock-{{ s.pk }}"
+              hx-swap="outerHTML"
+              @submit="editing = false"
+              style="display: inline-flex; gap: 4px; align-items: center; margin: 0;">
+          {% csrf_token %}
+          <input x-ref="input"
+                 type="number" name="cantidad" value="{{ s.cantidad }}"
+                 min="0" max="99999"
+                 @keydown.escape="editing = false"
+                 style="width: 70px; padding: 2px 6px; border: 1px solid var(--bo-primary); border-radius: 4px; font: inherit; text-align: right;">
+          <button type="submit" class="bo-btn bo-btn-sm" title="Guardar (Enter)"
+                  style="padding: 2px 8px;">✓</button>
+          <button type="button" class="bo-btn bo-btn-sm" title="Cancelar (Esc)"
+                  @click="editing = false"
+                  style="padding: 2px 8px;">×</button>
+        </form>
+      </span>
+    {% else %}
+      <strong>{{ s.cantidad }}</strong>
+    {% endif %}
+  </td>
+  <td>
+    {% if s.cantidad == 0 %}
+      <span class="bo-badge bo-badge-danger">Agotado</span>
+    {% elif s.cantidad <= umbral_bajo %}
+      <span class="bo-badge bo-badge-warning">Bajo</span>
+    {% else %}
+      <span class="bo-badge bo-badge-success">OK</span>
+    {% endif %}
+  </td>
+  {% if puede_reponer %}
+    <td>
+      <form method="post" action="{% url 'bodega:reponer' %}" class="stock-reponer">
+        {% csrf_token %}
+        <input type="hidden" name="tienda_id" value="{{ s.tienda.pk }}">
+        {% if s.variante %}
+          <input type="hidden" name="tipo" value="v">
+          <input type="hidden" name="item_id" value="{{ s.variante.pk }}">
+        {% else %}
+          <input type="hidden" name="tipo" value="p">
+          <input type="hidden" name="item_id" value="{{ s.producto.pk }}">
+        {% endif %}
+        <input type="number" name="cantidad" value="1" min="1" max="9999" title="Unidades a sumar">
+        <button type="submit" title="Sumar al stock">+ Reponer</button>
+      </form>
+    </td>
+  {% endif %}
+</tr>

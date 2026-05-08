@@ -3,6 +3,10 @@
 
 {% block titulo %}Recibo #{{ recibo.pk }} · Ideas Boutique{% endblock %}
 
+{% block extra_head %}
+  {% include 'pos/_pwa_meta.html' %}
+{% endblock %}
+
 {% block content %}
   <div class="bo-page-head">
     <div>

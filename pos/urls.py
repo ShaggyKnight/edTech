@@ -15,4 +15,9 @@ urlpatterns = [
     path('ventas/', views.ventas, name='ventas'),
     path('tienda/seleccionar/', views.seleccionar_tienda, name='seleccionar_tienda'),
     path('agregar-stock/', views.agregar_stock, name='agregar_stock'),
+
+    # PWA: manifest + service worker. La ruta del SW vive bajo /pos/ a
+    # proposito — su scope queda restringido al POS.
+    path('manifest.webmanifest', views.pwa_manifest, name='pwa_manifest'),
+    path('sw.js', views.pwa_service_worker, name='pwa_sw'),
 ]

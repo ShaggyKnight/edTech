@@ -4,6 +4,7 @@
 {% block titulo %}POS · {{ tienda.nombre_organizacion }}{% endblock %}
 
 {% block extra_head %}
+{% include 'pos/_pwa_meta.html' %}
 <style>
   .pos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
   @media (max-width: 1100px) { .pos-grid { grid-template-columns: 1fr; } }

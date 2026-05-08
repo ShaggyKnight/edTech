@@ -458,3 +458,144 @@ def seleccionar_tienda(request):
         else:
             messages.error(request, 'Tienda inválida.')
     return redirect('pos:home')
+
+
+# ============================================================================
+# PWA: manifest + service worker
+# ============================================================================
+
+# Subir esta version cada vez que se cambia el shell del POS para forzar
+# que los clientes refresquen el cache. El SW lo lee y compara contra el
+# de su cache para decidir si invalida.
+PWA_CACHE_VERSION = 'v1-2026.05'
+
+
+def pwa_manifest(request):
+    """Web App Manifest del POS.
+
+    Servido por Django (no como static) para poder inyectar URLs de
+    Django dinamicamente y mantener una sola fuente de verdad.
+    """
+    from django.http import JsonResponse
+    from django.urls import reverse
+    from django.templatetags.static import static
+    manifest = {
+        'name': 'Ideas Boutique POS',
+        'short_name': 'Ideas POS',
+        'description': 'Punto de venta de Ideas Boutique — Los Vilos',
+        'start_url': reverse('pos:home'),
+        'scope': '/pos/',
+        'display': 'standalone',
+        'orientation': 'any',
+        'background_color': '#1B1F2A',
+        'theme_color': '#1B1F2A',
+        'lang': 'es-CL',
+        'icons': [
+            {
+                'src': static('img/pwa/icon.svg'),
+                'sizes': 'any',
+                'type': 'image/svg+xml',
+                'purpose': 'any maskable',
+            },
+        ],
+    }
+    resp = JsonResponse(manifest)
+    resp['Content-Type'] = 'application/manifest+json'
+    return resp
+
+
+def pwa_service_worker(request):
+    """Service Worker del POS.
+
+    Estrategia:
+      - Precache de la shell minima al instalar.
+      - Network-first para HTML (paginas frescas si hay red, cacheadas
+        si no).
+      - Cache-first para assets staticos versionados.
+      - Skip-cache para POSTs y endpoints AJAX (carrito, checkout,
+        agregar, etc) — esos siempre tienen que pegar al server.
+    """
+    from django.http import HttpResponse
+    from django.urls import reverse
+    from django.templatetags.static import static
+
+    paths_a_precache = [
+        reverse('pos:home'),
+        static('css/backoffice.css'),
+        static('lib/htmx/htmx.min.js'),
+        static('lib/alpine/alpine.min.js'),
+        static('img/pwa/icon.svg'),
+    ]
+
+    sw_js = (
+        f"const CACHE_VERSION = {PWA_CACHE_VERSION!r};\n"
+        f"const CACHE_NAME = 'ideas-pos-' + CACHE_VERSION;\n"
+        f"const PRECACHE_PATHS = {paths_a_precache!r};\n"
+        """
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_PATHS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((k) => k.startsWith('ideas-pos-') && k !== CACHE_NAME)
+          .map((k) => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  // Solo GET — los POST (agregar al carrito, checkout) deben pegar al server.
+  if (req.method !== 'GET') return;
+  // Skip endpoints transaccionales: agregar/actualizar/quitar/vaciar/checkout.
+  const url = new URL(req.url);
+  if (url.pathname.startsWith('/pos/checkout') ||
+      url.pathname === '/pos/agregar/' ||
+      url.pathname === '/pos/actualizar/' ||
+      url.pathname.startsWith('/pos/quitar/') ||
+      url.pathname === '/pos/vaciar/') {
+    return;
+  }
+  // Network-first para HTML (asi el cajero ve siempre lo ultimo si hay red).
+  const isHtml = req.headers.get('accept')?.includes('text/html');
+  if (isHtml) {
+    event.respondWith(
+      fetch(req)
+        .then((resp) => {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+          return resp;
+        })
+        .catch(() => caches.match(req).then((c) => c || caches.match('/pos/')))
+    );
+    return;
+  }
+  // Cache-first para CSS/JS/imagenes.
+  event.respondWith(
+    caches.match(req).then((cached) => cached || fetch(req).then((resp) => {
+      if (resp.ok) {
+        const copy = resp.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+      }
+      return resp;
+    }))
+  );
+});
+"""
+    )
+    resp = HttpResponse(sw_js, content_type='application/javascript')
+    # El SW debe servirse con scope que cubre toda la app POS.
+    resp['Service-Worker-Allowed'] = '/pos/'
+    # No cachear el SW en si — la version va embebida y el browser
+    # debe verificar nuevas versiones de SW.
+    resp['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return resp

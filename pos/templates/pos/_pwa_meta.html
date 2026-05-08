@@ -1,0 +1,31 @@
+{% load static %}
+{% comment %}
+  Meta + registro del Service Worker. Incluir en cada template del POS
+  que extienda base.html, dentro de {% block extra_head %}.
+
+  Esto le dice al navegador:
+  - Soy una PWA instalable (link manifest).
+  - Mi color de barra es var(--ink) (theme-color).
+  - Tengo un icono apple-touch para iOS Safari.
+
+  Y registra el SW al cargar la pagina (defer, no bloquea).
+{% endcomment %}
+<link rel="manifest" href="{% url 'pos:pwa_manifest' %}">
+<meta name="theme-color" content="#1B1F2A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ideas POS">
+<link rel="apple-touch-icon" href="{% static 'img/pwa/icon.svg' %}">
+
+<script>
+  // Registra el SW si el browser lo soporta. Errores no rompen el POS —
+  // simplemente la app no funciona offline.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register("{% url 'pos:pwa_sw' %}", {scope: '/pos/'})
+        .catch(function (err) {
+          console.warn('Service worker registration failed:', err);
+        });
+    });
+  }
+</script>

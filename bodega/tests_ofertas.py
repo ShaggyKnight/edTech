@@ -264,6 +264,28 @@ class OfertasCrudTests(TestCase):
         o.refresh_from_db()
         self.assertTrue(o.activa)
 
+    # ── Formato de fechas ─────────────────────────────────────────────
+
+    def test_listado_renderiza_fechas_en_formato_chileno(self):
+        """El listado de ofertas debe mostrar fechas como DD-MM-AAAA HH:MM
+        — la convencion chilena, no el ISO ni el m/d/Y americano."""
+        from datetime import datetime
+        from django.utils import timezone as djtz
+        # Fecha conocida: 15 de marzo de 2026 a las 09:30 hora Chile.
+        fi = djtz.make_aware(datetime(2026, 3, 15, 9, 30))
+        ff = djtz.make_aware(datetime(2026, 6, 20, 18, 45))
+        Oferta.objects.create(
+            nombre='Otono Boutique', producto=self.producto,
+            tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('15'),
+            canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=fi, fecha_fin=ff,
+        )
+        resp = self.client.get(reverse('bodega:lista_ofertas'))
+        self.assertContains(resp, '15-03-2026 09:30')
+        self.assertContains(resp, '20-06-2026 18:45')
+        # Anti-regresion: que no quede el formato viejo con barras.
+        self.assertNotContains(resp, '15/03/2026')
+
 
 class OfertasInlineProductoTests(TestCase):
     """Panel inline de ofertas en la pantalla de editar producto."""

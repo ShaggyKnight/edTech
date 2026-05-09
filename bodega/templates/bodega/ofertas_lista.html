@@ -88,8 +88,8 @@
                 <span class="bo-badge bo-badge-info">{{ o.get_canal_display }}</span>
               </td>
               <td style="font-size:12px;">
-                {{ o.fecha_inicio|date:"d/m/Y H:i" }}<br>
-                <span style="color:var(--bo-muted);">→ {{ o.fecha_fin|date:"d/m/Y H:i" }}</span>
+                {{ o.fecha_inicio|date:"d-m-Y H:i" }}<br>
+                <span style="color:var(--bo-muted);">→ {{ o.fecha_fin|date:"d-m-Y H:i" }}</span>
               </td>
               <td>
                 {% if o.estado_visual == 'vigente' %}

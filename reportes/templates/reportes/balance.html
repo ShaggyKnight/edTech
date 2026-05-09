@@ -12,7 +12,7 @@
     <div>
       <div class="bo-crumb">Reportes / Balance General</div>
       <h1>Balance General</h1>
-      <div class="sub">Snapshot patrimonial al <strong>{{ balance.fecha|date:"d M Y H:i" }}</strong></div>
+      <div class="sub">Snapshot patrimonial al <strong>{{ balance.fecha|date:"d-m-Y H:i" }}</strong></div>
     </div>
     <div style="display:flex; gap:8px;">
       <a href="{% url 'reportes:eerr' %}" class="bo-btn">Estado de Resultados</a>

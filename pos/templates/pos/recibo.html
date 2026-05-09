@@ -13,7 +13,7 @@
       <div class="bo-crumb">Operación / Ventas / Recibo #{{ recibo.pk }}</div>
       <h1>Recibo #{{ recibo.pk }}</h1>
       <div class="sub">
-        {{ recibo.creado|date:"d M Y · H:i" }} · {{ recibo.tienda.nombre_organizacion }}
+        {{ recibo.creado|date:"d-m-Y H:i" }} · {{ recibo.tienda.nombre_organizacion }}
         {% if recibo.estado == 'pagado' %}
           <span class="bo-badge bo-badge-success">{{ recibo.get_estado_display }}</span>
         {% elif recibo.estado == 'fallido' %}

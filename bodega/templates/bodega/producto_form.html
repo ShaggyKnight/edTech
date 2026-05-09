@@ -151,7 +151,7 @@
                   {% if o.tipo == 'porcentaje' %}−{{ o.valor|floatformat:0 }}%{% else %}−${{ o.valor|floatformat:0 }}{% endif %}
                 </td>
                 <td style="font-size:12px;">
-                  {{ o.fecha_inicio|date:"d/m/Y" }} → {{ o.fecha_fin|date:"d/m/Y" }}
+                  {{ o.fecha_inicio|date:"d-m-Y" }} → {{ o.fecha_fin|date:"d-m-Y" }}
                 </td>
                 <td>
                   {% if o.estado_visual == 'vigente' %}

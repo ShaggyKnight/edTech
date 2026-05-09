@@ -64,7 +64,7 @@
         <div class="pedido-row">
           <div class="pedido-id">#{{ r.pk }}</div>
           <div class="pedido-fecha">
-            <strong>{{ r.creado|date:"d M Y" }}</strong>
+            <strong>{{ r.creado|date:"d-m-Y" }}</strong>
             <span>{{ r.detalles.count }} producto{{ r.detalles.count|pluralize:"s" }}</span>
           </div>
           <div class="pedido-estado estado-{{ r.estado }}">

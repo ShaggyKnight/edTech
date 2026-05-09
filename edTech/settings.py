@@ -117,6 +117,15 @@ TIME_ZONE = env('TIME_ZONE')
 USE_I18N = True
 USE_TZ = True
 
+# Formato de fechas chileno: DD-MM-AAAA. Aplica al filtro {{ fecha }}
+# sin parametro y a varios widgets de formularios. Los templates con
+# `|date:"..."` explicito quedan como esten — pero la convencion del
+# proyecto es usar el mismo formato (`d-m-Y` o `d-m-Y H:i`).
+DATE_FORMAT = 'd-m-Y'
+DATETIME_FORMAT = 'd-m-Y H:i'
+SHORT_DATE_FORMAT = 'd-m-Y'
+SHORT_DATETIME_FORMAT = 'd-m-Y H:i'
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'edTech' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'

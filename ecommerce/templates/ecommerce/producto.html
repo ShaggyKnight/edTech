@@ -53,7 +53,6 @@
             {% if producto.tiene_oferta_online %}${{ producto.precio_oferta_online|floatformat:0|intcomma }}{% else %}${{ producto.precio_minimo|floatformat:0|intcomma }}{% endif %}
           </span>
           <span class="pdp-price-old"{% if not producto.tiene_oferta_online %} style="display:none;"{% endif %}>${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
-          <span class="pdp-price-badge"{% if not producto.tiene_oferta_online %} style="display:none;"{% endif %}>−{{ producto.descuento_porcentaje_online }}%</span>
           <span class="pdp-installments" id="pdp-installments">
             o 3 cuotas sin interés de ${% widthratio producto.precio_minimo 3 1 %}
           </span>
@@ -125,9 +124,8 @@
               return Number(n).toLocaleString('es-CL');
             }
 
-            // Mantenemos referencia a los nodos auxiliares de oferta (si existen).
-            var priceOld   = priceBlock.querySelector('.pdp-price-old');
-            var priceBadge = priceBlock.querySelector('.pdp-price-badge');
+            // Referencia al precio tachado (si existe en el DOM).
+            var priceOld = priceBlock.querySelector('.pdp-price-old');
 
             chips.forEach(function(chip) {
               chip.addEventListener('click', function() {
@@ -152,8 +150,8 @@
                   fromTag.style.display = 'none';
                 }
 
-                // Mostrar/ocultar precio tachado + badge según si la
-                // variante elegida tiene descuento.
+                // Si la variante tiene descuento, mostrar el precio
+                // tachado al lado y resaltar el precio en vino.
                 var hayDesc = descPct > 0 && precioFinal < precioBase;
                 priceVal.classList.toggle('pdp-price-sale', hayDesc);
                 if (priceOld) {
@@ -162,14 +160,6 @@
                     priceOld.style.display = '';
                   } else {
                     priceOld.style.display = 'none';
-                  }
-                }
-                if (priceBadge) {
-                  if (hayDesc) {
-                    priceBadge.textContent = '−' + descPct + '%';
-                    priceBadge.style.display = '';
-                  } else {
-                    priceBadge.style.display = 'none';
                   }
                 }
 
@@ -186,7 +176,6 @@
           {% if producto.tiene_oferta_online %}
             <span class="big pdp-price-sale">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
             <span class="pdp-price-old">${{ producto.precio_base|floatformat:0|intcomma }}</span>
-            <span class="pdp-price-badge">−{{ producto.descuento_porcentaje_online }}%</span>
           {% else %}
             <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
           {% endif %}

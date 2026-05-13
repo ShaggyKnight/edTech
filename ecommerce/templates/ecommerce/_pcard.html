@@ -9,9 +9,6 @@
       {% imagen_producto producto as img_url %}
       <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy">
       {% if producto.tag %}<span class="pcard-tag">{{ producto.tag }}</span>{% endif %}
-      {% if producto.tiene_oferta_online %}
-        <span class="pcard-discount-badge">−{{ producto.descuento_porcentaje_online }}%</span>
-      {% endif %}
     </div>
     <div class="pcard-body">
       <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>

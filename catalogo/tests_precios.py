@@ -204,17 +204,16 @@ class RenderPreciosCatalogoTests(TestCase):
     def test_card_muestra_precio_con_descuento_y_tachado(self):
         resp = self.client.get(reverse('ecommerce:catalogo'))
         body = resp.content.decode()
-        # Precio nuevo (20000 con descuento de 5000 = 20000) y original (25000).
+        # Precio nuevo (20000 con descuento) en vino + el original tachado
+        # (25000). Sin badge.
         self.assertIn('20.000', body)        # precio con descuento (locale)
         self.assertIn('pcard-price-sale', body)
         self.assertIn('pcard-old', body)
-        self.assertIn('pcard-discount-badge', body)
-        self.assertIn('−20%', body)
+        self.assertNotIn('pcard-discount-badge', body)
 
-    def test_pdp_muestra_precio_con_descuento_tachado_y_badge(self):
+    def test_pdp_muestra_precio_con_descuento_y_tachado(self):
         resp = self.client.get(reverse('ecommerce:producto', args=[self.producto.pk]))
         body = resp.content.decode()
         self.assertIn('pdp-price-sale', body)
         self.assertIn('pdp-price-old', body)
-        self.assertIn('pdp-price-badge', body)
-        self.assertIn('−20%', body)
+        self.assertNotIn('pdp-price-badge', body)

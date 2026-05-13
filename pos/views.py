@@ -219,6 +219,96 @@ def agregar_stock(request):
 @login_required
 @permission_required('pos.add_reciboventa', raise_exception=True)
 @require_POST
+def escanear(request):
+    """Recibe un codigo de barras y agrega 1 unidad al carrito del POS.
+
+    El input es el clasico escaner USB que actua como teclado (los
+    digitos + Enter llegan como un POST normal con el codigo en el
+    body), o un input manual del cajero si no encuentra el item.
+
+    Optimizacion: si el codigo fue generado por nosotros
+    (parsear_codigo_interno != None) sabemos directo la tabla y pk
+    sin escanear toda la columna. Caemos a busqueda por codigo_barras
+    plano para EAN-13 de fabrica (perfumes con codigo comercial).
+    """
+    from catalogo.barcode import parsear_codigo_interno
+
+    codigo = (request.POST.get('codigo') or '').strip()
+    if not codigo:
+        messages.error(request, 'Falta el código.')
+        return _respuesta_scan(request)
+
+    tienda = get_active_tienda(request)
+    if tienda is None:
+        messages.error(request, 'Seleccioná una tienda antes de escanear.')
+        return _respuesta_scan(request)
+
+    cart = Cart(request.session)
+
+    # Optimizacion: si es codigo interno (prefijo 200), salteamos los
+    # SELECT por columna.
+    parsed = parsear_codigo_interno(codigo)
+    if parsed:
+        tipo_p, pk = parsed
+        if tipo_p == 'p':
+            p = Producto.objects.filter(
+                pk=pk, activo=True, tiene_variantes=False, codigo_barras=codigo,
+            ).first()
+            if p:
+                cart.add_producto(p.pk, 1)
+                messages.success(request, f'+ {p.nombre}')
+                return _respuesta_scan(request)
+        else:
+            v = ProductoVariante.objects.filter(
+                pk=pk, activa=True, producto__activo=True, codigo_barras=codigo,
+            ).select_related('producto').first()
+            if v:
+                cart.add_variante(v.pk, 1)
+                messages.success(request, f'+ {v.producto.nombre} [{v.sku}]')
+                return _respuesta_scan(request)
+
+    # Fallback: busqueda por la columna codigo_barras (codigos externos).
+    v = (
+        ProductoVariante.objects
+        .filter(codigo_barras=codigo, activa=True, producto__activo=True)
+        .select_related('producto')
+        .first()
+    )
+    if v:
+        cart.add_variante(v.pk, 1)
+        messages.success(request, f'+ {v.producto.nombre} [{v.sku}]')
+        return _respuesta_scan(request)
+
+    p = Producto.objects.filter(
+        codigo_barras=codigo, activo=True, tiene_variantes=False,
+    ).first()
+    if p:
+        cart.add_producto(p.pk, 1)
+        messages.success(request, f'+ {p.nombre}')
+        return _respuesta_scan(request)
+
+    messages.error(request, f'Código no encontrado: {codigo}')
+    return _respuesta_scan(request)
+
+
+def _respuesta_scan(request):
+    """Devuelve la respuesta apropiada despues de un scan.
+
+    - Si vino de HTMX, header HX-Refresh para que el browser recargue
+      la pagina entera (asi el carrito y los toasts aparecen).
+    - Si vino de un POST tradicional, redirect a home.
+    """
+    from django.http import HttpResponse
+    if request.htmx:
+        resp = HttpResponse('')
+        resp['HX-Refresh'] = 'true'
+        return resp
+    return redirect('pos:home')
+
+
+@login_required
+@permission_required('pos.add_reciboventa', raise_exception=True)
+@require_POST
 def agregar(request):
     form = AgregarForm(request.POST)
     if not form.is_valid():

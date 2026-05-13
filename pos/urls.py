@@ -6,6 +6,7 @@ app_name = 'pos'
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('escanear/', views.escanear, name='escanear'),
     path('agregar/', views.agregar, name='agregar'),
     path('actualizar/', views.actualizar, name='actualizar'),
     path('quitar/<path:key>/', views.quitar, name='quitar'),

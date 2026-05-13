@@ -18,12 +18,12 @@
     {% endif %}
   </div>
 
-  <header class="shop-cat-head" style="--cat-accent: {% if cat_info %}{{ cat_info.accent }}{% else %}var(--gold){% endif %};">
+  <header class="shop-cat-head" style="--cat-accent: {% if solo_ofertas %}var(--vino){% elif cat_info %}{{ cat_info.accent }}{% else %}var(--gold){% endif %};">
     <div id="shop-cat-info">
-      <div class="eyebrow">{% if cat_info %}Categoría{% else %}Catálogo{% endif %}</div>
-      <h1>{% if cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
+      <div class="eyebrow">{% if solo_ofertas %}Ofertas vigentes{% elif cat_info %}Categoría{% else %}Catálogo{% endif %}</div>
+      <h1>{% if solo_ofertas %}Productos en oferta{% elif cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
       <p>
-        {% if cat_info %}{{ cat_info.desc }} · {% endif %}
+        {% if solo_ofertas %}Descuentos activos hoy en la tienda online · {% elif cat_info %}{{ cat_info.desc }} · {% endif %}
         {{ total_productos }} producto{{ total_productos|pluralize:"s" }}
       </p>
     </div>
@@ -52,6 +52,11 @@
         {% endcomment %}
         {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
         <input type="hidden" name="talla" value="{{ talla_activa }}">
+        {% comment %}
+          Sticky para los AJAX al cambiar otros filtros — sin esto, click
+          en una categoria saca al cliente del modo "solo ofertas".
+        {% endcomment %}
+        <input type="hidden" name="oferta" value="{% if solo_ofertas %}1{% endif %}">
 
         <h4>Filtrar</h4>
 
@@ -139,7 +144,7 @@
         </div>
 
         <div id="filter-limpiar">
-          {% if cat_activa or colegio_activo or talla_activa or precio_min or precio_max or query %}
+          {% if cat_activa or colegio_activo or talla_activa or precio_min or precio_max or query or solo_ofertas %}
             <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline"
                style="display:block;text-align:center;margin-top:12px;font-size:12px;padding:6px 10px;">
               Limpiar todos los filtros
@@ -277,6 +282,8 @@
     });
     var t = form.querySelector('input[name="talla"][type="hidden"]');
     if (t) t.value = '';
+    var o = form.querySelector('input[name="oferta"][type="hidden"]');
+    if (o) o.value = '';
     applyFilters();
   });
 

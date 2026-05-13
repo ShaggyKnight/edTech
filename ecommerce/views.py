@@ -29,7 +29,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from bodega.models import StockTienda
-from catalogo.models import Colegio, Familia, Producto, ProductoVariante, ValorAtributo
+from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
 from ecommerce.cart import CANAL, Cart
 from ecommerce.emails import enviar_boleta
 from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm
@@ -108,7 +108,9 @@ def catalogo(request):
       cat=<slug> | familia=<pk> | colegio=<pk> | talla=<valor>
       precio_min, precio_max | q=<texto>  (accent + case insensitive)
       sort=relevant|low|high|new
+      oferta=1  → solo productos con al menos una oferta vigente online
     """
+    from django.utils import timezone
     from edTech.search import normalize_text
 
     try:
@@ -123,6 +125,7 @@ def catalogo(request):
     precio_min = (request.GET.get('precio_min') or '').strip()
     precio_max = (request.GET.get('precio_max') or '').strip()
     query = (request.GET.get('q') or '').strip()
+    solo_ofertas = (request.GET.get('oferta') or '').strip() == '1'
     sort = (request.GET.get('sort') or 'relevant').strip()
     if sort not in SORT_OPTIONS:
         sort = 'relevant'
@@ -195,6 +198,29 @@ def catalogo(request):
         productos_qs = productos_qs.filter(
             Q(nombre_buscable__contains=q_norm)
             | Q(descripcion_buscable__contains=q_norm)
+        )
+
+    if solo_ofertas:
+        # "Solo ofertas vigentes" del header de la tienda. Vigente =
+        # activa + en ventana de fechas + canal online o ambos.
+        # La oferta puede apuntar al producto o a una variante del
+        # producto — ambos casos lo hacen "estar en oferta".
+        ahora = timezone.now()
+        ofertas_vigentes = Oferta.objects.filter(
+            activa=True,
+            fecha_inicio__lte=ahora,
+            fecha_fin__gte=ahora,
+            canal__in=(Oferta.CANAL_ONLINE, Oferta.CANAL_AMBOS),
+        )
+        oferta_directa = ofertas_vigentes.filter(producto=OuterRef('pk'))
+        oferta_via_variante = ofertas_vigentes.filter(
+            variante__producto=OuterRef('pk'),
+        )
+        productos_qs = productos_qs.annotate(
+            tiene_oferta_directa=Exists(oferta_directa),
+            tiene_oferta_via_variante=Exists(oferta_via_variante),
+        ).filter(
+            Q(tiene_oferta_directa=True) | Q(tiene_oferta_via_variante=True)
         )
 
     cart = Cart(request.session)
@@ -274,6 +300,7 @@ def catalogo(request):
         'precio_min': precio_min,
         'precio_max': precio_max,
         'query': query,
+        'solo_ofertas': solo_ofertas,
         'items_count': cart.items_count,
     })
 

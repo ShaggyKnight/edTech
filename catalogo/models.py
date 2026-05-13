@@ -112,6 +112,12 @@ class Producto(models.Model):
     )
     activo = models.BooleanField(default=True)
     imagen = models.ImageField(upload_to='productos/', null=True, blank=True)
+    codigo_barras = models.CharField(
+        max_length=32, unique=True, null=True, blank=True,
+        help_text='EAN-13 / Code128. Si el producto tiene variantes el código '
+                  'vive a nivel de variante; este campo solo se usa para '
+                  'productos sin variantes (ej. perfumes).',
+    )
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)
 
@@ -170,6 +176,12 @@ class ProductoVariante(models.Model):
     )
     activa = models.BooleanField(default=True)
     valores = models.ManyToManyField(ValorAtributo, related_name='variantes', blank=True)
+    codigo_barras = models.CharField(
+        max_length=32, unique=True, null=True, blank=True,
+        help_text='EAN-13 / Code128. Para uniformes confeccionados se genera '
+                  'automáticamente con prefijo 200 (rango GS1 reservado a uso '
+                  'interno) — ver catalogo.barcode.generar_codigo_interno.',
+    )
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)
 

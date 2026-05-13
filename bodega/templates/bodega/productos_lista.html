@@ -94,7 +94,7 @@
             <tr {% if not p.activo %}style="opacity:.5;"{% endif %}>
               <td>
                 {% if p.imagen %}
-                  <img class="prod-thumb" src="{{ p.imagen.url }}" alt="">
+                  <img class="prod-thumb" src="{{ p.imagen.url }}" alt="{{ p.nombre }}" loading="lazy">
                 {% else %}
                   <div class="prod-placeholder">·</div>
                 {% endif %}

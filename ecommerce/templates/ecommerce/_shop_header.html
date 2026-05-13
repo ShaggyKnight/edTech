@@ -119,7 +119,7 @@
           ? '<small style="font-size:10px;color:var(--ink-60);font-weight:600;display:block;letter-spacing:.06em;">DESDE</small>' + fmtPrecio(p.precio)
           : fmtPrecio(p.precio);
         return '<a class="search-row" href="' + p.url + '">' +
-          '<div class="search-thumb"><img src="' + p.img + '" alt=""></div>' +
+          '<div class="search-thumb"><img src="' + p.img + '" alt="' + escapeHtml(p.nombre) + '" loading="lazy"></div>' +
           '<div class="search-meta">' +
             '<div class="search-name">' + escapeHtml(p.nombre) + '</div>' +
             '<div class="search-cat">' +

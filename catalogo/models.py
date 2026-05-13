@@ -1,4 +1,5 @@
 from decimal import Decimal
+from functools import cached_property
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -133,7 +134,7 @@ class Producto(models.Model):
         self.descripcion_buscable = normalize_text(self.descripcion)
         super().save(*args, **kwargs)
 
-    @property
+    @cached_property
     def precio_minimo(self):
         """Precio mínimo entre variantes activas (override) o precio_base.
 
@@ -148,7 +149,7 @@ class Producto(models.Model):
             precios.append(v.precio_override or self.precio_base)
         return min(precios) if precios else self.precio_base
 
-    @property
+    @cached_property
     def precios_varian_por_variante(self):
         """True si las variantes activas tienen precios distintos entre sí.
 
@@ -166,8 +167,13 @@ class Producto(models.Model):
     # Usadas por el catálogo público y la PDP para mostrar el precio
     # con descuento aplicado antes de llegar al carrito. La lógica vive
     # en catalogo.precios (compartida con cart presencial/online).
+    #
+    # cached_property: los catalogos llaman estas 3 properties por cada
+    # card (tiene_oferta_online + precio_oferta_online +
+    # descuento_porcentaje_online). Sin cache, eran 3 queries por
+    # producto. Con cache, 1 sola consulta por producto + reusos.
 
-    @property
+    @cached_property
     def _mejor_oferta_online(self):
         """Mejor oferta vigente para canal online sobre este producto
         (no toca variantes). Devuelve (descuento_unit, oferta) o
@@ -239,7 +245,7 @@ class ProductoVariante(models.Model):
 
     # ── Precios con oferta para canal online ──────────────────────────
 
-    @property
+    @cached_property
     def _mejor_oferta_online(self):
         from catalogo.precios import mejor_descuento_unitario
         return mejor_descuento_unitario(self, 'online')

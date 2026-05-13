@@ -37,9 +37,9 @@
           <div class="cart-row">
             <div class="cart-img">
               {% if linea.tipo == 'v' and linea.item.producto.imagen %}
-                <img src="{{ linea.item.producto.imagen.url }}" alt="">
+                <img src="{{ linea.item.producto.imagen.url }}" alt="{{ linea.item.producto.nombre }}" loading="lazy">
               {% elif linea.tipo == 'p' and linea.item.imagen %}
-                <img src="{{ linea.item.imagen.url }}" alt="">
+                <img src="{{ linea.item.imagen.url }}" alt="{{ linea.item.nombre }}" loading="lazy">
               {% else %}
                 <div class="pcard-placeholder" style="aspect-ratio:1/1;"></div>
               {% endif %}

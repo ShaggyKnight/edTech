@@ -112,7 +112,7 @@
           <div class="bo-card-head"><h3>Imagen</h3></div>
           <div class="bo-card-body">
             {% if producto.imagen %}
-              <img src="{{ producto.imagen.url }}" style="max-width:100%;border-radius:8px;margin-bottom:10px;">
+              <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" loading="lazy" style="max-width:100%;border-radius:8px;margin-bottom:10px;">
             {% endif %}
             {{ form.imagen }}
             <small style="color:var(--bo-muted);font-size:11px;display:block;margin-top:6px;">

@@ -180,6 +180,10 @@ class InventarioLinea(models.Model):
             ),
         ]
 
+    def __str__(self):
+        item = self.variante or self.producto
+        return f'{item} = {self.cantidad_contada}'
+
 
 class Rendimiento(models.Model):
     """Cuántas unidades de una variante se obtienen de un rollo de material.
@@ -323,3 +327,8 @@ class MovimientoStock(models.Model):
                 name='movimientostock_variante_xor_producto',
             ),
         ]
+
+    def __str__(self):
+        item = self.variante or self.producto
+        signo = '+' if self.tipo == self.ENTRADA else '−'
+        return f'{self.get_tipo_display()} {signo}{self.cantidad} {item} @ {self.tienda}'

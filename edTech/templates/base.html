@@ -181,6 +181,13 @@
               Ofertas
             </a>
           {% endif %}
+          {% if perms.catalogo.change_producto or user.is_superuser %}
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'etiquetas_seleccionar' %}active{% endif %}"
+               href="{% url 'bodega:etiquetas_seleccionar' %}">
+              <svg class="ico"><use href="#ico-pin"/></svg>
+              Etiquetas
+            </a>
+          {% endif %}
           {% if user.is_superuser %}
             <a class="bo-side-link" href="{% url 'admin:index' %}">
               <svg class="ico"><use href="#ico-shield"/></svg>

@@ -32,6 +32,10 @@ urlpatterns = [
     path('materiales/<int:pk>/rendimientos/<int:rend_pk>/borrar/',
          views.rendimiento_borrar, name='rendimiento_borrar'),
 
+    # Etiquetas imprimibles con codigo de barras.
+    path('etiquetas/', views.etiquetas_seleccionar, name='etiquetas_seleccionar'),
+    path('etiquetas/imprimir/', views.etiquetas_imprimir, name='etiquetas_imprimir'),
+
     # Ofertas (Fase O.1).
     path('ofertas/', views.lista_ofertas, name='lista_ofertas'),
     path('ofertas/nueva/', views.oferta_nueva, name='oferta_nueva'),

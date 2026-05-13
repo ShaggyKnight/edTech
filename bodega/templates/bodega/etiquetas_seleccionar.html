@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Etiquetas · Ideas Boutique{% endblock %}
+
+{% block extra_head %}
+<style>
+  .etiq-tabla input[type="number"] {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid var(--bo-border);
+    border-radius: 6px;
+    text-align: right;
+    font: inherit;
+  }
+  .etiq-codigo {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--bo-muted);
+  }
+  .etiq-sin-codigo {
+    color: var(--bo-danger);
+    font-size: 11px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">Bodega / Etiquetas</div>
+      <h1>Generar etiquetas para imprimir</h1>
+      <div class="sub">
+        Marcá cuántas etiquetas querés de cada item. Imprimí en hojas A4
+        adhesivas (30 etiquetas por hoja, Avery L7651 o similar).
+      </div>
+    </div>
+  </div>
+
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-body">
+      <form method="get" class="bo-form-inline">
+        <div class="bo-field" style="min-width:220px;">
+          <label>Buscar</label>
+          <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
+                 placeholder="Nombre o SKU…">
+        </div>
+        <div class="bo-field">
+          <label>Familia</label>
+          <select name="familia" class="bo-select">
+            <option value="">Todas</option>
+            {% for f in familias %}
+              <option value="{{ f.pk }}" {% if filtros.familia == f.pk|stringformat:"s" %}selected{% endif %}>
+                {{ f.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="bo-field">
+          <label>Colegio</label>
+          <select name="colegio" class="bo-select">
+            <option value="">Todos</option>
+            {% for c in colegios %}
+              <option value="{{ c.pk }}" {% if filtros.colegio == c.pk|stringformat:"s" %}selected{% endif %}>
+                {{ c.nombre }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
+          <a href="{% url 'bodega:etiquetas_seleccionar' %}" class="bo-btn">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <form method="post" action="{% url 'bodega:etiquetas_imprimir' %}" target="_blank">
+    {% csrf_token %}
+    <div class="bo-card etiq-tabla">
+      {% if productos or variantes %}
+        <table class="bo-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Variante</th>
+              <th>Familia</th>
+              <th>Colegio</th>
+              <th class="num">Precio</th>
+              <th>Código</th>
+              <th class="num">Copias a imprimir</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in variantes %}
+              <tr>
+                <td><strong>{{ v.producto.nombre }}</strong></td>
+                <td>
+                  {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}
+                  <span style="font-size:11px;color:var(--bo-muted);"> · {{ v.sku }}</span>
+                </td>
+                <td>{{ v.producto.familia.nombre }}</td>
+                <td>
+                  {% if v.producto.colegio %}<span class="bo-badge bo-badge-info">{{ v.producto.colegio.nombre }}</span>{% else %}<span style="color:var(--bo-muted);">—</span>{% endif %}
+                </td>
+                <td class="num">${{ v.precio|floatformat:0|intcomma }}</td>
+                <td>
+                  {% if v.codigo_barras %}
+                    <code class="etiq-codigo">{{ v.codigo_barras }}</code>
+                  {% else %}
+                    <span class="etiq-sin-codigo">Sin código — editá la variante</span>
+                  {% endif %}
+                </td>
+                <td class="num">
+                  {% if v.codigo_barras %}
+                    <input type="number" name="v_{{ v.pk }}" min="0" max="99" value="0">
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            {% for p in productos %}
+              <tr>
+                <td><strong>{{ p.nombre }}</strong></td>
+                <td><em style="color:var(--bo-muted);">producto único</em></td>
+                <td>{{ p.familia.nombre }}</td>
+                <td>
+                  {% if p.colegio %}<span class="bo-badge bo-badge-info">{{ p.colegio.nombre }}</span>{% else %}<span style="color:var(--bo-muted);">—</span>{% endif %}
+                </td>
+                <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
+                <td>
+                  {% if p.codigo_barras %}
+                    <code class="etiq-codigo">{{ p.codigo_barras }}</code>
+                  {% else %}
+                    <span class="etiq-sin-codigo">Sin código — editá el producto</span>
+                  {% endif %}
+                </td>
+                <td class="num">
+                  {% if p.codigo_barras %}
+                    <input type="number" name="p_{{ p.pk }}" min="0" max="99" value="0">
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="bo-card-body" style="color:var(--bo-muted);">
+          No hay items con los filtros aplicados.
+        </div>
+      {% endif %}
+    </div>
+
+    {% if productos or variantes %}
+      <div style="margin-top:20px;display:flex;gap:8px;align-items:center;">
+        <button type="submit" class="bo-btn bo-btn-primary">
+          Generar hoja imprimible →
+        </button>
+        <span style="color:var(--bo-muted);font-size:12px;">
+          Se abre en una pestaña nueva. Imprimí con <kbd>Ctrl+P</kbd> o <kbd>⌘P</kbd>.
+        </span>
+      </div>
+    {% endif %}
+  </form>
+{% endblock %}

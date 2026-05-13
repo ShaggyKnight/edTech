@@ -112,3 +112,18 @@ class ParsearCodigoInternoTests(SimpleTestCase):
         cuerpo = '200900000001'
         codigo = cuerpo + calcular_digito_ean13(cuerpo)
         self.assertIsNone(parsear_codigo_interno(codigo))
+
+
+class RenderSvgTests(SimpleTestCase):
+
+    def test_renderiza_svg_para_codigo_valido(self):
+        from catalogo.barcode import render_svg_ean13, generar_codigo_interno
+        svg = render_svg_ean13(generar_codigo_interno('v', 5))
+        # Empieza directo con <svg, sin <?xml ni DOCTYPE.
+        self.assertTrue(svg.startswith('<svg'), svg[:80])
+        self.assertIn('</svg>', svg)
+
+    def test_codigo_invalido_levanta(self):
+        from catalogo.barcode import render_svg_ean13
+        with self.assertRaises(ValueError):
+            render_svg_ean13('abc')

@@ -751,3 +751,143 @@ def oferta_toggle(request, pk):
         f'Oferta "{o.nombre}" {"reactivada" if o.activa else "pausada"}.',
     )
     return redirect('bodega:lista_ofertas')
+
+
+# ============================================================================
+# Etiquetas imprimibles con código de barras
+# ============================================================================
+
+@login_required
+@reponer_required
+def etiquetas_seleccionar(request):
+    """Pantalla con filtros + checkboxes para elegir qué items y cuántas
+    etiquetas imprimir.
+
+    Lista variantes activas y productos sin variantes con stock > 0 en
+    cualquier tienda. El bodeguero filtra por familia/colegio, elige
+    cuántas copias de cada uno, y dispara la vista imprimible."""
+    familia_id = (request.GET.get('familia') or '').strip()
+    colegio_id = (request.GET.get('colegio') or '').strip()
+    q = (request.GET.get('q') or '').strip()
+
+    productos_qs = Producto.objects.filter(
+        activo=True, tiene_variantes=False,
+    ).select_related('familia', 'colegio')
+
+    variantes_qs = (
+        ProductoVariante.objects.filter(
+            activa=True, producto__activo=True, producto__tiene_variantes=True,
+        )
+        .select_related('producto__familia', 'producto__colegio')
+        .prefetch_related('valores__atributo')
+    )
+
+    if familia_id.isdigit():
+        productos_qs = productos_qs.filter(familia_id=int(familia_id))
+        variantes_qs = variantes_qs.filter(producto__familia_id=int(familia_id))
+    if colegio_id.isdigit():
+        productos_qs = productos_qs.filter(colegio_id=int(colegio_id))
+        variantes_qs = variantes_qs.filter(producto__colegio_id=int(colegio_id))
+    if q:
+        from edTech.search import normalize_text
+        q_norm = normalize_text(q)
+        productos_qs = productos_qs.filter(nombre_buscable__contains=q_norm)
+        variantes_qs = variantes_qs.filter(
+            Q(producto__nombre_buscable__contains=q_norm)
+            | Q(sku__icontains=q),
+        )
+
+    return render(request, 'bodega/etiquetas_seleccionar.html', {
+        'productos': productos_qs.order_by('familia__nombre', 'nombre'),
+        'variantes': variantes_qs.order_by('producto__nombre', 'sku'),
+        'familias': Familia.objects.order_by('nombre'),
+        'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
+        'filtros': {'familia': familia_id, 'colegio': colegio_id, 'q': q},
+    })
+
+
+@login_required
+@reponer_required
+@require_POST
+def etiquetas_imprimir(request):
+    """Renderiza la vista imprimible con los códigos seleccionados.
+
+    POST recibe pares `p_<pk>=N` y `v_<pk>=N` donde N es la cantidad de
+    etiquetas a imprimir de ese item. La página resultante usa CSS
+    @page A4 y un grid de 30 etiquetas (3 cols x 10 filas), compatible
+    con plantillas Avery L7651 / similar.
+    """
+    from catalogo.barcode import render_svg_ean13
+
+    items = []  # list de dicts {nombre, variante_txt, precio, codigo, svg}
+
+    for key, valor in request.POST.items():
+        if not valor or not valor.isdigit() or int(valor) < 1:
+            continue
+        copias = min(int(valor), 99)  # tope de seguridad
+
+        if key.startswith('p_'):
+            try:
+                pk = int(key[2:])
+            except ValueError:
+                continue
+            try:
+                p = Producto.objects.select_related('familia').get(
+                    pk=pk, activo=True, tiene_variantes=False,
+                )
+            except Producto.DoesNotExist:
+                continue
+            if not p.codigo_barras:
+                continue
+            etiqueta = {
+                'nombre': p.nombre,
+                'variante_txt': '',
+                'precio': p.precio_base,
+                'codigo': p.codigo_barras,
+                'svg': render_svg_ean13(p.codigo_barras),
+            }
+            for _ in range(copias):
+                items.append(etiqueta)
+
+        elif key.startswith('v_'):
+            try:
+                pk = int(key[2:])
+            except ValueError:
+                continue
+            try:
+                v = ProductoVariante.objects.select_related(
+                    'producto__familia',
+                ).prefetch_related('valores__atributo').get(
+                    pk=pk, activa=True, producto__activo=True,
+                )
+            except ProductoVariante.DoesNotExist:
+                continue
+            if not v.codigo_barras:
+                continue
+            valores_txt = ' · '.join(
+                str(val.valor) for val in v.valores.all()
+            )
+            etiqueta = {
+                'nombre': v.producto.nombre,
+                'variante_txt': valores_txt or v.sku,
+                'precio': v.precio,
+                'codigo': v.codigo_barras,
+                'svg': render_svg_ean13(v.codigo_barras),
+            }
+            for _ in range(copias):
+                items.append(etiqueta)
+
+    if not items:
+        messages.error(request, 'Seleccioná al menos un item con cantidad > 0.')
+        return redirect('bodega:etiquetas_seleccionar')
+
+    # Agrupamos las etiquetas en hojas de 30 (3 cols × 10 filas) para que
+    # cada hoja sea su propia pagina con page-break controlado por CSS.
+    POR_HOJA = 30
+    hojas = [items[i:i + POR_HOJA] for i in range(0, len(items), POR_HOJA)]
+
+    return render(request, 'bodega/etiquetas_imprimir.html', {
+        'hojas': hojas,
+        'total': len(items),
+        'total_hojas': len(hojas),
+    })

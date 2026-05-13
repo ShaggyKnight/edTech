@@ -1,0 +1,137 @@
+{% load humanize %}<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Etiquetas para imprimir — {{ total }} unidades</title>
+  <style>
+    /* ============================================================
+       Hoja A4 con 30 etiquetas (3 columnas x 10 filas).
+       Medidas Avery L7651 compatibles:
+         Etiqueta: 63.5mm x 29.6mm
+         Margen superior/inferior: ~13mm
+         Margen izquierdo/derecho: ~7mm
+         Gap horizontal: 2.5mm
+       ============================================================ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    @page { size: A4; margin: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: #000;
+      background: #f0f0f0;
+    }
+    .hoja {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 13mm 7mm;
+      background: #fff;
+      margin: 12px auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      page-break-after: always;
+    }
+    .hoja:last-child { page-break-after: auto; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 63.5mm);
+      grid-auto-rows: 29.6mm;
+      gap: 0 2.5mm;
+    }
+    .etiqueta {
+      border: 0.5px dashed #ccc;       /* solo para guia en pantalla */
+      padding: 1.5mm 2mm;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+    .etiqueta .marca {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 7pt;
+      font-style: italic;
+      color: #555;
+      letter-spacing: 0.05em;
+    }
+    .etiqueta .nombre {
+      font-size: 8pt;
+      font-weight: 600;
+      line-height: 1.1;
+      max-height: 2.4em;
+      overflow: hidden;
+      width: 100%;
+    }
+    .etiqueta .variante {
+      font-size: 7pt;
+      color: #555;
+      line-height: 1.1;
+    }
+    .etiqueta .precio {
+      font-size: 11pt;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .etiqueta .barcode svg {
+      width: 100%;
+      height: auto;
+      max-height: 12mm;
+    }
+    /* Cabecera con conteo y boton imprimir — solo en pantalla. */
+    .toolbar {
+      max-width: 210mm;
+      margin: 12px auto;
+      padding: 10px 14px;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .toolbar .total { font-size: 14px; color: #555; }
+    .toolbar button {
+      background: #0891b2;
+      color: #fff;
+      border: 0;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    @media print {
+      body { background: #fff; }
+      .hoja { box-shadow: none; margin: 0; }
+      .etiqueta { border: 0; }
+      .toolbar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="total">
+      <strong>{{ total }}</strong> etiqueta{{ total|pluralize:"s" }} —
+      {{ total_hojas }} hoja{{ total_hojas|pluralize:"s" }} A4
+    </div>
+    <button type="button" onclick="window.print()">Imprimir →</button>
+  </div>
+
+  {% for hoja in hojas %}
+    <div class="hoja">
+      <div class="grid">
+        {% for e in hoja %}
+          <div class="etiqueta">
+            <div class="marca">Ideas Boutique</div>
+            <div class="nombre">{{ e.nombre }}</div>
+            {% if e.variante_txt %}
+              <div class="variante">{{ e.variante_txt }}</div>
+            {% endif %}
+            <div class="precio">${{ e.precio|floatformat:0|intcomma }}</div>
+            <div class="barcode">{{ e.svg|safe }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</body>
+</html>

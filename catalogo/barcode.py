@@ -105,3 +105,47 @@ def parsear_codigo_interno(codigo: str) -> tuple[str, int] | None:
     if pk < 1:
         return None
     return (tipo, pk)
+
+
+def render_svg_ean13(codigo: str, *, module_width=0.35,
+                     module_height=12.0, font_size=8) -> str:
+    """Renderiza un EAN-13 como SVG (string) para embeber en HTML/print.
+
+    Args:
+        codigo: 13 dígitos (debe ser EAN-13 válido o se levanta).
+        module_width: ancho de cada modulo en mm (0.33 es minimo legible).
+        module_height: alto de las barras en mm.
+        font_size: tamaño del texto del codigo bajo las barras.
+
+    Returns:
+        SVG completo como string, listo para embeber con |safe en template.
+    """
+    if not validar_ean13(codigo):
+        raise ValueError(f'No es un EAN-13 valido: {codigo!r}')
+
+    # Lazy import: python-barcode solo se usa cuando se imprime, no en
+    # cada request del catalogo.
+    import io
+    import barcode
+    from barcode.writer import SVGWriter
+
+    # python-barcode acepta el EAN-13 completo de 13 digitos en su clase
+    # 'ean13' usando add_checksum=False (ya tenemos check).
+    bcode = barcode.get('ean13', codigo[:12], writer=SVGWriter())
+    buf = io.BytesIO()
+    bcode.write(buf, options={
+        'module_width': module_width,
+        'module_height': module_height,
+        'font_size': font_size,
+        'text_distance': 2.0,
+        'quiet_zone': 2.0,
+        'write_text': True,
+    })
+    svg_bytes = buf.getvalue()
+    # python-barcode incluye <?xml?> y <!DOCTYPE> antes del <svg> que
+    # estorban al embeber inline. Cortamos desde el primer '<svg'.
+    svg = svg_bytes.decode('utf-8')
+    idx = svg.find('<svg')
+    if idx > 0:
+        svg = svg[idx:]
+    return svg

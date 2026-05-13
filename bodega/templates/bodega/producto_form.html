@@ -88,6 +88,26 @@
           </div>
         </div>
 
+        {% comment %}
+          Codigo de barras: solo aplica si el producto NO tiene variantes
+          (la mayoria del catalogo tiene variantes y el codigo va en la
+          variante). Si queda vacio, save() genera uno interno con
+          prefijo 200 automaticamente al guardar.
+        {% endcomment %}
+        <div class="bo-card">
+          <div class="bo-card-head"><h3>Código de barras</h3></div>
+          <div class="bo-card-body">
+            <div class="bo-field">
+              <label for="{{ form.codigo_barras.id_for_label }}">Código</label>
+              {{ form.codigo_barras }}
+              {% if form.codigo_barras.help_text %}
+                <small style="color:var(--bo-muted);font-size:11px;display:block;">{{ form.codigo_barras.help_text }}</small>
+              {% endif %}
+              {% if form.codigo_barras.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.codigo_barras.errors }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
         <div class="bo-card">
           <div class="bo-card-head"><h3>Imagen</h3></div>
           <div class="bo-card-body">

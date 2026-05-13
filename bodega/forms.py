@@ -38,6 +38,7 @@ class ProductoForm(forms.ModelForm):
             'descripcion',
             'precio_base', 'precio_costo',
             'tiene_variantes', 'activo',
+            'codigo_barras',
             'imagen',
         ]
         widgets = {
@@ -49,6 +50,13 @@ class ProductoForm(forms.ModelForm):
             'precio_costo': forms.NumberInput(attrs={'class': 'bo-input', 'min': 0}),
             'tiene_variantes': forms.CheckboxInput(),
             'activo': forms.CheckboxInput(),
+            'codigo_barras': forms.TextInput(attrs={
+                'class': 'bo-input',
+                'placeholder': 'EAN-13 de fábrica o "Generar" para uno interno',
+                'pattern': r'[0-9]{0,32}',
+                'maxlength': '32',
+                'inputmode': 'numeric',
+            }),
             'imagen': forms.ClearableFileInput(),
         }
         help_texts = {
@@ -56,7 +64,22 @@ class ProductoForm(forms.ModelForm):
             'tiene_variantes': 'Marcá si el producto se vende por talla, volumen, etc. '
                                'En el siguiente paso definís las variantes.',
             'precio_costo': 'Costo unitario. Sirve para calcular margen y valorizar inventario.',
+            'codigo_barras': 'Solo aplica si NO tiene variantes. Para productos con '
+                             'variantes, el código vive en cada variante. Si está '
+                             'vacío se genera automáticamente al guardar.',
         }
+
+    def save(self, commit=True):
+        """Autogenera el codigo si no tiene variantes y quedó vacio."""
+        from catalogo.barcode import generar_codigo_interno
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            # Si es producto sin variantes y no tiene codigo, generar uno.
+            if not instance.tiene_variantes and not instance.codigo_barras:
+                instance.codigo_barras = generar_codigo_interno('p', instance.pk)
+                instance.save(update_fields=['codigo_barras'])
+        return instance
 
 
 class ProductoVarianteForm(forms.ModelForm):
@@ -96,19 +119,29 @@ class ProductoVarianteForm(forms.ModelForm):
 
     class Meta:
         model = ProductoVariante
-        fields = ['sku', 'precio_override', 'activa']
+        fields = ['sku', 'precio_override', 'activa', 'codigo_barras']
         widgets = {
             'sku': forms.TextInput(attrs={'class': 'bo-input'}),
             'precio_override': forms.NumberInput(attrs={'class': 'bo-input', 'min': 0}),
             'activa': forms.CheckboxInput(),
+            'codigo_barras': forms.TextInput(attrs={
+                'class': 'bo-input',
+                'placeholder': 'Vacío = generar automático',
+                'pattern': r'[0-9]{0,32}',
+                'maxlength': '32',
+                'inputmode': 'numeric',
+            }),
         }
         help_texts = {
             'sku': 'Código único. Ej: BUZO-SFJ-M, YARA-30ML-EDP.',
             'precio_override': 'Si esta variante tiene precio distinto al producto base. '
                                'Vacío = usa el precio del producto.',
+            'codigo_barras': 'Si la variante tiene EAN-13 de fábrica, ingresalo. '
+                             'Vacío = se genera uno interno automáticamente.',
         }
 
     def save(self, commit=True, producto=None):
+        from catalogo.barcode import generar_codigo_interno
         v = super().save(commit=False)
         if producto:
             v.producto = producto
@@ -125,6 +158,11 @@ class ProductoVarianteForm(forms.ModelForm):
                 val = self.cleaned_data.get(key)
                 if val:
                     v.valores.add(val)
+            # Autogenerar codigo si quedó vacio. Hace falta el pk asi que
+            # va despues del save().
+            if not v.codigo_barras:
+                v.codigo_barras = generar_codigo_interno('v', v.pk)
+                v.save(update_fields=['codigo_barras'])
         return v
 
 

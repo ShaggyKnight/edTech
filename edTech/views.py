@@ -1,11 +1,21 @@
+import datetime
+
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET
 
+# Año de fundación de Ideas Boutique — punto único de verdad para que
+# el hero del sitio nunca se desactualice (ver Sprint 1 · 1.1 del roadmap).
+FUNDACION = 1987
+
 
 def index(request):
-    return render(request, 'index.html')
+    contexto = {
+        'anios_negocio': datetime.date.today().year - FUNDACION,
+        'fundacion': FUNDACION,
+    }
+    return render(request, 'index.html', contexto)
 
 
 @require_GET

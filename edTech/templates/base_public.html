@@ -18,6 +18,43 @@
     <meta property="og:image:alt" content="{% block og_image_alt %}Letrero de Ideas Boutique en Caupolicán 437-B{% endblock %}">
     <meta name="twitter:card" content="summary_large_image">
 
+    {% comment %}
+      Schema.org LocalBusiness — SEO local para "tiendas en Los Vilos".
+      Los datos canónicos viven acá: Google los lee para mostrar la
+      ficha en búsquedas locales / Google Maps.
+    {% endcomment %}
+    {% block schema_org %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ClothingStore",
+      "name": "Ideas Boutique",
+      "alternateName": "Ideas Perfumería y Boutique",
+      "description": "Boutique familiar en Los Vilos. Perfumes originales, uniformes escolares y moda desde 1987.",
+      "image": "{% static 'img/ideas/logo-letrero.png' %}",
+      "foundingDate": "1987",
+      "founder": {"@type": "Person", "name": "Estela Contreras"},
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Caupolicán 437-B",
+        "addressLocality": "Los Vilos",
+        "addressRegion": "Coquimbo",
+        "addressCountry": "CL"
+      },
+      "openingHoursSpecification": [{
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+        "opens": "09:00",
+        "closes": "19:00"
+      }],
+      "makesOffer": [
+        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Uniformes Colegio San Francisco Javier (SFJ)"}},
+        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Perfumes originales"}}
+      ]
+    }
+    </script>
+    {% endblock %}
+
     <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
     <link rel="icon" type="image/svg+xml" href="{% static 'icon.svg' %}">
     <link rel="icon" href="{% static 'favicon.ico' %}">

@@ -134,40 +134,11 @@ def _precio_unitario(item):
 
 
 def _descuento_unitario(item, precio_unit: Decimal, canal: str, ahora) -> Decimal:
-    """Descuento por unidad según la mejor oferta vigente para item+canal."""
-    if isinstance(item, ProductoVariante):
-        ofertas_qs = Oferta.objects.filter(
-            activa=True,
-            fecha_inicio__lte=ahora,
-            fecha_fin__gte=ahora,
-        ).filter(
-            # oferta puntual de la variante o del producto padre
-            variante=item,
-        ) | Oferta.objects.filter(
-            activa=True,
-            fecha_inicio__lte=ahora,
-            fecha_fin__gte=ahora,
-            producto=item.producto,
-            variante__isnull=True,
-        )
-    else:
-        ofertas_qs = Oferta.objects.filter(
-            activa=True,
-            fecha_inicio__lte=ahora,
-            fecha_fin__gte=ahora,
-            producto=item,
-            variante__isnull=True,
-        )
+    """Compatibilidad: delega al helper centralizado de catalogo.precios.
 
-    mejor = Decimal('0')
-    for oferta in ofertas_qs:
-        if not oferta.aplica_a_canal(canal):
-            continue
-        if oferta.tipo == Oferta.TIPO_PORCENTAJE:
-            candidato = (precio_unit * oferta.valor) / Decimal('100')
-        else:
-            candidato = oferta.valor
-        if candidato > mejor:
-            mejor = candidato
-    # No descontar más que el propio precio
-    return min(mejor, precio_unit)
+    La lógica única vive en catalogo.precios para que el catálogo
+    público y el PDP puedan mostrar precios con descuento sin duplicar
+    código (ver Producto.precio_oferta_online / ...descuento_porcentaje_online).
+    """
+    from catalogo.precios import descuento_unitario
+    return descuento_unitario(item, precio_unit, canal, ahora)

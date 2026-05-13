@@ -37,16 +37,23 @@
       </div>
 
       {% if producto.tiene_variantes %}
-        {# Precio dinámico: arranca como "desde $X" y se actualiza al elegir talla. #}
+        {% comment %}
+          Precio dinámico: arranca como "desde $X" y se actualiza al
+          elegir talla. Si hay oferta vigente online, mostramos el
+          precio con descuento más prominente + el original tachado
+          + badge -N%.
+        {% endcomment %}
         <div class="pdp-price" id="pdp-price-block">
           {% if producto.precios_varian_por_variante %}
             <div style="font-size:12px;color:var(--ink-60);font-weight:600;
                         text-transform:uppercase;letter-spacing:0.1em;
                         margin-bottom:2px;">Desde</div>
-            <span class="big" id="pdp-price-value">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
-          {% else %}
-            <span class="big" id="pdp-price-value">${{ producto.precio_base|floatformat:0|intcomma }}</span>
           {% endif %}
+          <span class="big{% if producto.tiene_oferta_online %} pdp-price-sale{% endif %}" id="pdp-price-value">
+            {% if producto.tiene_oferta_online %}${{ producto.precio_oferta_online|floatformat:0|intcomma }}{% else %}${{ producto.precio_minimo|floatformat:0|intcomma }}{% endif %}
+          </span>
+          <span class="pdp-price-old"{% if not producto.tiene_oferta_online %} style="display:none;"{% endif %}>${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+          <span class="pdp-price-badge"{% if not producto.tiene_oferta_online %} style="display:none;"{% endif %}>−{{ producto.descuento_porcentaje_online }}%</span>
           <span class="pdp-installments" id="pdp-installments">
             o 3 cuotas sin interés de ${% widthratio producto.precio_minimo 3 1 %}
           </span>
@@ -77,6 +84,8 @@
                   <button type="button" class="size-chip"
                           data-variante-id="{{ v.pk }}"
                           data-precio="{{ v.precio|floatformat:0 }}"
+                          data-precio-oferta="{{ v.precio_oferta_online|floatformat:0 }}"
+                          data-descuento-pct="{{ v.descuento_porcentaje_online }}"
                           data-stock="{{ v.stock }}"
                           data-label="{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}">
                     {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
@@ -116,20 +125,26 @@
               return Number(n).toLocaleString('es-CL');
             }
 
+            // Mantenemos referencia a los nodos auxiliares de oferta (si existen).
+            var priceOld   = priceBlock.querySelector('.pdp-price-old');
+            var priceBadge = priceBlock.querySelector('.pdp-price-badge');
+
             chips.forEach(function(chip) {
               chip.addEventListener('click', function() {
                 chips.forEach(function(c) { c.classList.remove('active'); });
                 chip.classList.add('active');
 
-                var precio = parseFloat(chip.dataset.precio);
-                var stock  = parseInt(chip.dataset.stock, 10);
-                var label  = chip.dataset.label.trim();
-                var id     = chip.dataset.varianteId;
+                var precioBase  = parseFloat(chip.dataset.precio);
+                var precioFinal = parseFloat(chip.dataset.precioOferta || chip.dataset.precio);
+                var descPct     = parseInt(chip.dataset.descuentoPct || '0', 10);
+                var stock       = parseInt(chip.dataset.stock, 10);
+                var label       = chip.dataset.label.trim();
+                var id          = chip.dataset.varianteId;
 
                 hidden.value = id;
-                priceVal.textContent = '$' + fmt(precio);
+                priceVal.textContent = '$' + fmt(precioFinal);
                 installments.textContent = 'o 3 cuotas sin interés de $' +
-                  fmt(Math.floor(precio / 3));
+                  fmt(Math.floor(precioFinal / 3));
 
                 // Quita el "Desde" cuando ya hay variante elegida.
                 var fromTag = priceBlock.querySelector('div');
@@ -137,9 +152,30 @@
                   fromTag.style.display = 'none';
                 }
 
+                // Mostrar/ocultar precio tachado + badge según si la
+                // variante elegida tiene descuento.
+                var hayDesc = descPct > 0 && precioFinal < precioBase;
+                priceVal.classList.toggle('pdp-price-sale', hayDesc);
+                if (priceOld) {
+                  if (hayDesc) {
+                    priceOld.textContent = '$' + fmt(precioBase);
+                    priceOld.style.display = '';
+                  } else {
+                    priceOld.style.display = 'none';
+                  }
+                }
+                if (priceBadge) {
+                  if (hayDesc) {
+                    priceBadge.textContent = '−' + descPct + '%';
+                    priceBadge.style.display = '';
+                  } else {
+                    priceBadge.style.display = 'none';
+                  }
+                }
+
                 stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
                 btn.disabled = false;
-                btnLabel.textContent = 'Agregar al carrito · $' + fmt(precio);
+                btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
               });
             });
           })();
@@ -147,7 +183,13 @@
 
       {% else %}
         <div class="pdp-price">
-          <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+          {% if producto.tiene_oferta_online %}
+            <span class="big pdp-price-sale">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
+            <span class="pdp-price-old">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+            <span class="pdp-price-badge">−{{ producto.descuento_porcentaje_online }}%</span>
+          {% else %}
+            <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+          {% endif %}
           <span class="pdp-installments">o 3 cuotas sin interés de ${% widthratio producto.precio_base 3 1 %}</span>
         </div>
 
@@ -174,7 +216,7 @@
           <div class="pdp-ctas">
             <button type="submit" class="btn-primary lg" {% if not stock_directo %}disabled{% endif %}>
               {% if stock_directo %}
-                Agregar al carrito · ${{ producto.precio_base|floatformat:0|intcomma }}
+                Agregar al carrito · ${{ producto.precio_oferta_online|floatformat:0|intcomma }}
               {% else %}
                 Sin stock
               {% endif %}

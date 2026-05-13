@@ -9,6 +9,9 @@
       {% imagen_producto producto as img_url %}
       <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy">
       {% if producto.tag %}<span class="pcard-tag">{{ producto.tag }}</span>{% endif %}
+      {% if producto.tiene_oferta_online %}
+        <span class="pcard-discount-badge">−{{ producto.descuento_porcentaje_online }}%</span>
+      {% endif %}
     </div>
     <div class="pcard-body">
       <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>
@@ -19,12 +22,12 @@
                 style="font-size:10px;color:var(--ink-60);font-weight:600;
                        text-transform:uppercase;letter-spacing:0.08em;
                        margin-right:4px;">desde</span>
-          <span class="pcard-price">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
-        {% else %}
-          <span class="pcard-price">${{ producto.precio_base|floatformat:0|intcomma }}</span>
         {% endif %}
-        {% if producto.precio_old %}
-          <span class="pcard-old">${{ producto.precio_old|floatformat:0|intcomma }}</span>
+        {% if producto.tiene_oferta_online %}
+          <span class="pcard-price pcard-price-sale">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
+          <span class="pcard-old">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+        {% else %}
+          <span class="pcard-price">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
         {% endif %}
       </div>
     </div>

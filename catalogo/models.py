@@ -162,6 +162,48 @@ class Producto(models.Model):
             precios.add(v.precio_override or self.precio_base)
         return len(precios) > 1
 
+    # ── Precios con oferta para canal online ──────────────────────────
+    # Usadas por el catálogo público y la PDP para mostrar el precio
+    # con descuento aplicado antes de llegar al carrito. La lógica vive
+    # en catalogo.precios (compartida con cart presencial/online).
+
+    @property
+    def _mejor_oferta_online(self):
+        """Mejor oferta vigente para canal online sobre este producto
+        (no toca variantes). Devuelve (descuento_unit, oferta) o
+        (Decimal('0'), None) si no hay.
+        """
+        from catalogo.precios import mejor_descuento_unitario
+        return mejor_descuento_unitario(self, Oferta.CANAL_ONLINE)
+
+    @property
+    def precio_oferta_online(self):
+        """Precio con oferta aplicada. Si no hay oferta vigente,
+        devuelve el `precio_minimo` (para productos con variantes
+        baratas/caras, refleja el "desde")."""
+        desc, oferta = self._mejor_oferta_online
+        base = self.precio_minimo
+        if not oferta or desc <= 0:
+            return base
+        return base - desc
+
+    @property
+    def tiene_oferta_online(self):
+        _, oferta = self._mejor_oferta_online
+        return oferta is not None
+
+    @property
+    def descuento_porcentaje_online(self):
+        """Porcentaje (int 0..100) del descuento aplicado. 0 si no hay
+        oferta. Útil para el badge "−15%" en card y PDP."""
+        desc, oferta = self._mejor_oferta_online
+        if not oferta or desc <= 0:
+            return 0
+        base = self.precio_minimo
+        if base <= 0:
+            return 0
+        return int(round((desc / base) * 100))
+
 
 class ProductoVariante(models.Model):
     """SKU vendible. Cada combinación de valores de atributo es una variante."""
@@ -194,6 +236,34 @@ class ProductoVariante(models.Model):
     @property
     def precio(self):
         return self.precio_override if self.precio_override is not None else self.producto.precio_base
+
+    # ── Precios con oferta para canal online ──────────────────────────
+
+    @property
+    def _mejor_oferta_online(self):
+        from catalogo.precios import mejor_descuento_unitario
+        return mejor_descuento_unitario(self, 'online')
+
+    @property
+    def precio_oferta_online(self):
+        desc, oferta = self._mejor_oferta_online
+        if not oferta or desc <= 0:
+            return self.precio
+        return self.precio - desc
+
+    @property
+    def tiene_oferta_online(self):
+        _, oferta = self._mejor_oferta_online
+        return oferta is not None
+
+    @property
+    def descuento_porcentaje_online(self):
+        desc, oferta = self._mejor_oferta_online
+        if not oferta or desc <= 0:
+            return 0
+        if self.precio <= 0:
+            return 0
+        return int(round((desc / self.precio) * 100))
 
 
 class Oferta(models.Model):

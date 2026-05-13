@@ -507,7 +507,15 @@ input, select { font-family: inherit; }
 .pdp-price { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 24px; }
 .pdp-price .big { font-family: var(--serif); font-size: 40px; font-weight: 600; }
 .pdp-price .big.pdp-price-sale { color: var(--vino); }
-.pdp-old, .pdp-price-old { font-size: 18px; text-decoration: line-through; color: var(--ink-40); }
+.pdp-old, .pdp-price-old {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--ink-60);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--vino);
+  margin-left: 4px;
+}
 .pdp-installments { width: 100%; font-size: 13px; color: var(--gold-2); margin-top: 4px; }
 .pdp-opts { margin-bottom: 24px; }
 .pdp-opt-label { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; }

@@ -1,0 +1,24 @@
+{% comment %}
+  Fragment OOB devuelto por views.agregar cuando es request HTMX.
+
+  Mediante hx-swap-oob="true" actualiza el badge del carrito (con el
+  conteo nuevo) y mediante hx-swap-oob="beforeend" inyecta los toasts
+  del messages framework al container global.
+
+  Asi el cliente ve "+1 al carrito" como toast + el contador del
+  carrito sube, sin perder el lugar en el catalogo / PDP.
+{% endcomment %}
+<a class="shop-cart" id="shop-cart-icon"
+   hx-swap-oob="true"
+   href="{% url 'ecommerce:carrito' %}"
+   aria-label="Carrito · {{ items_count }} item{{ items_count|pluralize:'s' }}">
+  <svg class="ico ico--18"><use href="#ico-bag"/></svg>
+  {% if items_count %}<span class="cart-dot">{{ items_count }}</span>{% endif %}
+</a>
+
+<div id="toast-container"
+     class="toast-container"
+     hx-swap-oob="beforeend"
+     aria-live="polite">
+  {% include 'partials/_toasts.html' %}
+</div>

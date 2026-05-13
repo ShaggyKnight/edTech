@@ -501,10 +501,19 @@ def ver_carrito(request):
 
 @require_POST
 def agregar(request):
+    """Agrega un item al carrito.
+
+    Comportamiento dual:
+    - Request HTMX: agrega al cart y devuelve un fragment con
+      `hx-swap-oob` que actualiza el badge del carrito + inyecta los
+      toasts del messages framework. El cliente queda donde estaba
+      (catalogo / PDP), ve "+ Yara al carrito" y el contador sube.
+    - Request tradicional (no JS): agrega y redirige al carrito.
+    """
     form = AgregarForm(request.POST)
     if not form.is_valid():
         messages.error(request, 'Datos inválidos.')
-        return redirect('ecommerce:catalogo')
+        return _respuesta_agregar(request)
 
     cart = Cart(request.session)
     tipo = form.cleaned_data['tipo']
@@ -512,18 +521,42 @@ def agregar(request):
     cantidad = form.cleaned_data['cantidad']
 
     if tipo == 'v':
-        if not ProductoVariante.objects.filter(pk=item_id, activa=True).exists():
+        variante = ProductoVariante.objects.select_related('producto').filter(
+            pk=item_id, activa=True,
+        ).first()
+        if not variante:
             messages.error(request, 'Variante no disponible.')
-            return redirect('ecommerce:catalogo')
+            return _respuesta_agregar(request)
         cart.add_variante(item_id, cantidad)
+        messages.success(
+            request,
+            f'+ {variante.producto.nombre} ({variante.sku}) agregado al carrito.',
+        )
     else:
-        if not Producto.objects.filter(
-            pk=item_id, activo=True, tiene_variantes=False
-        ).exists():
+        producto = Producto.objects.filter(
+            pk=item_id, activo=True, tiene_variantes=False,
+        ).first()
+        if not producto:
             messages.error(request, 'Producto no disponible.')
-            return redirect('ecommerce:catalogo')
+            return _respuesta_agregar(request)
         cart.add_producto(item_id, cantidad)
+        messages.success(
+            request, f'+ {producto.nombre} agregado al carrito.',
+        )
 
+    return _respuesta_agregar(request)
+
+
+def _respuesta_agregar(request):
+    """Devuelve la respuesta adecuada para `agregar`:
+    - HTMX: fragment con OOB del badge + toasts.
+    - Otro: redirect al carrito.
+    """
+    if request.htmx:
+        cart = Cart(request.session)
+        return render(request, 'ecommerce/_cart_oob_update.html', {
+            'items_count': cart.items_count,
+        })
     return redirect('ecommerce:carrito')
 
 

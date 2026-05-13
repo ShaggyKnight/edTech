@@ -56,7 +56,7 @@
           <svg class="ico ico--18"><use href="#ico-user"/></svg>
         </a>
       {% endif %}
-      <a class="shop-cart" href="{% url 'ecommerce:carrito' %}" aria-label="Carrito">
+      <a class="shop-cart" id="shop-cart-icon" href="{% url 'ecommerce:carrito' %}" aria-label="Carrito · {{ items_count }} item{{ items_count|pluralize:'s' }}">
         <svg class="ico ico--18"><use href="#ico-bag"/></svg>
         {% if items_count %}<span class="cart-dot">{{ items_count }}</span>{% endif %}
       </a>

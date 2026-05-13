@@ -62,7 +62,9 @@
           <p style="color: var(--ink-60); margin: 16px 0;">{{ producto.descripcion|linebreaksbr }}</p>
         {% endif %}
 
-        <form method="post" action="{% url 'ecommerce:agregar' %}" id="pdp-form">
+        <form method="post" action="{% url 'ecommerce:agregar' %}" id="pdp-form"
+              hx-post="{% url 'ecommerce:agregar' %}"
+              hx-swap="none">
           {% csrf_token %}
           <input type="hidden" name="tipo" value="v">
           <input type="hidden" name="item_id" id="pdp-item-id" value="">
@@ -186,7 +188,9 @@
           <p style="color: var(--ink-60); margin: 16px 0;">{{ producto.descripcion|linebreaksbr }}</p>
         {% endif %}
 
-        <form method="post" action="{% url 'ecommerce:agregar' %}">
+        <form method="post" action="{% url 'ecommerce:agregar' %}"
+              hx-post="{% url 'ecommerce:agregar' %}"
+              hx-swap="none">
           {% csrf_token %}
           <input type="hidden" name="tipo" value="p">
           <input type="hidden" name="item_id" value="{{ producto.pk }}">

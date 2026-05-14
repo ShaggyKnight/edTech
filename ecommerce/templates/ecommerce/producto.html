@@ -37,7 +37,7 @@
 {% block body %}
 {% include 'ecommerce/_shop_header.html' with items_count=items_count %}
 
-<main class="pdp">
+<main class="pdp" id="main-content" tabindex="-1">
   <div class="shop-breadcrumb">
     <a href="{% url 'index' %}">Inicio</a> /
     <a href="{% url 'ecommerce:catalogo' %}">{{ producto.familia.nombre }}</a> /

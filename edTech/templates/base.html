@@ -32,6 +32,12 @@
 <body class="bo">
   {% include 'partials/_icons.html' %}
 
+  {% comment %}
+    Barra de progreso global para requests HTMX (filtros AJAX, edicion
+    inline de stock, etc). Da feedback inmediato sin saturar UI.
+  {% endcomment %}
+  {% include 'partials/_htmx_progress.html' %}
+
   {# Container global para toasts (HTMX inyecta aca via hx-swap-oob). #}
   <div id="toast-container" class="toast-container" aria-live="polite">
     {% include 'partials/_toasts.html' %}

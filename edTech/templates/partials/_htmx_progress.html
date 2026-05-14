@@ -1,0 +1,85 @@
+{% comment %}
+  Barra de progreso global para requests HTMX. Inspirada en NProgress
+  pero auto-contenida: no carga libreria externa.
+
+  Cómo funciona:
+  - `<div id="htmx-progress">` fija arriba en la pantalla, escondida
+    por default (transform: translateX(-100%)).
+  - JS escucha `htmx:beforeRequest` y la anima al 80% en ~600ms (efecto
+    "crawl" — el cliente no tiene que esperar a que termine para ver
+    movimiento).
+  - En `htmx:afterRequest` la completa al 100% y la oculta tras 200ms.
+  - En `htmx:responseError` la pinta de rojo y la oculta.
+
+  Compatible con todos los swaps HTMX del proyecto (filtros del
+  catalogo, quick-view, agregar al carrito, stock inline, scroll
+  infinito, etc).
+{% endcomment %}
+<div id="htmx-progress" aria-hidden="true"></div>
+
+<style>
+  #htmx-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: var(--gold-2, #b08951);
+    transform: translateX(-100%);
+    transition: transform 0.6s cubic-bezier(0.1, 0.5, 0.2, 1),
+                opacity 0.2s ease;
+    z-index: 99999;
+    box-shadow: 0 0 8px rgba(176, 137, 81, 0.4);
+    pointer-events: none;
+  }
+  #htmx-progress.htmx-progress-active {
+    transform: translateX(-20%);  /* 80% completo */
+  }
+  #htmx-progress.htmx-progress-done {
+    transform: translateX(0);     /* 100% */
+    opacity: 0;
+  }
+  #htmx-progress.htmx-progress-error {
+    background: var(--vino, #7A1E2B);
+    box-shadow: 0 0 8px rgba(122, 30, 43, 0.4);
+  }
+</style>
+
+<script>
+  (function () {
+    var bar = document.getElementById('htmx-progress');
+    if (!bar) return;
+    var hideTimer = null;
+
+    function reset() {
+      bar.classList.remove('htmx-progress-active', 'htmx-progress-done',
+                           'htmx-progress-error');
+      bar.style.opacity = '';
+    }
+
+    document.body.addEventListener('htmx:beforeRequest', function () {
+      if (hideTimer) clearTimeout(hideTimer);
+      reset();
+      // Forzar reflow para que la transicion se vea.
+      void bar.offsetWidth;
+      bar.classList.add('htmx-progress-active');
+    });
+
+    function terminar(esError) {
+      bar.classList.remove('htmx-progress-active');
+      bar.classList.add('htmx-progress-done');
+      if (esError) bar.classList.add('htmx-progress-error');
+      hideTimer = setTimeout(reset, 300);
+    }
+
+    document.body.addEventListener('htmx:afterRequest', function (e) {
+      terminar(!e.detail.successful);
+    });
+    document.body.addEventListener('htmx:responseError', function () {
+      terminar(true);
+    });
+    document.body.addEventListener('htmx:sendError', function () {
+      terminar(true);
+    });
+  })();
+</script>

@@ -80,6 +80,13 @@
   <body>
     {% include 'partials/_icons.html' %}
 
+    {% comment %}
+      Barra de progreso global para requests HTMX (catalogo AJAX,
+      quick-view, agregar al carrito, etc). Aparece arriba durante el
+      fetch — comportamiento NProgress-like, da feedback inmediato.
+    {% endcomment %}
+    {% include 'partials/_htmx_progress.html' %}
+
     {# Container global para toasts (HTMX inyecta aca via hx-swap-oob). #}
     <div id="toast-container" class="toast-container" aria-live="polite">
       {% include 'partials/_toasts.html' %}

@@ -28,13 +28,25 @@
     </div>
   </div>
 
+  {% comment %}
+    Filtros AJAX: cada cambio (typed/selected) refresca solo la tabla
+    via HTMX, sin recargar la pagina entera. El input "Buscar" tiene
+    debounce de 300ms para no spamear el server mientras se tipea.
+    URL se sincroniza via hx-push-url asi el filtro queda linkeable.
+  {% endcomment %}
   <div class="bo-card" style="margin-bottom:20px;">
     <div class="bo-card-body">
-      <form method="get" class="bo-form-inline">
+      <form method="get" class="bo-form-inline"
+            hx-get="{% url 'bodega:lista_productos' %}"
+            hx-trigger="input changed delay:300ms from:input[name='q'], change from:select"
+            hx-target="#productos-tabla"
+            hx-swap="outerHTML"
+            hx-push-url="true">
         <div class="bo-field" style="min-width:200px;">
           <label>Buscar</label>
-          <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
-                 placeholder="Nombre o descripción…">
+          <input type="search" name="q" value="{{ filtros.q }}" class="bo-input"
+                 placeholder="Nombre o descripción…"
+                 autocomplete="off">
         </div>
         <div class="bo-field">
           <label>Familia</label>
@@ -67,6 +79,8 @@
           </select>
         </div>
         <div style="display:flex; gap:6px;">
+          {# Boton de fallback no-JS — con HTMX no hace falta clickear,
+             pero si JS esta deshabilitado funciona el form GET normal. #}
           <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
           <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Limpiar</a>
         </div>
@@ -74,79 +88,5 @@
     </div>
   </div>
 
-  <div class="bo-card">
-    {% if productos %}
-      <table class="bo-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Nombre</th>
-            <th>Familia</th>
-            <th>Colegio</th>
-            <th class="num">Precio</th>
-            <th class="num">Variantes</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in productos %}
-            <tr {% if not p.activo %}style="opacity:.5;"{% endif %}>
-              <td>
-                {% if p.imagen %}
-                  <img class="prod-thumb" src="{{ p.imagen.url }}" alt="{{ p.nombre }}" loading="lazy">
-                {% else %}
-                  <div class="prod-placeholder">·</div>
-                {% endif %}
-              </td>
-              <td>
-                <strong>{{ p.nombre }}</strong>
-                {% if p.descripcion %}
-                  <div style="font-size:11px;color:var(--bo-muted);">{{ p.descripcion|truncatechars:60 }}</div>
-                {% endif %}
-              </td>
-              <td>{{ p.familia.nombre }}</td>
-              <td>
-                {% if p.colegio %}
-                  <span class="bo-badge bo-badge-info">{{ p.colegio.nombre }}</span>
-                {% else %}
-                  <span style="color:var(--bo-muted);">—</span>
-                {% endif %}
-              </td>
-              <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
-              <td class="num">
-                {% if p.tiene_variantes %}
-                  <a href="{% url 'bodega:variantes' p.pk %}" style="color:var(--bo-primary-2);">
-                    {{ p.n_variantes }}
-                  </a>
-                {% else %}
-                  —
-                {% endif %}
-              </td>
-              <td>
-                {% if p.activo %}
-                  <span class="bo-badge bo-badge-success">Activo</span>
-                {% else %}
-                  <span class="bo-badge bo-badge-muted">Inactivo</span>
-                {% endif %}
-              </td>
-              <td>
-                <div class="prod-actions">
-                  <a href="{% url 'bodega:producto_editar' p.pk %}" class="bo-btn bo-btn-sm">Editar</a>
-                  {% if p.tiene_variantes %}
-                    <a href="{% url 'bodega:variantes' p.pk %}" class="bo-btn bo-btn-sm">Variantes</a>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <div class="bo-card-body" style="color:var(--bo-muted);">
-        No hay productos con los filtros aplicados.
-        <a href="{% url 'bodega:producto_nuevo' %}" style="color:var(--bo-primary-2);font-weight:600;">Creá uno →</a>
-      </div>
-    {% endif %}
-  </div>
+  {% include 'bodega/_productos_lista_tabla.html' %}
 {% endblock %}

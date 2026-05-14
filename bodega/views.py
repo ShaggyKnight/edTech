@@ -334,14 +334,18 @@ def lista_productos(request):
     elif estado == 'inactivos':
         qs = qs.filter(activo=False)
 
-    return render(request, 'bodega/productos_lista.html', {
+    contexto = {
         'productos': qs.order_by('familia__nombre', 'nombre'),
         'familias': Familia.objects.order_by('nombre'),
         'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
         'filtros': {
             'q': q, 'familia': familia_id, 'colegio': colegio_id, 'estado': estado,
         },
-    })
+    }
+    # Filtros AJAX: si la request es HTMX, devolvemos solo la tabla.
+    if request.htmx:
+        return render(request, 'bodega/_productos_lista_tabla.html', contexto)
+    return render(request, 'bodega/productos_lista.html', contexto)
 
 
 @login_required
@@ -510,10 +514,13 @@ def lista_materiales(request):
         qs = qs.filter(activo=True)
     elif estado == 'inactivos':
         qs = qs.filter(activo=False)
-    return render(request, 'bodega/materiales_lista.html', {
+    contexto = {
         'materiales': qs.order_by('nombre'),
         'filtros': {'q': q, 'estado': estado},
-    })
+    }
+    if request.htmx:
+        return render(request, 'bodega/_materiales_lista_tabla.html', contexto)
+    return render(request, 'bodega/materiales_lista.html', contexto)
 
 
 @login_required
@@ -674,11 +681,14 @@ def lista_ofertas(request):
         o.estado_visual = _estado_oferta(o, ahora)
         ofertas.append(o)
 
-    return render(request, 'bodega/ofertas_lista.html', {
+    contexto = {
         'ofertas': ofertas,
         'filtros': {'q': q, 'estado': estado, 'canal': canal},
         'canal_choices': Oferta.CANAL_CHOICES,
-    })
+    }
+    if request.htmx:
+        return render(request, 'bodega/_ofertas_lista_tabla.html', contexto)
+    return render(request, 'bodega/ofertas_lista.html', contexto)
 
 
 @login_required

@@ -1,0 +1,83 @@
+{% load humanize %}
+{% comment %}
+  Tabla de productos del backoffice. Extraida como partial para que el
+  filtro AJAX (input "Buscar" + selects familia/colegio/estado) refresque
+  solo esta zona sin recargar la pagina.
+
+  Contexto requerido: `productos`.
+{% endcomment %}
+<div class="bo-card" id="productos-tabla">
+  {% if productos %}
+    <table class="bo-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Nombre</th>
+          <th>Familia</th>
+          <th>Colegio</th>
+          <th class="num">Precio</th>
+          <th class="num">Variantes</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+          <tr {% if not p.activo %}style="opacity:.5;"{% endif %}>
+            <td>
+              {% if p.imagen %}
+                <img class="prod-thumb" src="{{ p.imagen.url }}" alt="{{ p.nombre }}" loading="lazy">
+              {% else %}
+                <div class="prod-placeholder">·</div>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ p.nombre }}</strong>
+              {% if p.descripcion %}
+                <div style="font-size:11px;color:var(--bo-muted);">{{ p.descripcion|truncatechars:60 }}</div>
+              {% endif %}
+            </td>
+            <td>{{ p.familia.nombre }}</td>
+            <td>
+              {% if p.colegio %}
+                <span class="bo-badge bo-badge-info">{{ p.colegio.nombre }}</span>
+              {% else %}
+                <span style="color:var(--bo-muted);">—</span>
+              {% endif %}
+            </td>
+            <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
+            <td class="num">
+              {% if p.tiene_variantes %}
+                <a href="{% url 'bodega:variantes' p.pk %}" style="color:var(--bo-primary-2);">
+                  {{ p.n_variantes }}
+                </a>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% if p.activo %}
+                <span class="bo-badge bo-badge-success">Activo</span>
+              {% else %}
+                <span class="bo-badge bo-badge-muted">Inactivo</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="prod-actions">
+                <a href="{% url 'bodega:producto_editar' p.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                {% if p.tiene_variantes %}
+                  <a href="{% url 'bodega:variantes' p.pk %}" class="bo-btn bo-btn-sm">Variantes</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="bo-card-body" style="color:var(--bo-muted);">
+      No hay productos con los filtros aplicados.
+      <a href="{% url 'bodega:producto_nuevo' %}" style="color:var(--bo-primary-2);font-weight:600;">Creá uno →</a>
+    </div>
+  {% endif %}
+</div>

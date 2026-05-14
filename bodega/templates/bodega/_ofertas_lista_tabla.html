@@ -1,0 +1,92 @@
+{% load humanize %}
+{% comment %}
+  Tabla de ofertas. Partial extraido para que los filtros AJAX refresquen
+  solo esta zona sin recargar la pagina.
+  Contexto: `ofertas`.
+{% endcomment %}
+<div class="bo-card" id="ofertas-tabla">
+  {% if ofertas %}
+    <table class="bo-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Aplica a</th>
+          <th class="num">Descuento</th>
+          <th>Canal</th>
+          <th>Vigencia</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in ofertas %}
+          <tr {% if not o.activa %}style="opacity:.55;"{% endif %}>
+            <td><strong>{{ o.nombre }}</strong></td>
+            <td>
+              {% if o.variante %}
+                <div>{{ o.variante.producto.nombre }}</div>
+                <div style="font-size:11px;color:var(--bo-muted);">SKU {{ o.variante.sku }}</div>
+              {% elif o.producto %}
+                <div>{{ o.producto.nombre }}</div>
+                <div style="font-size:11px;color:var(--bo-muted);">Todas las variantes</div>
+              {% else %}
+                <span style="color:var(--bo-muted);">—</span>
+              {% endif %}
+            </td>
+            <td class="num">
+              {% if o.tipo == 'porcentaje' %}
+                −{{ o.valor|floatformat:0 }}%
+              {% else %}
+                −${{ o.valor|floatformat:0|intcomma }}
+              {% endif %}
+            </td>
+            <td>
+              <span class="bo-badge bo-badge-info">{{ o.get_canal_display }}</span>
+            </td>
+            <td style="font-size:12px;">
+              {{ o.fecha_inicio|date:"d-m-Y H:i" }}<br>
+              <span style="color:var(--bo-muted);">→ {{ o.fecha_fin|date:"d-m-Y H:i" }}</span>
+            </td>
+            <td>
+              {% if o.estado_visual == 'vigente' %}
+                <span class="bo-badge bo-badge-success">Vigente</span>
+              {% elif o.estado_visual == 'programada' %}
+                <span class="bo-badge bo-badge-info">Programada</span>
+              {% elif o.estado_visual == 'vencida' %}
+                <span class="bo-badge bo-badge-muted">Vencida</span>
+              {% else %}
+                <span class="bo-badge bo-badge-warning">Pausada</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:inline-flex;gap:4px;">
+                <a href="{% url 'bodega:oferta_editar' o.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                <form method="post" action="{% url 'bodega:oferta_toggle' o.pk %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="bo-btn bo-btn-sm">
+                    {% if o.activa %}Pausar{% else %}Reactivar{% endif %}
+                  </button>
+                </form>
+                <button type="button" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);"
+                        onclick="ideasConfirm({
+                          title: 'Eliminar oferta',
+                          message: '¿Eliminar la oferta &quot;{{ o.nombre|escapejs }}&quot;?\n\nEsta acción no se puede deshacer.',
+                          confirmText: 'Eliminar',
+                          danger: true,
+                          formAction: '{% url 'bodega:oferta_borrar' o.pk %}',
+                        })">
+                  Borrar
+                </button>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="bo-card-body" style="color:var(--bo-muted);">
+      No hay ofertas con los filtros aplicados.
+      <a href="{% url 'bodega:oferta_nueva' %}" style="color:var(--bo-primary-2);font-weight:600;">Creá la primera →</a>
+    </div>
+  {% endif %}
+</div>

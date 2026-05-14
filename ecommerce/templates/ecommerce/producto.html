@@ -123,12 +123,41 @@
                           data-label="{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}">
                     {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                   </button>
+                {% else %}
+                  {# Sprint 2 · 2.3: agotada en la misma grilla con `is-agotada`. #}
+                  <button type="button" class="size-chip is-agotada"
+                          aria-disabled="true"
+                          data-agotada="1"
+                          data-variante-id="{{ v.pk }}"
+                          data-label="{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}"
+                          title="Sin stock — avísame cuando vuelva">
+                    {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                  </button>
                 {% endif %}
               {% endfor %}
             </div>
             <div style="margin-top:8px;font-size:12px;color:var(--ink-60);" id="pdp-stock-info"></div>
-            <div style="margin-top:10px;font-size:12px;color:var(--ink-60);">
-              {% for v in variantes %}{% if not v.stock %}{% if forloop.counter == 1 %}<span>Agotadas: </span>{% endif %}<span style="text-decoration:line-through;margin-right:6px;">{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}</span>{% endif %}{% endfor %}
+
+            {# Sprint 2 · 2.3: inline "Avísame cuando vuelva" — oculto hasta click en agotada. #}
+            <div class="notify-form" id="pdp-notify-form" hidden>
+              <div class="notify-head">
+                <strong>Avísame cuando vuelva la <span id="pdp-notify-label">talla</span></strong>
+                <button type="button" class="notify-close" id="pdp-notify-close" aria-label="Cerrar">
+                  <svg class="ico ico--14"><use href="#ico-close"/></svg>
+                </button>
+              </div>
+              <p>Te escribimos cuando vuelva a stock. Sin spam, sin promociones.</p>
+              <div class="notify-input">
+                <input type="email" inputmode="email" autocomplete="email"
+                       id="pdp-notify-email" placeholder="tu@email.cl" required>
+                <button type="button" class="btn-primary" id="pdp-notify-submit">
+                  Avísame
+                </button>
+              </div>
+              <div class="notify-done" id="pdp-notify-done" hidden>
+                <svg class="ico ico--16"><use href="#ico-check"/></svg>
+                Listo. Te escribiremos a <em id="pdp-notify-done-email"></em> apenas vuelva.
+              </div>
             </div>
           </div>
 
@@ -142,7 +171,8 @@
 
         <script>
           (function() {
-            var chips = document.querySelectorAll('#pdp-chips .size-chip');
+            var chips = document.querySelectorAll('#pdp-chips .size-chip:not(.is-agotada)');
+            var chipsAgotadas = document.querySelectorAll('#pdp-chips .size-chip.is-agotada');
             var btn = document.getElementById('pdp-add-btn');
             var btnLabel = document.getElementById('pdp-add-label');
             var priceVal = document.getElementById('pdp-price-value');
@@ -153,6 +183,16 @@
             var labelEleccion = "{{ label_eleccion|escapejs }}";
             // Capitalizar primer letra: "talla" → "Talla", "formato" → "Formato".
             var labelCap = labelEleccion.charAt(0).toUpperCase() + labelEleccion.slice(1);
+
+            // Sprint 2 · 2.3: form de "avísame cuando vuelva".
+            var notifyForm = document.getElementById('pdp-notify-form');
+            var notifyLabel = document.getElementById('pdp-notify-label');
+            var notifyClose = document.getElementById('pdp-notify-close');
+            var notifyEmail = document.getElementById('pdp-notify-email');
+            var notifySubmit = document.getElementById('pdp-notify-submit');
+            var notifyDone = document.getElementById('pdp-notify-done');
+            var notifyDoneEmail = document.getElementById('pdp-notify-done-email');
+            var notifyVarianteId = null;
 
             function fmt(n) {
               return Number(n).toLocaleString('es-CL');
@@ -165,6 +205,8 @@
               chip.addEventListener('click', function() {
                 chips.forEach(function(c) { c.classList.remove('active'); });
                 chip.classList.add('active');
+
+                if (notifyForm) notifyForm.hidden = true;
 
                 var precioBase  = parseFloat(chip.dataset.precio);
                 var precioFinal = parseFloat(chip.dataset.precioOferta || chip.dataset.precio);
@@ -201,6 +243,49 @@
                 btn.disabled = false;
                 btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
               });
+            });
+
+            // Sprint 2 · 2.3: click en chip agotada abre el form "avísame".
+            chipsAgotadas.forEach(function(chip) {
+              chip.addEventListener('click', function() {
+                if (!notifyForm) return;
+                notifyVarianteId = chip.dataset.varianteId;
+                if (notifyLabel) {
+                  notifyLabel.textContent = labelCap.toLowerCase() + ' ' + chip.dataset.label.trim();
+                }
+                notifyForm.hidden = false;
+                if (notifyDone) notifyDone.hidden = true;
+                if (notifyEmail) {
+                  try {
+                    var saved = localStorage.getItem('ib_save_email');
+                    if (saved && !notifyEmail.value) notifyEmail.value = saved;
+                  } catch (e) {}
+                  setTimeout(function () { notifyEmail.focus(); }, 60);
+                }
+              });
+            });
+
+            if (notifyClose) notifyClose.addEventListener('click', function () {
+              notifyForm.hidden = true;
+            });
+
+            if (notifySubmit) notifySubmit.addEventListener('click', function () {
+              var email = (notifyEmail.value || '').trim();
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                notifyEmail.focus();
+                notifyEmail.classList.add('is-invalid');
+                return;
+              }
+              notifyEmail.classList.remove('is-invalid');
+              try { localStorage.setItem('ib_save_email', email); } catch (e) {}
+              if (window.plausible) {
+                window.plausible('notify_when_available', {
+                  props: { variante_id: notifyVarianteId, email_dominio: email.split('@')[1] || '' },
+                });
+              }
+              // TODO Sprint 4: POST a `/tienda/avisame/` para persistir la suscripcion.
+              notifyDoneEmail.textContent = email;
+              notifyDone.hidden = false;
             });
           })();
         </script>

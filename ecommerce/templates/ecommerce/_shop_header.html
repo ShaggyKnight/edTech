@@ -5,6 +5,11 @@
 {% endcomment %}
 <header class="shop-header">
   <div class="shop-header-inner">
+    {# Hamburger — visible solo en mobile/tablet portrait (CSS toggle). #}
+    <button type="button" class="shop-mobile-toggle" id="shop-drawer-open"
+            aria-label="Menú" aria-expanded="false" aria-controls="shop-drawer">
+      <svg class="ico ico--20"><use href="#ico-menu"/></svg>
+    </button>
     <a class="shop-menu" href="{% url 'index' %}" aria-label="Inicio">
       {% include 'partials/_ideas_logo.html' with size=32 tone='ink' show_wordmark=False %}
     </a>
@@ -31,6 +36,11 @@
       <div class="search-dropdown" id="shop-search-dropdown" role="listbox" hidden></div>
     </form>
     <div class="shop-actions">
+      {# Mobile: icono lupa que expande el buscador en una fila propia. #}
+      <button type="button" class="shop-mobile-search" id="shop-mobile-search-toggle"
+              aria-label="Buscar" aria-expanded="false">
+        <svg class="ico ico--18"><use href="#ico-search"/></svg>
+      </button>
       {% if user.is_authenticated and user.is_staff %}
         {% comment %}
           Acceso rápido al panel privado para staff (admin/cajero/bodeguero)
@@ -62,11 +72,121 @@
       </a>
     </div>
   </div>
+  {# Mobile search expandido — toggled por el ícono lupa. #}
+  <div class="shop-search-mobile" id="shop-mobile-search-pane" hidden>
+    <form class="shop-search" method="get" action="{% url 'ecommerce:catalogo' %}" autocomplete="off">
+      <svg class="ico ico--16"><use href="#ico-search"/></svg>
+      <input type="text" name="q" value="{{ query|default:'' }}"
+             placeholder="Buscar productos o colegio…"
+             aria-label="Buscar productos"
+             id="shop-mobile-search-input">
+    </form>
+  </div>
   <div class="shop-promo">
     <svg class="ico ico--14"><use href="#ico-truck"/></svg>
     Envío gratis en compras sobre $50.000 · Ajustes de uniforme sin cargo
   </div>
 </header>
+
+{# ============ Mobile drawer (lateral izquierda) ============ #}
+<div class="drawer-scrim" id="shop-drawer-scrim" hidden></div>
+<aside class="drawer" id="shop-drawer" role="dialog" aria-label="Menú" aria-modal="true" hidden>
+  <div class="drawer-head">
+    {% include 'partials/_ideas_logo.html' with size=32 tone='ink' show_wordmark=True %}
+    <button type="button" class="drawer-close" id="shop-drawer-close" aria-label="Cerrar menú">
+      <svg class="ico ico--18"><use href="#ico-close"/></svg>
+    </button>
+  </div>
+  <nav class="drawer-nav">
+    <a href="{% url 'index' %}">Inicio</a>
+    <div class="drawer-section">Categorías</div>
+    <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes">Uniformes Escolares</a>
+    <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes">Perfumes</a>
+    <a href="{% url 'ecommerce:catalogo' %}?cat=moda">Moda</a>
+    <a href="{% url 'ecommerce:catalogo' %}?cat=intima">Ropa Íntima</a>
+    <a href="{% url 'ecommerce:catalogo' %}?oferta=1" class="sale">★ Ofertas</a>
+    <div class="drawer-section">Tu cuenta</div>
+    {% if user.is_authenticated %}
+      <a href="{% url 'ecommerce:mis_pedidos' %}">
+        <svg class="ico ico--16"><use href="#ico-user"/></svg> Mis pedidos
+      </a>
+      <a href="{% url 'ecommerce:logout' %}">Cerrar sesión</a>
+    {% else %}
+      <a href="{% url 'ecommerce:login' %}">
+        <svg class="ico ico--16"><use href="#ico-user"/></svg> Iniciar sesión
+      </a>
+      <a href="{% url 'ecommerce:registro' %}">Crear cuenta</a>
+    {% endif %}
+    <a href="{% url 'ecommerce:carrito' %}">
+      <svg class="ico ico--16"><use href="#ico-bag"/></svg>
+      Carrito
+      {% if items_count %}<span class="drawer-badge">{{ items_count }}</span>{% endif %}
+    </a>
+    {% if user.is_authenticated and user.is_staff %}
+      <div class="drawer-section">Staff</div>
+      <a href="{% url 'reportes:dashboard' %}">
+        <svg class="ico ico--16"><use href="#ico-shield"/></svg> Panel privado
+      </a>
+    {% endif %}
+  </nav>
+  <div class="drawer-foot">
+    <p>Caupolicán 437-B · Los Vilos<br>Lun a Sáb · 9:00 – 19:00</p>
+  </div>
+</aside>
+
+<script>
+  (function () {
+    // ============ Hamburger drawer ============
+    var openBtn = document.getElementById('shop-drawer-open');
+    var closeBtn = document.getElementById('shop-drawer-close');
+    var scrim = document.getElementById('shop-drawer-scrim');
+    var drawer = document.getElementById('shop-drawer');
+    if (openBtn && drawer && scrim) {
+      function openDrawer() {
+        drawer.hidden = false;
+        scrim.hidden = false;
+        openBtn.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('no-scroll');
+        var firstLink = drawer.querySelector('a, button');
+        if (firstLink) firstLink.focus();
+      }
+      function closeDrawer() {
+        drawer.hidden = true;
+        scrim.hidden = true;
+        openBtn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('no-scroll');
+        openBtn.focus();
+      }
+      openBtn.addEventListener('click', openDrawer);
+      closeBtn.addEventListener('click', closeDrawer);
+      scrim.addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !drawer.hidden) closeDrawer();
+      });
+      drawer.addEventListener('click', function (e) {
+        if (e.target.closest('a')) closeDrawer();
+      });
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 900 && !drawer.hidden) closeDrawer();
+      });
+    }
+
+    // ============ Mobile search expand ============
+    var searchToggle = document.getElementById('shop-mobile-search-toggle');
+    var searchPane = document.getElementById('shop-mobile-search-pane');
+    var searchInputMobile = document.getElementById('shop-mobile-search-input');
+    if (searchToggle && searchPane) {
+      searchToggle.addEventListener('click', function () {
+        var willOpen = searchPane.hidden;
+        searchPane.hidden = !willOpen;
+        searchToggle.setAttribute('aria-expanded', String(willOpen));
+        if (willOpen && searchInputMobile) {
+          setTimeout(function () { searchInputMobile.focus(); }, 50);
+        }
+      });
+    }
+  })();
+</script>
 
 <script>
   (function () {

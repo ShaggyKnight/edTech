@@ -560,8 +560,21 @@ def detalle_producto(request, pk: int):
 def ver_carrito(request):
     cart = Cart(request.session)
     subtotal_bruto, descuento_total, total_neto = cart.totales()
+
+    # Sprint 2 · 2.1: si hay errores guardados del intento de checkout,
+    # los inyectamos en las lineas correspondientes. Se consumen y se
+    # borran al renderizar — no queremos mostrar el error eternamente.
+    cart_errors = request.session.pop('cart_errors', {}) or {}
+    request.session.modified = True
+
+    lineas = list(cart.lineas())
+    for linea in lineas:
+        err = cart_errors.get(linea['key'])
+        if err:
+            linea['error'] = err
+
     return render(request, 'ecommerce/carrito.html', {
-        'lineas': list(cart.lineas()),
+        'lineas': lineas,
         'subtotal_bruto': subtotal_bruto,
         'descuento_total': descuento_total,
         'total_neto': total_neto,
@@ -749,7 +762,29 @@ def checkout_iniciar(request):
             return_url=return_url,
         )
     except StockInsuficienteOnline as exc:
-        messages.error(request, f'Stock insuficiente para {exc.descripcion}: quedan {exc.disponible}.')
+        # Sprint 2 · 2.1: marcar la linea conflictiva en sesion para que
+        # el carrito la renderice con borde rojo + CTA de ajuste. Toast
+        # corto, el detalle vive en la linea.
+        if exc.tipo and exc.item_id:
+            request.session['cart_errors'] = {
+                f'{exc.tipo}:{exc.item_id}': {
+                    'codigo': 'stock_insuficiente',
+                    'titulo': 'Stock insuficiente',
+                    'mensaje': (
+                        f'Quedan {exc.disponible} unidades — tienes '
+                        f'{exc.solicitado} en el carrito.'
+                    ),
+                    'accion': {
+                        'label': f'Ajustar a {exc.disponible}',
+                        'cantidad': exc.disponible,
+                    } if exc.disponible > 0 else None,
+                },
+            }
+            request.session.modified = True
+        messages.error(
+            request,
+            f'Stock insuficiente para {exc.descripcion}. Revisa la línea marcada en rojo.',
+        )
         return redirect('ecommerce:carrito')
     except TiendaOnlineNoConfigurada:
         messages.error(request, 'La tienda online no está configurada todavía.')

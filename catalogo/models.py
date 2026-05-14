@@ -210,6 +210,92 @@ class Producto(models.Model):
             return 0
         return int(round((desc / base) * 100))
 
+    # ── Resenas (Bloque 9) ────────────────────────────────────────────
+
+    @cached_property
+    def resenas_publicas(self):
+        """Resenas aprobadas, mas recientes primero."""
+        return list(self.resenas.filter(estado='aprobada'))
+
+    @cached_property
+    def resena_promedio(self):
+        """Promedio de estrellas (float 1.0..5.0), o None si no hay."""
+        resenas = self.resenas_publicas
+        if not resenas:
+            return None
+        return sum(r.estrellas for r in resenas) / len(resenas)
+
+    @property
+    def resena_promedio_redondo(self):
+        """Promedio redondeado al entero — para mostrar N estrellas pintadas."""
+        avg = self.resena_promedio
+        return int(round(avg)) if avg is not None else 0
+
+    @property
+    def resena_count(self):
+        return len(self.resenas_publicas)
+
+
+class Resena(models.Model):
+    """Reseña de un producto por un cliente (con o sin cuenta).
+
+    Bloque 9: para mostrar reseñas reales en el PDP (en vez del
+    placeholder "Nuevo · sin reseñas aún"). Moderacion manual via
+    `estado` — se publica solo lo que la duena aprueba. No exponemos
+    el email del cliente; solo `nombre_publico` (puede ser nick).
+
+    `recibo` opcional: si la duena lo enlaza al ReciboVenta del
+    cliente, mostramos badge "Compra verificada".
+    """
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_APROBADA = 'aprobada'
+    ESTADO_RECHAZADA = 'rechazada'
+    ESTADO_CHOICES = [
+        (ESTADO_PENDIENTE, 'Pendiente de revisión'),
+        (ESTADO_APROBADA, 'Aprobada (visible)'),
+        (ESTADO_RECHAZADA, 'Rechazada'),
+    ]
+
+    producto = models.ForeignKey(
+        Producto, on_delete=models.CASCADE, related_name='resenas',
+    )
+    estrellas = models.PositiveSmallIntegerField(
+        choices=[(i, f'{i} estrella{"s" if i != 1 else ""}') for i in range(1, 6)],
+    )
+    titulo = models.CharField(max_length=120, blank=True)
+    texto = models.TextField()
+    nombre_publico = models.CharField(
+        max_length=80,
+        help_text='Nombre o nick que se publica con la resena.',
+    )
+    cliente_email = models.EmailField(
+        help_text='Email del autor — NO se publica. Solo para contactar '
+                  'si la dueña necesita validar.',
+    )
+    estado = models.CharField(
+        max_length=12, choices=ESTADO_CHOICES, default=ESTADO_PENDIENTE,
+        db_index=True,
+    )
+    # FK opcional al recibo de compra — habilita el badge "verificada".
+    recibo = models.ForeignKey(
+        'pos.ReciboVenta', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='resenas',
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    moderada = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-creado']
+        constraints = [
+            CheckConstraint(
+                check=Q(estrellas__gte=1) & Q(estrellas__lte=5),
+                name='resena_estrellas_1_5',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.nombre_publico} · {self.estrellas}★ · {self.producto.nombre}'
+
 
 class ProductoImagen(models.Model):
     """Imagen adicional para la galeria del PDP.

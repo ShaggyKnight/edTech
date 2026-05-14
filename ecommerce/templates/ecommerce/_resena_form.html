@@ -1,0 +1,93 @@
+{% comment %}
+  Bloque 9 · Form para que un cliente envie una resena.
+  Param requerido: `producto`. Opcional: `form` (con errores tras POST).
+
+  Submit via HTMX por default — el endpoint devuelve el partial
+  `_resena_done.html` con el agradecimiento. Sin JS hace POST normal.
+{% endcomment %}
+<form class="resena-form" id="resena-form"
+      method="post"
+      action="{% url 'ecommerce:enviar_resena' producto.pk %}"
+      hx-post="{% url 'ecommerce:enviar_resena' producto.pk %}"
+      hx-target="#resena-form-wrap"
+      hx-swap="innerHTML">
+  {% csrf_token %}
+  <input type="hidden" name="producto_id" value="{{ producto.pk }}">
+
+  <h3 style="margin:0 0 8px 0;">Deja tu opinión</h3>
+  <p style="color:var(--ink-60);font-size:13px;margin:0 0 14px;">
+    Tu email no se publica. Revisamos cada reseña antes de subirla.
+  </p>
+
+  <div class="resena-stars" role="radiogroup" aria-label="Calificación">
+    {% for n in "12345" %}
+      <label class="resena-star">
+        <input type="radio" name="estrellas" value="{{ forloop.counter }}"
+               required {% if form.errors.estrellas %}aria-invalid="true"{% endif %}>
+        <svg class="ico ico--20"><use href="#ico-star"/></svg>
+        <span class="visually-hidden">{{ forloop.counter }} estrella{{ forloop.counter|pluralize:"s" }}</span>
+      </label>
+    {% endfor %}
+  </div>
+  {% if form.errors.estrellas %}
+    <div class="field-msg field-msg-error">Elegí cuántas estrellas le pondrías.</div>
+  {% endif %}
+
+  <label class="resena-row">
+    <span class="resena-label">Tu nombre (lo publicamos)</span>
+    <input type="text" name="nombre_publico" maxlength="80"
+           required autocomplete="name"
+           value="{{ form.nombre_publico.value|default_if_none:'' }}"
+           {% if form.errors.nombre_publico %}aria-invalid="true"{% endif %}>
+  </label>
+
+  <label class="resena-row">
+    <span class="resena-label">Tu email (privado)</span>
+    <input type="email" name="cliente_email" inputmode="email"
+           required autocomplete="email"
+           value="{{ form.cliente_email.value|default_if_none:'' }}"
+           {% if form.errors.cliente_email %}aria-invalid="true"{% endif %}>
+    {% if form.errors.cliente_email %}
+      <span class="field-msg field-msg-error">Necesitamos un email válido.</span>
+    {% endif %}
+  </label>
+
+  <label class="resena-row">
+    <span class="resena-label">Título (opcional)</span>
+    <input type="text" name="titulo" maxlength="120"
+           value="{{ form.titulo.value|default_if_none:'' }}">
+  </label>
+
+  <label class="resena-row">
+    <span class="resena-label">Contanos cómo te fue</span>
+    <textarea name="texto" rows="4" minlength="10" maxlength="2000" required
+              {% if form.errors.texto %}aria-invalid="true"{% endif %}>{{ form.texto.value|default_if_none:'' }}</textarea>
+    {% if form.errors.texto %}
+      <span class="field-msg field-msg-error">El comentario debe tener al menos 10 caracteres.</span>
+    {% endif %}
+  </label>
+
+  <button type="submit" class="btn-primary">Enviar reseña</button>
+</form>
+
+<script>
+  // Hover-fill de las estrellas — feedback visual al elegir.
+  (function () {
+    var stars = document.querySelectorAll('#resena-form .resena-star');
+    if (!stars.length) return;
+    function paint(uptoIndex) {
+      stars.forEach(function (s, i) {
+        s.classList.toggle('is-active', i <= uptoIndex);
+      });
+    }
+    stars.forEach(function (s, i) {
+      s.addEventListener('mouseenter', function () { paint(i); });
+      s.addEventListener('click', function () { paint(i); });
+    });
+    var wrap = stars[0].parentElement;
+    wrap.addEventListener('mouseleave', function () {
+      var checked = wrap.querySelector('input[name="estrellas"]:checked');
+      paint(checked ? parseInt(checked.value, 10) - 1 : -1);
+    });
+  })();
+</script>

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Atributo, Colegio, Familia, Oferta, Producto, ProductoImagen, ProductoVariante, ValorAtributo
+from .models import Atributo, Colegio, Familia, Oferta, Producto, ProductoImagen, ProductoVariante, Resena, ValorAtributo
 
 
 class ValorAtributoInline(admin.TabularInline):
@@ -102,3 +102,31 @@ class OfertaAdmin(admin.ModelAdmin):
     list_display = ['nombre', 'tipo', 'valor', 'canal', 'fecha_inicio', 'fecha_fin', 'activa']
     list_filter = ['canal', 'tipo', 'activa']
     search_fields = ['nombre']
+
+
+@admin.register(Resena)
+class ResenaAdmin(admin.ModelAdmin):
+    """Moderacion manual de resenas. La duena aprueba/rechaza desde aca;
+    solo las aprobadas se ven en el PDP publico (Bloque 9)."""
+    list_display = ['producto', 'estrellas', 'nombre_publico', 'estado', 'creado']
+    list_filter = ['estado', 'estrellas', 'producto__familia']
+    search_fields = ['producto__nombre', 'nombre_publico', 'cliente_email', 'texto']
+    readonly_fields = ['creado', 'cliente_email', 'recibo']
+    fieldsets = (
+        ('Contenido', {'fields': ('producto', 'estrellas', 'titulo', 'texto', 'nombre_publico')}),
+        ('Cliente', {'fields': ('cliente_email', 'recibo')}),
+        ('Moderacion', {'fields': ('estado', 'moderada', 'creado')}),
+    )
+    actions = ['aprobar_resenas', 'rechazar_resenas']
+
+    @admin.action(description='Aprobar resenas seleccionadas')
+    def aprobar_resenas(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(estado=Resena.ESTADO_APROBADA, moderada=timezone.now())
+        self.message_user(request, f'{updated} resenas aprobadas.')
+
+    @admin.action(description='Rechazar resenas seleccionadas')
+    def rechazar_resenas(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(estado=Resena.ESTADO_RECHAZADA, moderada=timezone.now())
+        self.message_user(request, f'{updated} resenas rechazadas.')

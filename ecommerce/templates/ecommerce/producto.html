@@ -75,9 +75,22 @@
       <div class="pdp-school">{{ producto.familia.nombre }}</div>
       <h1>{{ producto.nombre }}</h1>
 
+      {# Bloque 9 · Rating real (o "Nuevo" si no hay resenas aprobadas todavia). #}
       <div class="pdp-rating">
-        {% for i in "12345" %}<svg class="ico ico--16"><use href="#ico-star"/></svg>{% endfor %}
-        <span>Nuevo · sin reseñas aún</span>
+        {% if producto.resena_count %}
+          {% with promedio=producto.resena_promedio_redondo %}
+            {% for i in "12345" %}
+              <svg class="ico ico--16{% if forloop.counter <= promedio %} star-on{% endif %}"><use href="#ico-star"/></svg>
+            {% endfor %}
+            <a href="#resenas" style="color:var(--ink-60);text-decoration:none;">
+              <strong>{{ producto.resena_promedio|floatformat:1 }}</strong> ·
+              {{ producto.resena_count }} reseña{{ producto.resena_count|pluralize:"s" }}
+            </a>
+          {% endwith %}
+        {% else %}
+          {% for i in "12345" %}<svg class="ico ico--16"><use href="#ico-star"/></svg>{% endfor %}
+          <span><a href="#resenas" style="color:var(--ink-60);text-decoration:none;">Sé el primero en opinar</a></span>
+        {% endif %}
       </div>
 
       {% if producto.tiene_variantes %}
@@ -387,6 +400,54 @@
           </ul>
         {% endif %}
       </div>
+    </div>
+  </section>
+
+  {# Bloque 9 · Resenas reales. #}
+  <section class="pdp-resenas" id="resenas" aria-label="Reseñas">
+    <h2>Reseñas</h2>
+
+    {% if resenas_publicas %}
+      <div class="resenas-summary">
+        {% with promedio=producto.resena_promedio_redondo %}
+          <div class="resenas-avg">
+            {% for i in "12345" %}
+              <svg class="ico ico--18{% if forloop.counter <= promedio %} star-on{% endif %}"><use href="#ico-star"/></svg>
+            {% endfor %}
+            <strong>{{ producto.resena_promedio|floatformat:1 }}</strong>
+            <span>de {{ producto.resena_count }} reseña{{ producto.resena_count|pluralize:"s" }}</span>
+          </div>
+        {% endwith %}
+      </div>
+
+      <ul class="resenas-list">
+        {% for r in resenas_publicas %}
+          <li class="resena-item">
+            <div class="resena-head">
+              <div class="resena-stars-row" aria-label="{{ r.estrellas }} de 5 estrellas">
+                {% for i in "12345" %}
+                  <svg class="ico ico--14{% if forloop.counter <= r.estrellas %} star-on{% endif %}"><use href="#ico-star"/></svg>
+                {% endfor %}
+              </div>
+              <strong class="resena-author">{{ r.nombre_publico }}</strong>
+              {% if r.recibo %}
+                <span class="resena-verified" title="Compra verificada con recibo #{{ r.recibo.pk }}">
+                  <svg class="ico ico--14"><use href="#ico-check"/></svg> Compra verificada
+                </span>
+              {% endif %}
+              <time datetime="{{ r.creado|date:'c' }}">{{ r.creado|date:'d-m-Y' }}</time>
+            </div>
+            {% if r.titulo %}<p class="resena-titulo"><strong>{{ r.titulo }}</strong></p>{% endif %}
+            <p class="resena-texto">{{ r.texto|linebreaksbr }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="resenas-empty">Todavía nadie escribió una reseña. <strong>¡Animate a ser el primero!</strong></p>
+    {% endif %}
+
+    <div id="resena-form-wrap" class="resena-form-wrap">
+      {% include 'ecommerce/_resena_form.html' with producto=producto form=resena_form %}
     </div>
   </section>
 </main>

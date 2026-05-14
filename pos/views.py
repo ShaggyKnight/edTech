@@ -94,21 +94,34 @@ def home(request):
         .annotate(stock=_stock_subquery(tienda, 'variante'))
     )
     if query:
-        # Accent + case insensitive: usamos los campos `nombre_buscable` y
-        # `descripcion_buscable` que se mantienen normalizados al guardar.
-        # SKU y valores de atributo se normalizan inline porque son cortos y
-        # rara vez tienen acentos.
+        # Busqueda multi-token: el cajero tipea "buzo 10" o "chaqueta 14"
+        # y queremos matchear las variantes que tienen TODOS los tokens
+        # en cualquiera de sus campos (nombre, sku, valor de atributo).
+        # Asi "buzo 10" devuelve solo el Buzo SFJ talla 10, no todos los
+        # buzos ni todas las prendas talla 10.
         from edTech.search import normalize_text
         q_norm = normalize_text(query)
-        productos_qs = productos_qs.filter(
-            Q(nombre_buscable__contains=q_norm)
-            | Q(descripcion_buscable__contains=q_norm)
-        )
-        variantes_qs = variantes_qs.filter(
-            Q(producto__nombre_buscable__contains=q_norm)
-            | Q(sku__icontains=query)
-            | Q(valores__valor__icontains=query)
-        ).distinct()
+        tokens = [t for t in q_norm.split() if t]
+
+        for token in tokens:
+            # Cada token reduce el queryset. Productos sin variantes:
+            # match en nombre o descripcion.
+            productos_qs = productos_qs.filter(
+                Q(nombre_buscable__contains=token)
+                | Q(descripcion_buscable__contains=token)
+            )
+            # Variantes: match en producto.nombre, sku o ALGUN valor de
+            # atributo. El JOIN a `valores` toma alias distinto en cada
+            # iteracion del loop, lo cual es lo que queremos: cada token
+            # exige UN valor que matchee (no el mismo valor para todos).
+            variantes_qs = variantes_qs.filter(
+                Q(producto__nombre_buscable__contains=token)
+                | Q(sku__icontains=token)
+                | Q(valores__valor__icontains=token)
+            )
+
+        # distinct al final porque los JOINs multiples pueden duplicar.
+        variantes_qs = variantes_qs.distinct()
     if familia_id.isdigit():
         f = int(familia_id)
         productos_qs = productos_qs.filter(familia_id=f)

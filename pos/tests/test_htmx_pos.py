@@ -108,6 +108,64 @@ class PosHtmxFlowTests(TestCase):
         self.assertIn('Buzo SFJ', body)
         self.assertNotIn('Perfume Yara', body)
 
+    # ── Busqueda multi-token (nombre + talla, etc) ────────────────────
+
+    def test_busqueda_multi_token_buzo_talla(self):
+        """`buzo 10` debe matchear la talla 10 del Buzo, no la 12."""
+        val_12 = ValorAtributo.objects.create(atributo=self.atr, valor='12', orden=3)
+        val_10 = ValorAtributo.objects.create(atributo=self.atr, valor='10', orden=4)
+        var_10 = ProductoVariante.objects.create(producto=self.buzo, sku='BZ-10')
+        var_10.valores.add(val_10)
+        StockTienda.objects.create(tienda=self.tienda, variante=var_10, cantidad=2)
+        var_12 = ProductoVariante.objects.create(producto=self.buzo, sku='BZ-12')
+        var_12.valores.add(val_12)
+        StockTienda.objects.create(tienda=self.tienda, variante=var_12, cantidad=2)
+
+        resp = self.client.get(
+            reverse('pos:home') + '?q=buzo+10',
+            HTTP_HX_REQUEST='true',
+        )
+        body = resp.content.decode()
+        # La variante 10 SI esta.
+        self.assertIn('BZ-10', body)
+        # La variante 12 NO esta.
+        self.assertNotIn('BZ-12', body)
+        # La variante M (sin "10" en ningun lado) tampoco.
+        self.assertNotIn('BZ-M', body)
+        # El perfume Yara (no tiene "buzo") tampoco.
+        self.assertNotIn('Perfume Yara', body)
+
+    def test_busqueda_multi_token_orden_independiente(self):
+        """`10 buzo` debe dar el mismo resultado que `buzo 10`."""
+        val_10 = ValorAtributo.objects.create(atributo=self.atr, valor='10', orden=4)
+        var_10 = ProductoVariante.objects.create(producto=self.buzo, sku='BZ-10')
+        var_10.valores.add(val_10)
+        StockTienda.objects.create(tienda=self.tienda, variante=var_10, cantidad=2)
+
+        resp = self.client.get(
+            reverse('pos:home') + '?q=10+buzo',
+            HTTP_HX_REQUEST='true',
+        )
+        self.assertIn('BZ-10', resp.content.decode())
+
+    def test_busqueda_token_unico_funciona(self):
+        """Token unico (sin espacios) sigue funcionando como antes."""
+        resp = self.client.get(
+            reverse('pos:home') + '?q=yara',
+            HTTP_HX_REQUEST='true',
+        )
+        body = resp.content.decode()
+        self.assertIn('Perfume Yara', body)
+        self.assertNotIn('Buzo SFJ', body)
+
+    def test_busqueda_token_sin_match_devuelve_vacio(self):
+        resp = self.client.get(
+            reverse('pos:home') + '?q=xyz999',
+            HTTP_HX_REQUEST='true',
+        )
+        body = resp.content.decode()
+        self.assertIn('No hay productos', body)
+
     # ── Agregar al carrito con HTMX ───────────────────────────────────
 
     def test_agregar_htmx_devuelve_oob_del_carrito(self):

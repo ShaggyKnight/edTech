@@ -17,6 +17,7 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/iniciar/', views.checkout_iniciar, name='checkout_iniciar'),
     path('checkout/retorno/', views.checkout_retorno, name='checkout_retorno'),
+    path('checkout/validar-rut/', views.validar_rut_inline, name='validar_rut_inline'),
     path('pedido/<str:token>/', views.ver_pedido, name='pedido'),
     path('mock-pago/', views.mock_pago, name='mock_pago'),
 

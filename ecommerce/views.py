@@ -649,6 +649,36 @@ def _checkout_initial(request) -> dict:
 
 
 @require_POST
+def validar_rut_inline(request):
+    """Endpoint HTMX para validar RUT chileno mientras el cliente
+    completa el checkout (hx-trigger="change delay:300ms").
+
+    Devuelve fragment HTML chico con clase css indicando el estado:
+    - .field-msg.field-msg-ok    -> verde, "RUT válido"
+    - .field-msg.field-msg-error -> vino, mensaje del error
+    - vacío si el campo está vacío (no hay nada que mostrar).
+    """
+    from ecommerce.validators import validar_rut_chileno
+    from django.core.exceptions import ValidationError
+
+    rut = (request.POST.get('cliente_rut') or '').strip()
+    if not rut:
+        return render(request, 'ecommerce/_field_msg.html', {})
+
+    try:
+        normalizado = validar_rut_chileno(rut)
+        return render(request, 'ecommerce/_field_msg.html', {
+            'estado': 'ok',
+            'texto': f'RUT válido: {normalizado}',
+        })
+    except ValidationError as exc:
+        return render(request, 'ecommerce/_field_msg.html', {
+            'estado': 'error',
+            'texto': exc.messages[0],
+        })
+
+
+@require_POST
 def checkout_iniciar(request):
     cart = Cart(request.session)
     if cart.is_empty():

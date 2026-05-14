@@ -21,6 +21,15 @@ class CheckoutForm(forms.Form):
     cliente_telefono = forms.CharField(max_length=20, required=False)
     cliente_direccion = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
 
+    def clean_cliente_rut(self):
+        """Valida el RUT con módulo 11. Si el cliente no lo ingresó
+        (es opcional para boleta) no se valida."""
+        rut = self.cleaned_data.get('cliente_rut', '').strip()
+        if not rut:
+            return ''
+        from ecommerce.validators import validar_rut_chileno
+        return validar_rut_chileno(rut)
+
 
 class RegistroClienteForm(UserCreationForm):
     """Registro de cliente en la tienda.

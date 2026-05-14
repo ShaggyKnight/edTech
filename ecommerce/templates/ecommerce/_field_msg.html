@@ -1,0 +1,14 @@
+{% comment %}
+  Mensaje inline al lado de un campo (validacion vía HTMX).
+  Recibe en el contexto:
+    - estado: 'ok' / 'error' / vacío.
+    - texto: mensaje a mostrar.
+{% endcomment %}
+{% if estado %}
+  <div class="field-msg field-msg-{{ estado }}">
+    {% if estado == 'ok' %}
+      <svg class="ico ico--14" aria-hidden="true"><use href="#ico-check"/></svg>
+    {% endif %}
+    <span>{{ texto }}</span>
+  </div>
+{% endif %}

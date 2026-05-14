@@ -55,13 +55,7 @@
                 —
               {% endif %}
             </td>
-            <td>
-              {% if p.activo %}
-                <span class="bo-badge bo-badge-success">Activo</span>
-              {% else %}
-                <span class="bo-badge bo-badge-muted">Inactivo</span>
-              {% endif %}
-            </td>
+            {% include 'bodega/_producto_activo_celda.html' with p=p puede_editar_activo=puede_editar_activo %}
             <td>
               <div class="prod-actions">
                 <a href="{% url 'bodega:producto_editar' p.pk %}" class="bo-btn bo-btn-sm">Editar</a>

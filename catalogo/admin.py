@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Atributo, Colegio, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
+from .models import Atributo, Colegio, Familia, Oferta, Producto, ProductoImagen, ProductoVariante, ValorAtributo
 
 
 class ValorAtributoInline(admin.TabularInline):
@@ -21,6 +21,27 @@ class ProductoVarianteInline(admin.TabularInline):
     filter_horizontal = ['valores']
 
 
+class ProductoImagenInline(admin.TabularInline):
+    """Galeria de imagenes adicionales del PDP.
+
+    La imagen principal (`Producto.imagen`) sigue en el fieldset
+    "Imagen" del Producto. Estas aparecen solo en el detalle online.
+    """
+    model = ProductoImagen
+    extra = 1
+    fields = ['imagen', 'orden', 'alt', 'preview']
+    readonly_fields = ['preview']
+
+    def preview(self, obj):
+        if obj.imagen:
+            return format_html(
+                '<img src="{}" style="height:60px;width:60px;object-fit:cover;border-radius:4px;" />',
+                obj.imagen.url,
+            )
+        return '—'
+    preview.short_description = 'Preview'
+
+
 @admin.register(Colegio)
 class ColegioAdmin(admin.ModelAdmin):
     list_display = ['nombre', 'direccion', 'telefono_contacto', 'activo']
@@ -34,7 +55,7 @@ class ProductoAdmin(admin.ModelAdmin):
     list_display_links = ['nombre']
     list_filter = ['familia', 'colegio', 'activo', 'tiene_variantes']
     search_fields = ['nombre', 'descripcion']
-    inlines = [ProductoVarianteInline]
+    inlines = [ProductoImagenInline, ProductoVarianteInline]
     readonly_fields = ['preview']
     fieldsets = (
         (None, {'fields': ('nombre', 'familia', 'colegio', 'descripcion', 'activo')}),

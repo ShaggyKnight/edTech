@@ -211,6 +211,41 @@ class Producto(models.Model):
         return int(round((desc / base) * 100))
 
 
+class ProductoImagen(models.Model):
+    """Imagen adicional para la galeria del PDP.
+
+    `Producto.imagen` (el campo de la portada) se conserva como antes —
+    es la que sale en cards de catalogo, busqueda, OG image y emails.
+    Estas imagenes solo aparecen en el detalle de producto.
+
+    `orden` determina como se muestran (asc): la primera es la mas
+    grande, las siguientes son thumbnails. Si el cliente sube 4
+    imagenes con orden 1/2/3/4 se renderizan en ese orden.
+    """
+    producto = models.ForeignKey(
+        Producto, on_delete=models.CASCADE, related_name='imagenes',
+    )
+    imagen = models.ImageField(upload_to='productos/galeria/')
+    orden = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Orden de visualizacion en la galeria (asc).',
+    )
+    alt = models.CharField(
+        max_length=200, blank=True,
+        help_text='Texto alternativo para accesibilidad. Si vacio, '
+                  'se usa el nombre del producto.',
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['orden', 'creado']
+        verbose_name = 'Imagen de galeria'
+        verbose_name_plural = 'Imagenes de galeria'
+
+    def __str__(self):
+        return f'{self.producto.nombre} · img #{self.pk}'
+
+
 class ProductoVariante(models.Model):
     """SKU vendible. Cada combinación de valores de atributo es una variante."""
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='variantes')

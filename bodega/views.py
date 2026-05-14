@@ -405,6 +405,56 @@ def _respuesta_precio(request, producto):
 
 @login_required
 @require_POST
+def productos_bulk_action(request):
+    """Aplica una accion en bulk a varios productos seleccionados.
+
+    Bloque 11: complemento del toggle individual — permite cambiar
+    el estado de 5/10/20 productos a la vez desde la lista, sin
+    tener que clickear uno por uno. Util cuando entra una temporada
+    o se discontinua una linea completa.
+
+    Body:
+        - accion: 'activar' | 'desactivar'
+        - ids: lista de PKs (multivalued)
+
+    Respuesta:
+    - HTMX: tabla refrescada con los nuevos estados (re-aplica los
+      filtros vigentes del querystring).
+    - No-JS: redirect a lista_productos con messages.success.
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        messages.error(request, 'No tenés permisos para cambios masivos.')
+        return redirect('bodega:lista_productos')
+
+    accion = (request.POST.get('accion') or '').strip()
+    ids = [int(x) for x in request.POST.getlist('ids') if x.isdigit()]
+
+    if accion not in ('activar', 'desactivar'):
+        messages.error(request, 'Acción inválida.')
+        return redirect('bodega:lista_productos')
+    if not ids:
+        messages.error(request, 'No seleccionaste ningún producto.')
+        return redirect('bodega:lista_productos')
+
+    from django.utils import timezone
+    nuevo_estado = (accion == 'activar')
+    qs = Producto.objects.filter(pk__in=ids)
+    actualizados = qs.update(activo=nuevo_estado, modificado=timezone.now())
+
+    verbo = 'activados' if nuevo_estado else 'desactivados'
+    messages.success(request, f'{actualizados} producto(s) {verbo}.')
+
+    # Si fue HTMX, re-renderizamos la tabla preservando los filtros
+    # actuales (que el form de bulk envia via hidden inputs).
+    if request.htmx:
+        # Simulamos los GET params que `lista_productos` espera.
+        request.GET = request.POST
+        return lista_productos(request)
+    return redirect('bodega:lista_productos')
+
+
+@login_required
+@require_POST
 def producto_toggle_activo(request, pk):
     """Toggle del campo `activo` desde la lista de productos.
 

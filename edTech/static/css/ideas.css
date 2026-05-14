@@ -388,6 +388,39 @@ input, select { font-family: inherit; }
 .pcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 .pcard-img { aspect-ratio: 3/4; background: var(--cream-2); position: relative; overflow: hidden; }
 .pcard-img img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Boton "Vista rapida": aparece en hover sobre la card (desktop) y
+   siempre visible en mobile para que se pueda tocar. */
+.pcard-quick {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%) translateY(8px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ink);
+  color: var(--cream);
+  border: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+}
+.pcard:hover .pcard-quick {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.pcard-quick:hover { background: var(--gold-2); color: var(--ink); }
+@media (max-width: 768px) {
+  /* En mobile el hover no existe — siempre visible. */
+  .pcard-quick { opacity: 0.95; transform: translateX(-50%) translateY(0); }
+}
 .pcard-tag { position: absolute; top: 10px; left: 10px; background: var(--ink); color: var(--cream); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; }
 .pcard-wish { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; background: var(--cream); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--ink); }
 .pcard-wish:hover { background: var(--vino); color: var(--cream); }
@@ -976,4 +1009,121 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
   to   { opacity: 1; transform: scale(1); }
 }
 [x-cloak] { display: none !important; }
+
+/* ============================================================
+   Quick-view modal — vista rapida desde la card del catalogo
+   ============================================================ */
+.quick-view-modal {
+  border: 0;
+  padding: 0;
+  border-radius: 14px;
+  max-width: 880px;
+  width: calc(100% - 32px);
+  max-height: 90vh;
+  background: var(--cream, #fff);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.25);
+  animation: modal-in 0.18s ease-out;
+  overflow: hidden;
+}
+.quick-view-modal::backdrop {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+}
+.quick-view-loading {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--ink-60);
+  font-size: 14px;
+}
+.quick-view-content {
+  position: relative;
+  padding: 24px;
+}
+.quick-view-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: rgba(255,255,255,0.9);
+  border: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink);
+  z-index: 5;
+}
+.quick-view-close:hover { background: var(--vino); color: var(--cream); }
+.quick-view-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 24px;
+  align-items: start;
+}
+.quick-view-img {
+  aspect-ratio: 3/4;
+  background: var(--cream-2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.quick-view-img img { width: 100%; height: 100%; object-fit: cover; }
+.quick-view-cat {
+  font-size: 11px;
+  color: var(--ink-60);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.quick-view-nombre {
+  font-family: var(--serif);
+  font-size: 28px;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  color: var(--ink);
+}
+.quick-view-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.quick-view-price .big { font-family: var(--serif); font-size: 30px; font-weight: 600; }
+.quick-view-from {
+  font-size: 11px;
+  color: var(--ink-60);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.quick-view-desc {
+  font-size: 14px;
+  color: var(--ink-60);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.quick-view-variantes { margin-bottom: 18px; }
+.quick-view-label {
+  font-size: 11px;
+  color: var(--ink-60);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.quick-view-ctas {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.quick-view-ctas .btn-primary,
+.quick-view-ctas .btn-outline { flex: 1; min-width: 160px; }
+.quick-view-ctas form { display: contents; }
+@media (max-width: 700px) {
+  .quick-view-grid { grid-template-columns: 1fr; }
+  .quick-view-img { aspect-ratio: 4/3; }
+  .quick-view-nombre { font-size: 22px; }
+}
 

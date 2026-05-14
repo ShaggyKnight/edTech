@@ -1,0 +1,112 @@
+"""Tests del endpoint quick-view: fragment para el modal "Vista rápida"
+desde la card del catálogo."""
+from decimal import Decimal
+
+from django.test import TestCase, override_settings
+from django.urls import reverse
+
+from bodega.models import StockTienda, Tienda
+from catalogo.models import (
+    Atributo, Familia, Producto, ProductoVariante, ValorAtributo,
+)
+
+
+@override_settings(ECOMMERCE_PAYMENT_GATEWAY='mock')
+class QuickViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tienda = Tienda.objects.create(nombre_organizacion='Online', activa=True)
+        cls.fam = Familia.objects.create(nombre='Perfumes')
+
+        cls.producto = Producto.objects.create(
+            familia=cls.fam, nombre='Perfume Quick',
+            descripcion='Notas frescas, cítricos y madera.',
+            precio_base=Decimal('20000'), tiene_variantes=False,
+        )
+        StockTienda.objects.create(tienda=cls.tienda, producto=cls.producto, cantidad=5)
+
+        cls.fam_uni = Familia.objects.create(nombre='Uniformes')
+        cls.con_variantes = Producto.objects.create(
+            familia=cls.fam_uni, nombre='Buzo Quick',
+            precio_base=Decimal('30000'), tiene_variantes=True,
+        )
+        cls.atr = Atributo.objects.create(nombre='Talla')
+        cls.val_m = ValorAtributo.objects.create(atributo=cls.atr, valor='M', orden=2)
+        cls.var_m = ProductoVariante.objects.create(producto=cls.con_variantes, sku='BZ-M')
+        cls.var_m.valores.add(cls.val_m)
+        StockTienda.objects.create(tienda=cls.tienda, variante=cls.var_m, cantidad=3)
+
+        cls.inactivo = Producto.objects.create(
+            familia=cls.fam, nombre='Inactivo',
+            precio_base=Decimal('5000'), tiene_variantes=False, activo=False,
+        )
+
+    def setUp(self):
+        self.settings_override = self.settings(ECOMMERCE_TIENDA_ID=self.tienda.pk)
+        self.settings_override.enable()
+
+    def tearDown(self):
+        self.settings_override.disable()
+
+    def test_devuelve_fragment_no_pagina_completa(self):
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.producto.pk]))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode().lower()
+        # No es una pagina completa.
+        self.assertNotIn('<html', body)
+        self.assertNotIn('<head', body)
+        # Si trae el contenido del modal.
+        self.assertIn('quick-view-content', body)
+
+    def test_contiene_datos_basicos_del_producto(self):
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.producto.pk]))
+        body = resp.content.decode()
+        self.assertIn('Perfume Quick', body)
+        self.assertIn('Notas frescas', body)
+        self.assertIn('Perfumes', body)  # familia
+        # Precio formateado.
+        self.assertIn('20.000', body)
+
+    def test_producto_sin_variantes_muestra_form_agregar(self):
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.producto.pk]))
+        body = resp.content.decode()
+        # Tiene form HTMX para agregar directo desde el modal.
+        self.assertIn('hx-post="/tienda/agregar/"', body)
+        self.assertIn('Agregar al carrito', body)
+
+    def test_producto_con_variantes_redirige_a_pdp_para_elegir(self):
+        """Si tiene variantes, el CTA principal del modal lleva al PDP
+        completo donde el cliente puede elegir la talla."""
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.con_variantes.pk]))
+        body = resp.content.decode()
+        # No hay form de agregar inline (porque hay que elegir variante).
+        self.assertNotIn('hx-post="/tienda/agregar/"', body)
+        self.assertIn('Elegir y agregar', body)
+        # Lista las variantes disponibles.
+        self.assertIn('size-chip', body)
+
+    def test_link_a_pdp_completo(self):
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.producto.pk]))
+        body = resp.content.decode()
+        url_pdp = reverse('ecommerce:producto', args=[self.producto.pk])
+        self.assertIn(f'href="{url_pdp}"', body)
+        self.assertIn('Ver detalle completo', body)
+
+    def test_producto_inexistente_404(self):
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[999999]))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_producto_inactivo_404(self):
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.inactivo.pk]))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_solo_acepta_get(self):
+        resp = self.client.post(reverse('ecommerce:producto_quick', args=[self.producto.pk]))
+        self.assertEqual(resp.status_code, 405)
+
+    def test_card_del_catalogo_incluye_boton_quick(self):
+        """La card del catalogo tiene el boton que dispara el modal."""
+        resp = self.client.get(reverse('ecommerce:catalogo'))
+        body = resp.content.decode()
+        self.assertIn('pcard-quick', body)
+        self.assertIn('hx-target="#quick-view-body"', body)

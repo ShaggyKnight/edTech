@@ -9,6 +9,16 @@
       {% imagen_producto producto as img_url %}
       <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy">
       {% if producto.tag %}<span class="pcard-tag">{{ producto.tag }}</span>{% endif %}
+      <button type="button"
+              class="pcard-quick"
+              aria-label="Vista rápida de {{ producto.nombre }}"
+              hx-get="{% url 'ecommerce:producto_quick' producto.pk %}"
+              hx-target="#quick-view-body"
+              hx-swap="innerHTML"
+              onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('quick-view-modal').showModal();">
+        <svg class="ico ico--16"><use href="#ico-search"/></svg>
+        <span>Vista rápida</span>
+      </button>
     </div>
     <div class="pcard-body">
       <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>

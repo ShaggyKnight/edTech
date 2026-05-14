@@ -1,0 +1,81 @@
+{% load humanize static catalogo_extras %}
+{% comment %}
+  Fragment HTML del modal "Vista rápida". Se carga via HTMX dentro de
+  <dialog id="quick-view-modal"> cuando el cliente clickea el botón
+  "Vista rápida" en una card del catálogo.
+
+  Estructura: imagen + meta (familia, nombre, precio, descripción corta),
+  chips de variantes disponibles, CTA "Agregar al carrito" + link "Ver
+  detalle completo →".
+{% endcomment %}
+<div class="quick-view-content"
+     x-data="{ variante: {{ variantes.0.pk|default:'null' }}, precio: {{ variantes.0.precio|default:producto.precio_base|floatformat:0 }} }">
+  <button type="button" class="quick-view-close" aria-label="Cerrar"
+          onclick="document.getElementById('quick-view-modal').close()">×</button>
+
+  <div class="quick-view-grid">
+    <div class="quick-view-img">
+      {% imagen_producto producto as img_url %}
+      <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy">
+    </div>
+
+    <div class="quick-view-info">
+      <div class="quick-view-cat">{{ producto.familia.nombre }}{% if producto.colegio %} · {{ producto.colegio.nombre }}{% endif %}</div>
+      <h2 class="quick-view-nombre">{{ producto.nombre }}</h2>
+
+      <div class="quick-view-price">
+        {% if producto.tiene_oferta_online %}
+          <span class="big pdp-price-sale">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
+          <span class="pdp-price-old">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+        {% elif producto.precios_varian_por_variante %}
+          <span class="quick-view-from">Desde</span>
+          <span class="big">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+        {% else %}
+          <span class="big">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+        {% endif %}
+      </div>
+
+      {% if producto.descripcion %}
+        <p class="quick-view-desc">{{ producto.descripcion|truncatechars:160 }}</p>
+      {% endif %}
+
+      {% if producto.tiene_variantes and variantes %}
+        <div class="quick-view-variantes">
+          <div class="quick-view-label">Disponibles:</div>
+          <div class="size-chips">
+            {% for v in variantes %}
+              <span class="size-chip{% if not v.stock %} disabled{% endif %}"
+                    title="{% if v.stock %}Stock: {{ v.stock }}{% else %}Agotada{% endif %}">
+                {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="quick-view-ctas">
+        {% if producto.tiene_variantes %}
+          <a href="{% url 'ecommerce:producto' producto.pk %}" class="btn-primary">
+            Elegir y agregar →
+          </a>
+        {% else %}
+          <form method="post" action="{% url 'ecommerce:agregar' %}"
+                hx-post="{% url 'ecommerce:agregar' %}"
+                hx-swap="none"
+                hx-on::after-request="if(event.detail.successful){document.getElementById('quick-view-modal').close();}">
+            {% csrf_token %}
+            <input type="hidden" name="tipo" value="p">
+            <input type="hidden" name="item_id" value="{{ producto.pk }}">
+            <input type="hidden" name="cantidad" value="1">
+            <button type="submit" class="btn-primary">
+              Agregar al carrito · ${{ producto.precio_oferta_online|floatformat:0|intcomma }}
+            </button>
+          </form>
+        {% endif %}
+        <a href="{% url 'ecommerce:producto' producto.pk %}" class="btn-outline">
+          Ver detalle completo
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

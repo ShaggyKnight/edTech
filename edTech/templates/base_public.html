@@ -88,6 +88,24 @@
     {# Modal de confirmacion reusable (mismo helper que el backoffice). #}
     {% include 'partials/_confirm_modal.html' %}
 
+    {% comment %}
+      Modal de "Vista rápida" del catálogo: vacío al cargar, HTMX
+      inyecta el fragment cuando el cliente clickea el botón en una
+      card. Cerrar con Escape (default de <dialog>) o click en backdrop.
+    {% endcomment %}
+    <dialog id="quick-view-modal" class="quick-view-modal" aria-labelledby="quick-view-label">
+      <div id="quick-view-body" aria-live="polite">
+        <div class="quick-view-loading">Cargando…</div>
+      </div>
+    </dialog>
+    <script>
+      // Cierre del modal al click en backdrop (no es default del <dialog>).
+      document.addEventListener('click', function (e) {
+        var dlg = document.getElementById('quick-view-modal');
+        if (dlg && e.target === dlg) dlg.close();
+      });
+    </script>
+
     {% block body %}{% endblock %}
 
     {% block extra_scripts %}{% endblock %}

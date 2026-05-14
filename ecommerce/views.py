@@ -23,7 +23,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.db.models import Exists, OuterRef, Q, Subquery
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
@@ -398,6 +398,47 @@ def buscar_json(request):
     ]
 
     return JsonResponse({'productos': productos_data, 'colegios': colegios_data})
+
+
+@require_GET
+def quick_view(request, pk: int):
+    """Vista rápida del producto: fragment HTML que se carga en un
+    modal de la página del catálogo sin que el cliente pierda su lugar.
+
+    Devuelve solo el resumen necesario para decidir: imagen, nombre,
+    familia, precio (con descuento si aplica), descripción corta,
+    chips de variantes disponibles, y un link "Ver detalle completo".
+    El "Agregar al carrito" rápido es un formulario HTMX que reutiliza
+    `/tienda/agregar/`.
+    """
+    try:
+        tienda = get_tienda_online()
+    except TiendaOnlineNoConfigurada:
+        return HttpResponse(status=503)
+
+    producto = get_object_or_404(
+        Producto.objects.select_related('familia', 'colegio'),
+        pk=pk, activo=True,
+    )
+
+    # Variantes activas con stock — solo lo mínimo para el chip.
+    variantes = []
+    if producto.tiene_variantes:
+        stock_sq = StockTienda.objects.filter(
+            tienda=tienda, variante=OuterRef('pk'),
+        ).values('cantidad')[:1]
+        variantes = list(
+            producto.variantes
+            .filter(activa=True)
+            .prefetch_related('valores__atributo')
+            .annotate(stock=Subquery(stock_sq))
+            .order_by('sku')
+        )
+
+    return render(request, 'ecommerce/_quick_view.html', {
+        'producto': producto,
+        'variantes': variantes,
+    })
 
 
 def detalle_producto(request, pk: int):

@@ -31,7 +31,7 @@ from django.views.decorators.http import require_GET, require_POST
 from bodega.models import StockTienda
 from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
 from ecommerce.cart import CANAL, Cart
-from ecommerce.emails import enviar_boleta
+from ecommerce.emails import enviar_boleta, notificar_dueno_nueva_orden
 from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm
 from ecommerce.payments import get_online_gateway
 from ecommerce.services import (
@@ -99,6 +99,28 @@ SORT_OPTIONS = {
     'high':     ('-precio_base', 'nombre'),
     'new':      ('-creado',),
 }
+
+
+def _seo_context_catalogo(*, cat_info, colegio):
+    """Devuelve dict con seo_titulo / seo_descripcion / seo_h1 cuando aplica.
+
+    Sprint 3 · 3.3: cuando el visitante llega filtrando por colegio,
+    Google ve un H1 y un title locales ("Uniformes Colegio San Francisco
+    Javier Los Vilos") en vez del genérico "Uniformes Escolares". Es la
+    query de mayor intención de compra de la zona; vale el SEO.
+    """
+    if colegio and cat_info and cat_info['title'].startswith('Uniformes'):
+        # Sufijo geográfico explícito para el match local de "los vilos".
+        return {
+            'seo_titulo': f'Uniformes {colegio.nombre} · Los Vilos · Ideas Boutique',
+            'seo_h1': f'Uniformes {colegio.nombre}',
+            'seo_descripcion': (
+                f'Buzos, chalecos y poleras del {colegio.nombre} en Ideas Boutique '
+                f'(Caupolicán 437-B, Los Vilos). Telas duraderas, ajustes sin '
+                f'costo. Tres generaciones vistiendo a las familias de la zona.'
+            ),
+        }
+    return {}
 
 
 def catalogo(request):
@@ -302,6 +324,13 @@ def catalogo(request):
         'query': query,
         'solo_ofertas': solo_ofertas,
         'items_count': cart.items_count,
+        **_seo_context_catalogo(
+            cat_info=cat_info,
+            colegio=(
+                Colegio.objects.filter(pk=int(colegio_id)).first()
+                if aplicar_filtro_colegio else None
+            ),
+        ),
     })
 
 
@@ -764,6 +793,11 @@ def checkout_retorno(request):
             enviar_boleta(recibo)
         except Exception:  # noqa: BLE001 — el flujo de compra no debe romperse por email.
             log.exception('Error enviando boleta recibo %s', recibo.pk)
+        try:
+            # Sprint 3 · 3.5: avisar a Blanca apenas entra la venta.
+            notificar_dueno_nueva_orden(recibo)
+        except Exception:  # noqa: BLE001 — idem, no bloqueante.
+            log.exception('Error notificando al dueño sobre recibo %s', recibo.pk)
         return redirect('ecommerce:pedido', token=recibo.payment_reference)
 
     return render(request, 'ecommerce/retorno.html', {

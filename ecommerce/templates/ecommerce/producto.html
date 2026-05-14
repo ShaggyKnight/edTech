@@ -2,6 +2,37 @@
 {% load static humanize catalogo_extras %}
 
 {% block titulo %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
+{% block meta_description %}{{ producto.nombre }} en Ideas Boutique, Los Vilos. {% if producto.colegio %}Uniforme oficial {{ producto.colegio.nombre }}. {% endif %}Stock real, envío a todo Chile. Desde 1987.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
+{% block og_description %}{{ producto.nombre }}{% if producto.colegio %} · Uniforme oficial {{ producto.colegio.nombre }}{% endif %}. Caupolicán 437-B, Los Vilos. Envío a todo Chile.{% endblock %}
+{% block og_image %}{% if producto.imagen and producto.imagen.name %}{{ producto.imagen.url }}{% else %}{% static 'img/ideas/logo-letrero.png' %}{% endif %}{% endblock %}
+
+{# Schema.org Product — SEO de producto para Google Shopping y rich snippets. #}
+{% block schema_org %}
+{% imagen_producto producto as pdp_img %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ producto.nombre|escapejs }}",
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ pdp_img }}",
+  {% if producto.descripcion %}"description": "{{ producto.descripcion|escapejs|truncatewords:60 }}",{% endif %}
+  "brand": {"@type": "Brand", "name": "Ideas Boutique"},
+  {% if producto.colegio %}"category": "Uniforme escolar · {{ producto.colegio.nombre|escapejs }}",{% endif %}
+  {% if producto.codigo_barras %}"gtin13": "{{ producto.codigo_barras }}",{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ request.build_absolute_uri }}",
+    "priceCurrency": "CLP",
+    "price": "{{ producto.precio_minimo|floatformat:0 }}",
+    "availability": "https://schema.org/InStock",
+    "itemCondition": "https://schema.org/NewCondition",
+    "seller": {"@type": "Organization", "name": "Ideas Boutique"}
+  }
+}
+</script>
+{% endblock %}
 
 {% block body %}
 {% include 'ecommerce/_shop_header.html' with items_count=items_count %}
@@ -18,12 +49,13 @@
     <div class="pdp-gallery">
       <div class="pdp-thumbs">
         <div class="pdp-thumb active">
-          <img src="{{ pdp_img }}" alt="{{ producto.nombre }}">
+          <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" loading="lazy" width="120" height="120">
         </div>
         {# Thumbs adicionales: cuando haya galería los iteramos aquí #}
       </div>
       <div class="pdp-big">
-        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}">
+        {# La imagen principal del PDP es above-the-fold — sin lazy, con fetchpriority alto. #}
+        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" fetchpriority="high" width="600" height="600">
       </div>
     </div>
 

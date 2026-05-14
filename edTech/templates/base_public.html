@@ -94,6 +94,10 @@
     {% block extra_head %}{% endblock %}
   </head>
   <body>
+    {# Bloque 7 · a11y: Skip-to-content link. Solo aparece al recibir
+       foco con Tab — invisible para mouse/touch. WCAG 2.1 obligatorio
+       para usuarios de teclado que quieren saltar el header repetido. #}
+    <a href="#main-content" class="skip-link">Saltar al contenido</a>
     {% include 'partials/_icons.html' %}
 
     {% comment %}

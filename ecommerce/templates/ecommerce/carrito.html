@@ -6,7 +6,7 @@
 {% block body %}
 {% include 'ecommerce/_shop_header.html' with items_count=items_count %}
 
-<main class="cart">
+<main class="cart" id="main-content" tabindex="-1">
   <div class="cart-breadcrumb">
     <a href="{% url 'ecommerce:catalogo' %}" class="cart-back-link">
       <svg class="ico ico--16" style="transform: scaleX(-1);"><use href="#ico-arrow-right"/></svg>

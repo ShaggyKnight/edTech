@@ -321,6 +321,56 @@
 /* --- 11. Body scroll lock cuando hay drawer abierto ---------*/
 body.no-scroll, html.no-scroll { overflow: hidden !important; }
 
+/* --- 12. Bloque 7 · A11y -----------------------------------*/
+
+/* Skip-to-content link — invisible salvo cuando recibe foco con Tab.
+   WCAG 2.4.1: deja al usuario de teclado saltar el header sin tener
+   que tabbear por todos los enlaces de la nav. */
+.skip-link {
+  position: absolute;
+  top: -100px; left: 0;
+  z-index: 9999;
+  background: var(--ink);
+  color: var(--cream);
+  padding: 12px 20px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom-right-radius: 8px;
+  transition: top .15s;
+}
+.skip-link:focus, .skip-link:focus-visible {
+  top: 0;
+  outline: 3px solid var(--gold-2);
+  outline-offset: 2px;
+}
+
+/* Focus visible pulido — pintamos un outline dorado consistente en
+   botones, links e inputs cuando se navega por teclado, sin afectar
+   los clicks de mouse. */
+*:focus-visible {
+  outline: 3px solid var(--gold-2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Inputs ya tienen su propio focus — no agregamos doble outline. */
+.shop-search input:focus-visible,
+.resena-row input:focus-visible,
+.resena-row textarea:focus-visible,
+.notify-input input:focus-visible {
+  outline-offset: 1px;
+}
+
+/* prefers-reduced-motion: usuarios con vestibular disorder o ansiedad
+   pueden pedir que el SO desactive animaciones — respetar. WCAG 2.3.3. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* --- 12. Bloque 9 · Resenas reales en PDP --------------------*/
 .visually-hidden {
   position: absolute !important;

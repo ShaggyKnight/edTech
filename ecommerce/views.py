@@ -611,6 +611,10 @@ def detalle_producto(request, pk: int):
         for v in variantes
     )
 
+    # Bloque 12: la guia de talles solo aplica a productos con atributo
+    # "Talla" (uniformes, ropa). Perfumes y otros NO la ven.
+    mostrar_guia_talles = 'Talla' in nombres_atributos
+
     cart = Cart(request.session)
     # Bloque 8: galeria real. Cargamos las imagenes adicionales del PDP.
     imagenes_galeria = list(producto.imagenes.all())
@@ -635,6 +639,7 @@ def detalle_producto(request, pk: int):
         'imagenes_galeria': imagenes_galeria,
         'resenas_publicas': resenas_publicas,
         'resena_form': resena_form,
+        'mostrar_guia_talles': mostrar_guia_talles,
     })
 
 

@@ -128,7 +128,17 @@
           <input type="hidden" name="cantidad" value="1">
 
           <div class="pdp-opts">
-            <div class="pdp-opt-label">Elige tu {{ label_eleccion|default:"variante" }}</div>
+            <div class="pdp-opt-label-row">
+              <div class="pdp-opt-label">Elige tu {{ label_eleccion|default:"variante" }}</div>
+              {% if mostrar_guia_talles %}
+                {# Bloque 12: trigger del modal de guia de talles. #}
+                <button type="button" class="pdp-guia-link"
+                        onclick="document.getElementById('guia-talles-modal').showModal();">
+                  <svg class="ico ico--14"><use href="#ico-info"/></svg>
+                  Guía de talles
+                </button>
+              {% endif %}
+            </div>
             <div class="size-chips {% if chips_anchos %}wide-chips{% endif %}" id="pdp-chips">
               {% comment %}
                 Cada chip lleva los datos de la variante en data-attrs.
@@ -451,6 +461,20 @@
     </div>
   </section>
 </main>
+
+{% if mostrar_guia_talles %}
+  {# Bloque 12 · Modal con guia + calculadora de talles. #}
+  <dialog id="guia-talles-modal" class="guia-talles-modal" aria-labelledby="guia-talles-titulo">
+    {% include 'ecommerce/_guia_talles.html' %}
+  </dialog>
+  <script>
+    // Cerrar al click en el backdrop (no es default de <dialog>).
+    document.addEventListener('click', function (e) {
+      var dlg = document.getElementById('guia-talles-modal');
+      if (dlg && e.target === dlg) dlg.close();
+    });
+  </script>
+{% endif %}
 
 {# Bloque 8 · Galeria PDP: swap de imagen principal al click en thumb.
    Sin libs, sin Alpine — minimo: leer data-full, swap src, toggle clase

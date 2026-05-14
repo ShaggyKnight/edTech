@@ -57,6 +57,11 @@ class ProductoAdmin(admin.ModelAdmin):
     search_fields = ['nombre', 'descripcion']
     inlines = [ProductoImagenInline, ProductoVarianteInline]
     readonly_fields = ['preview']
+
+    def get_queryset(self, request):
+        # Bloque 6 (perf): list_display incluye familia + colegio. Sin
+        # select_related serian 2N queries por pagina del admin.
+        return super().get_queryset(request).select_related('familia', 'colegio')
     fieldsets = (
         (None, {'fields': ('nombre', 'familia', 'colegio', 'descripcion', 'activo')}),
         ('Precios', {'fields': ('precio_base', 'precio_costo')}),
@@ -96,6 +101,10 @@ class ProductoVarianteAdmin(admin.ModelAdmin):
     search_fields = ['sku', 'producto__nombre']
     filter_horizontal = ['valores']
 
+    def get_queryset(self, request):
+        # Bloque 6 (perf): `producto` se muestra en list_display.
+        return super().get_queryset(request).select_related('producto')
+
 
 @admin.register(Oferta)
 class OfertaAdmin(admin.ModelAdmin):
@@ -118,6 +127,10 @@ class ResenaAdmin(admin.ModelAdmin):
         ('Moderacion', {'fields': ('estado', 'moderada', 'creado')}),
     )
     actions = ['aprobar_resenas', 'rechazar_resenas']
+
+    def get_queryset(self, request):
+        # Bloque 6 (perf): producto se muestra en list_display.
+        return super().get_queryset(request).select_related('producto')
 
     @admin.action(description='Aprobar resenas seleccionadas')
     def aprobar_resenas(self, request, queryset):

@@ -1,0 +1,322 @@
+/* ============================================================
+   Sprint 2 · Mobile + Tablet polish
+   Se carga DESPUÉS de ideas.css. No edita el archivo grande;
+   solo agrega reglas nuevas o sobreescribe lo mínimo.
+   ============================================================ */
+
+/* --- 1. iPad PORTRAIT breakpoint (744–900px) -----------------
+   iPhone 12 Pro (390) → 2 columnas, drawer mobile.
+   iPad mini portrait (744), iPad 10th portrait (820), iPad Pro 11"
+   portrait (834) caen en este rango → 3 columnas y respiraciones
+   un poco más amplias, sin perder el drawer mobile.
+   -------------------------------------------------------------*/
+@media (min-width: 720px) and (max-width: 900px) {
+  .shop-grid,
+  .shop-grid.four          { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .cats-grid               { grid-template-columns: repeat(3, 1fr); }
+  .telas-grid              { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .strip                   { grid-template-columns: repeat(4, 1fr); padding: 24px 32px; }
+  .col-grid                { grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; }
+
+  /* PDP: foto a la izquierda, info al lado — aprovechamos los 820px. */
+  .pdp-main                { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .pdp-gallery             { grid-template-columns: 1fr; }
+  .pdp-thumbs              { display: flex; flex-direction: row; gap: 8px; order: 2; }
+  .pdp-thumbs button       { flex: 0 0 64px; }
+
+  /* Hero más cómodo. */
+  .hero                    { padding: 100px 40px 60px; }
+  .hero-title              { font-size: 60px; }
+
+  /* Layout padding más amplio. */
+  .shop-home,
+  .shop-cat-page,
+  .pdp,
+  .cart                    { padding-left: 32px; padding-right: 32px; }
+}
+
+/* --- 2. TOUCH targets (cualquier touch device) ---------------
+   Apple WCAG: tap targets ≥ 44×44 CSS px. Aplica en iPhone e
+   iPad por igual. `(hover: none)` excluye desktop con mouse.
+   -------------------------------------------------------------*/
+@media (hover: none) and (pointer: coarse) {
+  .size-chip               { min-width: 44px; min-height: 44px; padding: 6px 12px; }
+  .size-chips.wide-chips .size-chip { min-height: 56px; }
+  .qty button              { width: 44px; height: 44px; }
+  .qty.small button        { width: 40px; height: 40px; }
+  .shop-cart,
+  .shop-actions button,
+  .shop-actions > a        { min-width: 44px; min-height: 44px; }
+  .pcard-wish              { width: 40px; height: 40px; }
+  .drawer-nav a,
+  .drawer-nav button       { padding: 16px 24px; min-height: 52px; font-size: 16px; }
+  .pdp-thumb               { min-width: 56px; min-height: 56px; }
+  .filter-toggle,
+  .sort-sel select         { min-height: 40px; padding: 10px 16px; }
+  .pdp-nav                 { width: 48px; height: 48px; }
+  .remove                  { padding: 6px 10px; }
+}
+
+/* --- 3. SHOP-FILTERS bottom-sheet en mobile ------------------
+   El aside.shop-filters está oculto en mobile (CSS base). Al
+   abrir el drawer le ponemos `.is-open` y lo convertimos en
+   bottom-sheet con scrim. Se ve y se siente como nativo.
+   -------------------------------------------------------------*/
+.shop-filters-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 14, 14, 0.45);
+  z-index: 998;
+  animation: ib-fade-in 0.2s ease;
+}
+
+@media (max-width: 900px) {
+  .shop-filters {
+    display: block;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    max-height: 88vh;
+    background: var(--cream);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    z-index: 999;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+    transform: translateY(100%);
+    transition: transform .25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+  .shop-filters.is-open    { transform: translateY(0); }
+
+  .shop-filters-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .shop-filters-head h4 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .shop-filters form {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .shop-filters-foot {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 10px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+    background: var(--cream);
+  }
+  .shop-filters-foot .btn-primary,
+  .shop-filters-foot .btn-outline {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+  }
+}
+
+/* En desktop el aside es columna lateral — esconder head/foot. */
+@media (min-width: 901px) {
+  .shop-filters-head,
+  .shop-filters-foot       { display: none; }
+}
+
+/* --- 4. CARRITO · línea con error (Sprint 2 · 2.1) ----------*/
+.cart-row--error {
+  border-color: var(--vino) !important;
+  background: rgba(122, 30, 43, 0.04);
+  position: relative;
+}
+.cart-row-error {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  background: var(--vino);
+  color: var(--cream);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin: -8px -8px 8px;
+}
+.cart-row-error svg        { flex-shrink: 0; color: var(--gold); }
+.cart-row-error strong     { font-weight: 600; }
+.cart-row-error span       { flex: 1; min-width: 160px; opacity: 0.85; line-height: 1.4; }
+.cart-row-error-cta {
+  background: var(--cream);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cart-row-error-cta:hover  { background: var(--gold); }
+
+/* --- 5. Alerts más legibles ---------------------------------*/
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  background: #FFF8E6;
+  border: 1px solid #E5C97A;
+  color: #6B4F00;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.alert svg                 { flex-shrink: 0; margin-top: 2px; color: #B8935A; }
+.alert--error              { background: rgba(122,30,43,0.08); border-color: var(--vino); color: var(--vino); }
+.alert--error svg          { color: var(--vino); }
+.alert--success            { background: rgba(84,120,82,0.08); border-color: #547852; color: #2F5530; }
+.alert--success svg        { color: #547852; }
+
+/* --- 6. PDP · talla agotada y "avísame" ---------------------*/
+.size-chip.is-agotada {
+  position: relative;
+  color: var(--ink-40);
+  background: var(--cream-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-40);
+  text-decoration-thickness: 1.5px;
+  cursor: pointer;  /* clickable to open notify form */
+}
+.size-chip.is-agotada::after {
+  content: '⚐';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.size-chip.is-agotada:hover {
+  border-color: var(--gold-2);
+  color: var(--ink);
+  background: var(--cream);
+}
+
+.notify-form {
+  background: var(--cream);
+  border: 1px solid var(--gold-soft);
+  border-left: 3px solid var(--gold-2);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-top: 14px;
+  font-size: 14px;
+  animation: ib-slide-in 0.2s ease-out;
+}
+.notify-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.notify-head strong        { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--ink); }
+.notify-form p             { font-size: 13px; color: var(--ink-60); margin: 0 0 12px; line-height: 1.5; }
+.notify-input {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.notify-input input {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink);
+}
+.notify-input input.is-invalid { border-color: var(--vino); background: rgba(122,30,43,0.06); }
+.notify-input input:focus  { outline: none; border-color: var(--ink); }
+.notify-input .btn-primary { padding: 10px 18px; font-size: 13px; font-weight: 600; }
+.notify-close              { background: none; border: none; color: var(--ink-60); cursor: pointer; padding: 4px; line-height: 0; }
+.notify-close:hover        { color: var(--ink); }
+.notify-done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2F5530;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 0 0;
+}
+.notify-done svg           { color: #547852; flex-shrink: 0; }
+.notify-done em            { font-style: normal; font-weight: 600; color: var(--ink); }
+
+@media (max-width: 520px) {
+  .notify-input            { grid-template-columns: 1fr; }
+}
+
+/* --- 7. Sale tag rojo ----------------------------------------*/
+.pcard-tag-sale            { background: var(--vino); color: var(--cream); }
+
+/* --- 8. PDP sticky CTA en mobile -----------------------------
+   En iPhone, el botón "Agregar al carrito" puede quedar fuera de
+   la pantalla mientras el cliente revisa la descripción. Sticky
+   bottom resuelve eso.
+   -------------------------------------------------------------*/
+@media (max-width: 720px) {
+  .pdp { padding-bottom: 88px; }
+  .pdp-ctas {
+    position: sticky;
+    bottom: 0;
+    background: var(--cream);
+    margin: 16px -20px 0;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    z-index: 40;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  }
+  .pdp-ctas .btn-primary    { width: 100%; }
+}
+
+/* --- 9. PDP imagen full-bleed en mobile ----------------------*/
+@media (max-width: 720px) {
+  .pdp-main                { gap: 24px; }
+  .pdp-big                 { border-radius: 0; margin: 0 -20px; aspect-ratio: 4/5; }
+  .pdp-thumbs              { padding: 0 4px; }
+  .pdp-info h1             { font-size: 30px; }
+  .pdp-price .big          { font-size: 32px; }
+}
+
+/* --- 10. Drawer del header: ancho mejor en tablet -----------*/
+@media (min-width: 600px) and (max-width: 900px) {
+  .drawer                  { width: min(60vw, 380px); }
+}
+
+@keyframes ib-fade-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ib-slide-in  { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- 11. Body scroll lock cuando hay drawer abierto ---------*/
+body.no-scroll, html.no-scroll { overflow: hidden !important; }

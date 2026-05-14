@@ -18,8 +18,9 @@
 
   {% if messages %}
     {% for message in messages %}
-      <div class="alert" style="padding:12px 16px;border-radius:8px;margin-bottom:16px;background:#FEF3C7;color:#92400E;border:1px solid #F59E0B;">
-        {{ message }}
+      <div class="alert alert--{{ message.tags|default:'info' }}" role="alert">
+        <svg class="ico ico--16"><use href="#ico-info"/></svg>
+        <div>{{ message }}</div>
       </div>
     {% endfor %}
   {% endif %}
@@ -34,7 +35,23 @@
     <div class="cart-main">
       <div class="cart-items">
         {% for linea in lineas %}
-          <div class="cart-row">
+          <div class="cart-row{% if linea.error %} cart-row--error{% endif %}" {% if linea.error %}data-error="{{ linea.error.codigo }}"{% endif %}>
+            {% if linea.error %}
+              <div class="cart-row-error">
+                <svg class="ico ico--14"><use href="#ico-info"/></svg>
+                <strong>{{ linea.error.titulo }}</strong>
+                <span>{{ linea.error.mensaje }}</span>
+                {% if linea.error.accion %}
+                  <form method="post" action="{% url 'ecommerce:actualizar' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="key" value="{{ linea.key }}">
+                    <button type="submit" name="cantidad" value="{{ linea.error.accion.cantidad }}" class="cart-row-error-cta">
+                      {{ linea.error.accion.label }}
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endif %}
             <div class="cart-img">
               {% if linea.tipo == 'v' and linea.item.producto.imagen %}
                 <img src="{{ linea.item.producto.imagen.url }}" alt="{{ linea.item.producto.nombre }}" loading="lazy">
@@ -82,6 +99,56 @@
             </div>
           </div>
         {% endfor %}
+
+        {# Sprint 2 · 2.6: captura email para guardar carrito (localStorage). #}
+        <div class="save-cart" id="save-cart">
+          <div class="save-cart-copy">
+            <strong>¿No estás lista para comprar?</strong>
+            <p>Te guardamos el carrito. Te avisamos por email si baja de precio o queda última talla.</p>
+          </div>
+          <div class="save-cart-input">
+            <input type="email" inputmode="email" autocomplete="email"
+                   id="save-cart-email" placeholder="tu@email.cl" required>
+            <button type="button" class="btn-outline" id="save-cart-submit">Guardar carrito</button>
+          </div>
+          <div class="save-cart-done" id="save-cart-done" hidden>
+            <svg class="ico ico--18"><use href="#ico-check"/></svg>
+            <div>
+              <strong>Te guardamos el carrito.</strong>
+              <p>Te escribiremos a <em id="save-cart-done-email"></em> si baja de precio o queda última talla.</p>
+            </div>
+          </div>
+        </div>
+        <script>
+          (function () {
+            var form = document.getElementById('save-cart');
+            if (!form) return;
+            var input = document.getElementById('save-cart-email');
+            var submit = document.getElementById('save-cart-submit');
+            var done = document.getElementById('save-cart-done');
+            var doneEmail = document.getElementById('save-cart-done-email');
+            try {
+              var saved = localStorage.getItem('ib_save_email');
+              if (saved) { input.value = saved; }
+            } catch (e) {}
+            submit.addEventListener('click', function () {
+              var email = (input.value || '').trim();
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                input.focus();
+                input.classList.add('is-invalid');
+                return;
+              }
+              try { localStorage.setItem('ib_save_email', email); } catch (e) {}
+              if (window.plausible) {
+                window.plausible('save_cart_email', { props: { dominio: email.split('@')[1] || '' } });
+              }
+              doneEmail.textContent = email;
+              done.hidden = false;
+              form.querySelector('.save-cart-copy').style.display = 'none';
+              form.querySelector('.save-cart-input').style.display = 'none';
+            });
+          })();
+        </script>
       </div>
 
       <aside class="cart-summary">

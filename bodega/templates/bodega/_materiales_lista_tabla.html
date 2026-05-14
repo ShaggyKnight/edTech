@@ -1,13 +1,49 @@
 {% load humanize %}
 {% comment %}
   Tabla de materiales. Partial extraido para filtros AJAX.
-  Contexto: `materiales`.
+  Contexto: `materiales`, `filtros`, `puede_bulk_materiales`.
+  Bloque 14: bulk-select activar/desactivar.
 {% endcomment %}
 <div class="bo-card" id="materiales-tabla">
   {% if materiales %}
+    {% if puede_bulk_materiales %}
+      <form id="bulk-materiales-form"
+            method="post"
+            action="{% url 'bodega:materiales_bulk_action' %}"
+            hx-post="{% url 'bodega:materiales_bulk_action' %}"
+            hx-target="#materiales-tabla"
+            hx-swap="outerHTML">
+        {% csrf_token %}
+        <input type="hidden" name="q" value="{{ filtros.q }}">
+        <input type="hidden" name="estado" value="{{ filtros.estado }}">
+
+        <div class="bulk-bar" id="bulk-bar-materiales" hidden>
+          <strong><span id="bulk-count-materiales">0</span> seleccionado(s)</strong>
+          <div class="bulk-bar-actions">
+            <button type="submit" name="accion" value="activar"
+                    class="bo-btn bo-btn-sm bo-btn-primary">
+              Activar
+            </button>
+            <button type="submit" name="accion" value="desactivar"
+                    class="bo-btn bo-btn-sm">
+              Desactivar
+            </button>
+            <button type="button" id="bulk-clear-materiales" class="bo-btn bo-btn-sm bo-btn-ghost">
+              Limpiar selección
+            </button>
+          </div>
+        </div>
+    {% endif %}
+
     <table class="bo-table">
       <thead>
         <tr>
+          {% if puede_bulk_materiales %}
+            <th style="width:32px;">
+              <input type="checkbox" id="bulk-select-all-materiales"
+                     aria-label="Seleccionar todos los materiales visibles">
+            </th>
+          {% endif %}
           <th>Nombre</th>
           <th>Proveedor</th>
           <th class="num">Costo ref. / rollo</th>
@@ -20,6 +56,13 @@
       <tbody>
         {% for m in materiales %}
           <tr {% if not m.activo %}style="opacity:.5;"{% endif %}>
+            {% if puede_bulk_materiales %}
+              <td>
+                <input type="checkbox" name="ids" value="{{ m.pk }}"
+                       class="bulk-checkbox-materiales"
+                       aria-label="Seleccionar {{ m.nombre }}">
+              </td>
+            {% endif %}
             <td>
               <strong>{{ m.nombre }}</strong>
               {% if m.descripcion %}
@@ -63,6 +106,50 @@
         {% endfor %}
       </tbody>
     </table>
+
+    {% if puede_bulk_materiales %}
+      </form>
+
+      <script>
+        (function () {
+          var form = document.getElementById('bulk-materiales-form');
+          if (!form) return;
+          var bar = document.getElementById('bulk-bar-materiales');
+          var count = document.getElementById('bulk-count-materiales');
+          var selectAll = document.getElementById('bulk-select-all-materiales');
+          var clearBtn = document.getElementById('bulk-clear-materiales');
+          var checks = form.querySelectorAll('.bulk-checkbox-materiales');
+
+          function refresh() {
+            var n = 0;
+            checks.forEach(function (c) { if (c.checked) n++; });
+            count.textContent = String(n);
+            bar.hidden = (n === 0);
+            if (selectAll) {
+              selectAll.checked = (n === checks.length && n > 0);
+              selectAll.indeterminate = (n > 0 && n < checks.length);
+            }
+          }
+
+          checks.forEach(function (c) { c.addEventListener('change', refresh); });
+          if (selectAll) {
+            selectAll.addEventListener('change', function () {
+              var on = selectAll.checked;
+              checks.forEach(function (c) { c.checked = on; });
+              refresh();
+            });
+          }
+          if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+              checks.forEach(function (c) { c.checked = false; });
+              refresh();
+            });
+          }
+          refresh();
+        })();
+      </script>
+    {% endif %}
+
   {% else %}
     <div class="bo-card-body" style="color:var(--bo-muted);">
       No hay materiales con los filtros aplicados.

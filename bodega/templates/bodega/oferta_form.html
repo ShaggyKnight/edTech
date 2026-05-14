@@ -37,6 +37,14 @@
 
         <div class="bo-field">
           <label for="{{ form.producto.id_for_label }}">Producto</label>
+          {# Filtro de busqueda — JS chico que oculta las options del
+             select que no matchean. Solo requiere DOM, sin backend. #}
+          <input type="search"
+                 class="bo-input"
+                 placeholder="🔍 Filtrar productos…"
+                 autocomplete="off"
+                 style="margin-bottom:6px;"
+                 oninput="filtrarSelectOptions('{{ form.producto.id_for_label }}', this.value)">
           {{ form.producto }}
           {% if form.producto.help_text %}
             <small style="color:var(--bo-muted);font-size:11px;">{{ form.producto.help_text }}</small>
@@ -46,12 +54,35 @@
 
         <div class="bo-field">
           <label for="{{ form.variante.id_for_label }}">Variante específica</label>
+          <input type="search"
+                 class="bo-input"
+                 placeholder="🔍 Filtrar variantes…"
+                 autocomplete="off"
+                 style="margin-bottom:6px;"
+                 oninput="filtrarSelectOptions('{{ form.variante.id_for_label }}', this.value)">
           {{ form.variante }}
           {% if form.variante.help_text %}
             <small style="color:var(--bo-muted);font-size:11px;">{{ form.variante.help_text }}</small>
           {% endif %}
           {% if form.variante.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.variante.errors }}</div>{% endif %}
         </div>
+
+        <script>
+          // Filtra las options de un <select> ocultando las que no
+          // matchean. Accent-insensitive y case-insensitive.
+          function filtrarSelectOptions(selectId, query) {
+            var select = document.getElementById(selectId);
+            if (!select) return;
+            var q = (query || '').toLowerCase().trim()
+              .normalize('NFD').replace(/[̀-ͯ]/g, '');
+            Array.from(select.options).forEach(function(opt) {
+              if (!opt.value) return; // mantener la opcion vacia (placeholder)
+              var label = opt.textContent.toLowerCase().trim()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '');
+              opt.hidden = q && label.indexOf(q) === -1;
+            });
+          }
+        </script>
 
         <div class="bo-card-head" style="border-top:1px solid var(--bo-border);padding-top:16px;margin-top:8px;">
           <h3 style="font-size:14px;">Descuento</h3>

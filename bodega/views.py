@@ -343,10 +343,11 @@ def lista_productos(request):
         'filtros': {
             'q': q, 'familia': familia_id, 'colegio': colegio_id, 'estado': estado,
         },
-        # La edicion inline de precio es solo para admin / superuser.
-        # El bodeguero ve los precios pero no los modifica (es decision
-        # comercial, no de stock).
+        # La edicion inline de precio + toggle de `activo` son solo
+        # para admin / superuser. El bodeguero ve pero no modifica
+        # (es decision comercial, no de stock).
         'puede_editar_precio': _puede_gestionar_ofertas(request.user),
+        'puede_editar_activo': _puede_gestionar_ofertas(request.user),
     }
     # Filtros AJAX: si la request es HTMX, devolvemos solo la tabla.
     if request.htmx:
@@ -398,6 +399,38 @@ def _respuesta_precio(request, producto):
         return render(request, 'bodega/_producto_precio_celda.html', {
             'p': producto,
             'puede_editar_precio': True,
+        })
+    return redirect('bodega:lista_productos')
+
+
+@login_required
+@require_POST
+def producto_toggle_activo(request, pk):
+    """Toggle del campo `activo` desde la lista de productos.
+
+    Bloque 10: misma logica que `set_precio` y `oferta_toggle`, pero
+    para activar/desactivar productos sin entrar al form completo.
+    Solo admin/superuser (es decision comercial — el bodeguero NO
+    discontinua productos).
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        messages.error(request, 'No tenés permisos para cambiar el estado de productos.')
+        return redirect('bodega:lista_productos')
+
+    producto = get_object_or_404(Producto, pk=pk)
+    producto.activo = not producto.activo
+    producto.save(update_fields=['activo', 'modificado'])
+    estado = 'activado' if producto.activo else 'desactivado'
+    messages.success(request, f'Producto "{producto.nombre}" {estado}.')
+    return _respuesta_activo(request, producto)
+
+
+def _respuesta_activo(request, producto):
+    """HTMX: celda actualizada con el nuevo badge + form. No-JS: redirect."""
+    if request.htmx:
+        return render(request, 'bodega/_producto_activo_celda.html', {
+            'p': producto,
+            'puede_editar_activo': True,
         })
     return redirect('bodega:lista_productos')
 

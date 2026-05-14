@@ -654,10 +654,47 @@ def lista_materiales(request):
     contexto = {
         'materiales': qs.order_by('nombre'),
         'filtros': {'q': q, 'estado': estado},
+        # Bloque 14: bulk action — bodeguero y admin pueden.
+        'puede_bulk_materiales': _puede_reponer(request.user),
     }
     if request.htmx:
         return render(request, 'bodega/_materiales_lista_tabla.html', contexto)
     return render(request, 'bodega/materiales_lista.html', contexto)
+
+
+@login_required
+@reponer_required
+@require_POST
+def materiales_bulk_action(request):
+    """Bulk action para materiales: activar/desactivar varios a la vez.
+
+    Bloque 14. Permisos: bodeguero + admin (mismo que el resto del
+    CRUD de materiales).
+    """
+    from django.utils import timezone
+
+    accion = (request.POST.get('accion') or '').strip()
+    ids = [int(x) for x in request.POST.getlist('ids') if x.isdigit()]
+
+    if accion not in ('activar', 'desactivar'):
+        messages.error(request, 'Acción inválida.')
+        return redirect('bodega:lista_materiales')
+    if not ids:
+        messages.error(request, 'No seleccionaste ningún material.')
+        return redirect('bodega:lista_materiales')
+
+    nuevo_activo = (accion == 'activar')
+    actualizados = (
+        Material.objects.filter(pk__in=ids)
+        .update(activo=nuevo_activo, modificado=timezone.now())
+    )
+    verbo = 'activados' if nuevo_activo else 'desactivados'
+    messages.success(request, f'{actualizados} material(es) {verbo}.')
+
+    if request.htmx:
+        request.GET = request.POST
+        return lista_materiales(request)
+    return redirect('bodega:lista_materiales')
 
 
 @login_required
@@ -822,6 +859,9 @@ def lista_ofertas(request):
         'ofertas': ofertas,
         'filtros': {'q': q, 'estado': estado, 'canal': canal},
         'canal_choices': Oferta.CANAL_CHOICES,
+        # Bloque 13: bulk action solo para admin (mismo helper que
+        # toggle individual). El bodeguero NO ve la columna de check.
+        'puede_bulk_ofertas': _puede_gestionar_ofertas(request.user),
     }
     if request.htmx:
         return render(request, 'bodega/_ofertas_lista_tabla.html', contexto)
@@ -888,6 +928,45 @@ def oferta_borrar(request, pk):
 @login_required
 @ofertas_required
 @require_POST
+@login_required
+@ofertas_required
+@require_POST
+def ofertas_bulk_action(request):
+    """Bulk action para ofertas: pausar / reactivar varias a la vez.
+
+    Bloque 13: mismo patron que `productos_bulk_action`. Solo admin /
+    superuser (decorator `@ofertas_required`).
+
+    Body:
+      - accion: 'pausar' | 'reactivar'
+      - ids: lista de PKs (multivalued)
+    """
+    from django.utils import timezone
+
+    accion = (request.POST.get('accion') or '').strip()
+    ids = [int(x) for x in request.POST.getlist('ids') if x.isdigit()]
+
+    if accion not in ('pausar', 'reactivar'):
+        messages.error(request, 'Acción inválida.')
+        return redirect('bodega:lista_ofertas')
+    if not ids:
+        messages.error(request, 'No seleccionaste ninguna oferta.')
+        return redirect('bodega:lista_ofertas')
+
+    nueva_activa = (accion == 'reactivar')
+    actualizadas = (
+        Oferta.objects.filter(pk__in=ids)
+        .update(activa=nueva_activa, modificado=timezone.now())
+    )
+    verbo = 'reactivadas' if nueva_activa else 'pausadas'
+    messages.success(request, f'{actualizadas} oferta(s) {verbo}.')
+
+    if request.htmx:
+        request.GET = request.POST
+        return lista_ofertas(request)
+    return redirect('bodega:lista_ofertas')
+
+
 def oferta_toggle(request, pk):
     """Pausa o reactiva una oferta sin tener que entrar al form."""
     o = get_object_or_404(Oferta, pk=pk)

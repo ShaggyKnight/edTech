@@ -25,6 +25,7 @@ urlpatterns = [
 
     # Materiales (Fase Ñ.2).
     path('materiales/', views.lista_materiales, name='lista_materiales'),
+    path('materiales/bulk/', views.materiales_bulk_action, name='materiales_bulk_action'),
     path('materiales/nuevo/', views.material_nuevo, name='material_nuevo'),
     path('materiales/<int:pk>/editar/', views.material_editar, name='material_editar'),
     path('materiales/<int:pk>/rendimientos/', views.rendimientos_lista, name='rendimientos'),
@@ -41,6 +42,7 @@ urlpatterns = [
 
     # Ofertas (Fase O.1).
     path('ofertas/', views.lista_ofertas, name='lista_ofertas'),
+    path('ofertas/bulk/', views.ofertas_bulk_action, name='ofertas_bulk_action'),
     path('ofertas/nueva/', views.oferta_nueva, name='oferta_nueva'),
     path('ofertas/<int:pk>/editar/', views.oferta_editar, name='oferta_editar'),
     path('ofertas/<int:pk>/borrar/', views.oferta_borrar, name='oferta_borrar'),

@@ -547,6 +547,10 @@ def detalle_producto(request, pk: int):
     )
 
     cart = Cart(request.session)
+    # Bloque 8: galeria real. Cargamos las imagenes adicionales del PDP.
+    # `imagenes_galeria` solo se llama una vez en el template; prefetch
+    # no aporta porque es una relacion 1->N que el template itera plano.
+    imagenes_galeria = list(producto.imagenes.all())
     return render(request, 'ecommerce/producto.html', {
         'producto': producto,
         'variantes': variantes,
@@ -554,6 +558,7 @@ def detalle_producto(request, pk: int):
         'items_count': cart.items_count,
         'label_eleccion': label_eleccion,
         'chips_anchos': chips_anchos,
+        'imagenes_galeria': imagenes_galeria,
     })
 
 

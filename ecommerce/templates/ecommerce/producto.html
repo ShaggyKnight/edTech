@@ -46,16 +46,28 @@
 
   <div class="pdp-main">
     {% imagen_producto producto as pdp_img %}
-    <div class="pdp-gallery">
+    {# Bloque 8 · Galeria real PDP: si hay imagenes adicionales, las
+       montamos como thumbs clickables. Sin JS, click no hace swap;
+       el bloque <script> de abajo agrega el comportamiento. #}
+    <div class="pdp-gallery" id="pdp-gallery"
+         data-has-extra="{% if imagenes_galeria %}1{% else %}0{% endif %}">
       <div class="pdp-thumbs">
-        <div class="pdp-thumb active">
+        <button type="button" class="pdp-thumb active" data-full="{{ pdp_img }}"
+                aria-label="Ver imagen principal" aria-current="true">
           <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" loading="lazy" width="120" height="120">
-        </div>
-        {# Thumbs adicionales: cuando haya galería los iteramos aquí #}
+        </button>
+        {% for img in imagenes_galeria %}
+          <button type="button" class="pdp-thumb" data-full="{{ img.imagen.url }}"
+                  aria-label="Ver imagen {{ forloop.counter|add:1 }}">
+            <img src="{{ img.imagen.url }}" alt="{{ img.alt|default:producto.nombre }}"
+                 loading="lazy" width="120" height="120">
+          </button>
+        {% endfor %}
       </div>
       <div class="pdp-big">
         {# La imagen principal del PDP es above-the-fold — sin lazy, con fetchpriority alto. #}
-        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" fetchpriority="high" width="600" height="600">
+        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" id="pdp-big-img"
+             fetchpriority="high" width="600" height="600">
       </div>
     </div>
 
@@ -378,6 +390,35 @@
     </div>
   </section>
 </main>
+
+{# Bloque 8 · Galeria PDP: swap de imagen principal al click en thumb.
+   Sin libs, sin Alpine — minimo: leer data-full, swap src, toggle clase
+   active. Funciona sin JS tambien: si JS esta off, los thumbs son
+   botones sin efecto y el cliente sigue viendo la imagen principal. #}
+<script>
+  (function () {
+    var gallery = document.getElementById('pdp-gallery');
+    if (!gallery || gallery.dataset.hasExtra !== '1') return;
+    var big = document.getElementById('pdp-big-img');
+    var thumbs = gallery.querySelectorAll('.pdp-thumb');
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        var url = t.dataset.full;
+        if (!url || !big) return;
+        big.src = url;
+        // Conservar el alt del thumb (mejor a11y) si el thumb lo tiene.
+        var thumbImg = t.querySelector('img');
+        if (thumbImg && thumbImg.alt) big.alt = thumbImg.alt;
+        thumbs.forEach(function (x) {
+          x.classList.remove('active');
+          x.removeAttribute('aria-current');
+        });
+        t.classList.add('active');
+        t.setAttribute('aria-current', 'true');
+      });
+    });
+  })();
+</script>
 
 {% include 'ecommerce/_shop_footer.html' %}
 {% endblock %}

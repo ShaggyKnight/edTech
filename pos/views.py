@@ -122,7 +122,7 @@ def home(request):
     lineas = list(cart.lineas(canal=CANAL))
     subtotal_bruto, descuento_total, total_neto = cart.totales(canal=CANAL)
 
-    return render(request, 'pos/home.html', {
+    contexto = {
         'tienda': tienda,
         'tiendas_disponibles': Tienda.objects.filter(activa=True).exclude(pk=tienda.pk),
         'query': query,
@@ -137,7 +137,14 @@ def home(request):
         'total_neto': total_neto,
         'items_count': cart.items_count,
         'puede_agregar_stock': _puede_admin_stock(request.user),
-    })
+    }
+
+    # Live search: si la request viene de HTMX, devolvemos solo el tbody.
+    # Es lo unico que el cliente necesita reemplazar — ahorra render del
+    # resto de la pagina y reduce el payload.
+    if request.htmx:
+        return render(request, 'pos/_pos_productos_tbody.html', contexto)
+    return render(request, 'pos/home.html', contexto)
 
 
 @login_required
@@ -306,6 +313,31 @@ def _respuesta_scan(request):
     return redirect('pos:home')
 
 
+def _respuesta_carrito_pos(request):
+    """Helper: si la request es HTMX, devuelve el partial OOB del
+    carrito + toasts. Si no, redirect tradicional a home (fallback
+    no-JS).
+
+    Asi `agregar` / `actualizar` / `quitar` / `vaciar` actualizan la
+    UI sin recargar la pagina: el cajero sigue viendo el listado de
+    productos, no pierde scroll ni foco, y el carrito refleja el
+    estado nuevo + toast con el feedback del servidor.
+    """
+    if not request.htmx:
+        return redirect('pos:home')
+
+    cart = Cart(request.session)
+    lineas = list(cart.lineas(canal=CANAL))
+    subtotal_bruto, descuento_total, total_neto = cart.totales(canal=CANAL)
+    return render(request, 'pos/_pos_oob_update.html', {
+        'lineas': lineas,
+        'subtotal_bruto': subtotal_bruto,
+        'descuento_total': descuento_total,
+        'total_neto': total_neto,
+        'items_count': cart.items_count,
+    })
+
+
 @login_required
 @permission_required('pos.add_reciboventa', raise_exception=True)
 @require_POST
@@ -313,7 +345,7 @@ def agregar(request):
     form = AgregarForm(request.POST)
     if not form.is_valid():
         messages.error(request, 'Datos inválidos para agregar al carrito.')
-        return redirect('pos:home')
+        return _respuesta_carrito_pos(request)
 
     cart = Cart(request.session)
     tipo = form.cleaned_data['tipo']
@@ -321,17 +353,27 @@ def agregar(request):
     cantidad = form.cleaned_data['cantidad']
 
     if tipo == 'v':
-        if not ProductoVariante.objects.filter(pk=item_id, activa=True).exists():
+        variante = ProductoVariante.objects.select_related('producto').filter(
+            pk=item_id, activa=True,
+        ).first()
+        if not variante:
             messages.error(request, 'Variante no disponible.')
-            return redirect('pos:home')
+            return _respuesta_carrito_pos(request)
         cart.add_variante(item_id, cantidad)
+        messages.success(
+            request, f'+ {variante.producto.nombre} ({variante.sku}) al carrito.',
+        )
     else:
-        if not Producto.objects.filter(pk=item_id, activo=True, tiene_variantes=False).exists():
+        producto = Producto.objects.filter(
+            pk=item_id, activo=True, tiene_variantes=False,
+        ).first()
+        if not producto:
             messages.error(request, 'Producto no disponible.')
-            return redirect('pos:home')
+            return _respuesta_carrito_pos(request)
         cart.add_producto(item_id, cantidad)
+        messages.success(request, f'+ {producto.nombre} al carrito.')
 
-    return redirect('pos:home')
+    return _respuesta_carrito_pos(request)
 
 
 @login_required
@@ -341,7 +383,7 @@ def actualizar(request):
     form = ActualizarCantidadForm(request.POST)
     if form.is_valid():
         Cart(request.session).set_cantidad(form.cleaned_data['key'], form.cleaned_data['cantidad'])
-    return redirect('pos:home')
+    return _respuesta_carrito_pos(request)
 
 
 @login_required
@@ -349,7 +391,7 @@ def actualizar(request):
 @require_POST
 def quitar(request, key: str):
     Cart(request.session).remove(key)
-    return redirect('pos:home')
+    return _respuesta_carrito_pos(request)
 
 
 @login_required
@@ -357,7 +399,8 @@ def quitar(request, key: str):
 @require_POST
 def vaciar(request):
     Cart(request.session).clear()
-    return redirect('pos:home')
+    messages.success(request, 'Carrito vacío.')
+    return _respuesta_carrito_pos(request)
 
 
 @login_required

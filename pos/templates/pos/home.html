@@ -65,9 +65,36 @@
   .pos-totals { padding: 16px; background: var(--bo-bg); border-top: 1px solid var(--bo-border-soft); }
   .pos-totals .line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
   .pos-totals .line.total { padding-top: 12px; border-top: 1px solid var(--bo-border); margin-top: 8px; font-size: 18px; font-weight: 600; }
-  .pos-search-input { padding-left: 32px; }
-  .pos-search-wrap { position: relative; }
-  .pos-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--bo-muted); }
+  /* Buscador con icono lupa a la izquierda — flex en lugar de
+     position:absolute para que el texto del input NUNCA se superponga
+     al icono (bug reportado). */
+  .pos-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    background: var(--bo-card);
+    border: 1px solid var(--bo-border);
+    border-radius: var(--bo-radius);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .pos-search-wrap:focus-within {
+    border-color: var(--bo-primary);
+    box-shadow: 0 0 0 3px var(--bo-primary-soft);
+  }
+  .pos-search-wrap > svg { flex-shrink: 0; color: var(--bo-muted); }
+  .pos-search-wrap > input.pos-search-input {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 7px 0;
+    font: inherit;
+    font-size: 13px;
+    color: var(--bo-text);
+    outline: none;
+    box-shadow: none;
+  }
+  .pos-search-wrap > input.pos-search-input::placeholder { color: var(--bo-muted); }
   /* Filtros */
   .pos-filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
   .pos-chip {
@@ -159,13 +186,27 @@
     <div class="bo-card">
       <div class="bo-card-head">
         <h3>Productos</h3>
-        <form method="get" action="{% url 'pos:home' %}" class="pos-search-wrap" style="flex:1; max-width:340px;">
-          {# Persistimos los filtros activos durante la búsqueda #}
-          {% if familia_activa %}<input type="hidden" name="familia" value="{{ familia_activa }}">{% endif %}
-          {% if mostrar_todos %}<input type="hidden" name="stock" value="todos">{% endif %}
+        {% comment %}
+          Live search: cada keystroke (con 250ms de debounce) hace un
+          GET con HTMX que devuelve solo el tbody — sin recargar la
+          pagina. `hx-trigger="input changed delay:250ms, search"`
+          captura tipeo normal y el "search" event del input type=search.
+          Mantiene el "Enter" como submit tradicional (fallback no-JS).
+        {% endcomment %}
+        <form method="get" action="{% url 'pos:home' %}" class="pos-search-wrap"
+              style="flex:1; max-width:340px;"
+              hx-get="{% url 'pos:home' %}"
+              hx-trigger="input changed delay:250ms from:input[name='q'], change from:input[name='familia'], change from:input[name='stock']"
+              hx-target="#pos-productos-tbody"
+              hx-swap="outerHTML"
+              hx-push-url="true">
+          {# Persistimos los filtros activos durante la busqueda. #}
+          <input type="hidden" name="familia" value="{{ familia_activa|default:'' }}">
+          <input type="hidden" name="stock" value="{% if mostrar_todos %}todos{% endif %}">
           <svg class="ico ico--16"><use href="#ico-search"/></svg>
-          <input type="text" name="q" value="{{ query }}" class="bo-input pos-search-input"
-                 placeholder="Nombre, SKU o talla…">
+          <input type="search" name="q" value="{{ query }}" class="pos-search-input"
+                 placeholder="Nombre, SKU o talla…"
+                 autocomplete="off">
         </form>
       </div>
 
@@ -220,187 +261,12 @@
               {% if puede_agregar_stock %}<th>Cargar</th>{% endif %}
             </tr>
           </thead>
-          <tbody>
-            {% for v in variantes %}
-              <tr {% if not v.stock %}style="opacity:.6;"{% endif %}>
-                <td>{{ v.producto.nombre }}</td>
-                <td>
-                  <code>{{ v.sku }}</code>
-                  {% for val in v.valores.all %}
-                    <span class="bo-badge bo-badge-muted">{{ val.valor }}</span>
-                  {% endfor %}
-                </td>
-                <td>{{ v.producto.familia.nombre }}</td>
-                <td class="num">${{ v.precio|floatformat:0|intcomma }}</td>
-                <td class="num">
-                  {% if not v.stock %}
-                    <span class="bo-badge bo-badge-danger">0</span>
-                  {% elif v.stock <= 5 %}
-                    <span class="bo-badge bo-badge-warning">{{ v.stock }}</span>
-                  {% else %}
-                    {{ v.stock }}
-                  {% endif %}
-                </td>
-                <td>
-                  <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;">
-                    {% csrf_token %}
-                    <input type="hidden" name="tipo" value="v">
-                    <input type="hidden" name="item_id" value="{{ v.pk }}">
-                    <input type="hidden" name="cantidad" value="1">
-                    <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not v.stock %}disabled{% endif %}>+ Agregar</button>
-                  </form>
-                </td>
-                {% if puede_agregar_stock %}
-                  <td>
-                    <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
-                      {% csrf_token %}
-                      <input type="hidden" name="tipo" value="v">
-                      <input type="hidden" name="item_id" value="{{ v.pk }}">
-                      <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
-                      <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
-                    </form>
-                  </td>
-                {% endif %}
-              </tr>
-            {% endfor %}
-            {% for p in productos %}
-              <tr {% if not p.stock %}style="opacity:.6;"{% endif %}>
-                <td>{{ p.nombre }}</td>
-                <td><em style="color:var(--bo-muted);">sin variantes</em></td>
-                <td>{{ p.familia.nombre }}</td>
-                <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
-                <td class="num">
-                  {% if not p.stock %}
-                    <span class="bo-badge bo-badge-danger">0</span>
-                  {% elif p.stock <= 5 %}
-                    <span class="bo-badge bo-badge-warning">{{ p.stock }}</span>
-                  {% else %}
-                    {{ p.stock }}
-                  {% endif %}
-                </td>
-                <td>
-                  <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;">
-                    {% csrf_token %}
-                    <input type="hidden" name="tipo" value="p">
-                    <input type="hidden" name="item_id" value="{{ p.pk }}">
-                    <input type="hidden" name="cantidad" value="1">
-                    <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not p.stock %}disabled{% endif %}>+ Agregar</button>
-                  </form>
-                </td>
-                {% if puede_agregar_stock %}
-                  <td>
-                    <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
-                      {% csrf_token %}
-                      <input type="hidden" name="tipo" value="p">
-                      <input type="hidden" name="item_id" value="{{ p.pk }}">
-                      <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
-                      <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
-                    </form>
-                  </td>
-                {% endif %}
-              </tr>
-            {% empty %}
-              {% if not variantes %}
-                <tr>
-                  <td colspan="{% if puede_agregar_stock %}7{% else %}6{% endif %}"
-                      style="text-align:center;color:var(--bo-muted);padding:30px;">
-                    No hay productos que coincidan con los filtros.
-                  </td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-          </tbody>
+          {% include 'pos/_pos_productos_tbody.html' %}
         </table>
       </div>
     </div>
 
-    {# ─── Carrito + checkout ─── #}
-    <div class="bo-card">
-      <div class="bo-card-head">
-        <h3>Carrito ({{ items_count }} item{{ items_count|pluralize:"s" }})</h3>
-      </div>
-
-      <div>
-        {% for linea in lineas %}
-          <div class="pos-line">
-            <div class="name">
-              {% if linea.tipo == 'v' %}{{ linea.item.producto.nombre }}{% else %}{{ linea.item.nombre }}{% endif %}
-            </div>
-            <div class="meta">
-              {% if linea.tipo == 'v' %}{{ linea.item.sku }} · {% endif %}
-              ${{ linea.precio_unitario|floatformat:0|intcomma }} c/u
-              {% if linea.descuento_unitario %}
-                <span class="bo-badge bo-badge-warning">-${{ linea.descuento_unitario|floatformat:0|intcomma }}</span>
-              {% endif %}
-            </div>
-            <div class="row">
-              <form method="post" action="{% url 'pos:actualizar' %}" class="pos-qty" style="margin:0;">
-                {% csrf_token %}
-                <input type="hidden" name="key" value="{{ linea.key }}">
-                <input type="number" name="cantidad" value="{{ linea.cantidad }}" min="0"
-                       class="bo-input" onchange="this.form.submit()">
-              </form>
-              <strong>${{ linea.subtotal|floatformat:0|intcomma }}</strong>
-              <form method="post" action="{% url 'pos:quitar' linea.key %}" style="margin:0;">
-                {% csrf_token %}
-                <button type="submit" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);" title="Quitar">×</button>
-              </form>
-            </div>
-          </div>
-        {% empty %}
-          <div class="pos-cart-empty">
-            Carrito vacío.<br>Agregá items desde la tabla.
-          </div>
-        {% endfor %}
-      </div>
-
-      {% if lineas %}
-        <div class="pos-totals">
-          <div class="line">
-            <span>Subtotal</span>
-            <span>${{ subtotal_bruto|floatformat:0|intcomma }}</span>
-          </div>
-          {% if descuento_total %}
-            <div class="line" style="color:var(--bo-vino);">
-              <span>Descuentos</span>
-              <span>-${{ descuento_total|floatformat:0|intcomma }}</span>
-            </div>
-          {% endif %}
-          <div class="line total">
-            <span>Total</span>
-            <span>${{ total_neto|floatformat:0|intcomma }}</span>
-          </div>
-        </div>
-
-        <div class="bo-card-body">
-          <form method="post" action="{% url 'pos:checkout' %}"
-                onsubmit="return confirm('¿Cobrar ${{ total_neto|floatformat:0|intcomma }}?');">
-            {% csrf_token %}
-            <div class="bo-field">
-              <label>Cliente (opcional)</label>
-              <input type="text" name="cliente_nombre" class="bo-input" placeholder="Nombre">
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <div class="bo-field">
-                <label>Email (boleta)</label>
-                <input type="email" name="cliente_email" class="bo-input">
-              </div>
-              <div class="bo-field">
-                <label>RUT (factura)</label>
-                <input type="text" name="cliente_rut" class="bo-input">
-              </div>
-            </div>
-            <button type="submit" class="bo-btn bo-btn-primary bo-btn-block bo-btn-lg">
-              Cobrar ${{ total_neto|floatformat:0|intcomma }}
-            </button>
-          </form>
-          <form method="post" action="{% url 'pos:vaciar' %}"
-                onsubmit="return confirm('¿Vaciar carrito?');" style="margin-top:8px;">
-            {% csrf_token %}
-            <button type="submit" class="bo-btn bo-btn-block">Vaciar carrito</button>
-          </form>
-        </div>
-      {% endif %}
-    </div>
+    {# Carrito #}
+    {% include 'pos/_pos_carrito.html' %}
   </div>
 {% endblock %}

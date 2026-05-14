@@ -1,0 +1,18 @@
+{% load humanize %}
+{% comment %}
+  Fragment para responses HTMX de agregar/quitar/actualizar/vaciar
+  del POS. Devuelve dos swaps OOB:
+
+  1. <div id="pos-carrito-card" hx-swap-oob="true"> reemplaza el card
+     entero del carrito con la version recien actualizada.
+  2. <div id="toast-container" hx-swap-oob="beforeend"> appende los
+     toasts del messages framework (si hay).
+{% endcomment %}
+{% include 'pos/_pos_carrito.html' with oob=True %}
+
+<div id="toast-container"
+     class="toast-container"
+     hx-swap-oob="beforeend"
+     aria-live="polite">
+  {% include 'partials/_toasts.html' %}
+</div>

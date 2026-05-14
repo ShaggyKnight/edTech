@@ -1,0 +1,102 @@
+{% load humanize %}
+{% comment %}
+  Card del carrito del POS. Se extrae para que `agregar`, `quitar`,
+  `actualizar` puedan devolverlo como OOB swap sin recargar toda la
+  pagina. El boton "Cobrar" sigue siendo un POST tradicional (lleva
+  a la pasarela TUU / al recibo).
+
+  Contexto: lineas, items_count, subtotal_bruto, descuento_total, total_neto.
+{% endcomment %}
+<div class="bo-card" id="pos-carrito-card"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <div class="bo-card-head">
+    <h3>Carrito ({{ items_count }} item{{ items_count|pluralize:"s" }})</h3>
+  </div>
+
+  <div>
+    {% for linea in lineas %}
+      <div class="pos-line">
+        <div class="name">
+          {% if linea.tipo == 'v' %}{{ linea.item.producto.nombre }}{% else %}{{ linea.item.nombre }}{% endif %}
+        </div>
+        <div class="meta">
+          {% if linea.tipo == 'v' %}{{ linea.item.sku }} · {% endif %}
+          ${{ linea.precio_unitario|floatformat:0|intcomma }} c/u
+          {% if linea.descuento_unitario %}
+            <span class="bo-badge bo-badge-warning">-${{ linea.descuento_unitario|floatformat:0|intcomma }}</span>
+          {% endif %}
+        </div>
+        <div class="row">
+          <form method="post" action="{% url 'pos:actualizar' %}" class="pos-qty" style="margin:0;"
+                hx-post="{% url 'pos:actualizar' %}"
+                hx-swap="none">
+            {% csrf_token %}
+            <input type="hidden" name="key" value="{{ linea.key }}">
+            <input type="number" name="cantidad" value="{{ linea.cantidad }}" min="0"
+                   class="bo-input" onchange="this.form.requestSubmit()">
+          </form>
+          <strong>${{ linea.subtotal|floatformat:0|intcomma }}</strong>
+          <form method="post" action="{% url 'pos:quitar' linea.key %}" style="margin:0;"
+                hx-post="{% url 'pos:quitar' linea.key %}"
+                hx-swap="none">
+            {% csrf_token %}
+            <button type="submit" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);" title="Quitar">×</button>
+          </form>
+        </div>
+      </div>
+    {% empty %}
+      <div class="pos-cart-empty">
+        Carrito vacío.<br>Agregá items desde la tabla.
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if lineas %}
+    <div class="pos-totals">
+      <div class="line">
+        <span>Subtotal</span>
+        <span>${{ subtotal_bruto|floatformat:0|intcomma }}</span>
+      </div>
+      {% if descuento_total %}
+        <div class="line" style="color:var(--bo-vino);">
+          <span>Descuentos</span>
+          <span>-${{ descuento_total|floatformat:0|intcomma }}</span>
+        </div>
+      {% endif %}
+      <div class="line total">
+        <span>Total</span>
+        <span>${{ total_neto|floatformat:0|intcomma }}</span>
+      </div>
+    </div>
+
+    <div class="bo-card-body">
+      <form method="post" action="{% url 'pos:checkout' %}"
+            onsubmit="return confirm('¿Cobrar ${{ total_neto|floatformat:0|intcomma }}?');">
+        {% csrf_token %}
+        <div class="bo-field">
+          <label>Cliente (opcional)</label>
+          <input type="text" name="cliente_nombre" class="bo-input" placeholder="Nombre">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="bo-field">
+            <label>Email (boleta)</label>
+            <input type="email" name="cliente_email" class="bo-input">
+          </div>
+          <div class="bo-field">
+            <label>RUT (factura)</label>
+            <input type="text" name="cliente_rut" class="bo-input">
+          </div>
+        </div>
+        <button type="submit" class="bo-btn bo-btn-primary bo-btn-block bo-btn-lg">
+          Cobrar ${{ total_neto|floatformat:0|intcomma }}
+        </button>
+      </form>
+      <form method="post" action="{% url 'pos:vaciar' %}" style="margin-top:8px;"
+            hx-post="{% url 'pos:vaciar' %}"
+            hx-swap="none"
+            hx-confirm="¿Vaciar carrito?">
+        {% csrf_token %}
+        <button type="submit" class="bo-btn bo-btn-block">Vaciar carrito</button>
+      </form>
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,101 @@
+{% load humanize %}
+{% comment %}
+  Tbody del listado de productos del POS. Se extrae para que pueda
+  refrescarse via HTMX (live search, cambio de chip de familia,
+  toggle de stock) sin recargar toda la pagina.
+
+  Contexto requerido: `variantes`, `productos`, `puede_agregar_stock`.
+{% endcomment %}
+<tbody id="pos-productos-tbody">
+  {% for v in variantes %}
+    <tr {% if not v.stock %}style="opacity:.6;"{% endif %}>
+      <td>{{ v.producto.nombre }}</td>
+      <td>
+        <code>{{ v.sku }}</code>
+        {% for val in v.valores.all %}
+          <span class="bo-badge bo-badge-muted">{{ val.valor }}</span>
+        {% endfor %}
+      </td>
+      <td>{{ v.producto.familia.nombre }}</td>
+      <td class="num">${{ v.precio|floatformat:0|intcomma }}</td>
+      <td class="num">
+        {% if not v.stock %}
+          <span class="bo-badge bo-badge-danger">0</span>
+        {% elif v.stock <= 5 %}
+          <span class="bo-badge bo-badge-warning">{{ v.stock }}</span>
+        {% else %}
+          {{ v.stock }}
+        {% endif %}
+      </td>
+      <td>
+        <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;"
+              hx-post="{% url 'pos:agregar' %}"
+              hx-swap="none">
+          {% csrf_token %}
+          <input type="hidden" name="tipo" value="v">
+          <input type="hidden" name="item_id" value="{{ v.pk }}">
+          <input type="hidden" name="cantidad" value="1">
+          <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not v.stock %}disabled{% endif %}>+ Agregar</button>
+        </form>
+      </td>
+      {% if puede_agregar_stock %}
+        <td>
+          <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
+            {% csrf_token %}
+            <input type="hidden" name="tipo" value="v">
+            <input type="hidden" name="item_id" value="{{ v.pk }}">
+            <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
+            <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
+          </form>
+        </td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+  {% for p in productos %}
+    <tr {% if not p.stock %}style="opacity:.6;"{% endif %}>
+      <td>{{ p.nombre }}</td>
+      <td><em style="color:var(--bo-muted);">sin variantes</em></td>
+      <td>{{ p.familia.nombre }}</td>
+      <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
+      <td class="num">
+        {% if not p.stock %}
+          <span class="bo-badge bo-badge-danger">0</span>
+        {% elif p.stock <= 5 %}
+          <span class="bo-badge bo-badge-warning">{{ p.stock }}</span>
+        {% else %}
+          {{ p.stock }}
+        {% endif %}
+      </td>
+      <td>
+        <form method="post" action="{% url 'pos:agregar' %}" style="margin:0;"
+              hx-post="{% url 'pos:agregar' %}"
+              hx-swap="none">
+          {% csrf_token %}
+          <input type="hidden" name="tipo" value="p">
+          <input type="hidden" name="item_id" value="{{ p.pk }}">
+          <input type="hidden" name="cantidad" value="1">
+          <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not p.stock %}disabled{% endif %}>+ Agregar</button>
+        </form>
+      </td>
+      {% if puede_agregar_stock %}
+        <td>
+          <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
+            {% csrf_token %}
+            <input type="hidden" name="tipo" value="p">
+            <input type="hidden" name="item_id" value="{{ p.pk }}">
+            <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
+            <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
+          </form>
+        </td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+  {% if not variantes and not productos %}
+    <tr>
+      <td colspan="{% if puede_agregar_stock %}7{% else %}6{% endif %}"
+          style="text-align:center;color:var(--bo-muted);padding:30px;">
+        No hay productos que coincidan con los filtros.
+      </td>
+    </tr>
+  {% endif %}
+</tbody>

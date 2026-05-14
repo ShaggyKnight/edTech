@@ -320,3 +320,116 @@
 
 /* --- 11. Body scroll lock cuando hay drawer abierto ---------*/
 body.no-scroll, html.no-scroll { overflow: hidden !important; }
+
+/* --- 12. Bloque 9 · Resenas reales en PDP --------------------*/
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* Estrellas: el icono ya viene con `fill: currentColor`; pintamos en
+   dorado las que estan "on" y dejamos en gris las apagadas. */
+.ico.star-on { color: var(--gold-2); }
+.pdp-rating .ico:not(.star-on),
+.resena-stars-row .ico:not(.star-on),
+.resenas-avg .ico:not(.star-on) { color: var(--ink-40); }
+
+.pdp-resenas {
+  max-width: 760px;
+  margin: 48px auto 0;
+  padding: 32px 24px;
+  border-top: 1px solid var(--line);
+}
+.pdp-resenas h2 { font-family: var(--serif); font-size: 28px; margin: 0 0 16px; }
+
+.resenas-summary { margin-bottom: 24px; }
+.resenas-avg {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; color: var(--ink-60);
+}
+.resenas-avg strong {
+  font-size: 22px; color: var(--ink); margin-left: 6px; font-weight: 600;
+}
+
+.resenas-list { list-style: none; padding: 0; margin: 0 0 32px; }
+.resena-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.resena-head {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  align-items: center; margin-bottom: 6px;
+}
+.resena-stars-row { display: inline-flex; gap: 2px; }
+.resena-author { font-weight: 600; color: var(--ink); }
+.resena-verified {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; color: #2F5530;
+  background: rgba(84,120,82,0.10);
+  padding: 2px 8px; border-radius: 999px;
+}
+.resena-head time { color: var(--ink-60); font-size: 12px; }
+.resena-titulo { margin: 4px 0; }
+.resena-texto { color: var(--ink); line-height: 1.5; margin: 4px 0 0; }
+.resenas-empty { color: var(--ink-60); margin: 12px 0 24px; }
+
+/* --- Form para enviar resena --------------------------------*/
+.resena-form-wrap {
+  background: var(--cream-2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+}
+.resena-form h3 { font-family: var(--serif); font-weight: 600; font-size: 20px; }
+
+.resena-stars {
+  display: inline-flex; gap: 4px;
+  margin-bottom: 14px;
+}
+.resena-star {
+  cursor: pointer;
+  padding: 4px;
+  color: var(--ink-40);
+  transition: color .15s;
+}
+.resena-star input { position: absolute; opacity: 0; pointer-events: none; }
+.resena-star:hover, .resena-star.is-active { color: var(--gold-2); }
+.resena-star input:checked + svg,
+.resena-star input:focus-visible + svg { color: var(--gold-2); }
+
+.resena-row { display: block; margin-bottom: 14px; }
+.resena-label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--ink); margin-bottom: 4px;
+}
+.resena-row input,
+.resena-row textarea {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  background: white;
+}
+.resena-row input:focus,
+.resena-row textarea:focus { outline: none; border-color: var(--ink); }
+.resena-row input[aria-invalid="true"],
+.resena-row textarea[aria-invalid="true"] {
+  border-color: var(--vino);
+  background: rgba(122,30,43,0.04);
+}
+
+.resena-done {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 20px;
+  background: rgba(84,120,82,0.08);
+  border: 1px solid #547852;
+  border-radius: 12px;
+}
+.resena-done svg { color: #547852; flex-shrink: 0; }
+.resena-done strong { font-family: var(--serif); font-size: 18px; }
+.resena-done p { margin: 4px 0 0; color: var(--ink-60); font-size: 14px; }
+

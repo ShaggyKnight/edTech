@@ -29,10 +29,10 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from bodega.models import StockTienda
-from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
+from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, Resena, ValorAtributo
 from ecommerce.cart import CANAL, Cart
 from ecommerce.emails import enviar_boleta, notificar_dueno_nueva_orden
-from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm
+from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm, ResenaForm
 from ecommerce.payments import get_online_gateway
 from ecommerce.services import (
     ItemPedido,
@@ -429,6 +429,71 @@ def buscar_json(request):
     return JsonResponse({'productos': productos_data, 'colegios': colegios_data})
 
 
+@require_POST
+def enviar_resena(request, pk: int):
+    """Recibe una resena de un cliente para el producto `pk`.
+
+    Bloque 9. La resena queda en estado `pendiente` hasta que la
+    duena la apruebe desde el admin. Sin captcha: el campo `estado`
+    es un filtro implícito contra spam masivo (no se publica nada
+    que no se modere). Si el usuario esta logueado, prellena email
+    + nombre.
+
+    Respuesta:
+    - HTMX: fragment `_resena_done.html` con el agradecimiento. Se
+      hace swap del bloque del form.
+    - No-HTMX: redirect al PDP con messages.
+    """
+    producto = get_object_or_404(Producto, pk=pk, activo=True)
+    form = ResenaForm(request.POST)
+
+    if not form.is_valid():
+        if request.htmx:
+            return render(request, 'ecommerce/_resena_form.html', {
+                'producto': producto, 'form': form,
+            }, status=400)
+        messages.error(request, 'Por favor revisa los campos marcados.')
+        return redirect('ecommerce:producto', pk=pk)
+
+    # Cross-check del producto_id del POST con el de la URL (defensa
+    # contra POSTs a otro PDP con producto_id manipulado).
+    if form.cleaned_data['producto_id'] != producto.pk:
+        if request.htmx:
+            return HttpResponse('Producto no coincide.', status=400)
+        return redirect('ecommerce:producto', pk=pk)
+
+    # Si el cliente esta logueado y tiene compra del producto, enlazamos
+    # el recibo mas reciente para marcar la resena como "compra verificada".
+    recibo = None
+    if request.user.is_authenticated and request.user.email:
+        recibo = (
+            ReciboVenta.objects
+            .filter(cliente_email__iexact=request.user.email,
+                    canal=ReciboVenta.CANAL_ONLINE,
+                    estado=ReciboVenta.ESTADO_PAGADO,
+                    detalles__producto=producto)
+            .order_by('-creado').first()
+        )
+
+    Resena.objects.create(
+        producto=producto,
+        estrellas=form.cleaned_data['estrellas'],
+        titulo=form.cleaned_data['titulo'],
+        texto=form.cleaned_data['texto'],
+        nombre_publico=form.cleaned_data['nombre_publico'],
+        cliente_email=form.cleaned_data['cliente_email'],
+        recibo=recibo,
+    )
+
+    if request.htmx:
+        return render(request, 'ecommerce/_resena_done.html', {})
+    messages.success(
+        request,
+        'Gracias por tu resena. La revisaremos antes de publicarla.',
+    )
+    return redirect('ecommerce:producto', pk=pk)
+
+
 @require_GET
 def quick_view(request, pk: int):
     """Vista rápida del producto: fragment HTML que se carga en un
@@ -548,9 +613,18 @@ def detalle_producto(request, pk: int):
 
     cart = Cart(request.session)
     # Bloque 8: galeria real. Cargamos las imagenes adicionales del PDP.
-    # `imagenes_galeria` solo se llama una vez en el template; prefetch
-    # no aporta porque es una relacion 1->N que el template itera plano.
     imagenes_galeria = list(producto.imagenes.all())
+
+    # Bloque 9: resenas publicas + form vacio para enviar nueva.
+    resenas_publicas = producto.resenas_publicas
+    resena_form_initial = {'producto_id': producto.pk}
+    if request.user.is_authenticated:
+        nombre = (f'{request.user.first_name} {request.user.last_name}'.strip()
+                  or request.user.username)
+        resena_form_initial['nombre_publico'] = nombre
+        resena_form_initial['cliente_email'] = request.user.email or ''
+    resena_form = ResenaForm(initial=resena_form_initial)
+
     return render(request, 'ecommerce/producto.html', {
         'producto': producto,
         'variantes': variantes,
@@ -559,6 +633,8 @@ def detalle_producto(request, pk: int):
         'label_eleccion': label_eleccion,
         'chips_anchos': chips_anchos,
         'imagenes_galeria': imagenes_galeria,
+        'resenas_publicas': resenas_publicas,
+        'resena_form': resena_form,
     })
 
 

@@ -47,9 +47,9 @@ def robots_txt(request):
         # Endpoints AJAX/JSON.
         'Disallow: /tienda/buscar.json',
         '',
-        # Sugerencia de host canonico — el dueno actualiza el dominio cuando
-        # publique. Mientras tanto queda como hint informativo.
-        '# Sitemap: https://www.ideasboutique.cl/sitemap.xml',
+        # Sitemap público (Sprint 3 · 3.2). El host se resuelve relativo al
+        # request, por eso usamos build_absolute_uri en runtime.
+        f'Sitemap: {request.build_absolute_uri("/sitemap.xml")}',
         '',
     ]
     return HttpResponse('\n'.join(lineas), content_type='text/plain; charset=utf-8')

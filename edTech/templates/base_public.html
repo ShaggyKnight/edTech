@@ -68,6 +68,20 @@
     {# Hoja de estilos del sistema Ideas Boutique #}
     <link rel="stylesheet" href="{% static 'css/ideas.css' %}">
 
+    {# Analytics (Sprint 3 · 3.9) — Plausible: privacy-first, sin cookies,
+       cumple Ley 19.628. Solo se inyecta si ANALYTICS_DOMAIN está
+       configurado en settings (vacío en dev = no-op). Eventos custom
+       vía window.plausible("add_to_cart", {...}) cuando haga falta. #}
+    {% if ANALYTICS_DOMAIN %}
+    <script defer data-domain="{{ ANALYTICS_DOMAIN }}"
+            src="https://plausible.io/js/script.tagged-events.js"></script>
+    <script>
+      window.plausible = window.plausible || function() {
+        (window.plausible.q = window.plausible.q || []).push(arguments);
+      };
+    </script>
+    {% endif %}
+
     {% comment %}
       HTMX: AJAX declarativo. Alpine: estado local pequeño. Defer
       para no bloquear el primer render del catálogo / landing.

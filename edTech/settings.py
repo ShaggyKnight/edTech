@@ -33,6 +33,10 @@ env = environ.Env(
     OPENFACTURA_API_KEY=(str, ''),
     OPENFACTURA_BASE_URL=(str, 'https://api.haulmer.com'),
     OPENFACTURA_RUT_EMISOR=(str, ''),
+    # Sprint 3 · SEO + ops (opcionales, no-op si vacíos).
+    SITE_URL=(str, ''),
+    OWNER_NOTIFICATION_EMAIL=(str, ''),
+    ANALYTICS_DOMAIN=(str, ''),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -50,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
     'rest_framework',
     'accounts.apps.AccountsConfig',
     'catalogo.apps.CatalogoConfig',
@@ -94,6 +99,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'edTech.context_processors.public_settings',
             ],
         },
     },
@@ -245,3 +251,8 @@ DTE_EMISSOR = env('DTE_EMISSOR')
 OPENFACTURA_API_KEY = env('OPENFACTURA_API_KEY')
 OPENFACTURA_BASE_URL = env('OPENFACTURA_BASE_URL')
 OPENFACTURA_RUT_EMISOR = env('OPENFACTURA_RUT_EMISOR')
+
+# Sprint 3 · 3.5/3.9 — SEO + notificaciones + analytics.
+SITE_URL = env('SITE_URL')                              # ej: https://ideasboutique.cl
+OWNER_NOTIFICATION_EMAIL = env('OWNER_NOTIFICATION_EMAIL')  # email de Blanca
+ANALYTICS_DOMAIN = env('ANALYTICS_DOMAIN')              # dominio Plausible (vacío = sin analytics)

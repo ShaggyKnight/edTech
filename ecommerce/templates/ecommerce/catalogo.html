@@ -2,8 +2,14 @@
 {% load static humanize %}
 
 {% block titulo %}
-  {% if cat_info %}{{ cat_info.title }} · Ideas Boutique{% else %}Tienda · Ideas Boutique{% endif %}
+  {% if seo_titulo %}{{ seo_titulo }}{% elif cat_info %}{{ cat_info.title }} · Ideas Boutique{% else %}Tienda · Ideas Boutique{% endif %}
 {% endblock %}
+
+{% block meta_description %}
+  {% if seo_descripcion %}{{ seo_descripcion }}{% elif cat_info %}{{ cat_info.title }} en Ideas Boutique, Los Vilos. {{ cat_info.desc }}. Envío a todo Chile, desde 1987.{% else %}Catálogo completo de Ideas Boutique: perfumes originales, uniformes escolares, moda y ropa íntima. Caupolicán 437-B, Los Vilos.{% endif %}
+{% endblock %}
+
+{% if seo_h1 %}{% block og_title %}{{ seo_h1 }} · Ideas Boutique{% endblock %}{% endif %}
 
 {% block body %}
 {% include 'ecommerce/_shop_header.html' with cat_activa=cat_activa items_count=items_count query=query %}
@@ -21,7 +27,7 @@
   <header class="shop-cat-head" style="--cat-accent: {% if solo_ofertas %}var(--vino){% elif cat_info %}{{ cat_info.accent }}{% else %}var(--gold){% endif %};">
     <div id="shop-cat-info">
       <div class="eyebrow">{% if solo_ofertas %}Ofertas vigentes{% elif cat_info %}Categoría{% else %}Catálogo{% endif %}</div>
-      <h1>{% if solo_ofertas %}Productos en oferta{% elif cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
+      <h1>{% if solo_ofertas %}Productos en oferta{% elif seo_h1 %}{{ seo_h1 }}{% elif cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
       <p>
         {% if solo_ofertas %}Descuentos activos hoy en la tienda online · {% elif cat_info %}{{ cat_info.desc }} · {% endif %}
         {{ total_productos }} producto{{ total_productos|pluralize:"s" }}

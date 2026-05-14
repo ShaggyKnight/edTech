@@ -45,7 +45,7 @@
                 <span style="color:var(--bo-muted);">—</span>
               {% endif %}
             </td>
-            <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
+            {% include 'bodega/_producto_precio_celda.html' with p=p %}
             <td class="num">
               {% if p.tiene_variantes %}
                 <a href="{% url 'bodega:variantes' p.pk %}" style="color:var(--bo-primary-2);">

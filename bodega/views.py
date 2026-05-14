@@ -7,6 +7,8 @@ negocio. /admin/ queda para el superusuario en casos especiales.
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -341,11 +343,63 @@ def lista_productos(request):
         'filtros': {
             'q': q, 'familia': familia_id, 'colegio': colegio_id, 'estado': estado,
         },
+        # La edicion inline de precio es solo para admin / superuser.
+        # El bodeguero ve los precios pero no los modifica (es decision
+        # comercial, no de stock).
+        'puede_editar_precio': _puede_gestionar_ofertas(request.user),
     }
     # Filtros AJAX: si la request es HTMX, devolvemos solo la tabla.
     if request.htmx:
         return render(request, 'bodega/_productos_lista_tabla.html', contexto)
     return render(request, 'bodega/productos_lista.html', contexto)
+
+
+@login_required
+@require_POST
+def set_precio(request, pk):
+    """Edicion inline del precio_base de un producto desde el listado.
+
+    Solo admin / superuser (es un cambio comercial; el bodeguero
+    gestiona stock, no precios). Recibe `precio_base` como string,
+    valida que sea decimal positivo, persiste y devuelve la celda
+    actualizada (para HTMX) o redirige (no-JS).
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        messages.error(request, 'No tenés permisos para editar precios.')
+        return redirect('bodega:lista_productos')
+
+    producto = get_object_or_404(Producto, pk=pk)
+
+    try:
+        nuevo = Decimal(str(request.POST.get('precio_base', '')).replace(',', '.').strip())
+    except (InvalidOperation, ValueError, TypeError):
+        messages.error(request, 'Precio inválido.')
+        return _respuesta_precio(request, producto)
+
+    if nuevo < 0:
+        messages.error(request, 'El precio no puede ser negativo.')
+        return _respuesta_precio(request, producto)
+    if nuevo > Decimal('99999999.99'):
+        messages.error(request, 'Precio fuera de rango.')
+        return _respuesta_precio(request, producto)
+
+    producto.precio_base = nuevo
+    producto.save(update_fields=['precio_base', 'modificado'])
+    messages.success(request, f'Precio actualizado: ${nuevo:,.0f}'.replace(',', '.'))
+    return _respuesta_precio(request, producto)
+
+
+def _respuesta_precio(request, producto):
+    """HTMX: celda actualizada (inline edit). No-JS: redirect."""
+    if request.htmx:
+        # Solo admin/superuser llega aca (el require_POST + el if
+        # de set_precio ya filtra), asi `puede_editar_precio` siempre
+        # es True — pero lo dejamos explicito para el template.
+        return render(request, 'bodega/_producto_precio_celda.html', {
+            'p': producto,
+            'puede_editar_precio': True,
+        })
+    return redirect('bodega:lista_productos')
 
 
 @login_required

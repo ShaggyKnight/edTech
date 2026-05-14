@@ -371,6 +371,193 @@ body.no-scroll, html.no-scroll { overflow: hidden !important; }
   }
 }
 
+/* --- 13. Bloque 12 · Guia de talles + calculadora ----------*/
+.pdp-opt-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pdp-guia-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--vino);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pdp-guia-link:hover { background: rgba(122,30,43,0.06); }
+
+.guia-talles-modal {
+  width: min(720px, 92vw);
+  max-height: 86vh;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--cream);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+.guia-talles-modal::backdrop {
+  background: rgba(14,14,14,0.5);
+  backdrop-filter: blur(2px);
+}
+.guia-talles { padding: 0; }
+
+.guia-talles-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.guia-talles-head h2 {
+  font-family: var(--serif);
+  font-size: 24px;
+  margin: 0;
+  color: var(--ink);
+}
+.guia-talles-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--ink-60);
+}
+.guia-talles-close:hover { background: var(--cream-2); color: var(--ink); }
+
+.guia-talles-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+.guia-talles-tabs button {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--ink-60);
+  cursor: pointer;
+  margin: 0 -1px 0 0;
+}
+.guia-talles-tabs button.active {
+  color: var(--ink);
+  border-bottom-color: var(--vino);
+  font-weight: 600;
+}
+
+.guia-talles section {
+  padding: 20px 24px;
+  max-height: calc(86vh - 130px);
+  overflow-y: auto;
+}
+.guia-talles-help {
+  color: var(--ink-60);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.guia-talles-disclaimer {
+  background: rgba(201,169,110,0.10);
+  border-left: 3px solid var(--gold-2);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: var(--ink);
+  margin: 16px 0 0;
+}
+
+.guia-talles-table-wrap { overflow-x: auto; }
+.guia-talles-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.guia-talles-table th,
+.guia-talles-table td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+.guia-talles-table thead th {
+  background: var(--cream-2);
+  font-weight: 600;
+  color: var(--ink);
+  position: sticky;
+  top: 0;
+}
+.guia-talles-table tbody tr:hover { background: var(--cream-2); }
+.guia-talles-table td:first-child { color: var(--vino); }
+
+.guia-calc-form { display: grid; gap: 12px; margin-bottom: 16px; }
+.guia-calc-row { display: block; }
+.guia-calc-row span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.guia-calc-row em {
+  font-weight: 400;
+  color: var(--ink-60);
+  font-size: 12px;
+}
+.guia-calc-row input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  background: white;
+}
+.guia-calc-row input.is-invalid {
+  border-color: var(--vino);
+  background: rgba(122,30,43,0.04);
+}
+.guia-calc-form .btn-primary { justify-self: start; }
+
+.guia-calc-result {
+  background: rgba(84,120,82,0.06);
+  border: 1px solid #547852;
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 12px;
+}
+.calc-result-big {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--ink);
+}
+.calc-result-big strong {
+  color: var(--vino);
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 6px;
+}
+.guia-calc-result p {
+  color: var(--ink-60);
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+@media (max-width: 520px) {
+  .guia-talles-modal { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; }
+  .guia-talles section { max-height: calc(100vh - 130px); }
+}
+
 /* --- 12. Bloque 9 · Resenas reales en PDP --------------------*/
 .visually-hidden {
   position: absolute !important;

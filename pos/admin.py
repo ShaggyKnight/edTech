@@ -46,6 +46,10 @@ class ReciboVentaAdmin(admin.ModelAdmin):
         ('Auditoría', {'fields': ['creado', 'modificado']}),
     ]
 
+    def get_queryset(self, request):
+        # Bloque 6 (perf): 2 FKs en list_display (tienda + vendedor).
+        return super().get_queryset(request).select_related('tienda', 'vendedor')
+
     @admin.display(description='Estado', ordering='estado')
     def estado_coloreado(self, obj):
         colores = {

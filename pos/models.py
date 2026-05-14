@@ -85,6 +85,11 @@ class ReciboVenta(models.Model):
         indexes = [
             models.Index(fields=['canal', 'estado']),
             models.Index(fields=['creado']),
+            # Bloque 6 (perf): mis_pedidos hace lookup por
+            # cliente_email iexact. En Postgres, lower() indexa el
+            # patron — aca dejamos un btree estandar (suficiente con
+            # las cantidades reales esperadas por el comercio).
+            models.Index(fields=['cliente_email']),
         ]
 
     def __str__(self):

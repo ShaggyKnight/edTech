@@ -124,6 +124,13 @@ class Producto(models.Model):
 
     class Meta:
         ordering = ['nombre']
+        # Bloque 6 (perf): el catalogo publico filtra constantemente por
+        # (activo + familia) o (activo + colegio). Indices compuestos
+        # bajan el costo en Postgres prod cuando hay 1000+ SKUs.
+        indexes = [
+            models.Index(fields=['activo', 'familia']),
+            models.Index(fields=['activo', 'colegio']),
+        ]
 
     def __str__(self):
         return self.nombre
@@ -439,6 +446,12 @@ class Oferta(models.Model):
                 check=Q(fecha_fin__gte=models.F('fecha_inicio')),
                 name='oferta_fechas_coherentes',
             ),
+        ]
+        # Bloque 6 (perf): la query "ofertas vigentes" filtra siempre
+        # por (activa=True, canal, fecha_inicio <= ahora <= fecha_fin).
+        # Indices cubren la combinacion mas frecuente.
+        indexes = [
+            models.Index(fields=['activa', 'canal', 'fecha_inicio', 'fecha_fin']),
         ]
 
     def __str__(self):

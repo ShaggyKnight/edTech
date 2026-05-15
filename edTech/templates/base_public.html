@@ -142,13 +142,30 @@
       document.addEventListener('htmx:oobAfterSwap', function (e) {
         if (e.target && e.target.id === 'shop-cart-icon') {
           e.target.classList.remove('cart-just-added');
-          // Force reflow para reiniciar animacion si se dispara rapido seguido.
           void e.target.offsetWidth;
           e.target.classList.add('cart-just-added');
           setTimeout(function () {
             e.target.classList.remove('cart-just-added');
           }, 600);
         }
+      });
+
+      // Diagnostico HTMX (F12 -> Console). Si el carrito no actualiza,
+      // estos logs muestran donde falla. Solo logea requests al carrito
+      // para no spamear la consola.
+      ['htmx:beforeRequest', 'htmx:afterRequest', 'htmx:responseError',
+       'htmx:swapError', 'htmx:sendError'].forEach(function (ev) {
+        document.addEventListener(ev, function (e) {
+          var detail = e.detail || {};
+          var xhr = detail.xhr || {};
+          var url = detail.requestConfig ? detail.requestConfig.path : '';
+          if (url.indexOf('agregar') === -1 && url.indexOf('carrito') === -1
+              && ev !== 'htmx:responseError' && ev !== 'htmx:swapError'
+              && ev !== 'htmx:sendError') return;
+          var info = { event: ev, url: url, status: xhr.status || '' };
+          if (ev.indexOf('Error') !== -1) console.error('[Ideas HTMX]', info, detail);
+          else console.log('[Ideas HTMX]', info);
+        });
       });
     </script>
 

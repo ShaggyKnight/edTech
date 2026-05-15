@@ -225,26 +225,12 @@ class CarritoAnonimoTests(TestCase):
         # Indicator para loading state.
         self.assertContains(r, 'hx-indicator')
 
-    def test_pdp_boton_add_no_usa_disabled_html(self):
-        """El boton NO debe usar el atributo `disabled` HTML (que bloquea
-        clicks) NI `aria-disabled` (puede causar problemas en algunos
-        browsers/HTMX). Usa clase `.needs-selection` para look visual;
-        la validacion vive en el JS submit handler basado en hidden.value.
-
-        Si JS falla, el form submite, el server valida vacio item_id y
-        responde con error — el cliente nunca ve 'no pasa nada'."""
+    def test_pdp_boton_add_tiene_hint_visible(self):
+        """El boton arranca con `disabled` HTML (la forma SIMPLE y
+        confiable). Para que el cliente entienda QUE hacer, agregamos
+        un hint visible debajo del boton: 'Elegí tu talla arriba'. El
+        hint se esconde via JS cuando el cliente clickea un chip."""
         r = self.client.get(reverse('ecommerce:producto', args=[self.con_var.pk]))
         self.assertContains(r, 'id="pdp-add-btn"')
-        self.assertContains(r, 'needs-selection')
-        # Sanity: NO debe tener `disabled` ni `aria-disabled` en la
-        # apertura del boton (que bloquearian el click).
-        body = r.content.decode('utf-8')
-        # Buscar el <button id="pdp-add-btn" ...> y verificar sus attrs.
-        import re
-        m = re.search(r'<button[^>]*id="pdp-add-btn"[^>]*>', body)
-        self.assertIsNotNone(m, 'pdp-add-btn no encontrado')
-        tag_open = m.group(0)
-        self.assertNotIn(' disabled', tag_open,
-                         f'pdp-add-btn no debe tener `disabled`: {tag_open}')
-        self.assertNotIn('aria-disabled', tag_open,
-                         f'pdp-add-btn no debe tener `aria-disabled`: {tag_open}')
+        self.assertContains(r, 'id="pdp-add-hint"')
+        self.assertContains(r, 'para activar el botón')

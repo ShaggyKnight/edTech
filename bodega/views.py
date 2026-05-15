@@ -78,6 +78,13 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
     permission_required = 'bodega.view_stocktienda'
     template_name = 'bodega/stock.html'
 
+    def get(self, request, *args, **kwargs):
+        # Si la request es HTMX, devolvemos solo el partial de la
+        # tabla (mismo patron que productos/ofertas/materiales).
+        if getattr(request, 'htmx', False):
+            self.template_name = 'bodega/_stock_tabla.html'
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         request = self.request
@@ -298,6 +305,146 @@ def reponer_stock(request):
     if qs and '/bodega/' in qs:
         return redirect(qs)
     return redirect('bodega:stock')
+
+
+@login_required
+def stock_agregar(request):
+    """Pantalla para cargar stock inicial de productos que aun no
+    tienen ninguna fila en StockTienda.
+
+    Bug que motivo la feature: tras `seed_perfumes_real` se cargaron
+    43 perfumes nuevos. Como `/bodega/` lista solo filas existentes
+    de StockTienda, los nuevos eran invisibles. Esta pantalla
+    permite seleccionar tienda + variante (con optgroup por
+    producto, alfabetico) o producto-sin-variantes y registrar la
+    primera reposicion en una sola operacion.
+
+    POST reusa `reponer_stock` via redirect interno para mantener
+    la audit trail (MovimientoStock con tipo=ENTRADA).
+    """
+    if not _puede_reponer(request.user):
+        messages.error(request, 'No tenés permisos para cargar stock.')
+        return redirect('bodega:stock')
+
+    tiendas = Tienda.objects.filter(activa=True).order_by('nombre_organizacion')
+
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo', '')
+        try:
+            item_id = int(request.POST.get('item_id', 0))
+            tienda_id = int(request.POST.get('tienda_id', 0))
+            cantidad = int(request.POST.get('cantidad', 0))
+        except (TypeError, ValueError):
+            messages.error(request, 'Datos inválidos.')
+            return redirect('bodega:stock_agregar')
+
+        if cantidad <= 0:
+            messages.error(request, 'La cantidad a sumar debe ser mayor a 0.')
+            return redirect('bodega:stock_agregar')
+
+        try:
+            tienda = tiendas.get(pk=tienda_id)
+        except Tienda.DoesNotExist:
+            messages.error(request, 'Tienda no válida.')
+            return redirect('bodega:stock_agregar')
+
+        with transaction.atomic():
+            if tipo == 'v':
+                if not ProductoVariante.objects.filter(pk=item_id, activa=True).exists():
+                    messages.error(request, 'Variante no disponible.')
+                    return redirect('bodega:stock_agregar')
+                fila, _ = StockTienda.objects.select_for_update().get_or_create(
+                    tienda=tienda, variante_id=item_id, defaults={'cantidad': 0},
+                )
+            elif tipo == 'p':
+                if not Producto.objects.filter(
+                    pk=item_id, activo=True, tiene_variantes=False,
+                ).exists():
+                    messages.error(request, 'Producto no disponible.')
+                    return redirect('bodega:stock_agregar')
+                fila, _ = StockTienda.objects.select_for_update().get_or_create(
+                    tienda=tienda, producto_id=item_id, defaults={'cantidad': 0},
+                )
+            else:
+                messages.error(request, 'Tipo inválido.')
+                return redirect('bodega:stock_agregar')
+
+            StockTienda.objects.filter(pk=fila.pk).update(
+                cantidad=F('cantidad') + cantidad,
+            )
+            mov_kwargs = {
+                'tienda': tienda, 'tipo': MovimientoStock.ENTRADA,
+                'cantidad': cantidad, 'usuario': request.user,
+                'referencia': f'Stock inicial cargado por {request.user.username}',
+            }
+            if tipo == 'v':
+                mov_kwargs['variante_id'] = item_id
+            else:
+                mov_kwargs['producto_id'] = item_id
+            MovimientoStock.objects.create(**mov_kwargs)
+
+        messages.success(
+            request,
+            f'+{cantidad} unidades cargadas. Seguí agregando o volvé al stock.',
+        )
+        # Volvemos a la misma pantalla con el form limpio para cargar
+        # el siguiente producto sin tener que navegar.
+        return redirect('bodega:stock_agregar')
+
+    # GET: construir las opciones del selector.
+    # Variantes activas agrupadas por producto (alfabetico).
+    variantes = (
+        ProductoVariante.objects
+        .filter(activa=True, producto__activo=True)
+        .select_related('producto', 'producto__familia')
+        .prefetch_related('valores__atributo')
+        .order_by('producto__familia__nombre', 'producto__nombre', 'sku')
+    )
+    # Productos sin variantes (tipo=p).
+    productos_directos = (
+        Producto.objects
+        .filter(activo=True, tiene_variantes=False)
+        .select_related('familia')
+        .order_by('familia__nombre', 'nombre')
+    )
+
+    # Agrupar por familia para mostrar `<optgroup>` nativo (mejor UX
+    # con 100+ items que un select plano).
+    opciones_por_familia = {}
+    for v in variantes:
+        fam = v.producto.familia.nombre if v.producto.familia else 'Sin familia'
+        opciones_por_familia.setdefault(fam, []).append({
+            'tipo': 'v',
+            'item_id': v.pk,
+            'label': _label_variante(v),
+            'producto_pk': v.producto.pk,
+        })
+    for p in productos_directos:
+        fam = p.familia.nombre if p.familia else 'Sin familia'
+        opciones_por_familia.setdefault(fam, []).append({
+            'tipo': 'p',
+            'item_id': p.pk,
+            'label': f'{p.nombre} (sin variantes)',
+            'producto_pk': p.pk,
+        })
+
+    return render(request, 'bodega/stock_agregar.html', {
+        'tiendas': tiendas,
+        'opciones_por_familia': sorted(opciones_por_familia.items()),
+        'tienda_preseleccionada': tiendas.first(),
+    })
+
+
+def _label_variante(v):
+    """Etiqueta legible para una variante en el selector — incluye
+    nombre del producto + valores de atributos + SKU."""
+    valores = ' · '.join(
+        f'{val.atributo.nombre}: {val.valor}'
+        for val in v.valores.all()
+    )
+    if valores:
+        return f'{v.producto.nombre} — {valores} ({v.sku})'
+    return f'{v.producto.nombre} ({v.sku})'
 
 
 # ============================================================================

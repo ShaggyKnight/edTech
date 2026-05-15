@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cargar stock inicial · Ideas Boutique{% endblock %}
+
+{% block extra_head %}
+<style>
+  .stock-add-form { display: grid; gap: 16px; max-width: 720px; }
+  .stock-add-row label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--bo-text);
+  }
+  .stock-add-row select,
+  .stock-add-row input[type="number"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--bo-border);
+    border-radius: 8px;
+    font: inherit;
+    background: white;
+    box-sizing: border-box;
+  }
+  .stock-add-hint {
+    font-size: 12px;
+    color: var(--bo-muted);
+    margin-top: 4px;
+  }
+  .stock-add-cantidad {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 12px;
+    align-items: end;
+  }
+  .stock-add-search-wrap {
+    position: relative;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:stock' %}">Stock</a> / Cargar inicial
+      </div>
+      <h1>Cargar stock inicial</h1>
+      <div class="sub">
+        Para productos que todavía no tienen ninguna entrada de stock.
+        Si el producto ya tiene stock, reponé desde la pantalla principal.
+      </div>
+    </div>
+    <a href="{% url 'bodega:stock' %}" class="bo-btn">← Volver al stock</a>
+  </div>
+
+  <div class="bo-card">
+    <div class="bo-card-body">
+      <form method="post" class="stock-add-form">
+        {% csrf_token %}
+
+        <div class="stock-add-row">
+          <label for="id_tienda">Tienda</label>
+          <select name="tienda_id" id="id_tienda" required>
+            {% for t in tiendas %}
+              <option value="{{ t.pk }}"
+                      {% if tienda_preseleccionada and tienda_preseleccionada.pk == t.pk %}selected{% endif %}>
+                {{ t.nombre_organizacion }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="stock-add-row">
+          <label for="id_item">Producto / variante</label>
+
+          {# Filtro de busqueda — JS chico que oculta los <option> que no
+             matchean. Mismo patron que oferta_form (Bloque 5.B). #}
+          <input type="search" id="filtro-item"
+                 class="bo-input" placeholder="🔍 Filtrar (escribí nombre o talla)…"
+                 autocomplete="off"
+                 style="margin-bottom:6px;">
+
+          <select name="item_combo" id="id_item" required size="12"
+                  style="height:auto;">
+            <option value="" disabled selected>— Elegí producto o variante —</option>
+            {% for familia, items in opciones_por_familia %}
+              <optgroup label="{{ familia }}">
+                {% for opt in items %}
+                  <option value="{{ opt.tipo }}:{{ opt.item_id }}"
+                          data-tipo="{{ opt.tipo }}"
+                          data-item-id="{{ opt.item_id }}">
+                    {{ opt.label }}
+                  </option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          </select>
+          {# Inputs ocultos que la view lee. Se setean por JS al elegir. #}
+          <input type="hidden" name="tipo" id="hidden-tipo" value="">
+          <input type="hidden" name="item_id" id="hidden-item-id" value="">
+          <p class="stock-add-hint">
+            {{ opciones_por_familia|length }} familia{{ opciones_por_familia|length|pluralize:"s" }} ·
+            Buscá por nombre del producto o talla/volumen. La lista no se recarga, solo se filtra.
+          </p>
+        </div>
+
+        <div class="stock-add-cantidad">
+          <div class="stock-add-row">
+            <label for="id_cantidad">Unidades a sumar</label>
+            <input type="number" name="cantidad" id="id_cantidad"
+                   min="1" max="99999" step="1" required
+                   value="1" inputmode="numeric">
+          </div>
+          <div style="display:flex;gap:8px;align-self:end;">
+            <button type="submit" class="bo-btn bo-btn-primary">
+              + Cargar stock
+            </button>
+            <a href="{% url 'bodega:stock' %}" class="bo-btn">Cancelar</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 1) Filtro de busqueda sobre las <option>.
+      var input = document.getElementById('filtro-item');
+      var select = document.getElementById('id_item');
+      if (!input || !select) return;
+
+      function normalize(s) {
+        return (s || '').toLowerCase()
+          .normalize('NFD').replace(/[̀-ͯ]/g, '');
+      }
+
+      input.addEventListener('input', function () {
+        var q = normalize(input.value.trim());
+        var groups = select.querySelectorAll('optgroup');
+        groups.forEach(function (g) {
+          var visibles = 0;
+          g.querySelectorAll('option').forEach(function (opt) {
+            var match = !q || normalize(opt.textContent).indexOf(q) !== -1;
+            opt.hidden = !match;
+            if (match) visibles++;
+          });
+          g.hidden = (visibles === 0);
+        });
+      });
+
+      // 2) Al elegir, populamos los hidden inputs tipo + item_id.
+      var hiddenTipo = document.getElementById('hidden-tipo');
+      var hiddenId = document.getElementById('hidden-item-id');
+      select.addEventListener('change', function () {
+        var opt = select.options[select.selectedIndex];
+        if (!opt || !opt.dataset.tipo) return;
+        hiddenTipo.value = opt.dataset.tipo;
+        hiddenId.value = opt.dataset.itemId;
+      });
+    })();
+  </script>
+{% endblock %}

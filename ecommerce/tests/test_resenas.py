@@ -8,7 +8,7 @@ from bodega.models import StockTienda, Tienda
 from catalogo.models import Familia, Producto, Resena
 
 
-@override_settings(ECOMMERCE_PAYMENT_GATEWAY='mock')
+@override_settings(ECOMMERCE_PAYMENT_GATEWAY='mock', FEATURE_RESENAS=True)
 class ResenaModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -52,7 +52,7 @@ class ResenaModelTests(TestCase):
         self.assertEqual(producto.resena_promedio_redondo, 0)
 
 
-@override_settings(ECOMMERCE_PAYMENT_GATEWAY='mock')
+@override_settings(ECOMMERCE_PAYMENT_GATEWAY='mock', FEATURE_RESENAS=True)
 class EnviarResenaViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -155,3 +155,59 @@ class EnviarResenaViewTests(TestCase):
         r = self.client.get(reverse('ecommerce:producto', args=[self.producto.pk]))
         self.assertContains(r, 'name="estrellas"')
         self.assertContains(r, 'csrfmiddlewaretoken')
+
+
+@override_settings(ECOMMERCE_PAYMENT_GATEWAY='mock', FEATURE_RESENAS=False)
+class FeatureFlagResenasOffTests(TestCase):
+    """Cuando FEATURE_RESENAS=False (default), la UI esta oculta y el
+    endpoint de envio devuelve 404. Asi mantenemos el modelo + admin
+    + tests por si la duena la prende mas adelante, sin exponer la
+    feature publicamente."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.tienda = Tienda.objects.create(nombre_organizacion='Online', activa=True)
+        cls.fam = Familia.objects.create(nombre='Perfumes')
+        cls.producto = Producto.objects.create(
+            familia=cls.fam, nombre='Yara EDP',
+            precio_base=Decimal('20000'), tiene_variantes=False,
+        )
+        StockTienda.objects.create(tienda=cls.tienda, producto=cls.producto, cantidad=2)
+
+    def setUp(self):
+        self.so = self.settings(ECOMMERCE_TIENDA_ID=self.tienda.pk)
+        self.so.enable()
+
+    def tearDown(self):
+        self.so.disable()
+
+    def test_pdp_no_muestra_seccion_de_resenas(self):
+        # Aun si hay una resena aprobada, no debe renderizarse en el PDP.
+        Resena.objects.create(
+            producto=self.producto, estrellas=5, texto='Excelente producto',
+            nombre_publico='Ana', cliente_email='ana@example.com',
+            estado=Resena.ESTADO_APROBADA,
+        )
+        r = self.client.get(reverse('ecommerce:producto', args=[self.producto.pk]))
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, '<h2>Reseñas</h2>')
+        self.assertNotContains(r, 'Excelente producto')
+        # Tambien debe estar oculto el rating del header.
+        self.assertNotContains(r, 'class="pdp-rating"')
+
+    def test_endpoint_enviar_resena_devuelve_404(self):
+        """Aun con datos validos, el POST debe ser 404 cuando la
+        feature esta apagada — evita que alguien postee scrapeando la URL."""
+        r = self.client.post(
+            reverse('ecommerce:enviar_resena', args=[self.producto.pk]),
+            {
+                'producto_id': self.producto.pk,
+                'estrellas': 5,
+                'titulo': 'OK',
+                'texto': 'Quiero opinar antes de tiempo.',
+                'nombre_publico': 'Hacker',
+                'cliente_email': 'h@example.com',
+            },
+        )
+        self.assertEqual(r.status_code, 404)
+        self.assertEqual(Resena.objects.count(), 0)

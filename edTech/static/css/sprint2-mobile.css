@@ -321,6 +321,20 @@
 /* --- 11. Body scroll lock cuando hay drawer abierto ---------*/
 body.no-scroll, html.no-scroll { overflow: hidden !important; }
 
+/* --- 11b. FIX critico: `hidden` attr debe esconder de verdad ---
+   `.drawer` y otros elementos tienen `display: flex` que sobrescribe
+   el `[hidden] { display: none }` default del browser. Sin esta
+   regla, el drawer mobile aparece cubriendo la izquierda en desktop. */
+[hidden] { display: none !important; }
+
+/* --- 11c. Drawer y scrim solo en mobile/tablet portrait -------
+   En desktop (>900px) el menu lateral nunca debe aparecer — el
+   header tiene su propia nav horizontal. Aun si el JS abriera el
+   drawer, lo escondemos por CSS. */
+@media (min-width: 901px) {
+  .drawer, .drawer-scrim { display: none !important; }
+}
+
 /* --- 12. Bloque 7 · A11y -----------------------------------*/
 
 /* Skip-to-content link — invisible salvo cuando recibe foco con Tab.

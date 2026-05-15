@@ -95,8 +95,10 @@
           </select>
         </div>
         <div style="display:flex; gap:6px;">
-          {# Boton de fallback no-JS — con HTMX no hace falta clickear,
-             pero si JS esta deshabilitado funciona el form GET normal. #}
+          {% comment %}
+            Boton de fallback no-JS — con HTMX no hace falta clickear,
+            pero si JS esta deshabilitado funciona el form GET normal.
+          {% endcomment %}
           <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
           <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Limpiar</a>
         </div>

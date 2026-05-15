@@ -135,6 +135,21 @@
         var dlg = document.getElementById('quick-view-modal');
         if (dlg && e.target === dlg) dlg.close();
       });
+
+      // Animacion bounce del cart-icon cuando llega un OOB swap del
+      // badge tras agregar al carrito. HTMX dispara `htmx:oobAfterSwap`
+      // por cada elemento OOB swappado — escuchamos el del cart-icon.
+      document.addEventListener('htmx:oobAfterSwap', function (e) {
+        if (e.target && e.target.id === 'shop-cart-icon') {
+          e.target.classList.remove('cart-just-added');
+          // Force reflow para reiniciar animacion si se dispara rapido seguido.
+          void e.target.offsetWidth;
+          e.target.classList.add('cart-just-added');
+          setTimeout(function () {
+            e.target.classList.remove('cart-just-added');
+          }, 600);
+        }
+      });
     </script>
 
     {% block body %}{% endblock %}

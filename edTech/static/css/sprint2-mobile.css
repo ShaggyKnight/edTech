@@ -374,16 +374,19 @@ body.no-scroll, html.no-scroll { overflow: hidden !important; }
   outline-offset: 1px;
 }
 
-/* Botones disabled — el navegador NO les da estilo distintivo por
-   default, asi que el usuario clickea expecting que pasara algo y
-   "no pasa nada". Estos estilos hacen el disabled evidente. */
+/* Botones disabled / aria-disabled — el navegador NO les da estilo
+   distintivo por default. `aria-disabled` no bloquea clicks (a
+   diferencia de `disabled`), asi podemos capturar el click para
+   mostrar un hint cuando falta seleccion. */
 button:disabled, .btn-primary:disabled, .btn-outline:disabled,
-button[disabled], .btn-primary[disabled], .btn-outline[disabled] {
+button[disabled], .btn-primary[disabled], .btn-outline[disabled],
+button[aria-disabled="true"], .btn-primary[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
   filter: grayscale(0.3);
 }
-button:disabled:hover, button[disabled]:hover {
+button:disabled:hover, button[disabled]:hover,
+button[aria-disabled="true"]:hover {
   background: inherit;
   transform: none;
 }
@@ -393,6 +396,59 @@ button:disabled:hover, button[disabled]:hover {
 .htmx-indicator { opacity: 0; transition: opacity .15s; }
 .htmx-request .htmx-indicator { opacity: 1; }
 .htmx-request.btn-primary, .htmx-request .btn-primary { opacity: 0.7; cursor: wait; }
+
+/* Animaciones de feedback al agregar al carrito */
+@keyframes ib-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.shake { animation: ib-shake .4s ease-in-out; }
+
+@keyframes ib-flash-attention {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 169, 110, 0); }
+  30%, 70% { box-shadow: 0 0 0 6px rgba(201, 169, 110, 0.45); }
+}
+.flash-attention {
+  animation: ib-flash-attention 1.4s ease-in-out;
+  border-radius: 8px;
+}
+
+/* Pulse del cart-dot cuando se agrega un item. La clase la agrega JS
+   en base_public.html cuando llega un OOB swap del badge. */
+@keyframes ib-cart-bounce {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(1.35); }
+  40%  { transform: scale(.92); }
+  70%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+#shop-cart-icon.cart-just-added .cart-dot,
+#shop-cart-icon.cart-just-added .ico {
+  animation: ib-cart-bounce .55s ease-out;
+}
+#shop-cart-icon { position: relative; }
+
+/* Cart-dot mas prominente — antes pasaba desapercibido */
+.shop-cart .cart-dot {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--vino, #7A1E2B);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 2px solid var(--cream, #fff);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
 
 /* prefers-reduced-motion: usuarios con vestibular disorder o ansiedad
    pueden pedir que el SO desactive animaciones — respetar. WCAG 2.3.3. */

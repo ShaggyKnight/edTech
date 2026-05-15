@@ -37,6 +37,10 @@ env = environ.Env(
     SITE_URL=(str, ''),
     OWNER_NOTIFICATION_EMAIL=(str, ''),
     ANALYTICS_DOMAIN=(str, ''),
+    # Feature flags publicas. Bloque 9 quedo apagado por default hasta
+    # que la duena tenga banda para moderar las resenas. La data
+    # (model + admin + tests) se mantiene — solo se oculta el UI.
+    FEATURE_RESENAS=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -256,3 +260,8 @@ OPENFACTURA_RUT_EMISOR = env('OPENFACTURA_RUT_EMISOR')
 SITE_URL = env('SITE_URL')                              # ej: https://ideasboutique.cl
 OWNER_NOTIFICATION_EMAIL = env('OWNER_NOTIFICATION_EMAIL')  # email de Blanca
 ANALYTICS_DOMAIN = env('ANALYTICS_DOMAIN')              # dominio Plausible (vacío = sin analytics)
+
+# Feature flags. Bloque 9 (resenas) sigue codeado y testeado pero
+# se oculta en la UI publica hasta que la duena tenga ancho de banda
+# para moderar. Se prende cambiando FEATURE_RESENAS=True en .env.
+FEATURE_RESENAS = env('FEATURE_RESENAS')

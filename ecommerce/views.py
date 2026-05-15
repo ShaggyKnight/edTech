@@ -443,7 +443,14 @@ def enviar_resena(request, pk: int):
     - HTMX: fragment `_resena_done.html` con el agradecimiento. Se
       hace swap del bloque del form.
     - No-HTMX: redirect al PDP con messages.
+
+    Feature flag: si `FEATURE_RESENAS=False`, devolvemos 404 — la
+    feature esta oculta y no aceptamos nuevas resenas via web.
     """
+    from django.conf import settings as dj_settings
+    if not getattr(dj_settings, 'FEATURE_RESENAS', False):
+        raise Http404('Resenas no disponibles')
+
     producto = get_object_or_404(Producto, pk=pk, activo=True)
     form = ResenaForm(request.POST)
 
@@ -619,15 +626,22 @@ def detalle_producto(request, pk: int):
     # Bloque 8: galeria real. Cargamos las imagenes adicionales del PDP.
     imagenes_galeria = list(producto.imagenes.all())
 
-    # Bloque 9: resenas publicas + form vacio para enviar nueva.
-    resenas_publicas = producto.resenas_publicas
-    resena_form_initial = {'producto_id': producto.pk}
-    if request.user.is_authenticated:
-        nombre = (f'{request.user.first_name} {request.user.last_name}'.strip()
-                  or request.user.username)
-        resena_form_initial['nombre_publico'] = nombre
-        resena_form_initial['cliente_email'] = request.user.email or ''
-    resena_form = ResenaForm(initial=resena_form_initial)
+    # Bloque 9: resenas publicas + form. Gated por FEATURE_RESENAS —
+    # si la flag esta OFF, no cargamos nada del modulo y el template
+    # esconde toda la seccion. Asi evitamos query innecesario.
+    from django.conf import settings as dj_settings
+    feature_resenas = getattr(dj_settings, 'FEATURE_RESENAS', False)
+    resenas_publicas = []
+    resena_form = None
+    if feature_resenas:
+        resenas_publicas = producto.resenas_publicas
+        resena_form_initial = {'producto_id': producto.pk}
+        if request.user.is_authenticated:
+            nombre = (f'{request.user.first_name} {request.user.last_name}'.strip()
+                      or request.user.username)
+            resena_form_initial['nombre_publico'] = nombre
+            resena_form_initial['cliente_email'] = request.user.email or ''
+        resena_form = ResenaForm(initial=resena_form_initial)
 
     return render(request, 'ecommerce/producto.html', {
         'producto': producto,
@@ -637,6 +651,7 @@ def detalle_producto(request, pk: int):
         'label_eleccion': label_eleccion,
         'chips_anchos': chips_anchos,
         'imagenes_galeria': imagenes_galeria,
+        'feature_resenas': feature_resenas,
         'resenas_publicas': resenas_publicas,
         'resena_form': resena_form,
         'mostrar_guia_talles': mostrar_guia_talles,

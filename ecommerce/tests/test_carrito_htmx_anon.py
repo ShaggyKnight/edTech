@@ -235,3 +235,26 @@ class CarritoAnonimoTests(TestCase):
         m = re.search(r'<button[^>]*id="pdp-add-btn"[^>]*>', body)
         self.assertIsNotNone(m)
         self.assertIn('disabled', m.group(0))
+
+    def test_pdp_notify_email_no_tiene_required(self):
+        """BUG-001 regression guard.
+
+        `#pdp-notify-email` esta DENTRO del <form id='pdp-form'>. Si
+        tiene `required`, el browser intenta validarlo cuando el
+        cliente clickea "Agregar al carrito", pero como esta dentro
+        de un <div hidden>, no puede focusearse y cancela el submit
+        silenciosamente. El cart queda vacio sin error visible.
+
+        El JS de notifySubmit ya valida con regex; el HTML5 `required`
+        es redundante y rompe la pagina entera. NO debe estar."""
+        r = self.client.get(reverse('ecommerce:producto', args=[self.con_var.pk]))
+        body = r.content.decode('utf-8')
+        import re
+        m = re.search(r'<input[^>]*id="pdp-notify-email"[^>]*>', body)
+        self.assertIsNotNone(m, '#pdp-notify-email no encontrado')
+        self.assertNotIn(
+            ' required', m.group(0),
+            'BUG-001: #pdp-notify-email NO debe tener `required` — '
+            'rompe el submit del form de agregar al carrito. '
+            f'Tag actual: {m.group(0)}',
+        )

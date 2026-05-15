@@ -12,7 +12,7 @@
   <header class="guia-talles-head">
     <h2 id="guia-talles-titulo">Guía de talles</h2>
     <button type="button" class="guia-talles-close"
-            @click="$root.close()"
+            onclick="this.closest('dialog').close()"
             aria-label="Cerrar guía de talles">
       <svg class="ico ico--18"><use href="#ico-close"/></svg>
     </button>

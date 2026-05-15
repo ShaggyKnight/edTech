@@ -1018,6 +1018,15 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
    Quick-view modal — vista rapida desde la card del catalogo
    ============================================================ */
 .quick-view-modal {
+  /* Centrado explicito — el margin:auto default de <dialog> es
+     inconsistente entre browsers (Safari iOS lo rompe con varios
+     viewports). Con position:fixed + translate forzamos el centrado
+     siempre. */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
   border: 0;
   padding: 0;
   border-radius: 14px;
@@ -1027,7 +1036,8 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
   background: var(--cream, #fff);
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.25);
   animation: modal-in 0.18s ease-out;
-  overflow: hidden;
+  overflow: auto;  /* scroll interno cuando el contenido no entra */
+  -webkit-overflow-scrolling: touch;  /* momentum scroll iOS */
 }
 .quick-view-modal::backdrop {
   background: rgba(15, 23, 42, 0.55);
@@ -1129,5 +1139,23 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
   .quick-view-grid { grid-template-columns: 1fr; }
   .quick-view-img { aspect-ratio: 4/3; }
   .quick-view-nombre { font-size: 22px; }
+  /* En mobile el modal ocupa casi todo el viewport para que la
+     imagen + info quepan sin scroll horizontal. La X queda a la
+     derecha del header. */
+  .quick-view-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    /* En mobile el `transform: translate(-50%, -50%)` mas
+       `width:100vw; height:100vh` resulta en posicion correcta,
+       pero algunos iOS antiguos truncan el render. Lo forzamos
+       inset: 0. */
+    inset: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+  }
 }
 

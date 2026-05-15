@@ -411,6 +411,15 @@ body.no-scroll, html.no-scroll { overflow: hidden !important; }
 .pdp-guia-link:hover { background: rgba(122,30,43,0.06); }
 
 .guia-talles-modal {
+  /* Centrado explicito — el margin:auto default de <dialog> es
+     inconsistente entre browsers (Safari iOS lo rompe con varios
+     viewports). Con position:fixed + translate forzamos el centrado
+     siempre. */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
   width: min(720px, 92vw);
   max-height: 86vh;
   padding: 0;
@@ -418,6 +427,8 @@ body.no-scroll, html.no-scroll { overflow: hidden !important; }
   border-radius: 16px;
   background: var(--cream);
   box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .guia-talles-modal::backdrop {
   background: rgba(14,14,14,0.5);
@@ -568,7 +579,19 @@ body.no-scroll, html.no-scroll { overflow: hidden !important; }
 }
 
 @media (max-width: 520px) {
-  .guia-talles-modal { width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; }
+  .guia-talles-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    /* En mobile el modal cubre todo el viewport — `inset: 0`
+       garantiza posicion correcta incluso en iOS Safari viejos. */
+    inset: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+  }
   .guia-talles section { max-height: calc(100vh - 130px); }
 }
 

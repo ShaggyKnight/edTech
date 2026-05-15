@@ -658,13 +658,15 @@ def detalle_producto(request, pk: int):
     })
 
 
-def ver_carrito(request):
+def _carrito_contexto(request):
+    """Arma el contexto del carrito — usado tanto por la pagina full
+    como por el partial HTMX tras actualizar/quitar/vaciar."""
     cart = Cart(request.session)
     subtotal_bruto, descuento_total, total_neto = cart.totales()
 
     # Sprint 2 · 2.1: si hay errores guardados del intento de checkout,
     # los inyectamos en las lineas correspondientes. Se consumen y se
-    # borran al renderizar — no queremos mostrar el error eternamente.
+    # borran al renderizar.
     cart_errors = request.session.pop('cart_errors', {}) or {}
     request.session.modified = True
 
@@ -674,13 +676,27 @@ def ver_carrito(request):
         if err:
             linea['error'] = err
 
-    return render(request, 'ecommerce/carrito.html', {
+    return {
         'lineas': lineas,
         'subtotal_bruto': subtotal_bruto,
         'descuento_total': descuento_total,
         'total_neto': total_neto,
         'items_count': cart.items_count,
-    })
+    }
+
+
+def _respuesta_carrito_htmx(request):
+    """Tras +/- / quitar / vaciar via HTMX, devuelve solo el partial
+    del contenido (cart-content). Sin HTMX redirige al carrito full.
+    """
+    if request.htmx:
+        return render(request, 'ecommerce/_carrito_contenido.html',
+                      _carrito_contexto(request))
+    return redirect('ecommerce:carrito')
+
+
+def ver_carrito(request):
+    return render(request, 'ecommerce/carrito.html', _carrito_contexto(request))
 
 
 @require_POST
@@ -749,19 +765,19 @@ def actualizar(request):
     form = ActualizarCantidadForm(request.POST)
     if form.is_valid():
         Cart(request.session).set_cantidad(form.cleaned_data['key'], form.cleaned_data['cantidad'])
-    return redirect('ecommerce:carrito')
+    return _respuesta_carrito_htmx(request)
 
 
 @require_POST
 def quitar(request, key: str):
     Cart(request.session).remove(key)
-    return redirect('ecommerce:carrito')
+    return _respuesta_carrito_htmx(request)
 
 
 @require_POST
 def vaciar(request):
     Cart(request.session).clear()
-    return redirect('ecommerce:carrito')
+    return _respuesta_carrito_htmx(request)
 
 
 def checkout(request):

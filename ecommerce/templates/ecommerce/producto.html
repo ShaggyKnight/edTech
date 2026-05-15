@@ -125,7 +125,8 @@
 
         <form method="post" action="{% url 'ecommerce:agregar' %}" id="pdp-form"
               hx-post="{% url 'ecommerce:agregar' %}"
-              hx-swap="none">
+              hx-swap="none"
+              hx-indicator="this">
           {% csrf_token %}
           <input type="hidden" name="tipo" value="v">
           <input type="hidden" name="item_id" id="pdp-item-id" value="">
@@ -346,7 +347,8 @@
 
         <form method="post" action="{% url 'ecommerce:agregar' %}"
               hx-post="{% url 'ecommerce:agregar' %}"
-              hx-swap="none">
+              hx-swap="none"
+              hx-indicator="this">
           {% csrf_token %}
           <input type="hidden" name="tipo" value="p">
           <input type="hidden" name="item_id" value="{{ producto.pk }}">

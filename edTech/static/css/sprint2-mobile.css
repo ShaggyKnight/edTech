@@ -374,6 +374,26 @@ body.no-scroll, html.no-scroll { overflow: hidden !important; }
   outline-offset: 1px;
 }
 
+/* Botones disabled — el navegador NO les da estilo distintivo por
+   default, asi que el usuario clickea expecting que pasara algo y
+   "no pasa nada". Estos estilos hacen el disabled evidente. */
+button:disabled, .btn-primary:disabled, .btn-outline:disabled,
+button[disabled], .btn-primary[disabled], .btn-outline[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+button:disabled:hover, button[disabled]:hover {
+  background: inherit;
+  transform: none;
+}
+
+/* hx-indicator: HTMX agrega `htmx-request` class al elemento mientras
+   esta el request en vuelo. Muestra que la accion esta procesando. */
+.htmx-indicator { opacity: 0; transition: opacity .15s; }
+.htmx-request .htmx-indicator { opacity: 1; }
+.htmx-request.btn-primary, .htmx-request .btn-primary { opacity: 0.7; cursor: wait; }
+
 /* prefers-reduced-motion: usuarios con vestibular disorder o ansiedad
    pueden pedir que el SO desactive animaciones — respetar. WCAG 2.3.3. */
 @media (prefers-reduced-motion: reduce) {

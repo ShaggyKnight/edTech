@@ -206,9 +206,6 @@
               <span id="pdp-add-label">Elige tu {{ label_eleccion|default:"variante" }} primero</span>
               <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
             </button>
-            <p id="pdp-add-hint" style="font-size:12px;color:var(--ink-60);margin:6px 0 0;">
-              ⬆️ Elegí tu {{ label_eleccion|default:"variante" }} arriba para activar el botón.
-            </p>
           </div>
         </form>
 
@@ -283,10 +280,7 @@
                 }
 
                 stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
-                // Habilita el boton + esconde el hint.
                 btn.disabled = false;
-                var hint = document.getElementById('pdp-add-hint');
-                if (hint) hint.style.display = 'none';
                 btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
               });
             });

@@ -225,12 +225,13 @@ class CarritoAnonimoTests(TestCase):
         # Indicator para loading state.
         self.assertContains(r, 'hx-indicator')
 
-    def test_pdp_boton_add_tiene_hint_visible(self):
-        """El boton arranca con `disabled` HTML (la forma SIMPLE y
-        confiable). Para que el cliente entienda QUE hacer, agregamos
-        un hint visible debajo del boton: 'Elegí tu talla arriba'. El
-        hint se esconde via JS cuando el cliente clickea un chip."""
+    def test_pdp_boton_add_arranca_disabled(self):
+        """El boton arranca con `disabled` HTML — JS lo habilita al
+        clickear un chip de talla."""
         r = self.client.get(reverse('ecommerce:producto', args=[self.con_var.pk]))
         self.assertContains(r, 'id="pdp-add-btn"')
-        self.assertContains(r, 'id="pdp-add-hint"')
-        self.assertContains(r, 'para activar el botón')
+        body = r.content.decode('utf-8')
+        import re
+        m = re.search(r'<button[^>]*id="pdp-add-btn"[^>]*>', body)
+        self.assertIsNotNone(m)
+        self.assertIn('disabled', m.group(0))

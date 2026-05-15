@@ -632,17 +632,39 @@ def galeria_borrar(request, pk, img_pk):
 @login_required
 @reponer_required
 def variantes_lista(request, pk):
-    """Lista las variantes de un producto y permite agregar/editar/eliminar."""
+    """Lista las variantes de un producto con filtros AJAX.
+
+    Bloque 16: filtros sobre SKU/valor + estado (activas/inactivas).
+    Patron HTMX igual que productos/ofertas/materiales — input
+    'Buscar' con debounce 300ms refresca solo la tabla.
+    """
     p = get_object_or_404(Producto, pk=pk)
-    variantes = (
-        p.variantes.all()
-        .prefetch_related('valores__atributo')
-        .order_by('sku')
-    )
-    return render(request, 'bodega/variantes_lista.html', {
+    qs = p.variantes.all().prefetch_related('valores__atributo')
+
+    q = (request.GET.get('q') or '').strip()
+    estado = (request.GET.get('estado') or '').strip()
+
+    if q:
+        # Busca en SKU + en valores de atributos (talla "10", color "rojo", etc).
+        qs = qs.filter(
+            Q(sku__icontains=q) | Q(valores__valor__icontains=q)
+        ).distinct()
+    if estado == 'activas':
+        qs = qs.filter(activa=True)
+    elif estado == 'inactivas':
+        qs = qs.filter(activa=False)
+
+    variantes = qs.order_by('sku')
+    contexto = {
         'producto': p,
         'variantes': variantes,
-    })
+        'filtros': {'q': q, 'estado': estado},
+        'total_filtradas': variantes.count(),
+        'total_producto': p.variantes.count(),
+    }
+    if request.htmx:
+        return render(request, 'bodega/_variantes_lista_tabla.html', contexto)
+    return render(request, 'bodega/variantes_lista.html', contexto)
 
 
 @login_required

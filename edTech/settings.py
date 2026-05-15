@@ -100,6 +100,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'edTech.context_processors.public_settings',
+                'edTech.context_processors.proxima_temporada_uniformes',
             ],
         },
     },

@@ -26,7 +26,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from accounts.roles import BODEGUERO, CAJERO
+from accounts.roles import ADMIN, BODEGUERO, CAJERO
 from bodega.models import (
     Bodega,
     Material,
@@ -143,17 +143,23 @@ class Command(BaseCommand):
             admin.save()
         self._say('Superuser admin / admin', creado=c)
 
-        # Cajero y bodeguero, sumados al grupo correspondiente.
+        # Roles del staff. Cada uno con su grupo + is_staff (acceso al admin).
+        # `blanca` es el rol admin sin ser superuser — sirve para verificar
+        # que los helpers de permisos (`_puede_gestionar_ofertas`, etc) NO
+        # dependen de is_superuser, sino del grupo `admin`.
         from django.contrib.auth.models import Group
-        for username, password, rol in (
-            ('cajera', 'demo12345', CAJERO),
-            ('bodeguero', 'demo12345', BODEGUERO),
+        for username, password, rol, first_name in (
+            ('blanca', 'demo12345', ADMIN, 'Blanca'),
+            ('cajera', 'demo12345', CAJERO, 'Cajera'),
+            ('bodeguero', 'demo12345', BODEGUERO, 'Bodeguero'),
         ):
             user, c = User.objects.get_or_create(
-                username=username, defaults={'is_staff': True},
+                username=username,
+                defaults={'is_staff': True, 'first_name': first_name},
             )
             if c or self.reset_passwords:
                 user.set_password(password)
+                user.first_name = first_name
                 user.save()
             grupo = Group.objects.filter(name=rol).first()
             if grupo:

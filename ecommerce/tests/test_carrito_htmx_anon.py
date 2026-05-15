@@ -224,3 +224,13 @@ class CarritoAnonimoTests(TestCase):
         self.assertContains(r, 'csrfmiddlewaretoken')
         # Indicator para loading state.
         self.assertContains(r, 'hx-indicator')
+
+    def test_pdp_boton_add_usa_aria_disabled_no_disabled(self):
+        """El boton NO debe usar el atributo `disabled` HTML (que bloquea
+        clicks). Usa `aria-disabled` + flag para capturar el click y
+        mostrar hint al cliente — si no, click sin seleccion = 'no pasa
+        nada'."""
+        r = self.client.get(reverse('ecommerce:producto', args=[self.con_var.pk]))
+        self.assertContains(r, 'id="pdp-add-btn"')
+        self.assertContains(r, 'aria-disabled="true"')
+        self.assertContains(r, 'data-needs-selection="1"')

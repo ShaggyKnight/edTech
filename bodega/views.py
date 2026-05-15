@@ -169,6 +169,8 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
             'mostrar_todos': mostrar_todos,
             'umbral_bajo': STOCK_BAJO,
             'puede_reponer': _puede_reponer(request.user),
+            # Carga masiva: solo admin. Mucho poder en una sola operacion.
+            'puede_bulk_stock': _puede_gestionar_ofertas(request.user),
         })
         return ctx
 
@@ -432,6 +434,199 @@ def stock_agregar(request):
         'tiendas': tiendas,
         'opciones_por_familia': sorted(opciones_por_familia.items()),
         'tienda_preseleccionada': tiendas.first(),
+    })
+
+
+@login_required
+def stock_bulk_agregar(request):
+    """Carga masiva de stock — admin only.
+
+    Una sola pantalla con TODAS las variantes activas + productos sin
+    variantes. Por cada uno: stock actual + input "Sumar". Submit
+    procesa todas las filas con cantidad > 0 en una transaccion.
+
+    Casos de uso:
+    1. Llego un lote de 43 perfumes — agregar +X a cada uno sin
+       hacer 43 operaciones individuales.
+    2. Resetear / inicializar stock al empezar la temporada.
+    3. "Marca con +1 todos los que no tienen stock" (quick win).
+
+    Permisos: solo admin/superuser. Mucho poder en una operacion.
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        messages.error(request, 'Solo administradores pueden hacer cargas masivas.')
+        return redirect('bodega:stock')
+
+    tiendas = Tienda.objects.filter(activa=True).order_by('nombre_organizacion')
+
+    if request.method == 'POST':
+        try:
+            tienda_id = int(request.POST.get('tienda_id', 0))
+        except (TypeError, ValueError):
+            messages.error(request, 'Tienda inválida.')
+            return redirect('bodega:stock_bulk_agregar')
+        try:
+            tienda = tiendas.get(pk=tienda_id)
+        except Tienda.DoesNotExist:
+            messages.error(request, 'Tienda no válida.')
+            return redirect('bodega:stock_bulk_agregar')
+
+        # Recoger filas del POST: claves `qty_v_<id>` o `qty_p_<id>`.
+        actualizaciones = []  # [(tipo, item_id, cantidad), ...]
+        for key, raw in request.POST.items():
+            if not (key.startswith('qty_v_') or key.startswith('qty_p_')):
+                continue
+            try:
+                cantidad = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if cantidad <= 0:
+                continue
+            tipo = 'v' if key.startswith('qty_v_') else 'p'
+            try:
+                item_id = int(key.split('_')[-1])
+            except (TypeError, ValueError):
+                continue
+            actualizaciones.append((tipo, item_id, cantidad))
+
+        if not actualizaciones:
+            messages.warning(
+                request,
+                'No ingresaste ninguna cantidad mayor a 0. Llená al menos un input.',
+            )
+            return redirect('bodega:stock_bulk_agregar')
+
+        # Cap defensivo: nunca procesar mas de 500 filas en un POST.
+        if len(actualizaciones) > 500:
+            messages.error(request, 'Demasiadas filas — limite 500 por carga.')
+            return redirect('bodega:stock_bulk_agregar')
+
+        creadas, actualizadas_count, ignoradas = 0, 0, 0
+        with transaction.atomic():
+            for tipo, item_id, cantidad in actualizaciones:
+                if tipo == 'v':
+                    if not ProductoVariante.objects.filter(
+                        pk=item_id, activa=True,
+                    ).exists():
+                        ignoradas += 1
+                        continue
+                    fila, creada = StockTienda.objects.select_for_update().get_or_create(
+                        tienda=tienda, variante_id=item_id, defaults={'cantidad': 0},
+                    )
+                else:
+                    if not Producto.objects.filter(
+                        pk=item_id, activo=True, tiene_variantes=False,
+                    ).exists():
+                        ignoradas += 1
+                        continue
+                    fila, creada = StockTienda.objects.select_for_update().get_or_create(
+                        tienda=tienda, producto_id=item_id, defaults={'cantidad': 0},
+                    )
+                StockTienda.objects.filter(pk=fila.pk).update(
+                    cantidad=F('cantidad') + cantidad,
+                )
+                mov_kwargs = {
+                    'tienda': tienda, 'tipo': MovimientoStock.ENTRADA,
+                    'cantidad': cantidad, 'usuario': request.user,
+                    'referencia': f'Carga masiva por {request.user.username}',
+                }
+                if tipo == 'v':
+                    mov_kwargs['variante_id'] = item_id
+                else:
+                    mov_kwargs['producto_id'] = item_id
+                MovimientoStock.objects.create(**mov_kwargs)
+                if creada:
+                    creadas += 1
+                else:
+                    actualizadas_count += 1
+
+        msg = (
+            f'Carga masiva: {creadas} producto(s) sin stock inicializado(s), '
+            f'{actualizadas_count} sumado(s) a stock existente'
+        )
+        if ignoradas:
+            msg += f', {ignoradas} ignorado(s) (inactivos)'
+        msg += '.'
+        messages.success(request, msg)
+        return redirect('bodega:stock_bulk_agregar')
+
+    # GET — construir el grid.
+    tienda_seleccionada = tiendas.first()
+    if request.GET.get('tienda', '').isdigit():
+        tid = int(request.GET['tienda'])
+        sel = tiendas.filter(pk=tid).first()
+        if sel:
+            tienda_seleccionada = sel
+
+    solo_sin_stock = request.GET.get('solo_sin_stock') == '1'
+
+    variantes = (
+        ProductoVariante.objects
+        .filter(activa=True, producto__activo=True)
+        .select_related('producto', 'producto__familia')
+        .prefetch_related('valores__atributo')
+        .order_by('producto__familia__nombre', 'producto__nombre', 'sku')
+    )
+    productos_directos = (
+        Producto.objects
+        .filter(activo=True, tiene_variantes=False)
+        .select_related('familia')
+        .order_by('familia__nombre', 'nombre')
+    )
+
+    # Mapear stock actual por (tipo, id) en la tienda seleccionada.
+    stocks_v = {
+        s.variante_id: s.cantidad
+        for s in StockTienda.objects.filter(
+            tienda=tienda_seleccionada, variante__isnull=False,
+        )
+    }
+    stocks_p = {
+        s.producto_id: s.cantidad
+        for s in StockTienda.objects.filter(
+            tienda=tienda_seleccionada, producto__isnull=False,
+        )
+    }
+
+    filas_por_familia = {}
+    for v in variantes:
+        stock = stocks_v.get(v.pk, 0)
+        if solo_sin_stock and stock > 0:
+            continue
+        fam = v.producto.familia.nombre if v.producto.familia else 'Sin familia'
+        filas_por_familia.setdefault(fam, []).append({
+            'tipo': 'v',
+            'item_id': v.pk,
+            'label': _label_variante(v),
+            'stock_actual': stock,
+            'qty_name': f'qty_v_{v.pk}',
+        })
+    for p in productos_directos:
+        stock = stocks_p.get(p.pk, 0)
+        if solo_sin_stock and stock > 0:
+            continue
+        fam = p.familia.nombre if p.familia else 'Sin familia'
+        filas_por_familia.setdefault(fam, []).append({
+            'tipo': 'p',
+            'item_id': p.pk,
+            'label': f'{p.nombre} (sin variantes)',
+            'stock_actual': stock,
+            'qty_name': f'qty_p_{p.pk}',
+        })
+
+    total_filas = sum(len(items) for items in filas_por_familia.values())
+    total_sin_stock = sum(
+        1 for items in filas_por_familia.values() for it in items
+        if it['stock_actual'] == 0
+    )
+
+    return render(request, 'bodega/stock_bulk_agregar.html', {
+        'tiendas': tiendas,
+        'tienda_seleccionada': tienda_seleccionada,
+        'filas_por_familia': sorted(filas_por_familia.items()),
+        'total_filas': total_filas,
+        'total_sin_stock': total_sin_stock,
+        'solo_sin_stock': solo_sin_stock,
     })
 
 

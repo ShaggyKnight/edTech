@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block titulo %}Carga masiva de stock · Ideas Boutique{% endblock %}
+
+{% block extra_head %}
+<style>
+  .bulk-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .bulk-grid th, .bulk-grid td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--bo-line);
+    text-align: left;
+    vertical-align: middle;
+  }
+  .bulk-grid thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bo-card);
+    z-index: 2;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--bo-muted);
+    border-bottom: 2px solid var(--bo-line);
+  }
+  .bulk-grid tr.is-empty td { background: rgba(122,30,43,0.04); }
+  .bulk-grid tr.is-empty .stock-badge { color: var(--bo-danger); font-weight: 600; }
+  .bulk-grid .qty-input {
+    width: 84px;
+    padding: 6px 10px;
+    border: 1px solid var(--bo-border);
+    border-radius: 6px;
+    font: inherit;
+    text-align: right;
+  }
+  .bulk-grid .qty-input:focus { outline: none; border-color: var(--bo-primary); }
+  .bulk-grid .qty-input.is-set { background: rgba(11, 156, 49, 0.08); border-color: #0b9c31; }
+  .bulk-family-head td {
+    background: var(--bo-bg-elev, #fff7e6);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bo-text);
+    padding: 14px 10px 8px;
+  }
+  .bulk-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: var(--bo-bg-elev, #fff7e6);
+    border-bottom: 1px solid var(--bo-line);
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+  .bulk-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid var(--bo-line);
+    background: var(--bo-card);
+    position: sticky;
+    bottom: 0;
+    flex-wrap: wrap;
+  }
+  .bulk-summary {
+    font-size: 13px;
+    color: var(--bo-muted);
+  }
+  .bulk-summary strong { color: var(--bo-text); }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        <a href="{% url 'bodega:stock' %}">Stock</a> / Carga masiva
+      </div>
+      <h1>⚡ Carga masiva de stock</h1>
+      <div class="sub">
+        Cargá cantidades para muchos productos a la vez. Las cantidades
+        se <strong>SUMAN</strong> al stock actual — no lo reemplazan.
+        {{ total_filas }} ítem{{ total_filas|pluralize:"s" }} ·
+        <strong style="color:var(--bo-danger);">{{ total_sin_stock }}</strong> sin stock.
+      </div>
+    </div>
+    <a href="{% url 'bodega:stock' %}" class="bo-btn">← Volver al stock</a>
+  </div>
+
+  <form method="post" id="bulk-form">
+    {% csrf_token %}
+
+    <div class="bulk-toolbar">
+      <div>
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:2px;">Tienda</label>
+        <select name="tienda_id" form="bulk-form" required
+                hx-get="{% url 'bodega:stock_bulk_agregar' %}"
+                hx-target="body"
+                hx-trigger="change"
+                hx-include="[name='tienda_id'], [name='solo_sin_stock']"
+                hx-push-url="true"
+                onchange="this.form.action='?'+new URLSearchParams({tienda:this.value, solo_sin_stock: document.querySelector('input[name=solo_sin_stock]:checked')?'1':''}).toString();">
+          {% for t in tiendas %}
+            <option value="{{ t.pk }}" {% if tienda_seleccionada.pk == t.pk %}selected{% endif %}>
+              {{ t.nombre_organizacion }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:2px;">Filtro</label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="solo-sin-stock-check"
+                 {% if solo_sin_stock %}checked{% endif %}
+                 onchange="window.location.href='?tienda={{ tienda_seleccionada.pk }}&solo_sin_stock='+(this.checked?'1':'')">
+          Solo mostrar productos sin stock
+        </label>
+      </div>
+
+      <div style="flex:1;"></div>
+
+      <div style="display:inline-flex;align-items:center;gap:6px;">
+        <label style="font-size:12px;font-weight:600;">Pre-llenar sin stock con:</label>
+        <input type="number" id="prefill-empty-value" value="1" min="1" max="9999" step="1"
+               style="width:72px;padding:6px 10px;border:1px solid var(--bo-border);border-radius:6px;text-align:right;">
+        <button type="button" class="bo-btn bo-btn-sm" id="prefill-empty-btn">
+          Aplicar a sin stock
+        </button>
+        <button type="button" class="bo-btn bo-btn-sm bo-btn-ghost" id="clear-all-btn">
+          Limpiar todos
+        </button>
+      </div>
+    </div>
+
+    {% if total_filas %}
+      <div class="bo-card" style="padding:0;">
+        <table class="bulk-grid">
+          <thead>
+            <tr>
+              <th>Producto / variante</th>
+              <th style="width:140px;text-align:right;">Stock actual</th>
+              <th style="width:140px;text-align:right;">Sumar</th>
+              <th style="width:140px;text-align:right;">Stock resultante</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for familia, filas in filas_por_familia %}
+              <tr class="bulk-family-head">
+                <td colspan="4">{{ familia }} · {{ filas|length }} ítem{{ filas|length|pluralize:"s" }}</td>
+              </tr>
+              {% for it in filas %}
+                <tr class="{% if it.stock_actual == 0 %}is-empty{% endif %}"
+                    data-stock-actual="{{ it.stock_actual }}">
+                  <td>{{ it.label }}</td>
+                  <td style="text-align:right;">
+                    <span class="stock-badge">{{ it.stock_actual }}</span>
+                  </td>
+                  <td style="text-align:right;">
+                    <input type="number"
+                           name="{{ it.qty_name }}"
+                           class="qty-input"
+                           min="0" max="9999" step="1"
+                           value=""
+                           placeholder="0"
+                           inputmode="numeric"
+                           data-stock-actual="{{ it.stock_actual }}">
+                  </td>
+                  <td style="text-align:right;color:var(--bo-muted);">
+                    <span class="stock-resultante" data-base="{{ it.stock_actual }}">
+                      {{ it.stock_actual }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="bo-card">
+        <div class="bo-card-body" style="color:var(--bo-muted);text-align:center;padding:48px 24px;">
+          {% if solo_sin_stock %}
+            🎉 Todos los productos tienen stock. Sacá el filtro "solo sin stock" para ver todos.
+          {% else %}
+            No hay productos activos en el sistema. <a href="{% url 'bodega:producto_nuevo' %}">Creá uno →</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if total_filas %}
+      <div class="bulk-foot">
+        <div class="bulk-summary">
+          <strong id="bulk-count-changed">0</strong> ítem(s) con cantidad ·
+          Total a sumar: <strong id="bulk-total-sum">0</strong> unidades
+        </div>
+        <div style="display:inline-flex;gap:8px;">
+          <a href="{% url 'bodega:stock' %}" class="bo-btn">Cancelar</a>
+          <button type="submit" class="bo-btn bo-btn-primary" id="bulk-submit" disabled>
+            Guardar carga masiva
+          </button>
+        </div>
+      </div>
+    {% endif %}
+  </form>
+
+  <script>
+    (function () {
+      var inputs = document.querySelectorAll('.qty-input');
+      var prefillBtn = document.getElementById('prefill-empty-btn');
+      var prefillValue = document.getElementById('prefill-empty-value');
+      var clearBtn = document.getElementById('clear-all-btn');
+      var submitBtn = document.getElementById('bulk-submit');
+      var countEl = document.getElementById('bulk-count-changed');
+      var totalEl = document.getElementById('bulk-total-sum');
+
+      function refresh() {
+        var count = 0, total = 0;
+        inputs.forEach(function (i) {
+          var v = parseInt(i.value || '0', 10);
+          if (v > 0) {
+            count++;
+            total += v;
+            i.classList.add('is-set');
+            var resultanteEl = i.closest('tr').querySelector('.stock-resultante');
+            if (resultanteEl) {
+              var base = parseInt(resultanteEl.dataset.base, 10);
+              resultanteEl.textContent = base + v;
+              resultanteEl.style.color = 'var(--bo-success, #0b9c31)';
+              resultanteEl.style.fontWeight = '600';
+            }
+          } else {
+            i.classList.remove('is-set');
+            var resultanteEl = i.closest('tr').querySelector('.stock-resultante');
+            if (resultanteEl) {
+              resultanteEl.textContent = resultanteEl.dataset.base;
+              resultanteEl.style.color = '';
+              resultanteEl.style.fontWeight = '';
+            }
+          }
+        });
+        if (countEl) countEl.textContent = count;
+        if (totalEl) totalEl.textContent = total;
+        if (submitBtn) submitBtn.disabled = (count === 0);
+      }
+
+      inputs.forEach(function (i) { i.addEventListener('input', refresh); });
+
+      if (prefillBtn) prefillBtn.addEventListener('click', function () {
+        var n = parseInt(prefillValue.value || '1', 10);
+        if (n <= 0) return;
+        inputs.forEach(function (i) {
+          var stock = parseInt(i.dataset.stockActual, 10);
+          if (stock === 0 && !i.value) {
+            i.value = String(n);
+          }
+        });
+        refresh();
+      });
+
+      if (clearBtn) clearBtn.addEventListener('click', function () {
+        if (!confirm('¿Limpiar todos los valores ingresados?')) return;
+        inputs.forEach(function (i) { i.value = ''; });
+        refresh();
+      });
+
+      // Confirmar antes de submit si hay >= 30 items para evitar accidentes.
+      var form = document.getElementById('bulk-form');
+      if (form) form.addEventListener('submit', function (e) {
+        var n = parseInt(countEl.textContent, 10);
+        if (n >= 30) {
+          if (!confirm('Vas a cargar stock para ' + n + ' productos. ¿Confirmar?')) {
+            e.preventDefault();
+          }
+        }
+      });
+
+      refresh();
+    })();
+  </script>
+{% endblock %}

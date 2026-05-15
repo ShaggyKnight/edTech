@@ -9,6 +9,7 @@ urlpatterns = [
     path('reponer/', views.reponer_stock, name='reponer'),
     path('stock/<int:pk>/set/', views.set_stock, name='set_stock'),
     path('stock/agregar/', views.stock_agregar, name='stock_agregar'),
+    path('stock/bulk/', views.stock_bulk_agregar, name='stock_bulk_agregar'),
 
     # Catálogo (CRUD desde el backoffice — Fase Ñ).
     path('productos/', views.lista_productos, name='lista_productos'),

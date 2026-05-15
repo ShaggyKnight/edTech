@@ -202,9 +202,11 @@
           </div>
 
           <div class="pdp-ctas" style="margin-top:18px;">
-            {# El boton NO usa `disabled` HTML — usa `aria-disabled` +
-               clase. Asi el click fire siempre y podemos avisar al
-               cliente que falta elegir la talla. #}
+            {% comment %}
+              El boton NO usa `disabled` HTML — usa `aria-disabled` +
+              clase. Asi el click fire siempre y podemos avisar al
+              cliente que falta elegir la talla.
+            {% endcomment %}
             <button type="submit" class="btn-primary lg" id="pdp-add-btn"
                     aria-disabled="true" data-needs-selection="1">
               <span id="pdp-add-label">Elige tu {{ label_eleccion|default:"variante" }} primero</span>

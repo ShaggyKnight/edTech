@@ -11,7 +11,14 @@
       </div>
       <h1>{{ titulo }}</h1>
     </div>
-    <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">← Volver</a>
+    <div style="display:flex;gap:8px;">
+      {% if modo == 'editar' and producto %}
+        <a href="{% url 'bodega:galeria_producto' producto.pk %}" class="bo-btn">
+          🖼️ Galería de imágenes
+        </a>
+      {% endif %}
+      <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">← Volver</a>
+    </div>
   </div>
 
   <form method="post" enctype="multipart/form-data">

@@ -15,6 +15,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.db import transaction
 from django.db.models import Count, F, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import generic
@@ -542,6 +543,90 @@ def producto_editar(request, pk):
         'ofertas': ofertas,
         'puede_gestionar_ofertas': _puede_gestionar_ofertas(request.user),
     })
+
+
+@login_required
+@reponer_required
+def galeria_producto(request, pk):
+    """Pantalla de gestion de galeria de imagenes adicionales (Bloque 8).
+
+    Bloque 15: la imagen principal (`Producto.imagen`) se gestiona en
+    el form de editar producto. Aca solo las imagenes adicionales que
+    aparecen como thumbs en el PDP. Se pueden reordenar via drag-drop
+    (admin) y borrar (bodeguero + admin).
+    """
+    from catalogo.models import ProductoImagen
+    p = get_object_or_404(Producto, pk=pk)
+    imagenes = list(p.imagenes.all())
+    return render(request, 'bodega/galeria_producto.html', {
+        'producto': p,
+        'imagenes': imagenes,
+        'puede_reordenar': _puede_gestionar_ofertas(request.user),
+    })
+
+
+@login_required
+@require_POST
+def galeria_reorder(request, pk):
+    """Recibe el nuevo orden de imagenes de la galeria.
+
+    Body: `orden_ids` = lista de PKs separadas por coma, en el orden
+    nuevo. Ej: "12,15,8,3" → imagen 12 con orden=0, etc.
+
+    Defensa: verifica que todos los IDs pertenecen al producto antes
+    de actualizar (evita reorder cross-producto via POST forjado).
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        if request.htmx:
+            return HttpResponse('Sin permisos', status=403)
+        messages.error(request, 'No tenés permisos para reordenar la galería.')
+        return redirect('bodega:galeria_producto', pk=pk)
+
+    from catalogo.models import ProductoImagen
+    producto = get_object_or_404(Producto, pk=pk)
+    raw = (request.POST.get('orden_ids') or '').strip()
+    if not raw:
+        return HttpResponse('Sin orden recibido', status=400) if request.htmx \
+            else redirect('bodega:galeria_producto', pk=pk)
+
+    try:
+        ids = [int(x) for x in raw.split(',') if x.strip()]
+    except ValueError:
+        return HttpResponse('IDs invalidos', status=400) if request.htmx \
+            else redirect('bodega:galeria_producto', pk=pk)
+
+    imgs = {i.pk: i for i in producto.imagenes.all()}
+    if set(ids) - set(imgs.keys()):
+        return HttpResponse('IDs ajenos al producto', status=400) if request.htmx \
+            else redirect('bodega:galeria_producto', pk=pk)
+
+    actualizadas = []
+    for idx, img_id in enumerate(ids):
+        img = imgs[img_id]
+        if img.orden != idx:
+            img.orden = idx
+            actualizadas.append(img)
+    if actualizadas:
+        ProductoImagen.objects.bulk_update(actualizadas, ['orden'])
+
+    if request.htmx:
+        return HttpResponse(f'OK · {len(actualizadas)}', status=200)
+    messages.success(
+        request, f'Galería reordenada · {len(actualizadas)} imagen(es) actualizada(s).',
+    )
+    return redirect('bodega:galeria_producto', pk=pk)
+
+
+@login_required
+@require_POST
+def galeria_borrar(request, pk, img_pk):
+    """Borra una imagen de la galeria. Bodeguero + admin pueden."""
+    from catalogo.models import ProductoImagen
+    producto = get_object_or_404(Producto, pk=pk)
+    img = get_object_or_404(ProductoImagen, pk=img_pk, producto=producto)
+    img.delete()
+    messages.success(request, 'Imagen eliminada de la galería.')
+    return redirect('bodega:galeria_producto', pk=pk)
 
 
 @login_required

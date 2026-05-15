@@ -46,9 +46,11 @@
 
   <div class="pdp-main">
     {% imagen_producto producto as pdp_img %}
-    {# Bloque 8 · Galeria real PDP: si hay imagenes adicionales, las
-       montamos como thumbs clickables. Sin JS, click no hace swap;
-       el bloque <script> de abajo agrega el comportamiento. #}
+    {% comment %}
+      Bloque 8 · Galeria real PDP: si hay imagenes adicionales, las
+      montamos como thumbs clickables. Sin JS, click no hace swap;
+      el bloque script de abajo agrega el comportamiento.
+    {% endcomment %}
     <div class="pdp-gallery" id="pdp-gallery"
          data-has-extra="{% if imagenes_galeria %}1{% else %}0{% endif %}">
       <div class="pdp-thumbs">
@@ -476,10 +478,12 @@
   </script>
 {% endif %}
 
-{# Bloque 8 · Galeria PDP: swap de imagen principal al click en thumb.
-   Sin libs, sin Alpine — minimo: leer data-full, swap src, toggle clase
-   active. Funciona sin JS tambien: si JS esta off, los thumbs son
-   botones sin efecto y el cliente sigue viendo la imagen principal. #}
+{% comment %}
+  Bloque 8 · Galeria PDP: swap de imagen principal al click en thumb.
+  Sin libs, sin Alpine — minimo: leer data-full, swap src, toggle clase
+  active. Funciona sin JS tambien: si JS esta off, los thumbs son
+  botones sin efecto y el cliente sigue viendo la imagen principal.
+{% endcomment %}
 <script>
   (function () {
     var gallery = document.getElementById('pdp-gallery');

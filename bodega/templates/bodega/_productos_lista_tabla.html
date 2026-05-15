@@ -11,8 +11,10 @@
 <div class="bo-card" id="productos-tabla">
   {% if productos %}
     {% if puede_editar_activo %}
-      {# Bloque 11: form de bulk que envuelve la tabla. Los checkboxes
-         viajan como `ids[]`, los botones del bulk-bar como `accion`. #}
+      {% comment %}
+        Bloque 11: form de bulk que envuelve la tabla. Los checkboxes
+        viajan como ids, los botones del bulk-bar como accion.
+      {% endcomment %}
       <form id="bulk-productos-form"
             method="post"
             action="{% url 'bodega:productos_bulk_action' %}"

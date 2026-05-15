@@ -70,10 +70,12 @@
     {# Sprint 2 — mobile/tablet polish. Se carga DESPUES de ideas.css. #}
     <link rel="stylesheet" href="{% static 'css/sprint2-mobile.css' %}">
 
-    {# Analytics (Sprint 3 · 3.9) — Plausible: privacy-first, sin cookies,
-       cumple Ley 19.628. Solo se inyecta si ANALYTICS_DOMAIN está
-       configurado en settings (vacío en dev = no-op). Eventos custom
-       vía window.plausible("add_to_cart", {...}) cuando haga falta. #}
+    {% comment %}
+      Analytics (Sprint 3 · 3.9) — Plausible: privacy-first, sin cookies,
+      cumple Ley 19.628. Solo se inyecta si ANALYTICS_DOMAIN esta
+      configurado en settings (vacio en dev = no-op). Eventos custom
+      via window.plausible("add_to_cart", {...}) cuando haga falta.
+    {% endcomment %}
     {% if ANALYTICS_DOMAIN %}
     <script defer data-domain="{{ ANALYTICS_DOMAIN }}"
             src="https://plausible.io/js/script.tagged-events.js"></script>
@@ -94,9 +96,11 @@
     {% block extra_head %}{% endblock %}
   </head>
   <body>
-    {# Bloque 7 · a11y: Skip-to-content link. Solo aparece al recibir
-       foco con Tab — invisible para mouse/touch. WCAG 2.1 obligatorio
-       para usuarios de teclado que quieren saltar el header repetido. #}
+    {% comment %}
+      Bloque 7 · a11y: Skip-to-content link. Solo aparece al recibir
+      foco con Tab — invisible para mouse/touch. WCAG 2.1 obligatorio
+      para usuarios de teclado que quieren saltar el header repetido.
+    {% endcomment %}
     <a href="#main-content" class="skip-link">Saltar al contenido</a>
     {% include 'partials/_icons.html' %}
 

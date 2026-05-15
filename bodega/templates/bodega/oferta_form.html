@@ -37,8 +37,10 @@
 
         <div class="bo-field">
           <label for="{{ form.producto.id_for_label }}">Producto</label>
-          {# Filtro de busqueda — JS chico que oculta las options del
-             select que no matchean. Solo requiere DOM, sin backend. #}
+          {% comment %}
+            Filtro de busqueda — JS chico que oculta las options del
+            select que no matchean. Solo requiere DOM, sin backend.
+          {% endcomment %}
           <input type="search"
                  class="bo-input"
                  placeholder="🔍 Filtrar productos…"

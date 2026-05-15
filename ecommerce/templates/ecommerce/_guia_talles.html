@@ -6,7 +6,7 @@
   2. "Calculadora" — input edad/altura -> sugiere talla.
 
   Las medidas son aproximadas (estandar industria), pueden variar 1-2 cm
-  por confeccion. Para ajustes pasa por la tienda.
+  por confeccion. Si hay dudas, escribir por WhatsApp.
 {% endcomment %}
 <div class="guia-talles" x-data="{ tab: 'tabla' }" role="document">
   <header class="guia-talles-head">
@@ -38,8 +38,7 @@
     <p class="guia-talles-help">
       Medidas en centímetros. Para acertar al primer intento, medí
       pecho/cintura del niño y comparalo con esta tabla. Si dudás
-      entre dos tallas, elegí la mayor — ofrecemos ajustes sin costo
-      hasta {{ ajustes_fecha_tope }}.
+      entre dos tallas, te recomendamos elegir la mayor.
     </p>
     <div class="guia-talles-table-wrap">
       <table class="guia-talles-table">
@@ -69,8 +68,8 @@
       </table>
     </div>
     <p class="guia-talles-disclaimer">
-      ✂️ Si la talla queda larga, hacemos ajustes en tienda <strong>sin costo</strong>
-      hasta {{ ajustes_fecha_tope }}. Vení con la prenda y la marcamos juntos.
+      💬 ¿Tenés dudas con la talla? <strong>Escribinos por WhatsApp</strong>
+      antes de comprar y te ayudamos a elegir.
     </p>
   </section>
 
@@ -107,8 +106,8 @@
       </div>
       <p id="calc-result-detalle"></p>
       <p class="guia-talles-disclaimer">
-        Si dudás entre dos tallas, elegí la mayor. Ajustes en tienda sin
-        costo hasta {{ ajustes_fecha_tope }}.
+        Si dudás entre dos tallas, elegí la mayor. Cambios sin costo
+        dentro de los 15 días si el producto está sin uso.
       </p>
     </div>
   </section>

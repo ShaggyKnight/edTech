@@ -203,12 +203,12 @@
 
           <div class="pdp-ctas" style="margin-top:18px;">
             {% comment %}
-              El boton NO usa `disabled` HTML — usa `aria-disabled` +
-              clase. Asi el click fire siempre y podemos avisar al
-              cliente que falta elegir la talla.
+              Boton sin atributo `disabled` — el click siempre fire.
+              Si el cliente no eligio talla, el submit handler valida
+              `hidden.value` y muestra hint. Esto sobrevive cualquier
+              error en el chip click handler.
             {% endcomment %}
-            <button type="submit" class="btn-primary lg" id="pdp-add-btn"
-                    aria-disabled="true" data-needs-selection="1">
+            <button type="submit" class="btn-primary lg needs-selection" id="pdp-add-btn">
               <span id="pdp-add-label">Elige tu {{ label_eleccion|default:"variante" }} primero</span>
               <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
             </button>
@@ -286,21 +286,22 @@
                 }
 
                 stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
-                // Habilitar el boton: remueve aria-disabled + flag.
-                btn.removeAttribute('aria-disabled');
-                btn.removeAttribute('data-needs-selection');
+                // El cliente eligio: sacamos la clase visual de "necesita seleccion".
+                btn.classList.remove('needs-selection');
                 btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
               });
             });
 
-            // Si el cliente clickea el boton SIN haber elegido una talla,
-            // capturamos el submit y mostramos hint visual (no se hace POST).
+            // Validacion en submit. La fuente de verdad es `hidden.value`
+            // — si esta vacio, no hubo chip click. Independiente de
+            // cualquier estado intermedio o atributo. Capturamos en
+            // CAPTURE phase (3er arg true) para correr ANTES que HTMX.
             var form = document.getElementById('pdp-form');
             if (form) {
               form.addEventListener('submit', function (e) {
-                if (btn.dataset.needsSelection === '1') {
+                if (!hidden.value) {
                   e.preventDefault();
-                  // Scroll a los chips + flash + mensaje
+                  e.stopImmediatePropagation();  // bloquea HTMX tambien
                   var chipsWrap = document.getElementById('pdp-chips');
                   if (chipsWrap) {
                     chipsWrap.scrollIntoView({behavior: 'smooth', block: 'center'});
@@ -309,13 +310,11 @@
                       chipsWrap.classList.remove('flash-attention');
                     }, 1400);
                   }
-                  // Sacude el boton para feedback adicional.
                   btn.classList.add('shake');
                   setTimeout(function () { btn.classList.remove('shake'); }, 500);
-                  // Vibracion en mobile si esta disponible.
                   if (navigator.vibrate) navigator.vibrate(60);
                 }
-              });
+              }, true);  // capture phase
             }
 
             // Sprint 2 · 2.3: click en chip agotada abre el form "avísame".

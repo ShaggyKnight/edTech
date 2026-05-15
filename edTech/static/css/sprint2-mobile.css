@@ -374,19 +374,28 @@ body.no-scroll, html.no-scroll { overflow: hidden !important; }
   outline-offset: 1px;
 }
 
-/* Botones disabled / aria-disabled — el navegador NO les da estilo
-   distintivo por default. `aria-disabled` no bloquea clicks (a
-   diferencia de `disabled`), asi podemos capturar el click para
-   mostrar un hint cuando falta seleccion. */
+/* Botones disabled — el navegador NO les da estilo distintivo por
+   default. */
 button:disabled, .btn-primary:disabled, .btn-outline:disabled,
-button[disabled], .btn-primary[disabled], .btn-outline[disabled],
-button[aria-disabled="true"], .btn-primary[aria-disabled="true"] {
+button[disabled], .btn-primary[disabled], .btn-outline[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
   filter: grayscale(0.3);
 }
-button:disabled:hover, button[disabled]:hover,
-button[aria-disabled="true"]:hover {
+button:disabled:hover, button[disabled]:hover {
+  background: inherit;
+  transform: none;
+}
+
+/* `.needs-selection`: estado visual "necesita seleccion previa" SIN
+   bloquear el click (a diferencia de `disabled` HTML). La validacion
+   en JS captura el submit y muestra hint. Si JS falla, el form
+   submitea, el server responde con error gracefully. */
+button.needs-selection, .btn-primary.needs-selection {
+  opacity: 0.55;
+  filter: grayscale(0.3);
+}
+button.needs-selection:hover {
   background: inherit;
   transform: none;
 }

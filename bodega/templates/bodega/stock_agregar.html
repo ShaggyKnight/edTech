@@ -43,24 +43,42 @@
   <div class="bo-page-head">
     <div>
       <div class="bo-crumb">
-        <a href="{% url 'bodega:stock' %}">Stock</a> / Cargar inicial
+        <a href="{% url 'bodega:stock' %}">Stock</a> / Sumar unidades
       </div>
-      <h1>Cargar stock inicial</h1>
+      <h1>Sumar unidades al stock</h1>
       <div class="sub">
-        Para productos que todavía no tienen ninguna entrada de stock.
-        Si el producto ya tiene stock, reponé desde la pantalla principal.
+        Elegí <strong>un solo</strong> producto o variante, escribí cuántas unidades
+        te están entrando, y guardá. Repetí para cada producto.
       </div>
     </div>
     <a href="{% url 'bodega:stock' %}" class="bo-btn">← Volver al stock</a>
   </div>
 
-  <div class="bo-card">
+  <div class="bo-card" style="background:rgba(201,169,110,0.12);border:1px solid var(--bo-gold, #C9A96E);">
+    <div class="bo-card-body" style="font-size:14px;line-height:1.5;">
+      <strong>📦 Cómo funciona</strong><br>
+      Esta pantalla <strong>SUMA</strong> al stock existente — no lo reemplaza.
+      <ul style="margin:8px 0 0 24px;padding:0;">
+        <li>Si el producto <strong>nunca tuvo stock</strong> en esta tienda, crea la entrada con la cantidad que pongas.</li>
+        <li>Si <strong>ya tenía stock</strong> (por ej. 5), suma lo que pongas (5 + N).</li>
+        <li>Carga <strong>una operación por producto</strong>. Para 10 productos diferentes, hacés 10 cargas.</li>
+        <li>Cada carga queda registrada como <strong>movimiento de entrada</strong> auditado (con tu usuario).</li>
+      </ul>
+      <p style="margin:10px 0 0;color:var(--bo-muted);">
+        ¿Querés <strong>corregir</strong> el stock a un número exacto en vez de sumar?
+        Andá a <a href="{% url 'bodega:stock' %}" style="color:var(--bo-primary-2);">Stock</a>
+        y hacé click en el número de la fila — se edita inline (Enter para guardar).
+      </p>
+    </div>
+  </div>
+
+  <div class="bo-card" style="margin-top:20px;">
     <div class="bo-card-body">
       <form method="post" class="stock-add-form">
         {% csrf_token %}
 
         <div class="stock-add-row">
-          <label for="id_tienda">Tienda</label>
+          <label for="id_tienda">1. Tienda</label>
           <select name="tienda_id" id="id_tienda" required>
             {% for t in tiendas %}
               <option value="{{ t.pk }}"
@@ -69,13 +87,16 @@
               </option>
             {% endfor %}
           </select>
+          <p class="stock-add-hint">¿A qué tienda le están entrando estas unidades?</p>
         </div>
 
         <div class="stock-add-row">
-          <label for="id_item">Producto / variante</label>
+          <label for="id_item">2. Producto o variante (uno solo)</label>
 
-          {# Filtro de busqueda — JS chico que oculta los <option> que no
-             matchean. Mismo patron que oferta_form (Bloque 5.B). #}
+          {% comment %}
+            Filtro de busqueda — JS chico que oculta los <option> que no
+            matchean. Mismo patron que oferta_form (Bloque 5.B).
+          {% endcomment %}
           <input type="search" id="filtro-item"
                  class="bo-input" placeholder="🔍 Filtrar (escribí nombre o talla)…"
                  autocomplete="off"
@@ -83,7 +104,7 @@
 
           <select name="item_combo" id="id_item" required size="12"
                   style="height:auto;">
-            <option value="" disabled selected>— Elegí producto o variante —</option>
+            <option value="" disabled selected>— Elegí UN producto o variante —</option>
             {% for familia, items in opciones_por_familia %}
               <optgroup label="{{ familia }}">
                 {% for opt in items %}
@@ -100,21 +121,25 @@
           <input type="hidden" name="tipo" id="hidden-tipo" value="">
           <input type="hidden" name="item_id" id="hidden-item-id" value="">
           <p class="stock-add-hint">
-            {{ opciones_por_familia|length }} familia{{ opciones_por_familia|length|pluralize:"s" }} ·
-            Buscá por nombre del producto o talla/volumen. La lista no se recarga, solo se filtra.
+            Lista completa de variantes activas + productos sin variantes
+            ({{ opciones_por_familia|length }} familia{{ opciones_por_familia|length|pluralize:"s" }}).
+            Tipear filtra; click selecciona <strong>una sola</strong> línea.
           </p>
         </div>
 
         <div class="stock-add-cantidad">
           <div class="stock-add-row">
-            <label for="id_cantidad">Unidades a sumar</label>
+            <label for="id_cantidad">3. ¿Cuántas unidades suma esta entrada?</label>
             <input type="number" name="cantidad" id="id_cantidad"
                    min="1" max="99999" step="1" required
                    value="1" inputmode="numeric">
+            <p class="stock-add-hint">
+              Ej: si te llegaron 12 unidades del producto seleccionado, escribí <strong>12</strong>.
+            </p>
           </div>
           <div style="display:flex;gap:8px;align-self:end;">
             <button type="submit" class="bo-btn bo-btn-primary">
-              + Cargar stock
+              + Sumar al stock
             </button>
             <a href="{% url 'bodega:stock' %}" class="bo-btn">Cancelar</a>
           </div>

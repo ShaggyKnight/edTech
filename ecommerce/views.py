@@ -116,8 +116,8 @@ def _seo_context_catalogo(*, cat_info, colegio):
             'seo_h1': f'Uniformes {colegio.nombre}',
             'seo_descripcion': (
                 f'Buzos, chalecos y poleras del {colegio.nombre} en Ideas Boutique '
-                f'(Caupolicán 437-B, Los Vilos). Telas duraderas, ajustes sin '
-                f'costo. Tres generaciones vistiendo a las familias de la zona.'
+                f'(Caupolicán 437-B, Los Vilos). Telas duraderas, atención personal. '
+                f'Tres generaciones vistiendo a las familias de la zona.'
             ),
         }
     return {}

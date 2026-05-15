@@ -188,8 +188,16 @@
               </div>
               <p>Te escribimos cuando vuelva a stock. Sin spam, sin promociones.</p>
               <div class="notify-input">
+                {% comment %}
+                  IMPORTANTE: este input NO debe tener `required`. Esta
+                  hidden adentro del <form id="pdp-form">; si lleva
+                  `required`, el browser cancela el submit del form de
+                  agregar al carrito ("invalid form control is not
+                  focusable"). El JS de `notifySubmit` ya valida el
+                  email con regex antes de procesarlo.
+                {% endcomment %}
                 <input type="email" inputmode="email" autocomplete="email"
-                       id="pdp-notify-email" placeholder="tu@email.cl" required>
+                       id="pdp-notify-email" placeholder="tu@email.cl">
                 <button type="button" class="btn-primary" id="pdp-notify-submit">
                   Avísame
                 </button>

@@ -49,6 +49,8 @@ class Command(BaseCommand):
         port = opts['port']
         ips = _ips_locales()
         firewall_ok = self._regla_firewall_existe(port)
+        red_publica = self._red_activa_es_publica()
+        rule_perfiles = self._perfiles_regla_firewall(port)
         # Solo ASCII en stdout — en Windows cmd.exe el codec cp1252 no
         # acepta caracteres como ═ y revienta el comando.
         sep = '=' * 60
@@ -64,6 +66,19 @@ class Command(BaseCommand):
                 '\n      Ejecuta scripts/firewall_open_8000.bat como Administrador.'
                 '\n      Sin esa regla, otros dispositivos no van a poder conectar.'
             ))
+        # Bug comun: red WiFi clasificada como Public pero el firewall
+        # solo deja pasar Private+Domain. Otros dispositivos no conectan.
+        if red_publica and rule_perfiles and 'public' not in rule_perfiles:
+            self.stdout.write(self.style.WARNING(
+                '\n  [!] Tu red Wi-Fi esta como PUBLIC pero el firewall solo'
+                '\n      permite Private+Domain. Otros dispositivos NO van a'
+                '\n      conectar aunque la regla este habilitada. Fix rapido:'
+                '\n        1) PowerShell como Admin:'
+                '\n           Set-NetConnectionProfile -Name "<tu wifi>" '
+                '-NetworkCategory Private'
+                '\n        2) O re-correr scripts/firewall_open_8000.bat'
+                '\n           (ahora incluye profile=public).'
+            ))
         self.stdout.write(self.style.NOTICE(
             '\n  Desde otro dispositivo en la misma red, abri cualquiera de'
             '\n  las URLs "Red LAN" - celular, otra laptop, tablet.'
@@ -71,6 +86,66 @@ class Command(BaseCommand):
             '\n' + sep + '\n'
         ))
         call_command('runserver', f'0.0.0.0:{port}')
+
+    def _red_activa_es_publica(self):
+        """True si la red WiFi activa esta clasificada como Public.
+
+        Windows clasifica algunas WiFis residenciales como Public por
+        default. Las reglas de firewall comunes solo aplican a
+        Domain/Private, asi que la red queda inaccesible.
+        """
+        import platform, subprocess
+        if platform.system() != 'Windows':
+            return False
+        try:
+            r = subprocess.run(
+                ['powershell', '-NoProfile', '-Command',
+                 "Get-NetConnectionProfile | Where-Object {$_.IPv4Connectivity -eq 'Internet'} | "
+                 "Select-Object -ExpandProperty NetworkCategory"],
+                capture_output=True, text=True, timeout=8,
+            )
+            if r.returncode != 0:
+                return False
+            return 'Public' in r.stdout
+        except Exception:
+            return False
+
+    def _perfiles_regla_firewall(self, port: str):
+        """Devuelve set de perfiles ('private', 'domain', 'public') que
+        cubre la regla de firewall del puerto, o None si no se puede
+        determinar."""
+        import platform, subprocess
+        if platform.system() != 'Windows':
+            return None
+        try:
+            r = subprocess.run(
+                ['netsh', 'advfirewall', 'firewall', 'show', 'rule', 'name=all'],
+                capture_output=True, text=True, timeout=10,
+            )
+            if r.returncode != 0:
+                return None
+            # Buscar el bloque con LocalPort = nuestro puerto y leer Perfiles.
+            bloques = r.stdout.split('Nombre de regla')
+            perfiles = set()
+            for b in bloques:
+                if f'LocalPort:                            {port}' in b or \
+                   f'Local Port:                           {port}' in b:
+                    # Linea "Perfiles: ..." o "Profiles: ..."
+                    for line in b.split('\n'):
+                        L = line.strip().lower()
+                        if L.startswith('perfiles:') or L.startswith('profiles:'):
+                            valor = line.split(':', 1)[1].strip().lower()
+                            for p in ('private', 'privada', 'domain', 'dominio', 'public', 'publica'):
+                                if p in valor:
+                                    # normalizar a ingles
+                                    perfiles.add({
+                                        'privada': 'private',
+                                        'dominio': 'domain',
+                                        'publica': 'public',
+                                    }.get(p, p))
+            return perfiles or None
+        except Exception:
+            return None
 
     def _regla_firewall_existe(self, port: str):
         """Best-effort: revisa si Windows Firewall tiene regla abriendo el

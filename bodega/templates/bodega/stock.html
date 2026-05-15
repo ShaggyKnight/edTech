@@ -43,9 +43,10 @@
       <h1>Stock por tienda</h1>
       <div class="sub">{{ stock|length }} fila{{ stock|length|pluralize:"s" }} en el filtro · {{ kpi.unidades_totales }} unidades en total</div>
     </div>
-    <div style="display:flex; gap:8px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
       {% if puede_reponer %}
-        <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>
+        <a href="{% url 'bodega:stock_agregar' %}" class="bo-btn bo-btn-primary">+ Agregar stock</a>
+        <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn">+ Nuevo producto</a>
         <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Catálogo</a>
       {% endif %}
       <a href="{% url 'admin:bodega_movimientostock_changelist' %}" class="bo-btn">Movimientos</a>
@@ -76,15 +77,20 @@
     </div>
   </div>
 
-  {# ─── Filtros ─── #}
+  {# ─── Filtros (AJAX: auto-apply al cambiar input/select) ─── #}
   <div class="bo-card" style="margin-bottom:20px;">
     <div class="bo-card-body">
-      <form method="get">
+      <form method="get"
+            hx-get="{% url 'bodega:stock' %}"
+            hx-trigger="input changed delay:300ms from:input[name='q'], change from:select[name]"
+            hx-target="#stock-tabla"
+            hx-swap="outerHTML"
+            hx-push-url="true">
         <div class="stock-filters">
           <div class="bo-field">
             <label>Buscar</label>
-            <input type="text" name="q" value="{{ filtros.q }}" class="bo-input"
-                   placeholder="Nombre o SKU…">
+            <input type="search" name="q" value="{{ filtros.q }}" class="bo-input"
+                   placeholder="Nombre o SKU…" autocomplete="off">
           </div>
           <div class="bo-field">
             <label>Tienda</label>
@@ -127,54 +133,25 @@
               <option value="cero" {% if filtros.solo == "cero" %}selected{% endif %}>Solo agotados</option>
             </select>
           </div>
+          <div class="bo-field">
+            <label>Stock</label>
+            <select name="stock" class="bo-select">
+              <option value="">Solo con stock</option>
+              <option value="todos" {% if mostrar_todos %}selected{% endif %}>Incluir agotados</option>
+            </select>
+          </div>
         </div>
         <div class="stock-actions-row" style="margin-top: 14px;">
+          {% comment %}
+            Fallback no-JS: con HTMX el form se aplica solo. Sin JS,
+            el boton sigue funcionando como submit GET tradicional.
+          {% endcomment %}
           <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
           <a href="{% url 'bodega:stock' %}" class="bo-btn">Limpiar</a>
-          <div style="flex:1;"></div>
-          {% if mostrar_todos %}
-            <a class="stock-toggle"
-               href="?{% if filtros.tienda %}tienda={{ filtros.tienda }}&{% endif %}{% if filtros.familia %}familia={{ filtros.familia }}&{% endif %}{% if filtros.colegio %}colegio={{ filtros.colegio }}&{% endif %}{% if filtros.q %}q={{ filtros.q }}{% endif %}">
-              Mostrando agotados
-            </a>
-          {% else %}
-            <a class="stock-toggle on"
-               href="?stock=todos{% if filtros.tienda %}&tienda={{ filtros.tienda }}{% endif %}{% if filtros.familia %}&familia={{ filtros.familia }}{% endif %}{% if filtros.colegio %}&colegio={{ filtros.colegio }}{% endif %}{% if filtros.q %}&q={{ filtros.q }}{% endif %}">
-              Solo con stock
-            </a>
-          {% endif %}
         </div>
       </form>
     </div>
   </div>
 
-  {# ─── Tabla detalle ─── #}
-  <div class="bo-card">
-    <div class="bo-card-head">
-      <h3>Detalle</h3>
-    </div>
-    {% if stock %}
-      <table class="bo-table">
-        <thead>
-          <tr>
-            <th>Tienda</th>
-            <th>Producto</th>
-            <th>Familia</th>
-            <th>Colegio</th>
-            <th>SKU / tipo</th>
-            <th class="num">Cantidad</th>
-            <th>Estado</th>
-            {% if puede_reponer %}<th>Reponer</th>{% endif %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for s in stock %}
-            {% include 'bodega/_stock_fila.html' with s=s umbral_bajo=umbral_bajo puede_reponer=puede_reponer %}
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <div class="bo-card-body" style="color:var(--bo-muted);">No hay stock con los filtros aplicados.</div>
-    {% endif %}
-  </div>
+  {% include 'bodega/_stock_tabla.html' %}
 {% endblock %}

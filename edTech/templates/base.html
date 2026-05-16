@@ -7,8 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}Panel privado — Ideas Boutique{% endblock %}</title>
 
-  <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
-  <link rel="icon" type="image/svg+xml" href="{% static 'icon.svg' %}">
+  {# Favicon Ideas Boutique · variante "Clásico" (ver base_public.html). #}
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32.png' %}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon-180.png' %}">
   <link rel="icon" href="{% static 'favicon.ico' %}">
 
   {# Inter para el backoffice (Cormorant en cabeceras y títulos) #}

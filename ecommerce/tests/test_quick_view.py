@@ -76,12 +76,18 @@ class QuickViewTests(TestCase):
 
     def test_producto_con_variantes_redirige_a_pdp_para_elegir(self):
         """Si tiene variantes, el CTA principal del modal lleva al PDP
-        completo donde el cliente puede elegir la talla."""
+        completo donde el cliente puede elegir la talla.
+
+        BUG-010: el label era "Elegir y agregar" pero el CTA es solo un
+        link, no agrega nada. Ahora dice "Elegir talla y agregar →" para
+        que el usuario entienda que el agregar pasa en la ficha completa.
+        """
         resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.con_variantes.pk]))
         body = resp.content.decode()
         # No hay form de agregar inline (porque hay que elegir variante).
         self.assertNotIn('hx-post="/tienda/agregar/"', body)
-        self.assertIn('Elegir y agregar', body)
+        # BUG-010: copy honesto que aclara dónde pasa el agregar.
+        self.assertIn('Elegir talla y agregar', body)
         # Lista las variantes disponibles.
         self.assertIn('size-chip', body)
 
@@ -103,6 +109,50 @@ class QuickViewTests(TestCase):
     def test_solo_acepta_get(self):
         resp = self.client.post(reverse('ecommerce:producto_quick', args=[self.producto.pk]))
         self.assertEqual(resp.status_code, 405)
+
+    def test_variantes_ordenadas_por_talla_canonica(self):
+        """BUG-014 regression guard.
+
+        El modal antes ordenaba por SKU (alfabético): L, M, S, XL. Ahora
+        debe respetar el `orden` canónico de ValorAtributo: S, M, L, XL.
+        """
+        # Producto con 4 tallas en orden canónico. `val_m` ya existe en
+        # setUpTestData; las otras 3 las creamos acá. El unique
+        # (atributo, valor) impide re-crearlas.
+        prod = Producto.objects.create(
+            familia=self.fam_uni, nombre='Polera Test',
+            precio_base=Decimal('15000'), tiene_variantes=True,
+        )
+        val_s = ValorAtributo.objects.create(atributo=self.atr, valor='S', orden=1)
+        val_l = ValorAtributo.objects.create(atributo=self.atr, valor='L', orden=3)
+        val_xl = ValorAtributo.objects.create(atributo=self.atr, valor='XL', orden=4)
+        # Crear los SKUs en orden inverso alfabético para confirmar
+        # que NO se está ordenando por SKU.
+        for val, sku in [(val_xl, 'POL-XL'), (val_s, 'POL-S'),
+                         (val_l, 'POL-L'), (self.val_m, 'POL-M')]:
+            v = ProductoVariante.objects.create(producto=prod, sku=sku)
+            v.valores.add(val)
+            StockTienda.objects.create(tienda=self.tienda, variante=v, cantidad=5)
+
+        resp = self.client.get(reverse('ecommerce:producto_quick', args=[prod.pk]))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+
+        # Limitamos la búsqueda al bloque de las variantes (size-chip)
+        # para no falsos positivos con la 'S' / 'M' en el copy del modal.
+        bloque_inicio = body.find('quick-view-variantes')
+        bloque_fin = body.find('quick-view-ctas')
+        bloque = body[bloque_inicio:bloque_fin]
+
+        # Las tallas deben aparecer en el orden S, M, L, XL (no por SKU).
+        # XL se busca primero para evitar que 'L' lo matche dentro de 'XL'.
+        idx_s = bloque.find('>\n                S')
+        idx_m = bloque.find('>\n                M')
+        idx_l = bloque.find('>\n                L\n')
+        idx_xl = bloque.find('>\n                XL')
+        self.assertTrue(idx_s < idx_m < idx_l < idx_xl,
+            f'BUG-014: tallas deben ir S,M,L,XL. '
+            f'indices encontrados: S={idx_s}, M={idx_m}, L={idx_l}, XL={idx_xl}')
 
     def test_card_del_catalogo_incluye_boton_quick(self):
         """La card del catalogo tiene el boton que dispara el modal."""

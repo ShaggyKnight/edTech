@@ -138,6 +138,70 @@ class ProductoPreciosOnlineTests(TestCase):
         self.assertEqual(self.sin_oferta.descuento_porcentaje_online, 0)
 
 
+class ProductoConVariantesPreciosTests(TestCase):
+    """BUG-003 regression guard.
+
+    Producto con dos variantes con precios distintos y una oferta % a
+    nivel producto. El "DESDE" del catálogo debe aplicar el % sobre el
+    precio de cada variante y devolver el mínimo, NO restar al precio
+    mínimo el descuento calculado contra `precio_base`.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.fam = Familia.objects.create(nombre='Perfumes')
+        # precio_base = 64.990 (coincide con la variante grande, como
+        # se daba en producción para Oud Royal Elixir).
+        cls.producto = Producto.objects.create(
+            familia=cls.fam, nombre='Oud Royal Elixir',
+            precio_base=Decimal('64990'), tiene_variantes=True,
+        )
+        atr = Atributo.objects.create(nombre='Volumen')
+        val_30 = ValorAtributo.objects.create(atributo=atr, valor='30 ml', orden=1)
+        val_100 = ValorAtributo.objects.create(atributo=atr, valor='100 ml', orden=2)
+
+        cls.v_chica = ProductoVariante.objects.create(
+            producto=cls.producto, sku='OUD-30',
+            precio_override=Decimal('44990'),
+        )
+        cls.v_chica.valores.add(val_30)
+
+        cls.v_grande = ProductoVariante.objects.create(
+            producto=cls.producto, sku='OUD-100',
+            precio_override=Decimal('64990'),
+        )
+        cls.v_grande.valores.add(val_100)
+
+        Oferta.objects.create(
+            nombre='-10% Oud', producto=cls.producto,
+            tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('10'),
+            canal=Oferta.CANAL_ONLINE,
+            fecha_inicio=timezone.now() - timedelta(days=1),
+            fecha_fin=timezone.now() + timedelta(days=5),
+            activa=True,
+        )
+
+    def test_precio_minimo_es_la_variante_barata(self):
+        self.assertEqual(self.producto.precio_minimo, Decimal('44990'))
+
+    def test_precio_oferta_online_es_la_variante_barata_con_descuento(self):
+        """44.990 × 0.9 = 40.491, no 38.491."""
+        self.assertEqual(
+            self.producto.precio_oferta_online,
+            Decimal('40491.00'),
+            'BUG-003: el "DESDE" con oferta debe aplicar el % al precio '
+            'mínimo de variante, no restar el descuento calculado sobre '
+            '`precio_base`.',
+        )
+
+    def test_descuento_porcentaje_online_coincide_con_la_oferta(self):
+        """Badge debe decir -10%, no -14% ni similar."""
+        self.assertEqual(self.producto.descuento_porcentaje_online, 10)
+
+    def test_tiene_oferta_online_true(self):
+        self.assertTrue(self.producto.tiene_oferta_online)
+
+
 class VariantePreciosOnlineTests(TestCase):
     @classmethod
     def setUpTestData(cls):

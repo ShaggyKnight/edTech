@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block titulo %}Pedido #{{ recibo.pk }}{% endblock %}
 
@@ -36,29 +37,35 @@
             </tr>
         </thead>
         <tbody>
+            {% comment %}
+              BUG-005: los montos de Recibo / RecepcionDetalle son
+              Decimal con 2 decimales; sin format quedan "$64990.00".
+              Pasamos por floatformat:0 (sin decimales) + intcomma
+              (separador de miles CLP).
+            {% endcomment %}
             {% for d in recibo.detalles.all %}
             <tr>
                 <td>{{ d.descripcion }}</td>
                 <td class="text-center">{{ d.cantidad }}</td>
-                <td class="text-right">${{ d.precio_unitario }}</td>
-                <td class="text-right">${{ d.subtotal }}</td>
+                <td class="text-right">${{ d.precio_unitario|floatformat:0|intcomma }}</td>
+                <td class="text-right">${{ d.subtotal|floatformat:0|intcomma }}</td>
             </tr>
             {% endfor %}
         </tbody>
         <tfoot>
             <tr>
                 <td colspan="3" class="text-right">Subtotal</td>
-                <td class="text-right">${{ recibo.subtotal }}</td>
+                <td class="text-right">${{ recibo.subtotal|floatformat:0|intcomma }}</td>
             </tr>
             {% if recibo.descuento %}
             <tr>
                 <td colspan="3" class="text-right">Descuento</td>
-                <td class="text-right">-${{ recibo.descuento }}</td>
+                <td class="text-right">−${{ recibo.descuento|floatformat:0|intcomma }}</td>
             </tr>
             {% endif %}
             <tr>
                 <th colspan="3" class="text-right">TOTAL</th>
-                <th class="text-right"><h3>${{ recibo.total }}</h3></th>
+                <th class="text-right"><h3>${{ recibo.total|floatformat:0|intcomma }}</h3></th>
             </tr>
         </tfoot>
     </table>

@@ -115,7 +115,18 @@
           </span>
           <span class="pdp-price-old"{% if not producto.tiene_oferta_online %} style="display:none;"{% endif %}>${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
           <span class="pdp-installments" id="pdp-installments">
-            o 3 cuotas sin interés de ${% widthratio producto.precio_minimo 3 1 %}
+            {% comment %}
+              BUG-004: la cuota usa el MISMO precio que muestra arriba
+              (precio_oferta_online si hay oferta, sino precio_minimo).
+              BUG-005: el monto se pasa por intcomma para el separador
+              de miles.
+            {% endcomment %}
+            {% if producto.tiene_oferta_online %}
+              {% widthratio producto.precio_oferta_online 3 1 as cuota_inicial %}
+            {% else %}
+              {% widthratio producto.precio_minimo 3 1 as cuota_inicial %}
+            {% endif %}
+            o 3 cuotas sin interés de ${{ cuota_inicial|intcomma }}
           </span>
         </div>
 
@@ -251,45 +262,65 @@
 
             chips.forEach(function(chip) {
               chip.addEventListener('click', function() {
+                // BUG-002 defense: la prioridad es habilitar el form
+                // de agregar al carrito. Los updates visuales van
+                // despues, en try/catch, para que un error en uno
+                // de ellos no deje el boton "stuck disabled".
+                var id = chip.dataset.varianteId;
+                if (!id) return;
+
+                // 1) CRITICAL — habilita el submit del cart.
+                hidden.value = id;
+                btn.disabled = false;
+
+                // 2) Estado visual del chip seleccionado.
                 chips.forEach(function(c) { c.classList.remove('active'); });
                 chip.classList.add('active');
 
+                // 3) Cierra el form de "avisame" si estaba abierto.
                 if (notifyForm) notifyForm.hidden = true;
 
-                var precioBase  = parseFloat(chip.dataset.precio);
-                var precioFinal = parseFloat(chip.dataset.precioOferta || chip.dataset.precio);
-                var descPct     = parseInt(chip.dataset.descuentoPct || '0', 10);
-                var stock       = parseInt(chip.dataset.stock, 10);
-                var label       = chip.dataset.label.trim();
-                var id          = chip.dataset.varianteId;
+                // 4) Updates visuales — no criticos.
+                try {
+                  var precioBase  = parseFloat(chip.dataset.precio);
+                  var precioFinal = parseFloat(chip.dataset.precioOferta || chip.dataset.precio);
+                  var descPct     = parseInt(chip.dataset.descuentoPct || '0', 10);
+                  var stock       = parseInt(chip.dataset.stock, 10);
+                  var label       = (chip.dataset.label || '').trim();
 
-                hidden.value = id;
-                priceVal.textContent = '$' + fmt(precioFinal);
-                installments.textContent = 'o 3 cuotas sin interés de $' +
-                  fmt(Math.floor(precioFinal / 3));
-
-                // Quita el "Desde" cuando ya hay variante elegida.
-                var fromTag = priceBlock.querySelector('div');
-                if (fromTag && fromTag.textContent.trim() === 'Desde') {
-                  fromTag.style.display = 'none';
-                }
-
-                // Si la variante tiene descuento, mostrar el precio
-                // tachado al lado y resaltar el precio en vino.
-                var hayDesc = descPct > 0 && precioFinal < precioBase;
-                priceVal.classList.toggle('pdp-price-sale', hayDesc);
-                if (priceOld) {
-                  if (hayDesc) {
-                    priceOld.textContent = '$' + fmt(precioBase);
-                    priceOld.style.display = '';
-                  } else {
-                    priceOld.style.display = 'none';
+                  if (!isNaN(precioFinal)) {
+                    priceVal.textContent = '$' + fmt(precioFinal);
+                    installments.textContent = 'o 3 cuotas sin interés de $' +
+                      fmt(Math.floor(precioFinal / 3));
+                    btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
                   }
-                }
 
-                stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
-                btn.disabled = false;
-                btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
+                  // Quita el "Desde" cuando ya hay variante elegida.
+                  var fromTag = priceBlock.querySelector('div');
+                  if (fromTag && fromTag.textContent.trim() === 'Desde') {
+                    fromTag.style.display = 'none';
+                  }
+
+                  // Si la variante tiene descuento, mostrar el precio
+                  // tachado al lado y resaltar el precio en vino.
+                  var hayDesc = descPct > 0 && precioFinal < precioBase;
+                  priceVal.classList.toggle('pdp-price-sale', hayDesc);
+                  if (priceOld) {
+                    if (hayDesc) {
+                      priceOld.textContent = '$' + fmt(precioBase);
+                      priceOld.style.display = '';
+                    } else {
+                      priceOld.style.display = 'none';
+                    }
+                  }
+
+                  if (stockInfo) {
+                    stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
+                  }
+                } catch (err) {
+                  // No-op: el boton ya quedo habilitado mas arriba.
+                  if (window.console) console.error('[pdp-chip]', err);
+                }
               });
             });
 
@@ -346,7 +377,13 @@
           {% else %}
             <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
           {% endif %}
-          <span class="pdp-installments">o 3 cuotas sin interés de ${% widthratio producto.precio_base 3 1 %}</span>
+          {# BUG-004 / BUG-005: cuota usa el precio visible y va formateada. #}
+          {% if producto.tiene_oferta_online %}
+            {% widthratio producto.precio_oferta_online 3 1 as cuota_simple %}
+          {% else %}
+            {% widthratio producto.precio_base 3 1 as cuota_simple %}
+          {% endif %}
+          <span class="pdp-installments">o 3 cuotas sin interés de ${{ cuota_simple|intcomma }}</span>
         </div>
 
         {% if producto.descripcion %}

@@ -55,21 +55,36 @@
       <a class="btn-primary" href="{% url 'ecommerce:catalogo' %}">Ir a la tienda</a>
     </div>
   {% else %}
+    {% comment %}
+      BUG-012: el "#8" se mostraba visualmente pero un lector de pantalla
+      lo leía como "8" suelto, sin contexto. Ahora:
+      - El <a>/<span> tiene aria-label con el contexto completo del pedido.
+      - El "#" tiene un prefijo `visually-hidden` "Pedido número " para
+        que cualquier herramienta que inspeccione el texto del elemento
+        (no solo el aria-label) también lo capture.
+    {% endcomment %}
     {% for r in recibos %}
+      {% with aria_estado=r.get_estado_display %}
       {% if r.payment_reference %}
-        <a href="{% url 'ecommerce:pedido' r.payment_reference %}" style="text-decoration:none;color:inherit;">
+        <a href="{% url 'ecommerce:pedido' r.payment_reference %}"
+           aria-label="Pedido número {{ r.pk }}, {{ r.creado|date:'d-m-Y' }}, {{ r.detalles.count }} producto{{ r.detalles.count|pluralize:'s' }}, ${{ r.total|floatformat:0|intcomma }} CLP, estado {{ aria_estado }}"
+           style="text-decoration:none;color:inherit;">
       {% else %}
-        <span style="text-decoration:none;color:inherit;display:block;">
+        <span role="group"
+              aria-label="Pedido número {{ r.pk }}, {{ r.creado|date:'d-m-Y' }}, ${{ r.total|floatformat:0|intcomma }} CLP, estado {{ aria_estado }}"
+              style="text-decoration:none;color:inherit;display:block;">
       {% endif %}
         <div class="pedido-row">
-          <div class="pedido-id">#{{ r.pk }}</div>
+          <div class="pedido-id">
+            <span class="visually-hidden">Pedido número </span>#{{ r.pk }}
+          </div>
           <div class="pedido-fecha">
             <strong>{{ r.creado|date:"d-m-Y" }}</strong>
             <span>{{ r.detalles.count }} producto{{ r.detalles.count|pluralize:"s" }}</span>
           </div>
           <div class="pedido-estado estado-{{ r.estado }}">
             {% if r.estado == 'pagado' %}
-              <svg class="ico ico--14" style="vertical-align:middle;"><use href="#ico-check"/></svg>
+              <svg class="ico ico--14" style="vertical-align:middle;" aria-hidden="true"><use href="#ico-check"/></svg>
               Pagado
             {% elif r.estado == 'pendiente' %}
               Pendiente
@@ -82,6 +97,7 @@
           <div class="pedido-total">${{ r.total|floatformat:0|intcomma }}</div>
         </div>
       {% if r.payment_reference %}</a>{% else %}</span>{% endif %}
+      {% endwith %}
     {% endfor %}
   {% endif %}
 </main>

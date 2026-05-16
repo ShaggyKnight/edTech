@@ -128,6 +128,32 @@ class MisPedidosListadoTests(TestCase):
         resp = self.client.get(reverse('ecommerce:mis_pedidos'))
         self.assertEqual(list(resp.context['recibos']), [])
 
+    def test_numero_pedido_accesible_a_screen_readers(self):
+        """BUG-012 regression guard.
+
+        El "#8" tenía solo el texto visual sin contexto en el accessibility
+        tree. Ahora cada fila incluye un aria-label en el wrapper Y un
+        prefijo `visually-hidden` "Pedido número " antes del "#N" para
+        cubrir AT que lean el texto contenido en vez del aria-label.
+        """
+        r = self._crear_recibo(usuario=self.user)
+        # Asignamos payment_reference para que la fila sea un <a>.
+        r.payment_reference = 'mock-ref-12345'
+        r.save()
+
+        self.client.force_login(self.user)
+        resp = self.client.get(reverse('ecommerce:mis_pedidos'))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+
+        # aria-label con el número del pedido y contexto.
+        self.assertIn(f'Pedido número {r.pk}', body,
+            'BUG-012: el aria-label debe incluir "Pedido número N".')
+        # Texto visually-hidden delante del "#N".
+        self.assertIn('Pedido número </span>', body,
+            'BUG-012: debe haber un prefijo visually-hidden antes del "#N".')
+        self.assertIn(f'#{r.pk}', body)
+
 
 @override_settings(
     ECOMMERCE_PAYMENT_GATEWAY='mock',

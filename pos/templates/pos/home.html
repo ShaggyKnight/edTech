@@ -131,6 +131,34 @@
     font-weight: 600; cursor: pointer;
   }
   .pos-stock-form button:hover { background: var(--bo-success); color: #fff; }
+
+  /* Tallas / variantes destacadas (carrito + tabla productos).
+     Badge dorado prominente para que el cajero distinga la talla
+     a un vistazo antes de cobrar. */
+  .pos-talla-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    margin-right: 4px;
+    background: var(--bo-gold-soft, #F5E6CA);
+    color: #6B4F1D;
+    border: 1px solid var(--bo-gold, #C9A96E);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  .pos-line .pos-talla-chip { margin-left: 6px; vertical-align: middle; }
+  .pos-variante-tallas { margin-bottom: 3px; }
+  .pos-variante-sku {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--bo-muted);
+    font-family: monospace;
+  }
+
+
 </style>
 {% endblock %}
 
@@ -176,7 +204,22 @@
         {% endif %}
       </div>
     </div>
-    <div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      {% comment %}
+        Botón modo pantalla completa: ideal para dejar el POS fijo en
+        una tablet en el mostrador. Oculta topbar/sidebar y maximiza
+        el banner de escaneo. La preferencia queda en localStorage.
+      {% endcomment %}
+      <button type="button" id="pos-fullscreen-btn" class="pos-fullscreen-toggle"
+              title="Modo pantalla completa (tablet)"
+              onclick="togglePosFullscreen()">
+        <svg class="ico ico--16" aria-hidden="true">
+          <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"
+                fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="pos-fullscreen-label">Pantalla completa</span>
+      </button>
       <a href="{% url 'pos:ventas' %}" class="bo-btn">Ver ventas</a>
     </div>
   </div>
@@ -213,14 +256,21 @@
       {# ─── Filtros: chips de familia + toggle stock ─── #}
       <div class="bo-card-body" style="padding-top:14px; padding-bottom:14px; border-bottom:1px solid var(--bo-border-soft);">
         <div class="pos-filters">
-          {# Chip "Todas las familias" #}
+          {% comment %}
+            Al cambiar de familia LIMPIAMOS el `q` de búsqueda. El
+            cajero usualmente busca un producto puntual y luego quiere
+            "ver todas las poleras" — no tiene sentido arrastrar el
+            término anterior. Si el cajero quiere combinar, usa el
+            input de búsqueda que SÍ persiste el filtro de familia.
+          {% endcomment %}
+          {# Chip "Todas las familias" — solo conserva el toggle de stock. #}
           <a class="pos-chip {% if not familia_activa %}active{% endif %}"
-             href="?{% if query %}q={{ query }}&{% endif %}{% if mostrar_todos %}stock=todos{% endif %}">
+             href="?{% if mostrar_todos %}stock=todos{% endif %}">
             Todas
           </a>
           {% for f in familias %}
             <a class="pos-chip {% if familia_activa == f.pk %}active{% endif %}"
-               href="?familia={{ f.pk }}{% if query %}&q={{ query }}{% endif %}{% if mostrar_todos %}&stock=todos{% endif %}">
+               href="?familia={{ f.pk }}{% if mostrar_todos %}&stock=todos{% endif %}">
               {{ f.nombre }}
             </a>
           {% endfor %}
@@ -269,4 +319,9 @@
     {# Carrito #}
     {% include 'pos/_pos_carrito.html' %}
   </div>
+
+  {# CSS + JS del modo pantalla completa. La preferencia (localStorage) #}
+  {# se aplica también en pos/recibo.html para que el modo persista #}
+  {# después de cobrar una venta. #}
+  {% include 'pos/_pos_fullscreen.html' %}
 {% endblock %}

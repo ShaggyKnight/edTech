@@ -54,25 +54,7 @@
     <a href="{% url 'bodega:stock' %}" class="bo-btn">← Volver al stock</a>
   </div>
 
-  <div class="bo-card" style="background:rgba(201,169,110,0.12);border:1px solid var(--bo-gold, #C9A96E);">
-    <div class="bo-card-body" style="font-size:14px;line-height:1.5;">
-      <strong>📦 Cómo funciona</strong><br>
-      Esta pantalla <strong>SUMA</strong> al stock existente — no lo reemplaza.
-      <ul style="margin:8px 0 0 24px;padding:0;">
-        <li>Si el producto <strong>nunca tuvo stock</strong> en esta tienda, crea la entrada con la cantidad que pongas.</li>
-        <li>Si <strong>ya tenía stock</strong> (por ej. 5), suma lo que pongas (5 + N).</li>
-        <li>Carga <strong>una operación por producto</strong>. Para 10 productos diferentes, hacés 10 cargas.</li>
-        <li>Cada carga queda registrada como <strong>movimiento de entrada</strong> auditado (con tu usuario).</li>
-      </ul>
-      <p style="margin:10px 0 0;color:var(--bo-muted);">
-        ¿Querés <strong>corregir</strong> el stock a un número exacto en vez de sumar?
-        Andá a <a href="{% url 'bodega:stock' %}" style="color:var(--bo-primary-2);">Stock</a>
-        y hacé click en el número de la fila — se edita inline (Enter para guardar).
-      </p>
-    </div>
-  </div>
-
-  <div class="bo-card" style="margin-top:20px;">
+  <div class="bo-card">
     <div class="bo-card-body">
       <form method="post" class="stock-add-form">
         {% csrf_token %}

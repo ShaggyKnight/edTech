@@ -17,9 +17,18 @@
       <div class="pos-line">
         <div class="name">
           {% if linea.tipo == 'v' %}{{ linea.item.producto.nombre }}{% else %}{{ linea.item.nombre }}{% endif %}
+          {% comment %}
+            Mejora: badge prominente con la(s) talla(s)/variante. El
+            cajero los ve sin tener que descifrar el SKU.
+          {% endcomment %}
+          {% if linea.tipo == 'v' %}
+            {% for val in linea.item.valores.all %}
+              <span class="pos-talla-chip">{{ val.valor }}</span>
+            {% endfor %}
+          {% endif %}
         </div>
         <div class="meta">
-          {% if linea.tipo == 'v' %}{{ linea.item.sku }} · {% endif %}
+          {% if linea.tipo == 'v' %}<code class="pos-variante-sku">{{ linea.item.sku }}</code> · {% endif %}
           ${{ linea.precio_unitario|floatformat:0|intcomma }} c/u
           {% if linea.descuento_unitario %}
             <span class="bo-badge bo-badge-warning">-${{ linea.descuento_unitario|floatformat:0|intcomma }}</span>

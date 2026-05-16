@@ -103,7 +103,19 @@
     <div class="bo-card bo-kpi is-success">
       <div class="label">Margen bruto</div>
       <div class="value">${{ eerr.margen_bruto|floatformat:0|intcomma }}</div>
-      <div class="sub">{{ eerr.margen_pct|floatformat:2 }}% — {% widthratio eerr.margen_pct 1 100 %}% del ingreso</div>
+      {% comment %}
+        BUG-007: el sub mostraba dos unidades distintas:
+        "{{ margen_pct|floatformat:2 }}% — {widthratio*100}%" → "0.40% — 40%".
+        margen_pct se guarda como decimal 0..1 (ver contabilidad.services).
+        Ahora calculamos el porcentaje directo desde el ratio bruto/ingresos.
+      {% endcomment %}
+      <div class="sub">
+        {% if eerr.ingresos %}
+          {% widthratio eerr.margen_bruto eerr.ingresos 100 %}% del ingreso
+        {% else %}
+          — sin ingresos en el período
+        {% endif %}
+      </div>
     </div>
     <div class="bo-card bo-kpi {% if eerr.utilidad_neta < 0 %}is-danger{% else %}is-gold{% endif %}">
       <div class="label">Utilidad neta</div>

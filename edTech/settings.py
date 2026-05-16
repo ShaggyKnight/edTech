@@ -37,6 +37,10 @@ env = environ.Env(
     SITE_URL=(str, ''),
     OWNER_NOTIFICATION_EMAIL=(str, ''),
     ANALYTICS_DOMAIN=(str, ''),
+    # BUG-009: número de WhatsApp del local. Formato E.164 sin + ni
+    # espacios (ej. '56912345678'). Vacío = el bloque "WhatsApp directo"
+    # se muestra como texto plano (estado actual hasta que se configure).
+    PUBLIC_WHATSAPP=(str, ''),
     # Feature flags publicas. Bloque 9 quedo apagado por default hasta
     # que la duena tenga banda para moderar las resenas. La data
     # (model + admin + tests) se mantiene — solo se oculta el UI.
@@ -260,6 +264,7 @@ OPENFACTURA_RUT_EMISOR = env('OPENFACTURA_RUT_EMISOR')
 SITE_URL = env('SITE_URL')                              # ej: https://ideasboutique.cl
 OWNER_NOTIFICATION_EMAIL = env('OWNER_NOTIFICATION_EMAIL')  # email de Blanca
 ANALYTICS_DOMAIN = env('ANALYTICS_DOMAIN')              # dominio Plausible (vacío = sin analytics)
+PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del local, ej '56912345678'
 
 # Feature flags. Bloque 9 (resenas) sigue codeado y testeado pero
 # se oculta en la UI publica hasta que la duena tenga ancho de banda

@@ -51,7 +51,8 @@ class DashboardContenidoTests(TestCase):
         resp = self.client.get(reverse('reportes:dashboard'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'Dashboard')
-        self.assertContains(resp, '$10000')  # total de ventas
+        # BUG-005: el monto va formateado en CLP (con separador de miles).
+        self.assertContains(resp, '$10.000')  # total de ventas / promedio
         self.assertContains(resp, 'Central')  # tienda en el selector
 
 

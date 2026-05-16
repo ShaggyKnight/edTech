@@ -18,6 +18,16 @@ def index(request):
     return render(request, 'index.html', contexto)
 
 
+def info(request):
+    """Página de ayuda con secciones: envíos, cambios, tallas, contacto.
+
+    BUG-008: el footer apuntaba todos los links de Ayuda a anchors del
+    landing (#visitanos) que no tenían el contenido prometido. Esta vista
+    consolida los 4 temas en /info/ con anchors reales y copy chileno.
+    """
+    return render(request, 'info.html')
+
+
 @require_GET
 @cache_control(max_age=86400, public=True)
 def robots_txt(request):

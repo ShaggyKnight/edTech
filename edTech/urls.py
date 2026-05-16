@@ -15,6 +15,7 @@ admin.site.index_title = 'Panel de control'
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('info/', views.info, name='info'),  # BUG-008: ayuda consolidada
     path('robots.txt', views.robots_txt, name='robots_txt'),
     path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='sitemap'),
     path('cuenta/', include('django.contrib.auth.urls')),

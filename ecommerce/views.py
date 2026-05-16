@@ -523,8 +523,12 @@ def quick_view(request, pk: int):
     )
 
     # Variantes activas con stock — solo lo mínimo para el chip.
+    # BUG-014: antes ordenaba por `sku` (alfabético → L, M, S, XL),
+    # inconsistente con el PDP completo (S, M, L, XL). Replicamos la
+    # lógica del PDP: orden canónico por orden_talla/volumen/concentración.
     variantes = []
     if producto.tiene_variantes:
+        from django.db.models import Min
         stock_sq = StockTienda.objects.filter(
             tienda=tienda, variante=OuterRef('pk'),
         ).values('cantidad')[:1]
@@ -532,8 +536,22 @@ def quick_view(request, pk: int):
             producto.variantes
             .filter(activa=True)
             .prefetch_related('valores__atributo')
-            .annotate(stock=Subquery(stock_sq))
-            .order_by('sku')
+            .annotate(
+                stock=Subquery(stock_sq),
+                orden_talla=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Talla'),
+                ),
+                orden_volumen=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Volumen'),
+                ),
+                orden_concentracion=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Concentración'),
+                ),
+            )
+            .order_by('orden_talla', 'orden_volumen', 'orden_concentracion', 'sku')
         )
 
     return render(request, 'ecommerce/_quick_view.html', {

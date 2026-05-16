@@ -81,6 +81,8 @@ class ValorAtributo(models.Model):
     class Meta:
         unique_together = [('atributo', 'valor')]
         ordering = ['atributo__nombre', 'orden', 'valor']
+        verbose_name = 'valor de atributo'
+        verbose_name_plural = 'valores de atributo'
 
     def __str__(self):
         return f'{self.atributo.nombre}: {self.valor}'
@@ -191,9 +193,26 @@ class Producto(models.Model):
 
     @property
     def precio_oferta_online(self):
-        """Precio con oferta aplicada. Si no hay oferta vigente,
-        devuelve el `precio_minimo` (para productos con variantes
-        baratas/caras, refleja el "desde")."""
+        """Precio mínimo con oferta aplicada para el canal online.
+
+        BUG-003: para productos con variantes la oferta % se calcula
+        contra el precio de CADA variante (no contra `precio_base`).
+        Si el producto tiene 30 ml a $44.990 y 100 ml a $64.990 con
+        oferta -10%, el "DESDE" del catálogo debe ser $40.491
+        (= 44.990 × 0.9), no $38.491 (= 44.990 − 6.499, donde el 6.499
+        venía de aplicar 10% sobre `precio_base = 64.990`).
+
+        Para productos sin variantes: precio_base − descuento.
+        """
+        if self.tiene_variantes:
+            from catalogo.precios import mejor_descuento_unitario
+            precios = []
+            for v in self.variantes.filter(activa=True):
+                desc, _ = mejor_descuento_unitario(v, Oferta.CANAL_ONLINE)
+                precios.append(v.precio - desc)
+            if precios:
+                return min(precios)
+        # Sin variantes (o sin variantes activas): cálculo a nivel producto.
         desc, oferta = self._mejor_oferta_online
         base = self.precio_minimo
         if not oferta or desc <= 0:
@@ -202,19 +221,39 @@ class Producto(models.Model):
 
     @property
     def tiene_oferta_online(self):
+        """True si hay alguna oferta vigente que aplique al producto
+        (a nivel producto, o a alguna de sus variantes activas)."""
         _, oferta = self._mejor_oferta_online
-        return oferta is not None
+        if oferta is not None:
+            return True
+        # Si el producto tiene variantes, también consideramos ofertas
+        # variante-específicas: el card debe mostrar "Oferta" igual.
+        if self.tiene_variantes:
+            from catalogo.precios import mejor_descuento_unitario
+            for v in self.variantes.filter(activa=True):
+                _, ov = mejor_descuento_unitario(v, Oferta.CANAL_ONLINE)
+                if ov is not None:
+                    return True
+        return False
 
     @property
     def descuento_porcentaje_online(self):
-        """Porcentaje (int 0..100) del descuento aplicado. 0 si no hay
-        oferta. Útil para el badge "−15%" en card y PDP."""
-        desc, oferta = self._mejor_oferta_online
-        if not oferta or desc <= 0:
-            return 0
+        """Porcentaje (int 0..100) del descuento aplicado al "desde".
+        0 si no hay oferta. Útil para el badge "−15%" en card y PDP.
+
+        BUG-003: se calcula contra el precio mínimo de variante (o
+        precio_base si no hay variantes), usando el descuento absoluto
+        ya aplicado a la variante más barata. Antes mezclaba el desc
+        calculado sobre `precio_base` con un divisor distinto y daba
+        números engañosos.
+        """
         base = self.precio_minimo
         if base <= 0:
             return 0
+        precio_final = self.precio_oferta_online
+        if precio_final >= base:
+            return 0
+        desc = base - precio_final
         return int(round((desc / base) * 100))
 
     # ── Resenas (Bloque 9) ────────────────────────────────────────────
@@ -363,6 +402,8 @@ class ProductoVariante(models.Model):
 
     class Meta:
         ordering = ['producto__nombre', 'sku']
+        verbose_name = 'variante de producto'
+        verbose_name_plural = 'variantes de producto'
 
     def __str__(self):
         return f'{self.producto.nombre} [{self.sku}]'

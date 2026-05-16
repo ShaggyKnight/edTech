@@ -1,4 +1,4 @@
-Hola {{ recibo.cliente_nombre|default:"" }},
+{% load humanize %}Hola {{ recibo.cliente_nombre|default:"" }},
 
 Gracias por tu compra en Ideas de Blanca.
 
@@ -7,11 +7,11 @@ Fecha:  {{ recibo.creado|date:"d-m-Y H:i" }}
 Estado: {{ recibo.get_estado_display }}
 
 Detalle:
-{% for d in detalles %}  - {{ d.cantidad }} × {{ d.descripcion }}  ${{ d.precio_unitario }}  (subtotal ${{ d.subtotal }})
+{% for d in detalles %}  - {{ d.cantidad }} × {{ d.descripcion }}  ${{ d.precio_unitario|floatformat:0|intcomma }}  (subtotal ${{ d.subtotal|floatformat:0|intcomma }})
 {% endfor %}
-Subtotal:  ${{ recibo.subtotal }}
-{% if recibo.descuento %}Descuento: -${{ recibo.descuento }}
-{% endif %}TOTAL:     ${{ recibo.total }}
+Subtotal:  ${{ recibo.subtotal|floatformat:0|intcomma }}
+{% if recibo.descuento %}Descuento: -${{ recibo.descuento|floatformat:0|intcomma }}
+{% endif %}TOTAL:     ${{ recibo.total|floatformat:0|intcomma }}
 
 Referencia de pago: {{ recibo.payment_reference }}
 Proveedor:          {{ recibo.payment_provider }}

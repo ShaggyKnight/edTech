@@ -14,7 +14,17 @@
       <div class="bo-crumb">Reportes / Dashboard</div>
       <h1>Resumen del negocio</h1>
       <div class="sub">
-        Ventana: {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
+        {% comment %}
+          BUG-006: ventana MÓVIL — los totales no coinciden con EERR
+          (que usa mes/año calendario). El copy lo aclara para evitar
+          el "¿por qué Dashboard y EERR muestran distinto?".
+        {% endcomment %}
+        Últimos {{ dias }} días corridos:
+        {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
+        <span style="opacity:0.7;">·
+          para análisis por mes o año usá
+          <a href="{% url 'reportes:eerr' %}">Estado de Resultados</a>
+        </span>
       </div>
     </div>
 
@@ -67,7 +77,12 @@
       <div class="value">${{ resumen.ventas_por_canal.online.total|floatformat:0|intcomma }}</div>
       <div class="sub">{{ resumen.ventas_por_canal.online.n_ventas }} ventas</div>
     </div>
-    <div class="bo-card bo-kpi is-success">
+    {% comment %}
+      BUG-013: la tarjeta SIEMPRE iba con is-success (verde) sin importar
+      el signo. Negativo en verde era engañoso. Ahora: saldo < 0 → rojo,
+      saldo >= 0 → verde (semántica habitual del backoffice).
+    {% endcomment %}
+    <div class="bo-card bo-kpi {% if resumen.caja.saldo < 0 %}is-danger{% else %}is-success{% endif %}">
       <div class="label">Saldo de caja</div>
       <div class="value">${{ resumen.caja.saldo|floatformat:0|intcomma }}</div>
       <div class="sub">
@@ -86,7 +101,8 @@
     <div class="bo-card bo-kpi">
       <div class="label">Promedio por venta</div>
       <div class="value">
-        ${% if resumen.n_ventas %}{% widthratio resumen.total_ventas resumen.n_ventas 1 %}{% else %}0{% endif %}
+        {% comment %}BUG-005: widthratio devuelve un entero sin separadores; lo pasamos por intcomma.{% endcomment %}
+        ${% if resumen.n_ventas %}{% widthratio resumen.total_ventas resumen.n_ventas 1 as prom_venta %}{{ prom_venta|intcomma }}{% else %}0{% endif %}
       </div>
       <div class="sub">Total / cantidad de recibos</div>
     </div>

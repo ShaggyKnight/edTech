@@ -107,55 +107,11 @@
           </div>
         {% endfor %}
 
-        {# Sprint 2 · 2.6: captura email para guardar carrito (localStorage). #}
-        <div class="save-cart" id="save-cart">
-          <div class="save-cart-copy">
-            <strong>¿No estás lista para comprar?</strong>
-            <p>Te guardamos el carrito. Te avisamos por email si baja de precio o queda última talla.</p>
-          </div>
-          <div class="save-cart-input">
-            <input type="email" inputmode="email" autocomplete="email"
-                   id="save-cart-email" placeholder="tu@email.cl" required>
-            <button type="button" class="btn-outline" id="save-cart-submit">Guardar carrito</button>
-          </div>
-          <div class="save-cart-done" id="save-cart-done" hidden>
-            <svg class="ico ico--18"><use href="#ico-check"/></svg>
-            <div>
-              <strong>Te guardamos el carrito.</strong>
-              <p>Te escribiremos a <em id="save-cart-done-email"></em> si baja de precio o queda última talla.</p>
-            </div>
-          </div>
-        </div>
-        <script>
-          (function () {
-            var form = document.getElementById('save-cart');
-            if (!form) return;
-            var input = document.getElementById('save-cart-email');
-            var submit = document.getElementById('save-cart-submit');
-            var done = document.getElementById('save-cart-done');
-            var doneEmail = document.getElementById('save-cart-done-email');
-            try {
-              var saved = localStorage.getItem('ib_save_email');
-              if (saved) { input.value = saved; }
-            } catch (e) {}
-            submit.addEventListener('click', function () {
-              var email = (input.value || '').trim();
-              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                input.focus();
-                input.classList.add('is-invalid');
-                return;
-              }
-              try { localStorage.setItem('ib_save_email', email); } catch (e) {}
-              if (window.plausible) {
-                window.plausible('save_cart_email', { props: { dominio: email.split('@')[1] || '' } });
-              }
-              doneEmail.textContent = email;
-              done.hidden = false;
-              form.querySelector('.save-cart-copy').style.display = 'none';
-              form.querySelector('.save-cart-input').style.display = 'none';
-            });
-          })();
-        </script>
+        {# Bloque "Te guardamos el carrito" removido a pedido de la dueña.
+           El backend nunca persistia la suscripcion ni mandaba avisos —
+           el email solo quedaba en localStorage del browser. Si en el
+           futuro se quiere reactivar, ver el commit que introdujo el
+           Sprint 2 · 2.6 y los estilos `.save-cart*` en ideas.css. #}
       </div>
 
       <aside class="cart-summary">

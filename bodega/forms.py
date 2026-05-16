@@ -259,6 +259,17 @@ class OfertaForm(forms.ModelForm):
             .order_by('producto__nombre', 'sku')
         )
         self.fields['variante'].required = False
+        # `size > 1` convierte el <select> en un listbox visible: las
+        # opciones filtradas por el buscador se ven al instante, sin
+        # tener que abrir el dropdown. El buscador anterior usaba
+        # `option.hidden` adentro de un select cerrado, que no se
+        # respetaba en todos los browsers.
+        self.fields['producto'].widget.attrs.update({
+            'size': 8, 'class': 'bo-input bo-listbox',
+        })
+        self.fields['variante'].widget.attrs.update({
+            'size': 8, 'class': 'bo-input bo-listbox',
+        })
         self.fields['fecha_inicio'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S']
         self.fields['fecha_fin'].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M:%S']
 

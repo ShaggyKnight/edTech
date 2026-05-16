@@ -70,21 +70,63 @@
         </div>
 
         <script>
-          // Filtra las options de un <select> ocultando las que no
-          // matchean. Accent-insensitive y case-insensitive.
-          function filtrarSelectOptions(selectId, query) {
-            var select = document.getElementById(selectId);
-            if (!select) return;
-            var q = (query || '').toLowerCase().trim()
-              .normalize('NFD').replace(/[̀-ͯ]/g, '');
-            Array.from(select.options).forEach(function(opt) {
-              if (!opt.value) return; // mantener la opcion vacia (placeholder)
-              var label = opt.textContent.toLowerCase().trim()
-                .normalize('NFD').replace(/[̀-ͯ]/g, '');
-              opt.hidden = q && label.indexOf(q) === -1;
-            });
-          }
+          // Filtra las options de un <select size=8> ocultando las que
+          // no matchean. Accent + case insensitive. Aplicamos hidden,
+          // disabled y display:none juntos para max compatibilidad
+          // entre browsers (Safari ignora `hidden` en algunos casos).
+          //
+          // Construimos el regex con `new RegExp('[\\u0300-\\u036F]')`
+          // en vez de un literal — el bug original venía de copiar los
+          // caracteres combining (invisibles) en el archivo fuente, que
+          // se perdían al guardarse en encodings no-UTF8.
+          (function () {
+            var DIACRIT = new RegExp('[\\u0300-\\u036F]', 'g');
+            function norm(s) {
+              return (s || '').toLowerCase().trim().normalize('NFD').replace(DIACRIT, '');
+            }
+            window.filtrarSelectOptions = function (selectId, query) {
+              var select = document.getElementById(selectId);
+              if (!select) return;
+              var q = norm(query);
+              var visibles = 0;
+              Array.from(select.options).forEach(function (opt) {
+                if (!opt.value) return; // mantener la opcion vacia (placeholder)
+                var label = norm(opt.textContent);
+                var oculta = q && label.indexOf(q) === -1;
+                opt.hidden = oculta;
+                opt.disabled = oculta;
+                opt.style.display = oculta ? 'none' : '';
+                if (!oculta) visibles++;
+              });
+              select.classList.toggle('bo-listbox-empty', !!q && visibles === 0);
+            };
+          })();
         </script>
+
+        <style>
+          /* `size=8` convierte el select en listbox. Estilizamos para
+             que se vea consistente con el resto del backoffice. */
+          select.bo-listbox {
+            width: 100%;
+            padding: 6px 8px;
+            font: inherit;
+            font-size: 13px;
+            border: 1px solid var(--bo-border);
+            border-radius: var(--bo-radius);
+            background: var(--bo-card);
+          }
+          select.bo-listbox:focus {
+            outline: 2px solid var(--bo-primary);
+            outline-offset: 1px;
+          }
+          select.bo-listbox.bo-listbox-empty {
+            border-color: var(--bo-warning, #B5860C);
+            background: rgba(181, 134, 12, 0.06);
+          }
+          select.bo-listbox option {
+            padding: 4px 6px;
+          }
+        </style>
 
         <div class="bo-card-head" style="border-top:1px solid var(--bo-border);padding-top:16px;margin-top:8px;">
           <h3 style="font-size:14px;">Descuento</h3>

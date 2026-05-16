@@ -11,10 +11,16 @@
     <tr {% if not v.stock %}style="opacity:.6;"{% endif %}>
       <td>{{ v.producto.nombre }}</td>
       <td>
-        <code>{{ v.sku }}</code>
-        {% for val in v.valores.all %}
-          <span class="bo-badge bo-badge-muted">{{ val.valor }}</span>
-        {% endfor %}
+        {% comment %}
+          Mejora: talla(s) PRIMERO y en grande. El SKU técnico queda
+          como referencia debajo. El cajero ve la talla de un vistazo.
+        {% endcomment %}
+        <div class="pos-variante-tallas">
+          {% for val in v.valores.all %}
+            <span class="pos-talla-chip">{{ val.valor }}</span>
+          {% endfor %}
+        </div>
+        <code class="pos-variante-sku">{{ v.sku }}</code>
       </td>
       <td>{{ v.producto.familia.nombre }}</td>
       <td class="num">${{ v.precio|floatformat:0|intcomma }}</td>

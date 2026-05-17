@@ -10,21 +10,26 @@
 {% endcomment %}
 
 {% comment %}
-  Header del periodo — fuera del partial principal porque va arriba
-  del form, pero como tambien depende de `dias` y de `resumen.desde/hasta`
-  lo refrescamos aca para que el copy quede sincronizado.
+  Header del periodo via hx-swap-oob — refresca el copy del periodo
+  arriba del form cuando el cliente cambia un filtro.
+  IMPORTANTE: este bloque SOLO se emite cuando la peticion es HTMX
+  (cambio de filtro). En la carga inicial el shell `dashboard.html`
+  ya renderea el mismo texto en `#dashboard-periodo-info` — si lo
+  duplicaramos aca, aparece dos veces en pantalla.
 {% endcomment %}
-<div id="dashboard-periodo-info" hx-swap-oob="true" class="sub" style="opacity:.8;">
-  Últimos {{ dias }} días corridos:
-  {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
-  {% if canal_filtro %}
-    · canal <strong>{{ canal_filtro }}</strong>
-  {% endif %}
-  <span style="opacity:0.7;">·
-    para análisis por mes o año usá
-    <a href="{% url 'reportes:eerr' %}">Estado de Resultados</a>
-  </span>
-</div>
+{% if request.htmx %}
+  <div id="dashboard-periodo-info" hx-swap-oob="true" class="sub" style="opacity:.8;">
+    Últimos {{ dias }} días corridos:
+    {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
+    {% if canal_filtro %}
+      · canal <strong>{{ canal_filtro }}</strong>
+    {% endif %}
+    <span style="opacity:0.7;">·
+      para análisis por mes o año usá
+      <a href="{% url 'reportes:eerr' %}">Estado de Resultados</a>
+    </span>
+  </div>
+{% endif %}
 
 {% comment %}
   Mejora #2 (drill-down): cada KPI card es un <a> que linkea al detalle

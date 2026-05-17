@@ -8,13 +8,20 @@
   Contexto: eerr, potencial, serie, periodo, tienda_filtro.
 {% endcomment %}
 
-{# OOB swap del header — actualiza el "Periodo: ..." al cambiar filtros. #}
-<div id="eerr-periodo-info" hx-swap-oob="true" class="sub">
-  Período: <strong>{{ periodo.label }}</strong>
-  {% if tienda_filtro %}
-    · tienda <strong>{{ tienda_filtro.nombre_organizacion }}</strong>
-  {% endif %}
-</div>
+{% comment %}
+  OOB swap del header — actualiza "Período: ..." al cambiar filtros.
+  Solo se emite cuando es request HTMX: en la carga inicial el shell
+  `eerr.html` ya renderea el mismo texto en `#eerr-periodo-info`. Si
+  lo duplicaramos aca, aparece dos veces en pantalla.
+{% endcomment %}
+{% if request.htmx %}
+  <div id="eerr-periodo-info" hx-swap-oob="true" class="sub">
+    Período: <strong>{{ periodo.label }}</strong>
+    {% if tienda_filtro %}
+      · tienda <strong>{{ tienda_filtro.nombre_organizacion }}</strong>
+    {% endif %}
+  </div>
+{% endif %}
 
 {# ─── KPIs ─── #}
 {% comment %}

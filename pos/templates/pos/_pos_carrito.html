@@ -153,16 +153,15 @@
 
       {% comment %}
         Cobrar via HTMX: la view del checkout, cuando recibe HX-Request,
-        devuelve el HTML del recibo y un header `HX-Push-Url` con la
-        URL real del recibo. HTMX swap-ea `#pos-page-content` y la URL
-        del browser cambia — pero como NO hay navegacion real, el modo
-        pantalla completa del browser se mantiene.
+        devuelve `_pos_recibo_inner.html` (sin shell) y un header
+        `HX-Push-Url` con la URL del recibo. HTMX hace innerHTML swap
+        sobre `#pos-page-content` — sin navegacion, el modo pantalla
+        completa del browser se mantiene.
       {% endcomment %}
       <form method="post" action="{% url 'pos:checkout' %}"
             hx-post="{% url 'pos:checkout' %}"
             hx-target="#pos-page-content"
-            hx-select="#pos-page-content"
-            hx-swap="outerHTML"
+            hx-swap="innerHTML"
             hx-confirm="¿Cobrar ${{ total_neto|floatformat:0|intcomma }}?"
             class="pos-checkout-form">
         {% csrf_token %}

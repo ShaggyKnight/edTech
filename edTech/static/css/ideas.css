@@ -465,9 +465,14 @@ input, select { font-family: inherit; }
   border: 1px solid var(--line);
   position: relative;
 }
+/* `object-fit: contain` (no cover) para que el cliente VEA el producto
+   completo. Cover recortaba imagenes no 1:1 (las del catalogo van de
+   AR 0.91 a 1.25). El padding visual lo provee el fondo `--cream` del
+   contenedor. El "padding" interno de 24px da aire al producto. */
 .pdp-big img {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 24px;
   animation: pdp-fade .25s ease-out;
 }
 @keyframes pdp-fade {
@@ -1081,7 +1086,7 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
   border-radius: 10px;
   overflow: hidden;
 }
-.quick-view-img img { width: 100%; height: 100%; object-fit: cover; }
+.quick-view-img img { width: 100%; height: 100%; object-fit: contain; padding: 12px; }
 .quick-view-cat {
   font-size: 11px;
   color: var(--ink-60);

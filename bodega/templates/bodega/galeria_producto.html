@@ -144,7 +144,9 @@
     {% else %}
       <div class="gal-empty">
         <p>Este producto todavía no tiene imágenes adicionales.</p>
-        <p>Cargá imágenes desde el <a href="/admin/catalogo/producto/{{ producto.pk }}/change/">admin Django</a>
+        {# `{% url 'admin:...' %}` se resuelve dinamicamente segun el #}
+        {# ADMIN_URL configurado en settings (puede no ser '/admin/').  #}
+        <p>Cargá imágenes desde el <a href="{% url 'admin:catalogo_producto_change' producto.pk %}">admin Django</a>
            (sección "Imágenes de galería" al final del form).</p>
       </div>
     {% endif %}

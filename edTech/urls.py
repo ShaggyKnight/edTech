@@ -24,7 +24,10 @@ urlpatterns = [
     path('pos/', include('pos.urls')),
     path('tienda/', include('ecommerce.urls')),
     path('reportes/', include('reportes.urls')),
-    path('admin/', admin.site.urls),
+    # Admin Django. La ruta es configurable via env ADMIN_URL para que
+    # en prod no sea la default `/admin/` (los bots scanean masivo esa
+    # ruta). En dev queda `admin/` por convencion. Ver SECURITY.md.
+    path(settings.ADMIN_URL, admin.site.urls),
 ]
 
 if settings.DEBUG:

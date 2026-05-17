@@ -1,0 +1,12 @@
+[Unit]
+Description=Ideas Boutique — gunicorn socket
+PartOf=gunicorn-ideas.service
+
+[Socket]
+ListenStream=/run/gunicorn-ideas.sock
+SocketUser=ideas
+SocketGroup=www-data
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target

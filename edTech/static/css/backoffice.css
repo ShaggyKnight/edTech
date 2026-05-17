@@ -388,6 +388,33 @@ body.bo {
 .bo-crumb a:hover { color: var(--bo-text); }
 
 /* ---- Charts ------------------------------------------------------------- */
+/*
+ * Bug clasico de Chart.js con `responsive: true, maintainAspectRatio: false`:
+ * el canvas se redimensiona consultando al PADRE. Si el padre no tiene
+ * altura definida, Chart.js entra en un loop: pinta → resize event →
+ * el axis/legend toma espacio → padre crece → re-pinta → infinito.
+ *
+ * Fix oficial (https://www.chartjs.org/docs/latest/configuration/responsive.html):
+ * wrappear el <canvas> en un div con altura fija + position:relative.
+ * El canvas adentro se posiciona absolute para que Chart.js no pelee
+ * con el flow normal.
+ */
+.bo-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 280px;
+}
+.bo-chart-wrap.bo-chart-sm { height: 220px; }
+.bo-chart-wrap > canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Aliases legacy: el codigo viejo usaba .bo-chart directo en el canvas.
+   Lo dejamos por si quedan referencias, pero el patron recomendado es
+   `<div class="bo-chart-wrap"><canvas></canvas></div>`. */
 .bo-chart { width: 100%; height: 280px; }
 .bo-chart-sm { height: 220px; }
 

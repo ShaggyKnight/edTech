@@ -108,13 +108,19 @@
 </div>
 
 {# ─────────── Charts ─────────── #}
+{% comment %}
+  Wrappers con altura fija — Chart.js + maintainAspectRatio:false sin
+  un padre con altura causa loop infinito de crecimiento.
+{% endcomment %}
 <div class="bo-grid cols-2" style="margin-bottom: 20px;">
   <div class="bo-card">
     <div class="bo-card-head">
       <h3>Ventas por día</h3>
     </div>
     <div class="bo-card-body">
-      <canvas id="chartSerie" class="bo-chart"></canvas>
+      <div class="bo-chart-wrap" style="height: 280px;">
+        <canvas id="chartSerie"></canvas>
+      </div>
     </div>
   </div>
   <div class="bo-card">
@@ -122,7 +128,9 @@
       <h3>Distribución por canal</h3>
     </div>
     <div class="bo-card-body">
-      <canvas id="chartCanal" class="bo-chart bo-chart-sm"></canvas>
+      <div class="bo-chart-wrap bo-chart-sm" style="height: 220px;">
+        <canvas id="chartCanal"></canvas>
+      </div>
     </div>
   </div>
 </div>

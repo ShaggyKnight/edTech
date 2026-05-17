@@ -36,7 +36,7 @@ CSRF_TRUSTED_ORIGINS=https://ideasboutique.cl,https://www.ideasboutique.cl
 
 # Hardening
 ADMIN_URL=eduardo-blanca-x7k2/             # algo no-obvio, NO /admin/
-ADMIN_EMAIL=eduardo.tapia.contreras@gmail.com
+ADMIN_EMAIL=shaggyxreload@gmail.com
 AXES_FAILURE_LIMIT=5
 AXES_COOLOFF_HOURS=1
 AXES_PROXY_COUNT=1                         # nginx delante: 1
@@ -66,7 +66,7 @@ Solo Eduardo es superuser. Otros admins son `is_staff=True` pero **no superuser*
 ```bash
 python manage.py createsuperuser
 # username: eduardo
-# email: eduardo.tapia.contreras@gmail.com
+# email: shaggyxreload@gmail.com
 # password: <generado con un gestor, no reutilizar>
 ```
 
@@ -220,7 +220,7 @@ Debe pasar sin warnings. Si hay alguno, **NO desplegar** hasta resolverlo.
 
 ## Contactos en caso de incidente
 
-- **Eduardo Tapia** (superuser) — eduardo.tapia.contreras@gmail.com
+- **Eduardo Tapia** (superuser) — shaggyxreload@gmail.com
 - **Blanca Contreras** (dueña, admin) — actualizar email
 - **Hetzner support** — https://www.hetzner.com/support/
 - **Reporte CSIRT Chile** (incidentes con robo de datos) — https://www.csirt.gob.cl/

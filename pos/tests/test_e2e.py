@@ -54,7 +54,9 @@ class PosFlujoCompletoTests(TestCase):
             'cantidad': 2,
         }, follow=True)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'Carrito (2 items)')
+        # Layout nuevo del carrito: titulo + chip aparte con el contador.
+        self.assertContains(resp, 'pos-carrito-count')
+        self.assertContains(resp, '2 items')
 
         # checkout.
         resp = self.client.post(reverse('pos:checkout'), {

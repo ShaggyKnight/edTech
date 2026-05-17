@@ -1,0 +1,44 @@
+[Unit]
+Description=Ideas Boutique — gunicorn application server
+Requires=gunicorn-ideas.socket
+After=network.target postgresql.service
+
+[Service]
+Type=notify
+User=ideas
+Group=www-data
+WorkingDirectory=/srv/ideas/app
+EnvironmentFile=/srv/ideas/app/.env
+
+# 2 workers ajusta a CX22 (2 vCPU). Para mayor: (2 * cores) + 1.
+# `--access-logfile -` → stdout → journald → `journalctl -u gunicorn-ideas`.
+ExecStart=/srv/ideas/venv/bin/gunicorn \
+    --workers 2 \
+    --threads 2 \
+    --worker-class sync \
+    --timeout 30 \
+    --keep-alive 5 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --bind unix:/run/gunicorn-ideas.sock \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    edTech.wsgi:application
+
+# Reload sin downtime con `systemctl reload gunicorn-ideas`.
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart automatico si crashea (con backoff).
+Restart=on-failure
+RestartSec=5s
+
+# Hardening del proceso (systemd security).
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/srv/ideas/media /srv/ideas/backups /srv/ideas/logs /run
+
+[Install]
+WantedBy=multi-user.target

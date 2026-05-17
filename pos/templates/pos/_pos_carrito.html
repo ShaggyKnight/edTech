@@ -1,110 +1,186 @@
 {% load humanize %}
 {% comment %}
   Card del carrito del POS. Se extrae para que `agregar`, `quitar`,
-  `actualizar` puedan devolverlo como OOB swap sin recargar toda la
-  pagina. El boton "Cobrar" sigue siendo un POST tradicional (lleva
-  a la pasarela TUU / al recibo).
+  `actualizar` puedan devolverlo como OOB swap sin recargar la pagina.
+
+  Layout sticky pensado para tablet en mostrador (Blanca, 55):
+    - HEADER fijo arriba con titulo + contador
+    - LISTA con scroll vertical SOLO si no entra (max-height ~50vh)
+    - FOOTER fijo abajo con TOTAL + boton "Cobrar" SIEMPRE visible
+
+  Cada linea tiene un mini-stepper `[ - ] [ 3 ] [ + ]` con botones
+  grandes (>=44px) para uso tactil sin precision.
 
   Contexto: lineas, items_count, subtotal_bruto, descuento_total, total_neto.
 {% endcomment %}
-<div class="bo-card" id="pos-carrito-card"{% if oob %} hx-swap-oob="true"{% endif %}>
-  <div class="bo-card-head">
-    <h3>Carrito ({{ items_count }} item{{ items_count|pluralize:"s" }})</h3>
+<div class="bo-card pos-carrito"
+     id="pos-carrito-card"
+     {% if oob %}hx-swap-oob="true"{% endif %}>
+
+  {# ── HEADER fijo ────────────────────────────────────────────── #}
+  <div class="pos-carrito-head">
+    <h3 style="margin:0;">
+      Carrito
+      <span class="pos-carrito-count">{{ items_count }} item{{ items_count|pluralize:"s" }}</span>
+    </h3>
+    {% if lineas %}
+      <form method="post" action="{% url 'pos:vaciar' %}"
+            hx-post="{% url 'pos:vaciar' %}"
+            hx-swap="none"
+            hx-confirm="¿Vaciar todo el carrito?"
+            style="margin:0;">
+        {% csrf_token %}
+        <button type="submit"
+                class="pos-carrito-vaciar"
+                title="Quitar todo del carrito">
+          Vaciar
+        </button>
+      </form>
+    {% endif %}
   </div>
 
-  <div>
+  {# ── LISTA con scroll interno ──────────────────────────────── #}
+  <div class="pos-carrito-lineas">
     {% for linea in lineas %}
       <div class="pos-line">
-        <div class="name">
-          {% if linea.tipo == 'v' %}{{ linea.item.producto.nombre }}{% else %}{{ linea.item.nombre }}{% endif %}
-          {% comment %}
-            Mejora: badge prominente con la(s) talla(s)/variante. El
-            cajero los ve sin tener que descifrar el SKU.
-          {% endcomment %}
-          {% if linea.tipo == 'v' %}
-            {% for val in linea.item.valores.all %}
-              <span class="pos-talla-chip">{{ val.valor }}</span>
-            {% endfor %}
-          {% endif %}
+        <div class="pos-line-info">
+          <div class="name">
+            {% if linea.tipo == 'v' %}{{ linea.item.producto.nombre }}{% else %}{{ linea.item.nombre }}{% endif %}
+            {% if linea.tipo == 'v' %}
+              {% for val in linea.item.valores.all %}
+                <span class="pos-talla-chip">{{ val.valor }}</span>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="meta">
+            ${{ linea.precio_unitario|floatformat:0|intcomma }} c/u
+            {% if linea.descuento_unitario %}
+              <span class="bo-badge bo-badge-warning">-${{ linea.descuento_unitario|floatformat:0|intcomma }}</span>
+            {% endif %}
+          </div>
         </div>
-        <div class="meta">
-          {% if linea.tipo == 'v' %}<code class="pos-variante-sku">{{ linea.item.sku }}</code> · {% endif %}
-          ${{ linea.precio_unitario|floatformat:0|intcomma }} c/u
-          {% if linea.descuento_unitario %}
-            <span class="bo-badge bo-badge-warning">-${{ linea.descuento_unitario|floatformat:0|intcomma }}</span>
-          {% endif %}
-        </div>
-        <div class="row">
-          <form method="post" action="{% url 'pos:actualizar' %}" class="pos-qty" style="margin:0;"
+
+        {% comment %}
+          Stepper grande [ − ] [ N ] [ + ]. Los botones modifican el
+          <input type=number> via JS (stepUp/stepDown) y disparan el
+          submit del form HTMX. NO mandan `name=cantidad` propio para
+          evitar el conflicto con el input (Django se quedaria con el
+          ultimo valor del form, ignorando el del button).
+        {% endcomment %}
+        <div class="pos-line-qty">
+          <form method="post" action="{% url 'pos:actualizar' %}"
                 hx-post="{% url 'pos:actualizar' %}"
-                hx-swap="none">
+                hx-swap="none"
+                class="pos-stepper"
+                style="margin:0;">
             {% csrf_token %}
             <input type="hidden" name="key" value="{{ linea.key }}">
-            <input type="number" name="cantidad" value="{{ linea.cantidad }}" min="0"
-                   class="bo-input" onchange="this.form.requestSubmit()">
+
+            <button type="button"
+                    class="pos-step-btn pos-step-minus"
+                    aria-label="Quitar una unidad"
+                    title="Quitar una unidad"
+                    onclick="posStep(this, -1)">
+              −
+            </button>
+
+            <input type="number"
+                   name="cantidad"
+                   value="{{ linea.cantidad }}"
+                   min="0"
+                   inputmode="numeric"
+                   class="pos-step-input"
+                   onchange="this.form.requestSubmit()"
+                   aria-label="Cantidad">
+
+            <button type="button"
+                    class="pos-step-btn pos-step-plus"
+                    aria-label="Agregar una unidad"
+                    title="Agregar una unidad"
+                    onclick="posStep(this, +1)">
+              +
+            </button>
           </form>
-          <strong>${{ linea.subtotal|floatformat:0|intcomma }}</strong>
-          <form method="post" action="{% url 'pos:quitar' linea.key %}" style="margin:0;"
+
+          <div class="pos-line-subtotal">
+            ${{ linea.subtotal|floatformat:0|intcomma }}
+          </div>
+
+          <form method="post" action="{% url 'pos:quitar' linea.key %}"
                 hx-post="{% url 'pos:quitar' linea.key %}"
-                hx-swap="none">
+                hx-swap="none"
+                hx-confirm="¿Quitar {% if linea.tipo == 'v' %}{{ linea.item.producto.nombre }}{% else %}{{ linea.item.nombre }}{% endif %} del carrito?"
+                style="margin:0;">
             {% csrf_token %}
-            <button type="submit" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);" title="Quitar">×</button>
+            <button type="submit"
+                    class="pos-line-quitar"
+                    aria-label="Quitar del carrito"
+                    title="Quitar del carrito">
+              Quitar
+            </button>
           </form>
         </div>
       </div>
     {% empty %}
       <div class="pos-cart-empty">
-        Carrito vacío.<br>Agregá items desde la tabla.
+        <strong>Carrito vacío</strong><br>
+        <span style="color:var(--bo-muted);">
+          Escaneá un código o tocá <em>+ Agregar</em> en un producto.
+        </span>
       </div>
     {% endfor %}
   </div>
 
+  {# ── FOOTER fijo: totales + Cobrar ──────────────────────────── #}
   {% if lineas %}
-    <div class="pos-totals">
-      <div class="line">
-        <span>Subtotal</span>
-        <span>${{ subtotal_bruto|floatformat:0|intcomma }}</span>
-      </div>
-      {% if descuento_total %}
-        <div class="line" style="color:var(--bo-vino);">
-          <span>Descuentos</span>
-          <span>-${{ descuento_total|floatformat:0|intcomma }}</span>
+    <div class="pos-carrito-footer">
+      <div class="pos-totals">
+        <div class="line">
+          <span>Subtotal</span>
+          <span>${{ subtotal_bruto|floatformat:0|intcomma }}</span>
         </div>
-      {% endif %}
-      <div class="line total">
-        <span>Total</span>
-        <span>${{ total_neto|floatformat:0|intcomma }}</span>
+        {% if descuento_total %}
+          <div class="line" style="color:var(--bo-vino);">
+            <span>Descuentos</span>
+            <span>-${{ descuento_total|floatformat:0|intcomma }}</span>
+          </div>
+        {% endif %}
+        <div class="line total">
+          <span>Total</span>
+          <span>${{ total_neto|floatformat:0|intcomma }}</span>
+        </div>
       </div>
-    </div>
 
-    <div class="bo-card-body">
       <form method="post" action="{% url 'pos:checkout' %}"
-            onsubmit="return confirm('¿Cobrar ${{ total_neto|floatformat:0|intcomma }}?');">
+            onsubmit="return confirm('¿Cobrar ${{ total_neto|floatformat:0|intcomma }}?');"
+            class="pos-checkout-form">
         {% csrf_token %}
-        <div class="bo-field">
-          <label>Cliente (opcional)</label>
-          <input type="text" name="cliente_nombre" class="bo-input" placeholder="Nombre">
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        {% comment %}
+          Campos opcionales en una sola fila colapsable. Por default
+          ocultos detras de un toggle "Datos del cliente (opcional)"
+          para que el flujo rapido sea solo: agregar items → Cobrar.
+        {% endcomment %}
+        <details class="pos-cliente-details">
+          <summary>Datos del cliente (opcional)</summary>
           <div class="bo-field">
-            <label>Email (boleta)</label>
-            <input type="email" name="cliente_email" class="bo-input">
+            <label>Nombre</label>
+            <input type="text" name="cliente_nombre" class="bo-input">
           </div>
-          <div class="bo-field">
-            <label>RUT (factura)</label>
-            <input type="text" name="cliente_rut" class="bo-input">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="bo-field">
+              <label>Email (boleta)</label>
+              <input type="email" name="cliente_email" class="bo-input">
+            </div>
+            <div class="bo-field">
+              <label>RUT (factura)</label>
+              <input type="text" name="cliente_rut" class="bo-input">
+            </div>
           </div>
-        </div>
-        <button type="submit" class="bo-btn bo-btn-primary bo-btn-block bo-btn-lg">
+        </details>
+
+        <button type="submit" class="pos-cobrar-btn">
           Cobrar ${{ total_neto|floatformat:0|intcomma }}
         </button>
-      </form>
-      <form method="post" action="{% url 'pos:vaciar' %}" style="margin-top:8px;"
-            hx-post="{% url 'pos:vaciar' %}"
-            hx-swap="none"
-            hx-confirm="¿Vaciar carrito?">
-        {% csrf_token %}
-        <button type="submit" class="bo-btn bo-btn-block">Vaciar carrito</button>
       </form>
     </div>
   {% endif %}

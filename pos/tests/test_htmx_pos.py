@@ -179,8 +179,10 @@ class PosHtmxFlowTests(TestCase):
         # Carrito con OOB swap.
         self.assertIn('id="pos-carrito-card"', body)
         self.assertIn('hx-swap-oob="true"', body)
-        # 1 item en el carrito.
-        self.assertIn('Carrito (1 item)', body)
+        # 1 item en el carrito. Layout nuevo separa el contador en un
+        # chip aparte del titulo — busco por las 2 partes.
+        self.assertIn('pos-carrito-count', body)
+        self.assertIn('1 item', body)
         # Toast de exito.
         self.assertIn('toast-success', body)
         self.assertIn('Perfume Yara', body)
@@ -206,7 +208,8 @@ class PosHtmxFlowTests(TestCase):
             HTTP_HX_REQUEST='true',
         )
         body = resp.content.decode()
-        self.assertIn('Carrito (2 item', body)
+        self.assertIn('pos-carrito-count', body)
+        self.assertIn('2 item', body)
 
     def test_agregar_htmx_variante_muestra_sku(self):
         resp = self.client.post(

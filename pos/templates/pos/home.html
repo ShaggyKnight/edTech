@@ -51,20 +51,235 @@
   .pos-scan-form button:hover {
     background: #fff;
   }
-  .pos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+  .pos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
   @media (max-width: 1100px) { .pos-grid { grid-template-columns: 1fr; } }
   .pos-cart-empty {
-    text-align: center; padding: 40px 20px; color: var(--bo-muted);
+    text-align: center; padding: 60px 20px; color: var(--bo-muted);
+    font-size: 15px;
   }
-  .pos-line { padding: 12px 16px; border-bottom: 1px solid var(--bo-border-soft); }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Carrito STICKY con scroll interno solo en las líneas.
+   * El footer (totales + Cobrar) queda SIEMPRE visible — sin
+   * importar cuántos items haya agregado el cajero, el botón
+   * "Cobrar" no se va abajo del fold.
+   * ────────────────────────────────────────────────────────────── */
+  .pos-carrito {
+    position: sticky;
+    top: 14px;
+    /* `calc` deja un colchón abajo para que no toque el viewport. */
+    max-height: calc(100vh - 28px);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;   /* el header/footer son rigidos; la lista scroll-ea */
+  }
+  /* Fullscreen: el topbar y crumb desaparecen → más alto disponible. */
+  body.pos-fullscreen .pos-carrito {
+    top: 8px;
+    max-height: calc(100vh - 16px);
+  }
+  /* Mobile/tablet portrait: se rompe el sticky (no hay 2 columnas) y
+     volvemos al layout natural. */
+  @media (max-width: 1100px) {
+    .pos-carrito { position: static; max-height: none; }
+  }
+
+  .pos-carrito-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--bo-border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bo-card);
+    flex-shrink: 0;
+  }
+  .pos-carrito-count {
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--bo-muted);
+  }
+  .pos-carrito-vaciar {
+    background: transparent;
+    border: 1px solid var(--bo-border);
+    color: var(--bo-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .pos-carrito-vaciar:hover {
+    color: var(--bo-danger);
+    border-color: var(--bo-danger);
+  }
+
+  /* La lista ocupa todo el espacio que sobra entre header/footer. */
+  .pos-carrito-lineas {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 80px;
+  }
+
+  .pos-line {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--bo-border-soft);
+  }
   .pos-line:last-child { border-bottom: none; }
-  .pos-line .name { font-weight: 600; color: var(--bo-text); }
-  .pos-line .meta { font-size: 12px; color: var(--bo-muted); margin-top: 2px; }
-  .pos-line .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
-  .pos-qty input { width: 60px; text-align: center; }
-  .pos-totals { padding: 16px; background: var(--bo-bg); border-top: 1px solid var(--bo-border-soft); }
-  .pos-totals .line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
-  .pos-totals .line.total { padding-top: 12px; border-top: 1px solid var(--bo-border); margin-top: 8px; font-size: 18px; font-weight: 600; }
+  .pos-line-info .name {
+    font-weight: 600;
+    color: var(--bo-text);
+    font-size: 14px;
+  }
+  .pos-line-info .meta {
+    font-size: 12px;
+    color: var(--bo-muted);
+    margin-top: 4px;
+  }
+  .pos-line-qty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .pos-line-subtotal {
+    flex: 1;
+    text-align: right;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--bo-text);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Stepper [ − ] [ N ] [ + ] — botones grandes (44px+) para
+   * uso táctil sin precisión. Pensado para Blanca (55, no-tech).
+   * ────────────────────────────────────────────────────────────── */
+  .pos-stepper {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--bo-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bo-card);
+  }
+  .pos-step-btn {
+    background: var(--bo-bg);
+    border: 0;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--bo-text);
+    cursor: pointer;
+    line-height: 1;
+    transition: background .12s, color .12s;
+  }
+  .pos-step-btn:hover {
+    background: var(--bo-primary-soft, #DDF1FF);
+    color: var(--bo-primary-2);
+  }
+  .pos-step-btn:active { background: var(--bo-primary-2); color: #fff; }
+  .pos-step-minus { border-right: 1px solid var(--bo-border); }
+  .pos-step-plus  { border-left:  1px solid var(--bo-border); }
+  .pos-step-input {
+    width: 48px;
+    height: 44px;
+    text-align: center;
+    border: 0;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--bo-text);
+    outline: none;
+    /* Esconder las flechas nativas del number input — usamos las nuestras. */
+    -moz-appearance: textfield;
+  }
+  .pos-step-input::-webkit-outer-spin-button,
+  .pos-step-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .pos-line-quitar {
+    background: transparent;
+    border: 1px solid var(--bo-border);
+    color: var(--bo-danger);
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .pos-line-quitar:hover {
+    background: var(--bo-danger);
+    color: #fff;
+    border-color: var(--bo-danger);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Footer fijo del carrito (totales + Cobrar). Siempre visible.
+   * ────────────────────────────────────────────────────────────── */
+  .pos-carrito-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--bo-border);
+    background: var(--bo-card);
+  }
+  .pos-totals { padding: 14px 16px; background: var(--bo-bg); }
+  .pos-totals .line {
+    display: flex; justify-content: space-between;
+    padding: 4px 0; font-size: 13px;
+  }
+  .pos-totals .line.total {
+    padding-top: 12px;
+    border-top: 1px solid var(--bo-border);
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .pos-checkout-form { padding: 14px 16px; }
+  .pos-cliente-details {
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .pos-cliente-details summary {
+    cursor: pointer;
+    padding: 8px 10px;
+    background: var(--bo-bg);
+    border-radius: 6px;
+    color: var(--bo-muted);
+    user-select: none;
+    list-style: none;   /* esconde el triangulo default; usamos uno propio */
+  }
+  .pos-cliente-details summary::before {
+    content: "▸ ";
+    display: inline-block;
+    transition: transform .15s;
+  }
+  .pos-cliente-details[open] summary::before { transform: rotate(90deg); }
+  .pos-cliente-details[open] summary { margin-bottom: 10px; }
+
+  /* Botón Cobrar — el más prominente de la pantalla. Tamaño grande
+     para uso táctil, color primario fuerte, texto leíble desde lejos. */
+  .pos-cobrar-btn {
+    width: 100%;
+    background: var(--bo-success, #17C653);
+    color: #fff;
+    border: 0;
+    padding: 18px 16px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .12s, transform .08s;
+    box-shadow: 0 2px 8px rgba(23, 198, 83, 0.25);
+  }
+  .pos-cobrar-btn:hover { background: #14B14B; }
+  .pos-cobrar-btn:active { transform: translateY(1px); }
   /* Buscador con icono lupa a la izquierda — flex en lugar de
      position:absolute para que el texto del input NUNCA se superponga
      al icono (bug reportado). */
@@ -319,6 +534,32 @@
     {# Carrito #}
     {% include 'pos/_pos_carrito.html' %}
   </div>
+
+  {% comment %}
+    `posStep(btn, delta)` — handler de los botones [−] / [+] del
+    stepper del carrito. Suma/resta `delta` al input number del mismo
+    form y dispara el submit HTMX. No usamos `name=cantidad` en los
+    botones para evitar el conflicto con el input (Django se queda
+    con el ultimo valor del POST).
+  {% endcomment %}
+  <script>
+    function posStep(btn, delta) {
+      var form = btn.closest('form');
+      if (!form) return;
+      var input = form.querySelector('input[name="cantidad"]');
+      if (!input) return;
+      var val = parseInt(input.value, 10) || 0;
+      val = Math.max(0, val + delta);
+      input.value = val;
+      // Dispara el submit HTMX. Usamos requestSubmit en vez de submit()
+      // porque submit() salta el listener de HTMX en algunos browsers.
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.submit();
+      }
+    }
+  </script>
 
   {# CSS + JS del modo pantalla completa. La preferencia (localStorage) #}
   {# se aplica también en pos/recibo.html para que el modo persista #}

@@ -55,8 +55,15 @@
 
       <div class="quick-view-ctas">
         {% if producto.tiene_variantes %}
+          {% comment %}
+            BUG-010: el CTA primario decía "Elegir y agregar →" pero solo
+            redirigía a la PDP — engañoso. Ahora dice "Elegir talla y
+            agregar →" para que quede claro que la elección + agregado
+            pasan en la ficha completa. El botón secundario "Ver detalle"
+            se omite porque sería redundante (ambos llevan al mismo lugar).
+          {% endcomment %}
           <a href="{% url 'ecommerce:producto' producto.pk %}" class="btn-primary">
-            Elegir y agregar →
+            Elegir talla y agregar →
           </a>
         {% else %}
           <form method="post" action="{% url 'ecommerce:agregar' %}"
@@ -71,10 +78,10 @@
               Agregar al carrito · ${{ producto.precio_oferta_online|floatformat:0|intcomma }}
             </button>
           </form>
+          <a href="{% url 'ecommerce:producto' producto.pk %}" class="btn-outline">
+            Ver detalle completo
+          </a>
         {% endif %}
-        <a href="{% url 'ecommerce:producto' producto.pk %}" class="btn-outline">
-          Ver detalle completo
-        </a>
       </div>
     </div>
   </div>

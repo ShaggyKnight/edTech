@@ -2,11 +2,42 @@
 {% load static humanize catalogo_extras %}
 
 {% block titulo %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
+{% block meta_description %}{{ producto.nombre }} en Ideas Boutique, Los Vilos. {% if producto.colegio %}Uniforme oficial {{ producto.colegio.nombre }}. {% endif %}Stock real, envío a todo Chile. Desde 1987.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
+{% block og_description %}{{ producto.nombre }}{% if producto.colegio %} · Uniforme oficial {{ producto.colegio.nombre }}{% endif %}. Caupolicán 437-B, Los Vilos. Envío a todo Chile.{% endblock %}
+{% block og_image %}{% if producto.imagen and producto.imagen.name %}{{ producto.imagen.url }}{% else %}{% static 'img/ideas/logo-letrero.png' %}{% endif %}{% endblock %}
+
+{# Schema.org Product — SEO de producto para Google Shopping y rich snippets. #}
+{% block schema_org %}
+{% imagen_producto producto as pdp_img %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ producto.nombre|escapejs }}",
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ pdp_img }}",
+  {% if producto.descripcion %}"description": "{{ producto.descripcion|escapejs|truncatewords:60 }}",{% endif %}
+  "brand": {"@type": "Brand", "name": "Ideas Boutique"},
+  {% if producto.colegio %}"category": "Uniforme escolar · {{ producto.colegio.nombre|escapejs }}",{% endif %}
+  {% if producto.codigo_barras %}"gtin13": "{{ producto.codigo_barras }}",{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ request.build_absolute_uri }}",
+    "priceCurrency": "CLP",
+    "price": "{{ producto.precio_minimo|floatformat:0 }}",
+    "availability": "https://schema.org/InStock",
+    "itemCondition": "https://schema.org/NewCondition",
+    "seller": {"@type": "Organization", "name": "Ideas Boutique"}
+  }
+}
+</script>
+{% endblock %}
 
 {% block body %}
 {% include 'ecommerce/_shop_header.html' with items_count=items_count %}
 
-<main class="pdp">
+<main class="pdp" id="main-content" tabindex="-1">
   <div class="shop-breadcrumb">
     <a href="{% url 'index' %}">Inicio</a> /
     <a href="{% url 'ecommerce:catalogo' %}">{{ producto.familia.nombre }}</a> /
@@ -15,15 +46,30 @@
 
   <div class="pdp-main">
     {% imagen_producto producto as pdp_img %}
-    <div class="pdp-gallery">
+    {% comment %}
+      Bloque 8 · Galeria real PDP: si hay imagenes adicionales, las
+      montamos como thumbs clickables. Sin JS, click no hace swap;
+      el bloque script de abajo agrega el comportamiento.
+    {% endcomment %}
+    <div class="pdp-gallery" id="pdp-gallery"
+         data-has-extra="{% if imagenes_galeria %}1{% else %}0{% endif %}">
       <div class="pdp-thumbs">
-        <div class="pdp-thumb active">
-          <img src="{{ pdp_img }}" alt="{{ producto.nombre }}">
-        </div>
-        {# Thumbs adicionales: cuando haya galería los iteramos aquí #}
+        <button type="button" class="pdp-thumb active" data-full="{{ pdp_img }}"
+                aria-label="Ver imagen principal" aria-current="true">
+          <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" loading="lazy" width="120" height="120">
+        </button>
+        {% for img in imagenes_galeria %}
+          <button type="button" class="pdp-thumb" data-full="{{ img.imagen.url }}"
+                  aria-label="Ver imagen {{ forloop.counter|add:1 }}">
+            <img src="{{ img.imagen.url }}" alt="{{ img.alt|default:producto.nombre }}"
+                 loading="lazy" width="120" height="120">
+          </button>
+        {% endfor %}
       </div>
       <div class="pdp-big">
-        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}">
+        {# La imagen principal del PDP es above-the-fold — sin lazy, con fetchpriority alto. #}
+        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" id="pdp-big-img"
+             fetchpriority="high" width="600" height="600">
       </div>
     </div>
 
@@ -31,10 +77,25 @@
       <div class="pdp-school">{{ producto.familia.nombre }}</div>
       <h1>{{ producto.nombre }}</h1>
 
-      <div class="pdp-rating">
-        {% for i in "12345" %}<svg class="ico ico--16"><use href="#ico-star"/></svg>{% endfor %}
-        <span>Nuevo · sin reseñas aún</span>
-      </div>
+      {% if feature_resenas %}
+        {# Bloque 9 · Rating real (o "Nuevo" si no hay resenas aprobadas todavia). #}
+        <div class="pdp-rating">
+          {% if producto.resena_count %}
+            {% with promedio=producto.resena_promedio_redondo %}
+              {% for i in "12345" %}
+                <svg class="ico ico--16{% if forloop.counter <= promedio %} star-on{% endif %}"><use href="#ico-star"/></svg>
+              {% endfor %}
+              <a href="#resenas" style="color:var(--ink-60);text-decoration:none;">
+                <strong>{{ producto.resena_promedio|floatformat:1 }}</strong> ·
+                {{ producto.resena_count }} reseña{{ producto.resena_count|pluralize:"s" }}
+              </a>
+            {% endwith %}
+          {% else %}
+            {% for i in "12345" %}<svg class="ico ico--16"><use href="#ico-star"/></svg>{% endfor %}
+            <span><a href="#resenas" style="color:var(--ink-60);text-decoration:none;">Sé el primero en opinar</a></span>
+          {% endif %}
+        </div>
+      {% endif %}
 
       {% if producto.tiene_variantes %}
         {% comment %}
@@ -54,7 +115,18 @@
           </span>
           <span class="pdp-price-old"{% if not producto.tiene_oferta_online %} style="display:none;"{% endif %}>${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
           <span class="pdp-installments" id="pdp-installments">
-            o 3 cuotas sin interés de ${% widthratio producto.precio_minimo 3 1 %}
+            {% comment %}
+              BUG-004: la cuota usa el MISMO precio que muestra arriba
+              (precio_oferta_online si hay oferta, sino precio_minimo).
+              BUG-005: el monto se pasa por intcomma para el separador
+              de miles.
+            {% endcomment %}
+            {% if producto.tiene_oferta_online %}
+              {% widthratio producto.precio_oferta_online 3 1 as cuota_inicial %}
+            {% else %}
+              {% widthratio producto.precio_minimo 3 1 as cuota_inicial %}
+            {% endif %}
+            o 3 cuotas sin interés de ${{ cuota_inicial|intcomma }}
           </span>
         </div>
 
@@ -64,14 +136,25 @@
 
         <form method="post" action="{% url 'ecommerce:agregar' %}" id="pdp-form"
               hx-post="{% url 'ecommerce:agregar' %}"
-              hx-swap="none">
+              hx-swap="none"
+              hx-indicator="this">
           {% csrf_token %}
           <input type="hidden" name="tipo" value="v">
           <input type="hidden" name="item_id" id="pdp-item-id" value="">
           <input type="hidden" name="cantidad" value="1">
 
           <div class="pdp-opts">
-            <div class="pdp-opt-label">Elige tu {{ label_eleccion|default:"variante" }}</div>
+            <div class="pdp-opt-label-row">
+              <div class="pdp-opt-label">Elige tu {{ label_eleccion|default:"variante" }}</div>
+              {% if mostrar_guia_talles %}
+                {# Bloque 12: trigger del modal de guia de talles. #}
+                <button type="button" class="pdp-guia-link"
+                        onclick="document.getElementById('guia-talles-modal').showModal();">
+                  <svg class="ico ico--14"><use href="#ico-info"/></svg>
+                  Guía de talles
+                </button>
+              {% endif %}
+            </div>
             <div class="size-chips {% if chips_anchos %}wide-chips{% endif %}" id="pdp-chips">
               {% comment %}
                 Cada chip lleva los datos de la variante en data-attrs.
@@ -91,12 +174,49 @@
                           data-label="{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}">
                     {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                   </button>
+                {% else %}
+                  {# Sprint 2 · 2.3: agotada en la misma grilla con `is-agotada`. #}
+                  <button type="button" class="size-chip is-agotada"
+                          aria-disabled="true"
+                          data-agotada="1"
+                          data-variante-id="{{ v.pk }}"
+                          data-label="{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}"
+                          title="Sin stock — avísame cuando vuelva">
+                    {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                  </button>
                 {% endif %}
               {% endfor %}
             </div>
             <div style="margin-top:8px;font-size:12px;color:var(--ink-60);" id="pdp-stock-info"></div>
-            <div style="margin-top:10px;font-size:12px;color:var(--ink-60);">
-              {% for v in variantes %}{% if not v.stock %}{% if forloop.counter == 1 %}<span>Agotadas: </span>{% endif %}<span style="text-decoration:line-through;margin-right:6px;">{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}</span>{% endif %}{% endfor %}
+
+            {# Sprint 2 · 2.3: inline "Avísame cuando vuelva" — oculto hasta click en agotada. #}
+            <div class="notify-form" id="pdp-notify-form" hidden>
+              <div class="notify-head">
+                <strong>Avísame cuando vuelva la <span id="pdp-notify-label">talla</span></strong>
+                <button type="button" class="notify-close" id="pdp-notify-close" aria-label="Cerrar">
+                  <svg class="ico ico--14"><use href="#ico-close"/></svg>
+                </button>
+              </div>
+              <p>Te escribimos cuando vuelva a stock. Sin spam, sin promociones.</p>
+              <div class="notify-input">
+                {% comment %}
+                  IMPORTANTE: este input NO debe tener `required`. Esta
+                  hidden adentro del <form id="pdp-form">; si lleva
+                  `required`, el browser cancela el submit del form de
+                  agregar al carrito ("invalid form control is not
+                  focusable"). El JS de `notifySubmit` ya valida el
+                  email con regex antes de procesarlo.
+                {% endcomment %}
+                <input type="email" inputmode="email" autocomplete="email"
+                       id="pdp-notify-email" placeholder="tu@email.cl">
+                <button type="button" class="btn-primary" id="pdp-notify-submit">
+                  Avísame
+                </button>
+              </div>
+              <div class="notify-done" id="pdp-notify-done" hidden>
+                <svg class="ico ico--16"><use href="#ico-check"/></svg>
+                Listo. Te escribiremos a <em id="pdp-notify-done-email"></em> apenas vuelva.
+              </div>
             </div>
           </div>
 
@@ -110,7 +230,8 @@
 
         <script>
           (function() {
-            var chips = document.querySelectorAll('#pdp-chips .size-chip');
+            var chips = document.querySelectorAll('#pdp-chips .size-chip:not(.is-agotada)');
+            var chipsAgotadas = document.querySelectorAll('#pdp-chips .size-chip.is-agotada');
             var btn = document.getElementById('pdp-add-btn');
             var btnLabel = document.getElementById('pdp-add-label');
             var priceVal = document.getElementById('pdp-price-value');
@@ -122,6 +243,16 @@
             // Capitalizar primer letra: "talla" → "Talla", "formato" → "Formato".
             var labelCap = labelEleccion.charAt(0).toUpperCase() + labelEleccion.slice(1);
 
+            // Sprint 2 · 2.3: form de "avísame cuando vuelva".
+            var notifyForm = document.getElementById('pdp-notify-form');
+            var notifyLabel = document.getElementById('pdp-notify-label');
+            var notifyClose = document.getElementById('pdp-notify-close');
+            var notifyEmail = document.getElementById('pdp-notify-email');
+            var notifySubmit = document.getElementById('pdp-notify-submit');
+            var notifyDone = document.getElementById('pdp-notify-done');
+            var notifyDoneEmail = document.getElementById('pdp-notify-done-email');
+            var notifyVarianteId = null;
+
             function fmt(n) {
               return Number(n).toLocaleString('es-CL');
             }
@@ -131,44 +262,109 @@
 
             chips.forEach(function(chip) {
               chip.addEventListener('click', function() {
+                // BUG-002 defense: la prioridad es habilitar el form
+                // de agregar al carrito. Los updates visuales van
+                // despues, en try/catch, para que un error en uno
+                // de ellos no deje el boton "stuck disabled".
+                var id = chip.dataset.varianteId;
+                if (!id) return;
+
+                // 1) CRITICAL — habilita el submit del cart.
+                hidden.value = id;
+                btn.disabled = false;
+
+                // 2) Estado visual del chip seleccionado.
                 chips.forEach(function(c) { c.classList.remove('active'); });
                 chip.classList.add('active');
 
-                var precioBase  = parseFloat(chip.dataset.precio);
-                var precioFinal = parseFloat(chip.dataset.precioOferta || chip.dataset.precio);
-                var descPct     = parseInt(chip.dataset.descuentoPct || '0', 10);
-                var stock       = parseInt(chip.dataset.stock, 10);
-                var label       = chip.dataset.label.trim();
-                var id          = chip.dataset.varianteId;
+                // 3) Cierra el form de "avisame" si estaba abierto.
+                if (notifyForm) notifyForm.hidden = true;
 
-                hidden.value = id;
-                priceVal.textContent = '$' + fmt(precioFinal);
-                installments.textContent = 'o 3 cuotas sin interés de $' +
-                  fmt(Math.floor(precioFinal / 3));
+                // 4) Updates visuales — no criticos.
+                try {
+                  var precioBase  = parseFloat(chip.dataset.precio);
+                  var precioFinal = parseFloat(chip.dataset.precioOferta || chip.dataset.precio);
+                  var descPct     = parseInt(chip.dataset.descuentoPct || '0', 10);
+                  var stock       = parseInt(chip.dataset.stock, 10);
+                  var label       = (chip.dataset.label || '').trim();
 
-                // Quita el "Desde" cuando ya hay variante elegida.
-                var fromTag = priceBlock.querySelector('div');
-                if (fromTag && fromTag.textContent.trim() === 'Desde') {
-                  fromTag.style.display = 'none';
-                }
-
-                // Si la variante tiene descuento, mostrar el precio
-                // tachado al lado y resaltar el precio en vino.
-                var hayDesc = descPct > 0 && precioFinal < precioBase;
-                priceVal.classList.toggle('pdp-price-sale', hayDesc);
-                if (priceOld) {
-                  if (hayDesc) {
-                    priceOld.textContent = '$' + fmt(precioBase);
-                    priceOld.style.display = '';
-                  } else {
-                    priceOld.style.display = 'none';
+                  if (!isNaN(precioFinal)) {
+                    priceVal.textContent = '$' + fmt(precioFinal);
+                    installments.textContent = 'o 3 cuotas sin interés de $' +
+                      fmt(Math.floor(precioFinal / 3));
+                    btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
                   }
-                }
 
-                stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
-                btn.disabled = false;
-                btnLabel.textContent = 'Agregar al carrito · $' + fmt(precioFinal);
+                  // Quita el "Desde" cuando ya hay variante elegida.
+                  var fromTag = priceBlock.querySelector('div');
+                  if (fromTag && fromTag.textContent.trim() === 'Desde') {
+                    fromTag.style.display = 'none';
+                  }
+
+                  // Si la variante tiene descuento, mostrar el precio
+                  // tachado al lado y resaltar el precio en vino.
+                  var hayDesc = descPct > 0 && precioFinal < precioBase;
+                  priceVal.classList.toggle('pdp-price-sale', hayDesc);
+                  if (priceOld) {
+                    if (hayDesc) {
+                      priceOld.textContent = '$' + fmt(precioBase);
+                      priceOld.style.display = '';
+                    } else {
+                      priceOld.style.display = 'none';
+                    }
+                  }
+
+                  if (stockInfo) {
+                    stockInfo.textContent = labelCap + ' ' + label + ' · stock ' + stock;
+                  }
+                } catch (err) {
+                  // No-op: el boton ya quedo habilitado mas arriba.
+                  if (window.console) console.error('[pdp-chip]', err);
+                }
               });
+            });
+
+            // Sprint 2 · 2.3: click en chip agotada abre el form "avísame".
+            chipsAgotadas.forEach(function(chip) {
+              chip.addEventListener('click', function() {
+                if (!notifyForm) return;
+                notifyVarianteId = chip.dataset.varianteId;
+                if (notifyLabel) {
+                  notifyLabel.textContent = labelCap.toLowerCase() + ' ' + chip.dataset.label.trim();
+                }
+                notifyForm.hidden = false;
+                if (notifyDone) notifyDone.hidden = true;
+                if (notifyEmail) {
+                  try {
+                    var saved = localStorage.getItem('ib_save_email');
+                    if (saved && !notifyEmail.value) notifyEmail.value = saved;
+                  } catch (e) {}
+                  setTimeout(function () { notifyEmail.focus(); }, 60);
+                }
+              });
+            });
+
+            if (notifyClose) notifyClose.addEventListener('click', function () {
+              notifyForm.hidden = true;
+            });
+
+            if (notifySubmit) notifySubmit.addEventListener('click', function () {
+              var email = (notifyEmail.value || '').trim();
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                notifyEmail.focus();
+                notifyEmail.classList.add('is-invalid');
+                return;
+              }
+              notifyEmail.classList.remove('is-invalid');
+              try { localStorage.setItem('ib_save_email', email); } catch (e) {}
+              if (window.plausible) {
+                window.plausible('notify_when_available', {
+                  props: { variante_id: notifyVarianteId, email_dominio: email.split('@')[1] || '' },
+                });
+              }
+              // TODO Sprint 4: POST a `/tienda/avisame/` para persistir la suscripcion.
+              notifyDoneEmail.textContent = email;
+              notifyDone.hidden = false;
             });
           })();
         </script>
@@ -181,7 +377,13 @@
           {% else %}
             <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
           {% endif %}
-          <span class="pdp-installments">o 3 cuotas sin interés de ${% widthratio producto.precio_base 3 1 %}</span>
+          {# BUG-004 / BUG-005: cuota usa el precio visible y va formateada. #}
+          {% if producto.tiene_oferta_online %}
+            {% widthratio producto.precio_oferta_online 3 1 as cuota_simple %}
+          {% else %}
+            {% widthratio producto.precio_base 3 1 as cuota_simple %}
+          {% endif %}
+          <span class="pdp-installments">o 3 cuotas sin interés de ${{ cuota_simple|intcomma }}</span>
         </div>
 
         {% if producto.descripcion %}
@@ -190,7 +392,8 @@
 
         <form method="post" action="{% url 'ecommerce:agregar' %}"
               hx-post="{% url 'ecommerce:agregar' %}"
-              hx-swap="none">
+              hx-swap="none"
+              hx-indicator="this">
           {% csrf_token %}
           <input type="hidden" name="tipo" value="p">
           <input type="hidden" name="item_id" value="{{ producto.pk }}">
@@ -228,8 +431,8 @@
           <div><strong>Envío en 24–72 h</strong><span>Gratis sobre $50.000</span></div>
         </div>
         <div>
-          <svg class="ico ico--18"><use href="#ico-scissors"/></svg>
-          <div><strong>Ajustes gratis</strong><span>Hasta marzo 2026</span></div>
+          <svg class="ico ico--18"><use href="#ico-shield"/></svg>
+          <div><strong>Cambios sin costo</strong><span>15 días si está sin uso</span></div>
         </div>
         <div>
           <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
@@ -253,14 +456,108 @@
           <p>Producto seleccionado por la familia Contreras para tu tranquilidad. Si tienes dudas sobre talla, tela o calce, escríbenos por WhatsApp y te ayudamos en persona.</p>
           <ul>
             <li>Vendido y garantizado por Ideas Boutique, Los Vilos.</li>
-            <li>Ajustes de uniformes sin costo hasta marzo 2026.</li>
             <li>Cambios sin costo dentro de los 15 días si el producto está sin uso.</li>
           </ul>
         {% endif %}
       </div>
     </div>
   </section>
+
+  {% if feature_resenas %}
+    {# Bloque 9 · Resenas reales. Gated por FEATURE_RESENAS. #}
+    <section class="pdp-resenas" id="resenas" aria-label="Reseñas">
+      <h2>Reseñas</h2>
+
+      {% if resenas_publicas %}
+        <div class="resenas-summary">
+          {% with promedio=producto.resena_promedio_redondo %}
+            <div class="resenas-avg">
+              {% for i in "12345" %}
+                <svg class="ico ico--18{% if forloop.counter <= promedio %} star-on{% endif %}"><use href="#ico-star"/></svg>
+              {% endfor %}
+              <strong>{{ producto.resena_promedio|floatformat:1 }}</strong>
+              <span>de {{ producto.resena_count }} reseña{{ producto.resena_count|pluralize:"s" }}</span>
+            </div>
+          {% endwith %}
+        </div>
+
+        <ul class="resenas-list">
+          {% for r in resenas_publicas %}
+            <li class="resena-item">
+              <div class="resena-head">
+                <div class="resena-stars-row" aria-label="{{ r.estrellas }} de 5 estrellas">
+                  {% for i in "12345" %}
+                    <svg class="ico ico--14{% if forloop.counter <= r.estrellas %} star-on{% endif %}"><use href="#ico-star"/></svg>
+                  {% endfor %}
+                </div>
+                <strong class="resena-author">{{ r.nombre_publico }}</strong>
+                {% if r.recibo %}
+                  <span class="resena-verified" title="Compra verificada con recibo #{{ r.recibo.pk }}">
+                    <svg class="ico ico--14"><use href="#ico-check"/></svg> Compra verificada
+                  </span>
+                {% endif %}
+                <time datetime="{{ r.creado|date:'c' }}">{{ r.creado|date:'d-m-Y' }}</time>
+              </div>
+              {% if r.titulo %}<p class="resena-titulo"><strong>{{ r.titulo }}</strong></p>{% endif %}
+              <p class="resena-texto">{{ r.texto|linebreaksbr }}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="resenas-empty">Todavía nadie escribió una reseña. <strong>¡Animate a ser el primero!</strong></p>
+      {% endif %}
+
+      <div id="resena-form-wrap" class="resena-form-wrap">
+        {% include 'ecommerce/_resena_form.html' with producto=producto form=resena_form %}
+      </div>
+    </section>
+  {% endif %}
 </main>
+
+{% if mostrar_guia_talles %}
+  {# Bloque 12 · Modal con guia + calculadora de talles. #}
+  <dialog id="guia-talles-modal" class="guia-talles-modal" aria-labelledby="guia-talles-titulo">
+    {% include 'ecommerce/_guia_talles.html' %}
+  </dialog>
+  <script>
+    // Cerrar al click en el backdrop (no es default de <dialog>).
+    document.addEventListener('click', function (e) {
+      var dlg = document.getElementById('guia-talles-modal');
+      if (dlg && e.target === dlg) dlg.close();
+    });
+  </script>
+{% endif %}
+
+{% comment %}
+  Bloque 8 · Galeria PDP: swap de imagen principal al click en thumb.
+  Sin libs, sin Alpine — minimo: leer data-full, swap src, toggle clase
+  active. Funciona sin JS tambien: si JS esta off, los thumbs son
+  botones sin efecto y el cliente sigue viendo la imagen principal.
+{% endcomment %}
+<script>
+  (function () {
+    var gallery = document.getElementById('pdp-gallery');
+    if (!gallery || gallery.dataset.hasExtra !== '1') return;
+    var big = document.getElementById('pdp-big-img');
+    var thumbs = gallery.querySelectorAll('.pdp-thumb');
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        var url = t.dataset.full;
+        if (!url || !big) return;
+        big.src = url;
+        // Conservar el alt del thumb (mejor a11y) si el thumb lo tiene.
+        var thumbImg = t.querySelector('img');
+        if (thumbImg && thumbImg.alt) big.alt = thumbImg.alt;
+        thumbs.forEach(function (x) {
+          x.classList.remove('active');
+          x.removeAttribute('aria-current');
+        });
+        t.classList.add('active');
+        t.setAttribute('aria-current', 'true');
+      });
+    });
+  })();
+</script>
 
 {% include 'ecommerce/_shop_footer.html' %}
 {% endblock %}

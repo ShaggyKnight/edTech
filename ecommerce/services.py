@@ -41,10 +41,15 @@ class TiendaOnlineNoConfigurada(Exception):
 
 
 class StockInsuficienteOnline(Exception):
-    def __init__(self, descripcion: str, disponible: int, solicitado: int):
+    def __init__(self, descripcion: str, disponible: int, solicitado: int,
+                 *, tipo: str = '', item_id: int = 0):
         self.descripcion = descripcion
         self.disponible = disponible
         self.solicitado = solicitado
+        # Sprint 2 · 2.1: tipo + item_id permiten marcar la linea exacta
+        # en el carrito al redireccionar despues del fallo.
+        self.tipo = tipo
+        self.item_id = item_id
         super().__init__(
             f'Stock insuficiente para {descripcion}: disponible={disponible}, solicitado={solicitado}'
         )
@@ -103,7 +108,10 @@ def iniciar_pedido(
     for item in items:
         disp = stock_disponible.get((item.tipo, item.item_id), 0)
         if disp < item.cantidad:
-            raise StockInsuficienteOnline(_descripcion(item), disp, item.cantidad)
+            raise StockInsuficienteOnline(
+                _descripcion(item), disp, item.cantidad,
+                tipo=item.tipo, item_id=item.item_id,
+            )
         subtotal_bruto += item.precio_unitario * item.cantidad
         descuento_total += item.descuento_total
     total_neto = subtotal_bruto - descuento_total

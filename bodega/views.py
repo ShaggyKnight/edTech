@@ -15,6 +15,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.db import transaction
 from django.db.models import Count, F, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import generic
@@ -76,6 +77,13 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
     """
     permission_required = 'bodega.view_stocktienda'
     template_name = 'bodega/stock.html'
+
+    def get(self, request, *args, **kwargs):
+        # Si la request es HTMX, devolvemos solo el partial de la
+        # tabla (mismo patron que productos/ofertas/materiales).
+        if getattr(request, 'htmx', False):
+            self.template_name = 'bodega/_stock_tabla.html'
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -161,6 +169,8 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
             'mostrar_todos': mostrar_todos,
             'umbral_bajo': STOCK_BAJO,
             'puede_reponer': _puede_reponer(request.user),
+            # Carga masiva: solo admin. Mucho poder en una sola operacion.
+            'puede_bulk_stock': _puede_gestionar_ofertas(request.user),
         })
         return ctx
 
@@ -299,6 +309,339 @@ def reponer_stock(request):
     return redirect('bodega:stock')
 
 
+@login_required
+def stock_agregar(request):
+    """Pantalla para cargar stock inicial de productos que aun no
+    tienen ninguna fila en StockTienda.
+
+    Bug que motivo la feature: tras `seed_perfumes_real` se cargaron
+    43 perfumes nuevos. Como `/bodega/` lista solo filas existentes
+    de StockTienda, los nuevos eran invisibles. Esta pantalla
+    permite seleccionar tienda + variante (con optgroup por
+    producto, alfabetico) o producto-sin-variantes y registrar la
+    primera reposicion en una sola operacion.
+
+    POST reusa `reponer_stock` via redirect interno para mantener
+    la audit trail (MovimientoStock con tipo=ENTRADA).
+    """
+    if not _puede_reponer(request.user):
+        messages.error(request, 'No tenés permisos para cargar stock.')
+        return redirect('bodega:stock')
+
+    tiendas = Tienda.objects.filter(activa=True).order_by('nombre_organizacion')
+
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo', '')
+        try:
+            item_id = int(request.POST.get('item_id', 0))
+            tienda_id = int(request.POST.get('tienda_id', 0))
+            cantidad = int(request.POST.get('cantidad', 0))
+        except (TypeError, ValueError):
+            messages.error(request, 'Datos inválidos.')
+            return redirect('bodega:stock_agregar')
+
+        if cantidad <= 0:
+            messages.error(request, 'La cantidad a sumar debe ser mayor a 0.')
+            return redirect('bodega:stock_agregar')
+
+        try:
+            tienda = tiendas.get(pk=tienda_id)
+        except Tienda.DoesNotExist:
+            messages.error(request, 'Tienda no válida.')
+            return redirect('bodega:stock_agregar')
+
+        with transaction.atomic():
+            if tipo == 'v':
+                if not ProductoVariante.objects.filter(pk=item_id, activa=True).exists():
+                    messages.error(request, 'Variante no disponible.')
+                    return redirect('bodega:stock_agregar')
+                fila, _ = StockTienda.objects.select_for_update().get_or_create(
+                    tienda=tienda, variante_id=item_id, defaults={'cantidad': 0},
+                )
+            elif tipo == 'p':
+                if not Producto.objects.filter(
+                    pk=item_id, activo=True, tiene_variantes=False,
+                ).exists():
+                    messages.error(request, 'Producto no disponible.')
+                    return redirect('bodega:stock_agregar')
+                fila, _ = StockTienda.objects.select_for_update().get_or_create(
+                    tienda=tienda, producto_id=item_id, defaults={'cantidad': 0},
+                )
+            else:
+                messages.error(request, 'Tipo inválido.')
+                return redirect('bodega:stock_agregar')
+
+            StockTienda.objects.filter(pk=fila.pk).update(
+                cantidad=F('cantidad') + cantidad,
+            )
+            mov_kwargs = {
+                'tienda': tienda, 'tipo': MovimientoStock.ENTRADA,
+                'cantidad': cantidad, 'usuario': request.user,
+                'referencia': f'Stock inicial cargado por {request.user.username}',
+            }
+            if tipo == 'v':
+                mov_kwargs['variante_id'] = item_id
+            else:
+                mov_kwargs['producto_id'] = item_id
+            MovimientoStock.objects.create(**mov_kwargs)
+
+        messages.success(
+            request,
+            f'+{cantidad} unidades cargadas. Seguí agregando o volvé al stock.',
+        )
+        # Volvemos a la misma pantalla con el form limpio para cargar
+        # el siguiente producto sin tener que navegar.
+        return redirect('bodega:stock_agregar')
+
+    # GET: construir las opciones del selector.
+    # Variantes activas agrupadas por producto (alfabetico).
+    variantes = (
+        ProductoVariante.objects
+        .filter(activa=True, producto__activo=True)
+        .select_related('producto', 'producto__familia')
+        .prefetch_related('valores__atributo')
+        .order_by('producto__familia__nombre', 'producto__nombre', 'sku')
+    )
+    # Productos sin variantes (tipo=p).
+    productos_directos = (
+        Producto.objects
+        .filter(activo=True, tiene_variantes=False)
+        .select_related('familia')
+        .order_by('familia__nombre', 'nombre')
+    )
+
+    # Agrupar por familia para mostrar `<optgroup>` nativo (mejor UX
+    # con 100+ items que un select plano).
+    opciones_por_familia = {}
+    for v in variantes:
+        fam = v.producto.familia.nombre if v.producto.familia else 'Sin familia'
+        opciones_por_familia.setdefault(fam, []).append({
+            'tipo': 'v',
+            'item_id': v.pk,
+            'label': _label_variante(v),
+            'producto_pk': v.producto.pk,
+        })
+    for p in productos_directos:
+        fam = p.familia.nombre if p.familia else 'Sin familia'
+        opciones_por_familia.setdefault(fam, []).append({
+            'tipo': 'p',
+            'item_id': p.pk,
+            'label': f'{p.nombre} (sin variantes)',
+            'producto_pk': p.pk,
+        })
+
+    return render(request, 'bodega/stock_agregar.html', {
+        'tiendas': tiendas,
+        'opciones_por_familia': sorted(opciones_por_familia.items()),
+        'tienda_preseleccionada': tiendas.first(),
+    })
+
+
+@login_required
+def stock_bulk_agregar(request):
+    """Carga masiva de stock — admin only.
+
+    Una sola pantalla con TODAS las variantes activas + productos sin
+    variantes. Por cada uno: stock actual + input "Sumar". Submit
+    procesa todas las filas con cantidad > 0 en una transaccion.
+
+    Casos de uso:
+    1. Llego un lote de 43 perfumes — agregar +X a cada uno sin
+       hacer 43 operaciones individuales.
+    2. Resetear / inicializar stock al empezar la temporada.
+    3. "Marca con +1 todos los que no tienen stock" (quick win).
+
+    Permisos: solo admin/superuser. Mucho poder en una operacion.
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        messages.error(request, 'Solo administradores pueden hacer cargas masivas.')
+        return redirect('bodega:stock')
+
+    tiendas = Tienda.objects.filter(activa=True).order_by('nombre_organizacion')
+
+    if request.method == 'POST':
+        try:
+            tienda_id = int(request.POST.get('tienda_id', 0))
+        except (TypeError, ValueError):
+            messages.error(request, 'Tienda inválida.')
+            return redirect('bodega:stock_bulk_agregar')
+        try:
+            tienda = tiendas.get(pk=tienda_id)
+        except Tienda.DoesNotExist:
+            messages.error(request, 'Tienda no válida.')
+            return redirect('bodega:stock_bulk_agregar')
+
+        # Recoger filas del POST: claves `qty_v_<id>` o `qty_p_<id>`.
+        actualizaciones = []  # [(tipo, item_id, cantidad), ...]
+        for key, raw in request.POST.items():
+            if not (key.startswith('qty_v_') or key.startswith('qty_p_')):
+                continue
+            try:
+                cantidad = int(raw)
+            except (TypeError, ValueError):
+                continue
+            if cantidad <= 0:
+                continue
+            tipo = 'v' if key.startswith('qty_v_') else 'p'
+            try:
+                item_id = int(key.split('_')[-1])
+            except (TypeError, ValueError):
+                continue
+            actualizaciones.append((tipo, item_id, cantidad))
+
+        if not actualizaciones:
+            messages.warning(
+                request,
+                'No ingresaste ninguna cantidad mayor a 0. Llená al menos un input.',
+            )
+            return redirect('bodega:stock_bulk_agregar')
+
+        # Cap defensivo: nunca procesar mas de 500 filas en un POST.
+        if len(actualizaciones) > 500:
+            messages.error(request, 'Demasiadas filas — limite 500 por carga.')
+            return redirect('bodega:stock_bulk_agregar')
+
+        creadas, actualizadas_count, ignoradas = 0, 0, 0
+        with transaction.atomic():
+            for tipo, item_id, cantidad in actualizaciones:
+                if tipo == 'v':
+                    if not ProductoVariante.objects.filter(
+                        pk=item_id, activa=True,
+                    ).exists():
+                        ignoradas += 1
+                        continue
+                    fila, creada = StockTienda.objects.select_for_update().get_or_create(
+                        tienda=tienda, variante_id=item_id, defaults={'cantidad': 0},
+                    )
+                else:
+                    if not Producto.objects.filter(
+                        pk=item_id, activo=True, tiene_variantes=False,
+                    ).exists():
+                        ignoradas += 1
+                        continue
+                    fila, creada = StockTienda.objects.select_for_update().get_or_create(
+                        tienda=tienda, producto_id=item_id, defaults={'cantidad': 0},
+                    )
+                StockTienda.objects.filter(pk=fila.pk).update(
+                    cantidad=F('cantidad') + cantidad,
+                )
+                mov_kwargs = {
+                    'tienda': tienda, 'tipo': MovimientoStock.ENTRADA,
+                    'cantidad': cantidad, 'usuario': request.user,
+                    'referencia': f'Carga masiva por {request.user.username}',
+                }
+                if tipo == 'v':
+                    mov_kwargs['variante_id'] = item_id
+                else:
+                    mov_kwargs['producto_id'] = item_id
+                MovimientoStock.objects.create(**mov_kwargs)
+                if creada:
+                    creadas += 1
+                else:
+                    actualizadas_count += 1
+
+        msg = (
+            f'Carga masiva: {creadas} producto(s) sin stock inicializado(s), '
+            f'{actualizadas_count} sumado(s) a stock existente'
+        )
+        if ignoradas:
+            msg += f', {ignoradas} ignorado(s) (inactivos)'
+        msg += '.'
+        messages.success(request, msg)
+        return redirect('bodega:stock_bulk_agregar')
+
+    # GET — construir el grid.
+    tienda_seleccionada = tiendas.first()
+    if request.GET.get('tienda', '').isdigit():
+        tid = int(request.GET['tienda'])
+        sel = tiendas.filter(pk=tid).first()
+        if sel:
+            tienda_seleccionada = sel
+
+    solo_sin_stock = request.GET.get('solo_sin_stock') == '1'
+
+    variantes = (
+        ProductoVariante.objects
+        .filter(activa=True, producto__activo=True)
+        .select_related('producto', 'producto__familia')
+        .prefetch_related('valores__atributo')
+        .order_by('producto__familia__nombre', 'producto__nombre', 'sku')
+    )
+    productos_directos = (
+        Producto.objects
+        .filter(activo=True, tiene_variantes=False)
+        .select_related('familia')
+        .order_by('familia__nombre', 'nombre')
+    )
+
+    # Mapear stock actual por (tipo, id) en la tienda seleccionada.
+    stocks_v = {
+        s.variante_id: s.cantidad
+        for s in StockTienda.objects.filter(
+            tienda=tienda_seleccionada, variante__isnull=False,
+        )
+    }
+    stocks_p = {
+        s.producto_id: s.cantidad
+        for s in StockTienda.objects.filter(
+            tienda=tienda_seleccionada, producto__isnull=False,
+        )
+    }
+
+    filas_por_familia = {}
+    for v in variantes:
+        stock = stocks_v.get(v.pk, 0)
+        if solo_sin_stock and stock > 0:
+            continue
+        fam = v.producto.familia.nombre if v.producto.familia else 'Sin familia'
+        filas_por_familia.setdefault(fam, []).append({
+            'tipo': 'v',
+            'item_id': v.pk,
+            'label': _label_variante(v),
+            'stock_actual': stock,
+            'qty_name': f'qty_v_{v.pk}',
+        })
+    for p in productos_directos:
+        stock = stocks_p.get(p.pk, 0)
+        if solo_sin_stock and stock > 0:
+            continue
+        fam = p.familia.nombre if p.familia else 'Sin familia'
+        filas_por_familia.setdefault(fam, []).append({
+            'tipo': 'p',
+            'item_id': p.pk,
+            'label': f'{p.nombre} (sin variantes)',
+            'stock_actual': stock,
+            'qty_name': f'qty_p_{p.pk}',
+        })
+
+    total_filas = sum(len(items) for items in filas_por_familia.values())
+    total_sin_stock = sum(
+        1 for items in filas_por_familia.values() for it in items
+        if it['stock_actual'] == 0
+    )
+
+    return render(request, 'bodega/stock_bulk_agregar.html', {
+        'tiendas': tiendas,
+        'tienda_seleccionada': tienda_seleccionada,
+        'filas_por_familia': sorted(filas_por_familia.items()),
+        'total_filas': total_filas,
+        'total_sin_stock': total_sin_stock,
+        'solo_sin_stock': solo_sin_stock,
+    })
+
+
+def _label_variante(v):
+    """Etiqueta legible para una variante en el selector — incluye
+    nombre del producto + valores de atributos + SKU."""
+    valores = ' · '.join(
+        f'{val.atributo.nombre}: {val.valor}'
+        for val in v.valores.all()
+    )
+    if valores:
+        return f'{v.producto.nombre} — {valores} ({v.sku})'
+    return f'{v.producto.nombre} ({v.sku})'
+
+
 # ============================================================================
 # CRUD de productos desde la pantalla de bodega (Fase Ñ)
 # ============================================================================
@@ -343,10 +686,11 @@ def lista_productos(request):
         'filtros': {
             'q': q, 'familia': familia_id, 'colegio': colegio_id, 'estado': estado,
         },
-        # La edicion inline de precio es solo para admin / superuser.
-        # El bodeguero ve los precios pero no los modifica (es decision
-        # comercial, no de stock).
+        # La edicion inline de precio + toggle de `activo` son solo
+        # para admin / superuser. El bodeguero ve pero no modifica
+        # (es decision comercial, no de stock).
         'puede_editar_precio': _puede_gestionar_ofertas(request.user),
+        'puede_editar_activo': _puede_gestionar_ofertas(request.user),
     }
     # Filtros AJAX: si la request es HTMX, devolvemos solo la tabla.
     if request.htmx:
@@ -398,6 +742,88 @@ def _respuesta_precio(request, producto):
         return render(request, 'bodega/_producto_precio_celda.html', {
             'p': producto,
             'puede_editar_precio': True,
+        })
+    return redirect('bodega:lista_productos')
+
+
+@login_required
+@require_POST
+def productos_bulk_action(request):
+    """Aplica una accion en bulk a varios productos seleccionados.
+
+    Bloque 11: complemento del toggle individual — permite cambiar
+    el estado de 5/10/20 productos a la vez desde la lista, sin
+    tener que clickear uno por uno. Util cuando entra una temporada
+    o se discontinua una linea completa.
+
+    Body:
+        - accion: 'activar' | 'desactivar'
+        - ids: lista de PKs (multivalued)
+
+    Respuesta:
+    - HTMX: tabla refrescada con los nuevos estados (re-aplica los
+      filtros vigentes del querystring).
+    - No-JS: redirect a lista_productos con messages.success.
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        messages.error(request, 'No tenés permisos para cambios masivos.')
+        return redirect('bodega:lista_productos')
+
+    accion = (request.POST.get('accion') or '').strip()
+    ids = [int(x) for x in request.POST.getlist('ids') if x.isdigit()]
+
+    if accion not in ('activar', 'desactivar'):
+        messages.error(request, 'Acción inválida.')
+        return redirect('bodega:lista_productos')
+    if not ids:
+        messages.error(request, 'No seleccionaste ningún producto.')
+        return redirect('bodega:lista_productos')
+
+    from django.utils import timezone
+    nuevo_estado = (accion == 'activar')
+    qs = Producto.objects.filter(pk__in=ids)
+    actualizados = qs.update(activo=nuevo_estado, modificado=timezone.now())
+
+    verbo = 'activados' if nuevo_estado else 'desactivados'
+    messages.success(request, f'{actualizados} producto(s) {verbo}.')
+
+    # Si fue HTMX, re-renderizamos la tabla preservando los filtros
+    # actuales (que el form de bulk envia via hidden inputs).
+    if request.htmx:
+        # Simulamos los GET params que `lista_productos` espera.
+        request.GET = request.POST
+        return lista_productos(request)
+    return redirect('bodega:lista_productos')
+
+
+@login_required
+@require_POST
+def producto_toggle_activo(request, pk):
+    """Toggle del campo `activo` desde la lista de productos.
+
+    Bloque 10: misma logica que `set_precio` y `oferta_toggle`, pero
+    para activar/desactivar productos sin entrar al form completo.
+    Solo admin/superuser (es decision comercial — el bodeguero NO
+    discontinua productos).
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        messages.error(request, 'No tenés permisos para cambiar el estado de productos.')
+        return redirect('bodega:lista_productos')
+
+    producto = get_object_or_404(Producto, pk=pk)
+    producto.activo = not producto.activo
+    producto.save(update_fields=['activo', 'modificado'])
+    estado = 'activado' if producto.activo else 'desactivado'
+    messages.success(request, f'Producto "{producto.nombre}" {estado}.')
+    return _respuesta_activo(request, producto)
+
+
+def _respuesta_activo(request, producto):
+    """HTMX: celda actualizada con el nuevo badge + form. No-JS: redirect."""
+    if request.htmx:
+        return render(request, 'bodega/_producto_activo_celda.html', {
+            'p': producto,
+            'puede_editar_activo': True,
         })
     return redirect('bodega:lista_productos')
 
@@ -463,18 +889,124 @@ def producto_editar(request, pk):
 
 @login_required
 @reponer_required
-def variantes_lista(request, pk):
-    """Lista las variantes de un producto y permite agregar/editar/eliminar."""
+def galeria_producto(request, pk):
+    """Pantalla de gestion de galeria de imagenes adicionales (Bloque 8).
+
+    Bloque 15: la imagen principal (`Producto.imagen`) se gestiona en
+    el form de editar producto. Aca solo las imagenes adicionales que
+    aparecen como thumbs en el PDP. Se pueden reordenar via drag-drop
+    (admin) y borrar (bodeguero + admin).
+    """
+    from catalogo.models import ProductoImagen
     p = get_object_or_404(Producto, pk=pk)
-    variantes = (
-        p.variantes.all()
-        .prefetch_related('valores__atributo')
-        .order_by('sku')
+    imagenes = list(p.imagenes.all())
+    return render(request, 'bodega/galeria_producto.html', {
+        'producto': p,
+        'imagenes': imagenes,
+        'puede_reordenar': _puede_gestionar_ofertas(request.user),
+    })
+
+
+@login_required
+@require_POST
+def galeria_reorder(request, pk):
+    """Recibe el nuevo orden de imagenes de la galeria.
+
+    Body: `orden_ids` = lista de PKs separadas por coma, en el orden
+    nuevo. Ej: "12,15,8,3" → imagen 12 con orden=0, etc.
+
+    Defensa: verifica que todos los IDs pertenecen al producto antes
+    de actualizar (evita reorder cross-producto via POST forjado).
+    """
+    if not _puede_gestionar_ofertas(request.user):
+        if request.htmx:
+            return HttpResponse('Sin permisos', status=403)
+        messages.error(request, 'No tenés permisos para reordenar la galería.')
+        return redirect('bodega:galeria_producto', pk=pk)
+
+    from catalogo.models import ProductoImagen
+    producto = get_object_or_404(Producto, pk=pk)
+    raw = (request.POST.get('orden_ids') or '').strip()
+    if not raw:
+        return HttpResponse('Sin orden recibido', status=400) if request.htmx \
+            else redirect('bodega:galeria_producto', pk=pk)
+
+    try:
+        ids = [int(x) for x in raw.split(',') if x.strip()]
+    except ValueError:
+        return HttpResponse('IDs invalidos', status=400) if request.htmx \
+            else redirect('bodega:galeria_producto', pk=pk)
+
+    imgs = {i.pk: i for i in producto.imagenes.all()}
+    if set(ids) - set(imgs.keys()):
+        return HttpResponse('IDs ajenos al producto', status=400) if request.htmx \
+            else redirect('bodega:galeria_producto', pk=pk)
+
+    actualizadas = []
+    for idx, img_id in enumerate(ids):
+        img = imgs[img_id]
+        if img.orden != idx:
+            img.orden = idx
+            actualizadas.append(img)
+    if actualizadas:
+        ProductoImagen.objects.bulk_update(actualizadas, ['orden'])
+
+    if request.htmx:
+        return HttpResponse(f'OK · {len(actualizadas)}', status=200)
+    messages.success(
+        request, f'Galería reordenada · {len(actualizadas)} imagen(es) actualizada(s).',
     )
-    return render(request, 'bodega/variantes_lista.html', {
+    return redirect('bodega:galeria_producto', pk=pk)
+
+
+@login_required
+@require_POST
+def galeria_borrar(request, pk, img_pk):
+    """Borra una imagen de la galeria. Bodeguero + admin pueden."""
+    from catalogo.models import ProductoImagen
+    producto = get_object_or_404(Producto, pk=pk)
+    img = get_object_or_404(ProductoImagen, pk=img_pk, producto=producto)
+    img.delete()
+    messages.success(request, 'Imagen eliminada de la galería.')
+    return redirect('bodega:galeria_producto', pk=pk)
+
+
+@login_required
+@reponer_required
+def variantes_lista(request, pk):
+    """Lista las variantes de un producto con filtros AJAX.
+
+    Bloque 16: filtros sobre SKU/valor + estado (activas/inactivas).
+    Patron HTMX igual que productos/ofertas/materiales — input
+    'Buscar' con debounce 300ms refresca solo la tabla.
+    """
+    p = get_object_or_404(Producto, pk=pk)
+    qs = p.variantes.all().prefetch_related('valores__atributo')
+
+    q = (request.GET.get('q') or '').strip()
+    estado = (request.GET.get('estado') or '').strip()
+
+    if q:
+        # Busca en SKU + en valores de atributos (talla "10", color "rojo", etc).
+        qs = qs.filter(
+            Q(sku__icontains=q) | Q(valores__valor__icontains=q)
+        ).distinct()
+    if estado == 'activas':
+        qs = qs.filter(activa=True)
+    elif estado == 'inactivas':
+        qs = qs.filter(activa=False)
+
+    variantes = qs.order_by('sku')
+    contexto = {
         'producto': p,
         'variantes': variantes,
-    })
+        'filtros': {'q': q, 'estado': estado},
+        'total_filtradas': variantes.count(),
+        'total_producto': p.variantes.count(),
+    }
+    if request.htmx:
+        return render(request, 'bodega/_variantes_lista_tabla.html', contexto)
+    return render(request, 'bodega/variantes_lista.html', contexto)
 
 
 @login_required
@@ -571,10 +1103,47 @@ def lista_materiales(request):
     contexto = {
         'materiales': qs.order_by('nombre'),
         'filtros': {'q': q, 'estado': estado},
+        # Bloque 14: bulk action — bodeguero y admin pueden.
+        'puede_bulk_materiales': _puede_reponer(request.user),
     }
     if request.htmx:
         return render(request, 'bodega/_materiales_lista_tabla.html', contexto)
     return render(request, 'bodega/materiales_lista.html', contexto)
+
+
+@login_required
+@reponer_required
+@require_POST
+def materiales_bulk_action(request):
+    """Bulk action para materiales: activar/desactivar varios a la vez.
+
+    Bloque 14. Permisos: bodeguero + admin (mismo que el resto del
+    CRUD de materiales).
+    """
+    from django.utils import timezone
+
+    accion = (request.POST.get('accion') or '').strip()
+    ids = [int(x) for x in request.POST.getlist('ids') if x.isdigit()]
+
+    if accion not in ('activar', 'desactivar'):
+        messages.error(request, 'Acción inválida.')
+        return redirect('bodega:lista_materiales')
+    if not ids:
+        messages.error(request, 'No seleccionaste ningún material.')
+        return redirect('bodega:lista_materiales')
+
+    nuevo_activo = (accion == 'activar')
+    actualizados = (
+        Material.objects.filter(pk__in=ids)
+        .update(activo=nuevo_activo, modificado=timezone.now())
+    )
+    verbo = 'activados' if nuevo_activo else 'desactivados'
+    messages.success(request, f'{actualizados} material(es) {verbo}.')
+
+    if request.htmx:
+        request.GET = request.POST
+        return lista_materiales(request)
+    return redirect('bodega:lista_materiales')
 
 
 @login_required
@@ -739,6 +1308,9 @@ def lista_ofertas(request):
         'ofertas': ofertas,
         'filtros': {'q': q, 'estado': estado, 'canal': canal},
         'canal_choices': Oferta.CANAL_CHOICES,
+        # Bloque 13: bulk action solo para admin (mismo helper que
+        # toggle individual). El bodeguero NO ve la columna de check.
+        'puede_bulk_ofertas': _puede_gestionar_ofertas(request.user),
     }
     if request.htmx:
         return render(request, 'bodega/_ofertas_lista_tabla.html', contexto)
@@ -805,6 +1377,45 @@ def oferta_borrar(request, pk):
 @login_required
 @ofertas_required
 @require_POST
+@login_required
+@ofertas_required
+@require_POST
+def ofertas_bulk_action(request):
+    """Bulk action para ofertas: pausar / reactivar varias a la vez.
+
+    Bloque 13: mismo patron que `productos_bulk_action`. Solo admin /
+    superuser (decorator `@ofertas_required`).
+
+    Body:
+      - accion: 'pausar' | 'reactivar'
+      - ids: lista de PKs (multivalued)
+    """
+    from django.utils import timezone
+
+    accion = (request.POST.get('accion') or '').strip()
+    ids = [int(x) for x in request.POST.getlist('ids') if x.isdigit()]
+
+    if accion not in ('pausar', 'reactivar'):
+        messages.error(request, 'Acción inválida.')
+        return redirect('bodega:lista_ofertas')
+    if not ids:
+        messages.error(request, 'No seleccionaste ninguna oferta.')
+        return redirect('bodega:lista_ofertas')
+
+    nueva_activa = (accion == 'reactivar')
+    actualizadas = (
+        Oferta.objects.filter(pk__in=ids)
+        .update(activa=nueva_activa, modificado=timezone.now())
+    )
+    verbo = 'reactivadas' if nueva_activa else 'pausadas'
+    messages.success(request, f'{actualizadas} oferta(s) {verbo}.')
+
+    if request.htmx:
+        request.GET = request.POST
+        return lista_ofertas(request)
+    return redirect('bodega:lista_ofertas')
+
+
 def oferta_toggle(request, pk):
     """Pausa o reactiva una oferta sin tener que entrar al form."""
     o = get_object_or_404(Oferta, pk=pk)

@@ -37,7 +37,7 @@
   </nav>
 
   {# ========== HERO ========== #}
-  <section class="hero">
+  <section class="hero" id="main-content" tabindex="-1">
     <div class="hero-bg" style="background-image:url('{% static 'img/ideas/logo-letrero.png' %}');"></div>
     <div class="hero-veil"></div>
     <div class="hero-content">
@@ -79,10 +79,6 @@
     <div class="strip-item">
       <svg class="ico ico--22"><use href="#ico-shield"/></svg>
       <div><strong>Perfumes originales</strong><span>Garantía de autenticidad</span></div>
-    </div>
-    <div class="strip-item">
-      <svg class="ico ico--22"><use href="#ico-scissors"/></svg>
-      <div><strong>Uniformes a medida</strong><span>Ajustes sin costo</span></div>
     </div>
     <div class="strip-item">
       <svg class="ico ico--22"><use href="#ico-whatsapp"/></svg>
@@ -337,10 +333,25 @@
           <svg class="ico ico--18"><use href="#ico-phone"/></svg>
           <span><strong>Contáctanos</strong><br>Lun a Sáb · 9:00 – 19:00</span>
         </div>
-        <div>
-          <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
-          <span><strong>WhatsApp directo</strong><br>Pedidos y reservas</span>
-        </div>
+        {% comment %}
+          BUG-009: cuando PUBLIC_WHATSAPP está seteado en .env, el bloque
+          se renderiza como link a wa.me/... para que abra la app de
+          WhatsApp. Si está vacío queda como texto plano (estado previo)
+          para no romper el copy.
+        {% endcomment %}
+        {% if PUBLIC_WHATSAPP %}
+          <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}"
+             target="_blank" rel="noopener"
+             style="display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;">
+            <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
+            <span><strong>WhatsApp directo</strong><br>Pedidos y reservas</span>
+          </a>
+        {% else %}
+          <div>
+            <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
+            <span><strong>WhatsApp directo</strong><br>Pedidos y reservas</span>
+          </div>
+        {% endif %}
       </div>
     </div>
     <div class="visita-img">
@@ -365,15 +376,16 @@
         </div>
         <div>
           <h5>Ayuda</h5>
-          <a href="#visitanos">Envíos</a>
-          <a href="#visitanos">Cambios</a>
-          <a href="#uniformes">Tallas</a>
-          <a href="#visitanos">Contacto</a>
+          {# BUG-008: anchors reales en /info/. #}
+          <a href="{% url 'info' %}#envios">Envíos</a>
+          <a href="{% url 'info' %}#cambios">Cambios</a>
+          <a href="{% url 'info' %}#tallas">Tallas</a>
+          <a href="{% url 'info' %}#contacto">Contacto</a>
         </div>
         <div>
           <h5>Nosotros</h5>
           <a href="#historia">Nuestra historia</a>
-          <a href="#visitanos">Sucursal</a>
+          <a href="{% url 'info' %}#contacto">Sucursal</a>
           {% if user.is_authenticated %}
             <a href="{% url 'accounts:dashboard' %}">Mi cuenta</a>
           {% else %}

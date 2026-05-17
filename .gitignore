@@ -1,3 +1,7 @@
+# ===== Claude Code local state (NOT para el repo) =====
+# Contiene worktrees efímeros y settings.local.json.
+.claude/
+
 # ===== Python / Django =====
 __pycache__/
 *.py[cod]

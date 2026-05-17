@@ -1,0 +1,167 @@
+{% load static humanize %}
+{% comment %}
+  Partial del contenido dinamico del carrito — todo lo que cambia
+  cuando se hace +/- / quitar / vaciar via HTMX. La cabecera del
+  shop (`_shop_header.html`) y el footer quedan fuera (no cambian).
+
+  Contexto: `lineas`, `items_count`, `subtotal_bruto`, `descuento_total`,
+  `total_neto`. Para errores: cada `linea.error` opcional.
+{% endcomment %}
+<div id="cart-content">
+  <h1>Tu carrito <span class="muted">({{ items_count }} producto{{ items_count|pluralize:"s" }})</span></h1>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert--{{ message.tags|default:'info' }}" role="alert">
+        <svg class="ico ico--16"><use href="#ico-info"/></svg>
+        <div>{{ message }}</div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if not lineas %}
+    <div class="cart-empty">
+      <svg class="ico" style="width:40px;height:40px;"><use href="#ico-bag"/></svg>
+      <p>Tu carrito está vacío.</p>
+      <a class="btn-primary" href="{% url 'ecommerce:catalogo' %}">Ir a la tienda</a>
+    </div>
+  {% else %}
+    <div class="cart-main">
+      <div class="cart-items">
+        {% for linea in lineas %}
+          <div class="cart-row{% if linea.error %} cart-row--error{% endif %}" {% if linea.error %}data-error="{{ linea.error.codigo }}"{% endif %}>
+            {% if linea.error %}
+              <div class="cart-row-error">
+                <svg class="ico ico--14"><use href="#ico-info"/></svg>
+                <strong>{{ linea.error.titulo }}</strong>
+                <span>{{ linea.error.mensaje }}</span>
+                {% if linea.error.accion %}
+                  <form method="post" action="{% url 'ecommerce:actualizar' %}"
+                        hx-post="{% url 'ecommerce:actualizar' %}"
+                        hx-target="#cart-content"
+                        hx-swap="outerHTML"
+                        style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="key" value="{{ linea.key }}">
+                    <button type="submit" name="cantidad" value="{{ linea.error.accion.cantidad }}" class="cart-row-error-cta">
+                      {{ linea.error.accion.label }}
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endif %}
+            <div class="cart-img">
+              {% if linea.tipo == 'v' and linea.item.producto.imagen %}
+                <img src="{{ linea.item.producto.imagen.url }}" alt="{{ linea.item.producto.nombre }}" loading="lazy">
+              {% elif linea.tipo == 'p' and linea.item.imagen %}
+                <img src="{{ linea.item.imagen.url }}" alt="{{ linea.item.nombre }}" loading="lazy">
+              {% else %}
+                <div class="pcard-placeholder" style="aspect-ratio:1/1;"></div>
+              {% endif %}
+            </div>
+            <div class="cart-body">
+              <div class="cart-cat">
+                {% if linea.tipo == 'v' %}{{ linea.item.producto.familia.nombre }}{% else %}{{ linea.item.familia.nombre }}{% endif %}
+              </div>
+              <div class="cart-name">
+                {% if linea.tipo == 'v' %}
+                  {{ linea.item.producto.nombre }}
+                {% else %}
+                  {{ linea.item.nombre }}
+                {% endif %}
+              </div>
+              {% if linea.tipo == 'v' %}
+                <div class="cart-meta">SKU: <strong>{{ linea.item.sku }}</strong></div>
+              {% endif %}
+              {% if linea.descuento_unitario %}
+                <div class="cart-meta" style="color: var(--vino);">-${{ linea.descuento_unitario|floatformat:0|intcomma }} c/u</div>
+              {% endif %}
+              {# +/- cantidad con HTMX: el flow es instantaneo, sin redirect. #}
+              <form method="post" action="{% url 'ecommerce:actualizar' %}"
+                    hx-post="{% url 'ecommerce:actualizar' %}"
+                    hx-target="#cart-content"
+                    hx-swap="outerHTML"
+                    class="qty small" style="margin-top:8px;">
+                {% csrf_token %}
+                <input type="hidden" name="key" value="{{ linea.key }}">
+                <button type="submit" name="cantidad" value="{{ linea.cantidad|add:'-1' }}" aria-label="Restar">
+                  <svg class="ico ico--14"><use href="#ico-minus"/></svg>
+                </button>
+                <span>{{ linea.cantidad }}</span>
+                <button type="submit" name="cantidad" value="{{ linea.cantidad|add:'1' }}" aria-label="Sumar">
+                  <svg class="ico ico--14"><use href="#ico-plus"/></svg>
+                </button>
+              </form>
+            </div>
+            <div class="cart-price">
+              <strong>${{ linea.subtotal|floatformat:0|intcomma }}</strong>
+              <form method="post" action="{% url 'ecommerce:quitar' linea.key %}"
+                    hx-post="{% url 'ecommerce:quitar' linea.key %}"
+                    hx-target="#cart-content"
+                    hx-swap="outerHTML"
+                    style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="remove">Quitar</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+
+        {# Bloque "Te guardamos el carrito" removido a pedido de la dueña.
+           El backend nunca persistia la suscripcion ni mandaba avisos —
+           el email solo quedaba en localStorage del browser. Si en el
+           futuro se quiere reactivar, ver el commit que introdujo el
+           Sprint 2 · 2.6 y los estilos `.save-cart*` en ideas.css. #}
+      </div>
+
+      <aside class="cart-summary">
+        <h3>Resumen</h3>
+        <div class="sum-row">
+          <span>Subtotal</span>
+          <span>${{ subtotal_bruto|floatformat:0|intcomma }}</span>
+        </div>
+        {% if descuento_total %}
+          <div class="sum-row" style="color: var(--vino);">
+            <span>Descuentos</span>
+            <span>-${{ descuento_total|floatformat:0|intcomma }}</span>
+          </div>
+        {% endif %}
+        <div class="sum-row">
+          <span>Envío</span>
+          <span>{% if total_neto >= 50000 %}Gratis{% else %}$3.990{% endif %}</span>
+        </div>
+        {% if total_neto < 50000 %}
+          <div class="ship-hint">
+            Envío gratis en compras sobre $50.000.
+          </div>
+        {% endif %}
+        <div class="sum-total">
+          <span>Total</span>
+          <strong>${{ total_neto|floatformat:0|intcomma }}</strong>
+        </div>
+        <a href="{% url 'ecommerce:checkout' %}" class="btn-primary lg full">
+          Finalizar compra <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
+        </a>
+        <div class="cart-perks">
+          <div><svg class="ico ico--14"><use href="#ico-shield"/></svg> Pago seguro</div>
+          <div><svg class="ico ico--14"><use href="#ico-truck"/></svg> Envío garantizado</div>
+        </div>
+      </aside>
+    </div>
+
+    <div style="margin-top:32px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline">← Seguir comprando</a>
+      <button type="button" class="btn-outline"
+              style="color: var(--vino); border-color: var(--vino); background: transparent;"
+              onclick="ideasConfirm({
+                title: 'Vaciar carrito',
+                message: '¿Vaciar el carrito por completo?\n\nEsta acción no se puede deshacer.',
+                confirmText: 'Vaciar carrito',
+                danger: true,
+                formAction: '{% url 'ecommerce:vaciar' %}',
+              })">
+        Vaciar carrito
+      </button>
+    </div>
+  {% endif %}
+</div>

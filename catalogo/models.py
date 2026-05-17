@@ -81,6 +81,8 @@ class ValorAtributo(models.Model):
     class Meta:
         unique_together = [('atributo', 'valor')]
         ordering = ['atributo__nombre', 'orden', 'valor']
+        verbose_name = 'valor de atributo'
+        verbose_name_plural = 'valores de atributo'
 
     def __str__(self):
         return f'{self.atributo.nombre}: {self.valor}'
@@ -124,6 +126,13 @@ class Producto(models.Model):
 
     class Meta:
         ordering = ['nombre']
+        # Bloque 6 (perf): el catalogo publico filtra constantemente por
+        # (activo + familia) o (activo + colegio). Indices compuestos
+        # bajan el costo en Postgres prod cuando hay 1000+ SKUs.
+        indexes = [
+            models.Index(fields=['activo', 'familia']),
+            models.Index(fields=['activo', 'colegio']),
+        ]
 
     def __str__(self):
         return self.nombre
@@ -184,9 +193,26 @@ class Producto(models.Model):
 
     @property
     def precio_oferta_online(self):
-        """Precio con oferta aplicada. Si no hay oferta vigente,
-        devuelve el `precio_minimo` (para productos con variantes
-        baratas/caras, refleja el "desde")."""
+        """Precio mínimo con oferta aplicada para el canal online.
+
+        BUG-003: para productos con variantes la oferta % se calcula
+        contra el precio de CADA variante (no contra `precio_base`).
+        Si el producto tiene 30 ml a $44.990 y 100 ml a $64.990 con
+        oferta -10%, el "DESDE" del catálogo debe ser $40.491
+        (= 44.990 × 0.9), no $38.491 (= 44.990 − 6.499, donde el 6.499
+        venía de aplicar 10% sobre `precio_base = 64.990`).
+
+        Para productos sin variantes: precio_base − descuento.
+        """
+        if self.tiene_variantes:
+            from catalogo.precios import mejor_descuento_unitario
+            precios = []
+            for v in self.variantes.filter(activa=True):
+                desc, _ = mejor_descuento_unitario(v, Oferta.CANAL_ONLINE)
+                precios.append(v.precio - desc)
+            if precios:
+                return min(precios)
+        # Sin variantes (o sin variantes activas): cálculo a nivel producto.
         desc, oferta = self._mejor_oferta_online
         base = self.precio_minimo
         if not oferta or desc <= 0:
@@ -195,20 +221,161 @@ class Producto(models.Model):
 
     @property
     def tiene_oferta_online(self):
+        """True si hay alguna oferta vigente que aplique al producto
+        (a nivel producto, o a alguna de sus variantes activas)."""
         _, oferta = self._mejor_oferta_online
-        return oferta is not None
+        if oferta is not None:
+            return True
+        # Si el producto tiene variantes, también consideramos ofertas
+        # variante-específicas: el card debe mostrar "Oferta" igual.
+        if self.tiene_variantes:
+            from catalogo.precios import mejor_descuento_unitario
+            for v in self.variantes.filter(activa=True):
+                _, ov = mejor_descuento_unitario(v, Oferta.CANAL_ONLINE)
+                if ov is not None:
+                    return True
+        return False
 
     @property
     def descuento_porcentaje_online(self):
-        """Porcentaje (int 0..100) del descuento aplicado. 0 si no hay
-        oferta. Útil para el badge "−15%" en card y PDP."""
-        desc, oferta = self._mejor_oferta_online
-        if not oferta or desc <= 0:
-            return 0
+        """Porcentaje (int 0..100) del descuento aplicado al "desde".
+        0 si no hay oferta. Útil para el badge "−15%" en card y PDP.
+
+        BUG-003: se calcula contra el precio mínimo de variante (o
+        precio_base si no hay variantes), usando el descuento absoluto
+        ya aplicado a la variante más barata. Antes mezclaba el desc
+        calculado sobre `precio_base` con un divisor distinto y daba
+        números engañosos.
+        """
         base = self.precio_minimo
         if base <= 0:
             return 0
+        precio_final = self.precio_oferta_online
+        if precio_final >= base:
+            return 0
+        desc = base - precio_final
         return int(round((desc / base) * 100))
+
+    # ── Resenas (Bloque 9) ────────────────────────────────────────────
+
+    @cached_property
+    def resenas_publicas(self):
+        """Resenas aprobadas, mas recientes primero."""
+        return list(self.resenas.filter(estado='aprobada'))
+
+    @cached_property
+    def resena_promedio(self):
+        """Promedio de estrellas (float 1.0..5.0), o None si no hay."""
+        resenas = self.resenas_publicas
+        if not resenas:
+            return None
+        return sum(r.estrellas for r in resenas) / len(resenas)
+
+    @property
+    def resena_promedio_redondo(self):
+        """Promedio redondeado al entero — para mostrar N estrellas pintadas."""
+        avg = self.resena_promedio
+        return int(round(avg)) if avg is not None else 0
+
+    @property
+    def resena_count(self):
+        return len(self.resenas_publicas)
+
+
+class Resena(models.Model):
+    """Reseña de un producto por un cliente (con o sin cuenta).
+
+    Bloque 9: para mostrar reseñas reales en el PDP (en vez del
+    placeholder "Nuevo · sin reseñas aún"). Moderacion manual via
+    `estado` — se publica solo lo que la duena aprueba. No exponemos
+    el email del cliente; solo `nombre_publico` (puede ser nick).
+
+    `recibo` opcional: si la duena lo enlaza al ReciboVenta del
+    cliente, mostramos badge "Compra verificada".
+    """
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_APROBADA = 'aprobada'
+    ESTADO_RECHAZADA = 'rechazada'
+    ESTADO_CHOICES = [
+        (ESTADO_PENDIENTE, 'Pendiente de revisión'),
+        (ESTADO_APROBADA, 'Aprobada (visible)'),
+        (ESTADO_RECHAZADA, 'Rechazada'),
+    ]
+
+    producto = models.ForeignKey(
+        Producto, on_delete=models.CASCADE, related_name='resenas',
+    )
+    estrellas = models.PositiveSmallIntegerField(
+        choices=[(i, f'{i} estrella{"s" if i != 1 else ""}') for i in range(1, 6)],
+    )
+    titulo = models.CharField(max_length=120, blank=True)
+    texto = models.TextField()
+    nombre_publico = models.CharField(
+        max_length=80,
+        help_text='Nombre o nick que se publica con la resena.',
+    )
+    cliente_email = models.EmailField(
+        help_text='Email del autor — NO se publica. Solo para contactar '
+                  'si la dueña necesita validar.',
+    )
+    estado = models.CharField(
+        max_length=12, choices=ESTADO_CHOICES, default=ESTADO_PENDIENTE,
+        db_index=True,
+    )
+    # FK opcional al recibo de compra — habilita el badge "verificada".
+    recibo = models.ForeignKey(
+        'pos.ReciboVenta', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='resenas',
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+    moderada = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-creado']
+        constraints = [
+            CheckConstraint(
+                check=Q(estrellas__gte=1) & Q(estrellas__lte=5),
+                name='resena_estrellas_1_5',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.nombre_publico} · {self.estrellas}★ · {self.producto.nombre}'
+
+
+class ProductoImagen(models.Model):
+    """Imagen adicional para la galeria del PDP.
+
+    `Producto.imagen` (el campo de la portada) se conserva como antes —
+    es la que sale en cards de catalogo, busqueda, OG image y emails.
+    Estas imagenes solo aparecen en el detalle de producto.
+
+    `orden` determina como se muestran (asc): la primera es la mas
+    grande, las siguientes son thumbnails. Si el cliente sube 4
+    imagenes con orden 1/2/3/4 se renderizan en ese orden.
+    """
+    producto = models.ForeignKey(
+        Producto, on_delete=models.CASCADE, related_name='imagenes',
+    )
+    imagen = models.ImageField(upload_to='productos/galeria/')
+    orden = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Orden de visualizacion en la galeria (asc).',
+    )
+    alt = models.CharField(
+        max_length=200, blank=True,
+        help_text='Texto alternativo para accesibilidad. Si vacio, '
+                  'se usa el nombre del producto.',
+    )
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['orden', 'creado']
+        verbose_name = 'Imagen de galeria'
+        verbose_name_plural = 'Imagenes de galeria'
+
+    def __str__(self):
+        return f'{self.producto.nombre} · img #{self.pk}'
 
 
 class ProductoVariante(models.Model):
@@ -235,6 +402,8 @@ class ProductoVariante(models.Model):
 
     class Meta:
         ordering = ['producto__nombre', 'sku']
+        verbose_name = 'variante de producto'
+        verbose_name_plural = 'variantes de producto'
 
     def __str__(self):
         return f'{self.producto.nombre} [{self.sku}]'
@@ -318,6 +487,12 @@ class Oferta(models.Model):
                 check=Q(fecha_fin__gte=models.F('fecha_inicio')),
                 name='oferta_fechas_coherentes',
             ),
+        ]
+        # Bloque 6 (perf): la query "ofertas vigentes" filtra siempre
+        # por (activa=True, canal, fecha_inicio <= ahora <= fecha_fin).
+        # Indices cubren la combinacion mas frecuente.
+        indexes = [
+            models.Index(fields=['activa', 'canal', 'fecha_inicio', 'fecha_fin']),
         ]
 
     def __str__(self):

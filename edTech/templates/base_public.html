@@ -55,8 +55,18 @@
     </script>
     {% endblock %}
 
-    <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
-    <link rel="icon" type="image/svg+xml" href="{% static 'icon.svg' %}">
+    {% comment %}
+      Favicon Ideas Boutique · variante "Clásico" (anillos dorados + i italic).
+      Browsers modernos prefieren SVG; sizes 16/32/48/192 cubren bookmarks
+      y PWA; apple-touch-icon-180 cubre iOS home screen. La .ico legacy
+      queda como fallback final.
+    {% endcomment %}
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32.png' %}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{% static 'favicon-48.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon-192.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon-180.png' %}">
     <link rel="icon" href="{% static 'favicon.ico' %}">
     <link rel="manifest" href="{% static 'site.webmanifest' %}">
 
@@ -67,6 +77,24 @@
 
     {# Hoja de estilos del sistema Ideas Boutique #}
     <link rel="stylesheet" href="{% static 'css/ideas.css' %}">
+    {# Sprint 2 — mobile/tablet polish. Se carga DESPUES de ideas.css. #}
+    <link rel="stylesheet" href="{% static 'css/sprint2-mobile.css' %}">
+
+    {% comment %}
+      Analytics (Sprint 3 · 3.9) — Plausible: privacy-first, sin cookies,
+      cumple Ley 19.628. Solo se inyecta si ANALYTICS_DOMAIN esta
+      configurado en settings (vacio en dev = no-op). Eventos custom
+      via window.plausible("add_to_cart", {...}) cuando haga falta.
+    {% endcomment %}
+    {% if ANALYTICS_DOMAIN %}
+    <script defer data-domain="{{ ANALYTICS_DOMAIN }}"
+            src="https://plausible.io/js/script.tagged-events.js"></script>
+    <script>
+      window.plausible = window.plausible || function() {
+        (window.plausible.q = window.plausible.q || []).push(arguments);
+      };
+    </script>
+    {% endif %}
 
     {% comment %}
       HTMX: AJAX declarativo. Alpine: estado local pequeño. Defer
@@ -78,6 +106,12 @@
     {% block extra_head %}{% endblock %}
   </head>
   <body>
+    {% comment %}
+      Bloque 7 · a11y: Skip-to-content link. Solo aparece al recibir
+      foco con Tab — invisible para mouse/touch. WCAG 2.1 obligatorio
+      para usuarios de teclado que quieren saltar el header repetido.
+    {% endcomment %}
+    <a href="#main-content" class="skip-link">Saltar al contenido</a>
     {% include 'partials/_icons.html' %}
 
     {% comment %}
@@ -110,6 +144,38 @@
       document.addEventListener('click', function (e) {
         var dlg = document.getElementById('quick-view-modal');
         if (dlg && e.target === dlg) dlg.close();
+      });
+
+      // Animacion bounce del cart-icon cuando llega un OOB swap del
+      // badge tras agregar al carrito. HTMX dispara `htmx:oobAfterSwap`
+      // por cada elemento OOB swappado — escuchamos el del cart-icon.
+      document.addEventListener('htmx:oobAfterSwap', function (e) {
+        if (e.target && e.target.id === 'shop-cart-icon') {
+          e.target.classList.remove('cart-just-added');
+          void e.target.offsetWidth;
+          e.target.classList.add('cart-just-added');
+          setTimeout(function () {
+            e.target.classList.remove('cart-just-added');
+          }, 600);
+        }
+      });
+
+      // Diagnostico HTMX (F12 -> Console). Si el carrito no actualiza,
+      // estos logs muestran donde falla. Solo logea requests al carrito
+      // para no spamear la consola.
+      ['htmx:beforeRequest', 'htmx:afterRequest', 'htmx:responseError',
+       'htmx:swapError', 'htmx:sendError'].forEach(function (ev) {
+        document.addEventListener(ev, function (e) {
+          var detail = e.detail || {};
+          var xhr = detail.xhr || {};
+          var url = detail.requestConfig ? detail.requestConfig.path : '';
+          if (url.indexOf('agregar') === -1 && url.indexOf('carrito') === -1
+              && ev !== 'htmx:responseError' && ev !== 'htmx:swapError'
+              && ev !== 'htmx:sendError') return;
+          var info = { event: ev, url: url, status: xhr.status || '' };
+          if (ev.indexOf('Error') !== -1) console.error('[Ideas HTMX]', info, detail);
+          else console.log('[Ideas HTMX]', info);
+        });
       });
     </script>
 

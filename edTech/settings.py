@@ -2,10 +2,16 @@
 Django settings for edTech project (Ideas 2.0).
 """
 
+import sys
 from pathlib import Path
 import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# `python manage.py test` setea sys.argv[1] = 'test'. Lo detectamos
+# para apagar django-axes durante la suite: AxesBackend requiere el
+# objeto `request` en authenticate() y `Client.login()` no lo pasa.
+TESTING = 'test' in sys.argv
 
 env = environ.Env(
     DEBUG=(bool, False),
@@ -45,6 +51,12 @@ env = environ.Env(
     # que la duena tenga banda para moderar las resenas. La data
     # (model + admin + tests) se mantiene — solo se oculta el UI.
     FEATURE_RESENAS=(bool, False),
+    # Hardening (ver SECURITY.md). En dev quedan en defaults seguros;
+    # en prod el .env los redefine.
+    ADMIN_URL=(str, 'admin/'),          # Cambiar en prod por path no-obvio
+    ADMIN_EMAIL=(str, ''),              # Email del superusuario (recibe 500s)
+    AXES_FAILURE_LIMIT=(int, 5),        # 5 intentos fallidos = lockout
+    AXES_COOLOFF_HOURS=(int, 1),        # 1 hora de bloqueo
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -64,6 +76,8 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django.contrib.sitemaps',
     'rest_framework',
+    # Anti-fuerza-bruta para /admin/ y /cuenta/login/.
+    'axes',
     'accounts.apps.AccountsConfig',
     'catalogo.apps.CatalogoConfig',
     'bodega.apps.BodegaConfig',
@@ -92,6 +106,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Marca request.htmx para que views/templates puedan ajustar su salida.
     'edTech.middleware.HtmxMiddleware',
+    # django-axes: debe ir AL FINAL para ver el resultado del login.
+    'axes.middleware.AxesMiddleware',
+]
+
+# Auth backends: AxesStandaloneBackend RECHAZA logins de IPs/usuarios
+# bloqueados antes de llegar al ModelBackend. No autentica por si solo —
+# solo gatea. El orden importa: axes primero.
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'edTech.urls'
@@ -270,3 +294,41 @@ PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del 
 # se oculta en la UI publica hasta que la duena tenga ancho de banda
 # para moderar. Se prende cambiando FEATURE_RESENAS=True en .env.
 FEATURE_RESENAS = env('FEATURE_RESENAS')
+
+
+# --- Hardening de autenticacion y exposicion ----------------------------
+# Path del Django admin. En dev queda `admin/` por convencion; en prod el
+# .env lo cambia a algo no-obvio (ej. `eduardo-admin/`) para que los bots
+# que escanean /admin/wp-admin/login.php se pierdan.
+ADMIN_URL = env('ADMIN_URL').lstrip('/')
+if not ADMIN_URL.endswith('/'):
+    ADMIN_URL += '/'
+
+# Email del superusuario. Recibe el reporte de errores 500 (Django arma
+# email automaticamente cuando DEBUG=False — ver ADMINS + handler
+# `django.utils.log.AdminEmailHandler`).
+_admin_email = env('ADMIN_EMAIL')
+ADMINS = [('Eduardo Tapia', _admin_email)] if _admin_email else []
+MANAGERS = ADMINS
+
+# django-axes: lockout tras intentos fallidos de login.
+# Defaults conservadores: 5 intentos por usuario+IP, lockout de 1 hora.
+# El admin se desbloquea automaticamente despues del cooloff.
+AXES_FAILURE_LIMIT = env('AXES_FAILURE_LIMIT')
+AXES_COOLOFF_TIME = env('AXES_COOLOFF_HOURS')   # en horas (int) — axes lo entiende
+AXES_LOCKOUT_PARAMETERS = ['username', 'ip_address']
+AXES_RESET_ON_SUCCESS = True
+AXES_ENABLE_ADMIN = True
+# IPs que NO se bloquean (LAN del local). Vacio = todos. En prod podemos
+# whitelistear la IP de la tienda fisica si genera mucho falso-positivo.
+AXES_NEVER_LOCKOUT_WHITELIST = False
+# Para sitios detras de un reverse proxy (nginx, Cloudflare): usar el
+# X-Forwarded-For real, no la IP del proxy. AxesMiddleware respeta esto
+# si lo configuramos con la lista de proxies confiables. En dev queda
+# vacio; en prod (ver .env.example) se setea con la IP del balanceador.
+AXES_PROXY_COUNT = env.int('AXES_PROXY_COUNT', default=0)
+# Apagar axes durante la suite de tests: el Client.login() de Django no
+# pasa el `request` que AxesBackend exige. Cada test que quiera probar
+# el lockout puede usar `@override_settings(AXES_ENABLED=True)` o el
+# cliente real (POST a /cuenta/login/). Ver tests/test_axes_lockout.py.
+AXES_ENABLED = not TESTING

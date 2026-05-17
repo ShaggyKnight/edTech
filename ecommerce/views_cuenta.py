@@ -55,7 +55,10 @@ def registro(request):
         form = RegistroClienteForm(request.POST)
         if form.is_valid():
             user = form.save()
-            auth_login(request, user)
+            # Especificamos el backend porque con django-axes hay 2
+            # configurados (AxesStandaloneBackend + ModelBackend) y Django
+            # exige que indiquemos cual.
+            auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('ecommerce:mis_pedidos')
     else:
         form = RegistroClienteForm()

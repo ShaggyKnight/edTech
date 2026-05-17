@@ -18,3 +18,8 @@ whitenoise>=6.7
 # Dev sigue con SQLite por DATABASE_URL=sqlite:///.
 # psycopg2-binary evita necesitar toolchain de build en Railway / Fly.
 psycopg2-binary>=2.9
+
+# ── Hardening de autenticacion ───────────────────────────────────────
+# Lockout tras N intentos fallidos de login (anti-fuerza-bruta en
+# /admin/ y /cuenta/login/). Configurable en settings (AXES_*).
+django-axes>=7.0,<8.0

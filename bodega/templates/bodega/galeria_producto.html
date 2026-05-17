@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block titulo %}Galería · {{ producto.nombre }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .galeria-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .gal-card {
+    background: var(--bo-card);
+    border: 2px solid var(--bo-line);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+    cursor: grab;
+    user-select: none;
+  }
+  .gal-card:active { cursor: grabbing; }
+  .gal-card.is-dragging {
+    opacity: .4;
+    transform: scale(.97);
+  }
+  .gal-card.is-drag-over {
+    border-color: var(--bo-primary-2);
+    box-shadow: 0 0 0 4px rgba(122,30,43,0.12);
+  }
+  .gal-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+  }
+  .gal-card-meta {
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--bo-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .gal-card-order {
+    background: var(--bo-primary);
+    color: white;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+  }
+  .gal-handle {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: rgba(0,0,0,.55);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    pointer-events: none;
+  }
+  .gal-empty {
+    grid-column: 1 / -1;
+    padding: 32px;
+    text-align: center;
+    color: var(--bo-muted);
+    border: 2px dashed var(--bo-line);
+    border-radius: 10px;
+  }
+  .gal-status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--bo-muted);
+  }
+  .gal-status.is-ok { color: var(--bo-success, #2F5530); }
+  .gal-status.is-err { color: var(--bo-danger, #C00); }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="bo-page-head">
+    <div>
+      <div class="bo-crumb">
+        Bodega / <a href="{% url 'bodega:lista_productos' %}">Productos</a> /
+        <a href="{% url 'bodega:producto_editar' producto.pk %}">{{ producto.nombre }}</a> / Galería
+      </div>
+      <h1>Galería de imágenes</h1>
+      <div class="sub">
+        Imágenes adicionales que aparecen como thumbs en el PDP.
+        La <strong>imagen principal</strong> (la que sale en cards y resultados de búsqueda)
+        se edita en el form de producto.
+      </div>
+    </div>
+    <div>
+      <a href="{% url 'bodega:producto_editar' producto.pk %}" class="bo-btn">
+        ← Volver al producto
+      </a>
+    </div>
+  </div>
+
+  {% if puede_reordenar and imagenes|length > 1 %}
+    <div class="bo-card" style="padding:12px 16px;margin-bottom:0;background:var(--bo-bg-elev, #fff7e6);">
+      <strong>Arrastrá las imágenes</strong> para cambiar el orden en que se muestran en el PDP.
+      El cambio se guarda automáticamente.
+    </div>
+  {% elif not puede_reordenar and imagenes|length > 1 %}
+    <div class="bo-card" style="padding:12px 16px;margin-bottom:0;color:var(--bo-muted);">
+      Solo admins pueden cambiar el orden de la galería. Vos podés ver y eliminar imágenes.
+    </div>
+  {% endif %}
+
+  <div class="bo-card" style="padding:16px;">
+    {% if imagenes %}
+      <div class="galeria-grid" id="galeria-grid"
+           data-puede-reordenar="{{ puede_reordenar|yesno:'1,0' }}"
+           data-reorder-url="{% url 'bodega:galeria_reorder' producto.pk %}"
+           data-csrf="{{ csrf_token }}">
+        {% for img in imagenes %}
+          <div class="gal-card"
+               draggable="{% if puede_reordenar %}true{% else %}false{% endif %}"
+               data-img-id="{{ img.pk }}"
+               aria-label="Imagen {{ forloop.counter }} de {{ imagenes|length }}">
+            <span class="gal-handle">⋮⋮</span>
+            <img src="{{ img.imagen.url }}" alt="{{ img.alt|default:producto.nombre }}" loading="lazy">
+            <div class="gal-card-meta">
+              <span class="gal-card-order">#{{ forloop.counter }}</span>
+              <form method="post" action="{% url 'bodega:galeria_borrar' producto.pk img.pk %}"
+                    style="display:inline;margin:0;"
+                    onsubmit="return confirm('¿Eliminar esta imagen de la galería?');">
+                {% csrf_token %}
+                <button type="submit" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);">
+                  Borrar
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <div id="gal-status" class="gal-status" aria-live="polite"></div>
+    {% else %}
+      <div class="gal-empty">
+        <p>Este producto todavía no tiene imágenes adicionales.</p>
+        {# `{% url 'admin:...' %}` se resuelve dinamicamente segun el #}
+        {# ADMIN_URL configurado en settings (puede no ser '/admin/').  #}
+        <p>Cargá imágenes desde el <a href="{% url 'admin:catalogo_producto_change' producto.pk %}">admin Django</a>
+           (sección "Imágenes de galería" al final del form).</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if imagenes and puede_reordenar %}
+    <script>
+      (function () {
+        // Bloque 15 · Drag-drop nativo (sin libs). Cuando termina el
+        // drop, leemos el orden actual del DOM y lo POSTeamos al
+        // endpoint reorder. El servidor actualiza `orden` en cada
+        // ProductoImagen.
+        var grid = document.getElementById('galeria-grid');
+        var status = document.getElementById('gal-status');
+        if (!grid || grid.dataset.puedeReordenar !== '1') return;
+
+        var arrastrada = null;
+
+        function actualizarBadges() {
+          var cards = grid.querySelectorAll('.gal-card');
+          cards.forEach(function (card, idx) {
+            var badge = card.querySelector('.gal-card-order');
+            if (badge) badge.textContent = '#' + (idx + 1);
+          });
+        }
+
+        function persistirOrden() {
+          var cards = grid.querySelectorAll('.gal-card');
+          var ids = Array.from(cards).map(function (c) { return c.dataset.imgId; });
+          status.textContent = 'Guardando...';
+          status.className = 'gal-status';
+
+          var fd = new FormData();
+          fd.append('orden_ids', ids.join(','));
+          fd.append('csrfmiddlewaretoken', grid.dataset.csrf);
+
+          fetch(grid.dataset.reorderUrl, {
+            method: 'POST',
+            body: fd,
+            headers: {'HX-Request': 'true'},
+            credentials: 'same-origin',
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.text();
+            })
+            .then(function (txt) {
+              status.textContent = '✓ Orden guardado · ' + new Date().toLocaleTimeString('es-CL');
+              status.className = 'gal-status is-ok';
+            })
+            .catch(function (err) {
+              status.textContent = '✗ Error guardando · ' + err.message;
+              status.className = 'gal-status is-err';
+            });
+        }
+
+        grid.addEventListener('dragstart', function (e) {
+          var card = e.target.closest('.gal-card');
+          if (!card) return;
+          arrastrada = card;
+          card.classList.add('is-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        grid.addEventListener('dragend', function (e) {
+          var card = e.target.closest('.gal-card');
+          if (card) card.classList.remove('is-dragging');
+          grid.querySelectorAll('.is-drag-over').forEach(function (c) {
+            c.classList.remove('is-drag-over');
+          });
+          arrastrada = null;
+        });
+
+        grid.addEventListener('dragover', function (e) {
+          if (!arrastrada) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          var target = e.target.closest('.gal-card');
+          if (target && target !== arrastrada) {
+            grid.querySelectorAll('.is-drag-over').forEach(function (c) {
+              c.classList.remove('is-drag-over');
+            });
+            target.classList.add('is-drag-over');
+          }
+        });
+
+        grid.addEventListener('drop', function (e) {
+          e.preventDefault();
+          var target = e.target.closest('.gal-card');
+          if (!arrastrada || !target || target === arrastrada) return;
+
+          // Insertar antes o despues segun la posicion horizontal del cursor
+          // relativa al centro del target.
+          var rect = target.getBoundingClientRect();
+          var antes = (e.clientX - rect.left) < rect.width / 2;
+          if (antes) {
+            grid.insertBefore(arrastrada, target);
+          } else {
+            grid.insertBefore(arrastrada, target.nextSibling);
+          }
+          actualizarBadges();
+          persistirOrden();
+        });
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

@@ -2,13 +2,50 @@
 {% comment %}
   Tabla de ofertas. Partial extraido para que los filtros AJAX refresquen
   solo esta zona sin recargar la pagina.
-  Contexto: `ofertas`.
+  Contexto: `ofertas`, `filtros`, `puede_bulk_ofertas`.
+  Bloque 13: bulk-select para pausar/reactivar varias a la vez.
 {% endcomment %}
 <div class="bo-card" id="ofertas-tabla">
   {% if ofertas %}
+    {% if puede_bulk_ofertas %}
+      <form id="bulk-ofertas-form"
+            method="post"
+            action="{% url 'bodega:ofertas_bulk_action' %}"
+            hx-post="{% url 'bodega:ofertas_bulk_action' %}"
+            hx-target="#ofertas-tabla"
+            hx-swap="outerHTML">
+        {% csrf_token %}
+        <input type="hidden" name="q" value="{{ filtros.q }}">
+        <input type="hidden" name="estado" value="{{ filtros.estado }}">
+        <input type="hidden" name="canal" value="{{ filtros.canal }}">
+
+        <div class="bulk-bar" id="bulk-bar-ofertas" hidden>
+          <strong><span id="bulk-count-ofertas">0</span> seleccionada(s)</strong>
+          <div class="bulk-bar-actions">
+            <button type="submit" name="accion" value="reactivar"
+                    class="bo-btn bo-btn-sm bo-btn-primary">
+              Reactivar
+            </button>
+            <button type="submit" name="accion" value="pausar"
+                    class="bo-btn bo-btn-sm">
+              Pausar
+            </button>
+            <button type="button" id="bulk-clear-ofertas" class="bo-btn bo-btn-sm bo-btn-ghost">
+              Limpiar selección
+            </button>
+          </div>
+        </div>
+    {% endif %}
+
     <table class="bo-table">
       <thead>
         <tr>
+          {% if puede_bulk_ofertas %}
+            <th style="width:32px;">
+              <input type="checkbox" id="bulk-select-all-ofertas"
+                     aria-label="Seleccionar todas las ofertas visibles">
+            </th>
+          {% endif %}
           <th>Nombre</th>
           <th>Aplica a</th>
           <th class="num">Descuento</th>
@@ -21,6 +58,13 @@
       <tbody>
         {% for o in ofertas %}
           <tr {% if not o.activa %}style="opacity:.55;"{% endif %}>
+            {% if puede_bulk_ofertas %}
+              <td>
+                <input type="checkbox" name="ids" value="{{ o.pk }}"
+                       class="bulk-checkbox-ofertas"
+                       aria-label="Seleccionar {{ o.nombre }}">
+              </td>
+            {% endif %}
             <td><strong>{{ o.nombre }}</strong></td>
             <td>
               {% if o.variante %}
@@ -61,12 +105,21 @@
             <td>
               <div style="display:inline-flex;gap:4px;">
                 <a href="{% url 'bodega:oferta_editar' o.pk %}" class="bo-btn bo-btn-sm">Editar</a>
-                <form method="post" action="{% url 'bodega:oferta_toggle' o.pk %}" style="display:inline;">
-                  {% csrf_token %}
-                  <button type="submit" class="bo-btn bo-btn-sm">
-                    {% if o.activa %}Pausar{% else %}Reactivar{% endif %}
-                  </button>
-                </form>
+                {# El toggle individual se mantiene; el bulk es para varias. #}
+                <button type="button" class="bo-btn bo-btn-sm"
+                        onclick="(function(){
+                          var f = document.createElement('form');
+                          f.method = 'post';
+                          f.action = '{% url 'bodega:oferta_toggle' o.pk %}';
+                          var t = document.createElement('input');
+                          t.name = 'csrfmiddlewaretoken';
+                          t.value = '{{ csrf_token }}';
+                          f.appendChild(t);
+                          document.body.appendChild(f);
+                          f.submit();
+                        })()">
+                  {% if o.activa %}Pausar{% else %}Reactivar{% endif %}
+                </button>
                 <button type="button" class="bo-btn bo-btn-sm" style="color:var(--bo-danger);"
                         onclick="ideasConfirm({
                           title: 'Eliminar oferta',
@@ -83,6 +136,50 @@
         {% endfor %}
       </tbody>
     </table>
+
+    {% if puede_bulk_ofertas %}
+      </form>
+
+      <script>
+        (function () {
+          var form = document.getElementById('bulk-ofertas-form');
+          if (!form) return;
+          var bar = document.getElementById('bulk-bar-ofertas');
+          var count = document.getElementById('bulk-count-ofertas');
+          var selectAll = document.getElementById('bulk-select-all-ofertas');
+          var clearBtn = document.getElementById('bulk-clear-ofertas');
+          var checks = form.querySelectorAll('.bulk-checkbox-ofertas');
+
+          function refresh() {
+            var n = 0;
+            checks.forEach(function (c) { if (c.checked) n++; });
+            count.textContent = String(n);
+            bar.hidden = (n === 0);
+            if (selectAll) {
+              selectAll.checked = (n === checks.length && n > 0);
+              selectAll.indeterminate = (n > 0 && n < checks.length);
+            }
+          }
+
+          checks.forEach(function (c) { c.addEventListener('change', refresh); });
+          if (selectAll) {
+            selectAll.addEventListener('change', function () {
+              var on = selectAll.checked;
+              checks.forEach(function (c) { c.checked = on; });
+              refresh();
+            });
+          }
+          if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+              checks.forEach(function (c) { c.checked = false; });
+              refresh();
+            });
+          }
+          refresh();
+        })();
+      </script>
+    {% endif %}
+
   {% else %}
     <div class="bo-card-body" style="color:var(--bo-muted);">
       No hay ofertas con los filtros aplicados.

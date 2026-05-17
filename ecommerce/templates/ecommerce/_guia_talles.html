@@ -1,0 +1,225 @@
+{% comment %}
+  Bloque 12 · Guia de talles + calculadora para uniformes.
+
+  Se renderiza dentro de un <dialog> abierto desde el PDP. Dos tabs:
+  1. "Tabla de medidas" — tallas chilenas estandar para uniforme escolar.
+  2. "Calculadora" — input edad/altura -> sugiere talla.
+
+  Las medidas son aproximadas (estandar industria), pueden variar 1-2 cm
+  por confeccion. Si hay dudas, escribir por WhatsApp.
+{% endcomment %}
+<div class="guia-talles" x-data="{ tab: 'tabla' }" role="document">
+  <header class="guia-talles-head">
+    <h2 id="guia-talles-titulo">Guía de talles</h2>
+    <button type="button" class="guia-talles-close"
+            onclick="this.closest('dialog').close()"
+            aria-label="Cerrar guía de talles">
+      <svg class="ico ico--18"><use href="#ico-close"/></svg>
+    </button>
+  </header>
+
+  <nav class="guia-talles-tabs" role="tablist">
+    <button type="button" role="tab"
+            :aria-selected="tab === 'tabla'"
+            :class="tab === 'tabla' ? 'active' : ''"
+            @click="tab = 'tabla'">
+      Tabla de medidas
+    </button>
+    <button type="button" role="tab"
+            :aria-selected="tab === 'calc'"
+            :class="tab === 'calc' ? 'active' : ''"
+            @click="tab = 'calc'">
+      Calculadora rápida
+    </button>
+  </nav>
+
+  {# ============ Tab 1: Tabla de medidas ============ #}
+  <section x-show="tab === 'tabla'" x-cloak role="tabpanel">
+    <p class="guia-talles-help">
+      Medidas en centímetros. Para acertar al primer intento, medí
+      pecho/cintura del niño y comparalo con esta tabla. Si dudás
+      entre dos tallas, te recomendamos elegir la mayor.
+    </p>
+    <div class="guia-talles-table-wrap">
+      <table class="guia-talles-table">
+        <thead>
+          <tr>
+            <th>Talla</th>
+            <th>Edad</th>
+            <th>Altura (cm)</th>
+            <th>Pecho (cm)</th>
+            <th>Cintura (cm)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>4</strong></td>  <td>3-4 años</td>   <td>95-105</td>  <td>53-55</td>  <td>50-52</td></tr>
+          <tr><td><strong>6</strong></td>  <td>5-6 años</td>   <td>105-115</td> <td>55-58</td>  <td>52-55</td></tr>
+          <tr><td><strong>8</strong></td>  <td>7-8 años</td>   <td>115-125</td> <td>58-62</td>  <td>55-58</td></tr>
+          <tr><td><strong>10</strong></td> <td>9-10 años</td>  <td>125-135</td> <td>62-66</td>  <td>58-62</td></tr>
+          <tr><td><strong>12</strong></td> <td>11-12 años</td> <td>135-145</td> <td>66-71</td>  <td>62-66</td></tr>
+          <tr><td><strong>14</strong></td> <td>13-14 años</td> <td>145-155</td> <td>71-76</td>  <td>66-71</td></tr>
+          <tr><td><strong>16</strong></td> <td>15-16 años</td> <td>155-165</td> <td>76-82</td>  <td>71-76</td></tr>
+          <tr><td><strong>S</strong></td>  <td>16-19 años</td> <td>160-170</td> <td>82-88</td>  <td>72-78</td></tr>
+          <tr><td><strong>M</strong></td>  <td>adulto</td>     <td>165-175</td> <td>88-96</td>  <td>78-86</td></tr>
+          <tr><td><strong>L</strong></td>  <td>adulto</td>     <td>170-180</td> <td>96-104</td> <td>86-94</td></tr>
+          <tr><td><strong>XL</strong></td> <td>adulto</td>     <td>175-185</td> <td>104-112</td><td>94-102</td></tr>
+          <tr><td><strong>XXL</strong></td><td>adulto</td>     <td>180-190</td> <td>112-120</td><td>102-110</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="guia-talles-disclaimer">
+      💬 ¿Tenés dudas con la talla? <strong>Escribinos por WhatsApp</strong>
+      antes de comprar y te ayudamos a elegir.
+    </p>
+  </section>
+
+  {# ============ Tab 2: Calculadora ============ #}
+  <section x-show="tab === 'calc'" x-cloak role="tabpanel">
+    <p class="guia-talles-help">
+      Ingresá <strong>al menos uno</strong> de estos datos y te recomendamos
+      una talla. La altura es la medida más confiable.
+    </p>
+    <form id="guia-calc-form" class="guia-calc-form" onsubmit="return false;">
+      <label class="guia-calc-row">
+        <span>Edad (años)</span>
+        <input type="number" id="calc-edad" min="1" max="99" step="1"
+               placeholder="ej: 10" inputmode="numeric">
+      </label>
+      <label class="guia-calc-row">
+        <span>Altura (cm)</span>
+        <input type="number" id="calc-altura" min="80" max="220" step="1"
+               placeholder="ej: 135" inputmode="numeric">
+      </label>
+      <label class="guia-calc-row">
+        <span>Pecho (cm) <em>opcional</em></span>
+        <input type="number" id="calc-pecho" min="40" max="150" step="1"
+               placeholder="ej: 65" inputmode="numeric">
+      </label>
+      <button type="button" class="btn-primary" id="calc-submit">
+        Recomendarme una talla
+      </button>
+    </form>
+
+    <div id="calc-result" class="guia-calc-result" hidden>
+      <div class="calc-result-big">
+        Tu talla sugerida es <strong id="calc-result-talla">—</strong>
+      </div>
+      <p id="calc-result-detalle"></p>
+      <p class="guia-talles-disclaimer">
+        Si dudás entre dos tallas, elegí la mayor. Cambios sin costo
+        dentro de los 15 días si el producto está sin uso.
+      </p>
+    </div>
+  </section>
+</div>
+
+<script>
+  (function () {
+    // Bloque 12: lookup tables + recomendacion de talla.
+    // Cada fila: [talla, edadMin, edadMax, alturaMin, alturaMax, pechoMin, pechoMax]
+    var TALLAS = [
+      ['4',   3, 4,   95, 105, 53, 55],
+      ['6',   5, 6,   105, 115, 55, 58],
+      ['8',   7, 8,   115, 125, 58, 62],
+      ['10',  9, 10,  125, 135, 62, 66],
+      ['12',  11, 12, 135, 145, 66, 71],
+      ['14',  13, 14, 145, 155, 71, 76],
+      ['16',  15, 16, 155, 165, 76, 82],
+      ['S',   16, 19, 160, 170, 82, 88],
+      ['M',   18, 35, 165, 175, 88, 96],
+      ['L',   25, 45, 170, 180, 96, 104],
+      ['XL',  30, 99, 175, 185, 104, 112],
+      ['XXL', 30, 99, 180, 220, 112, 150],
+    ];
+
+    function buscarPorAltura(altura) {
+      for (var i = 0; i < TALLAS.length; i++) {
+        var t = TALLAS[i];
+        if (altura >= t[3] && altura <= t[4]) return t[0];
+      }
+      // Fuera de rango: si menor al minimo, devolver "4"; si mayor, "XXL".
+      if (altura < TALLAS[0][3]) return TALLAS[0][0];
+      return TALLAS[TALLAS.length - 1][0];
+    }
+
+    function buscarPorEdad(edad) {
+      for (var i = 0; i < TALLAS.length; i++) {
+        var t = TALLAS[i];
+        if (edad >= t[1] && edad <= t[2]) return t[0];
+      }
+      if (edad < TALLAS[0][1]) return TALLAS[0][0];
+      // Para adultos cualquier edad alta cae en M-XXL; preferimos M como default.
+      return 'M';
+    }
+
+    function buscarPorPecho(pecho) {
+      for (var i = 0; i < TALLAS.length; i++) {
+        var t = TALLAS[i];
+        if (pecho >= t[5] && pecho <= t[6]) return t[0];
+      }
+      if (pecho < TALLAS[0][5]) return TALLAS[0][0];
+      return TALLAS[TALLAS.length - 1][0];
+    }
+
+    var btn = document.getElementById('calc-submit');
+    var inputEdad = document.getElementById('calc-edad');
+    var inputAltura = document.getElementById('calc-altura');
+    var inputPecho = document.getElementById('calc-pecho');
+    var result = document.getElementById('calc-result');
+    var resultTalla = document.getElementById('calc-result-talla');
+    var resultDetalle = document.getElementById('calc-result-detalle');
+
+    btn.addEventListener('click', function () {
+      var edad = parseInt(inputEdad.value, 10);
+      var altura = parseInt(inputAltura.value, 10);
+      var pecho = parseInt(inputPecho.value, 10);
+
+      if (!edad && !altura && !pecho) {
+        inputAltura.focus();
+        inputAltura.classList.add('is-invalid');
+        return;
+      }
+      inputAltura.classList.remove('is-invalid');
+
+      // Prioridad: pecho > altura > edad (pecho es la medida mas precisa).
+      var sugerida = null;
+      var razon = '';
+      if (pecho) {
+        sugerida = buscarPorPecho(pecho);
+        razon = 'En base a ' + pecho + ' cm de pecho.';
+      } else if (altura) {
+        sugerida = buscarPorAltura(altura);
+        razon = 'En base a ' + altura + ' cm de altura.';
+      } else {
+        sugerida = buscarPorEdad(edad);
+        razon = 'En base a ' + edad + ' años. ' +
+                'Para más precisión, medí la altura o el pecho.';
+      }
+
+      // Si dieron edad + altura y discrepan mucho, agregamos un hint.
+      if (edad && altura) {
+        var sugEdad = buscarPorEdad(edad);
+        var sugAltura = buscarPorAltura(altura);
+        if (sugEdad !== sugAltura) {
+          razon += ' Por edad daría talla ' + sugEdad +
+                   ', pero la altura es más confiable.';
+        }
+      }
+
+      resultTalla.textContent = sugerida;
+      resultDetalle.textContent = razon;
+      result.hidden = false;
+      result.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    });
+
+    // Enter en cualquier input dispara la recomendacion.
+    [inputEdad, inputAltura, inputPecho].forEach(function (i) {
+      i.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btn.click();
+        }
+      });
+    });
+  })();
+</script>

@@ -1,0 +1,794 @@
+/* ============================================================
+   Sprint 2 · Mobile + Tablet polish
+   Se carga DESPUÉS de ideas.css. No edita el archivo grande;
+   solo agrega reglas nuevas o sobreescribe lo mínimo.
+   ============================================================ */
+
+/* --- 1. iPad PORTRAIT breakpoint (744–900px) -----------------
+   iPhone 12 Pro (390) → 2 columnas, drawer mobile.
+   iPad mini portrait (744), iPad 10th portrait (820), iPad Pro 11"
+   portrait (834) caen en este rango → 3 columnas y respiraciones
+   un poco más amplias, sin perder el drawer mobile.
+   -------------------------------------------------------------*/
+@media (min-width: 720px) and (max-width: 900px) {
+  .shop-grid,
+  .shop-grid.four          { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .cats-grid               { grid-template-columns: repeat(3, 1fr); }
+  .telas-grid              { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .strip                   { grid-template-columns: repeat(4, 1fr); padding: 24px 32px; }
+  .col-grid                { grid-template-columns: 1.4fr 1fr 1fr; gap: 14px; }
+
+  /* PDP: foto a la izquierda, info al lado — aprovechamos los 820px. */
+  .pdp-main                { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .pdp-gallery             { grid-template-columns: 1fr; }
+  .pdp-thumbs              { display: flex; flex-direction: row; gap: 8px; order: 2; }
+  .pdp-thumbs button       { flex: 0 0 64px; }
+
+  /* Hero más cómodo. */
+  .hero                    { padding: 100px 40px 60px; }
+  .hero-title              { font-size: 60px; }
+
+  /* Layout padding más amplio. */
+  .shop-home,
+  .shop-cat-page,
+  .pdp,
+  .cart                    { padding-left: 32px; padding-right: 32px; }
+}
+
+/* --- 2. TOUCH targets (cualquier touch device) ---------------
+   Apple WCAG: tap targets ≥ 44×44 CSS px. Aplica en iPhone e
+   iPad por igual. `(hover: none)` excluye desktop con mouse.
+   -------------------------------------------------------------*/
+@media (hover: none) and (pointer: coarse) {
+  .size-chip               { min-width: 44px; min-height: 44px; padding: 6px 12px; }
+  .size-chips.wide-chips .size-chip { min-height: 56px; }
+  .qty button              { width: 44px; height: 44px; }
+  .qty.small button        { width: 40px; height: 40px; }
+  .shop-cart,
+  .shop-actions button,
+  .shop-actions > a        { min-width: 44px; min-height: 44px; }
+  .pcard-wish              { width: 40px; height: 40px; }
+  .drawer-nav a,
+  .drawer-nav button       { padding: 16px 24px; min-height: 52px; font-size: 16px; }
+  .pdp-thumb               { min-width: 56px; min-height: 56px; }
+  .filter-toggle,
+  .sort-sel select         { min-height: 40px; padding: 10px 16px; }
+  .pdp-nav                 { width: 48px; height: 48px; }
+  .remove                  { padding: 6px 10px; }
+}
+
+/* --- 3. SHOP-FILTERS bottom-sheet en mobile ------------------
+   El aside.shop-filters está oculto en mobile (CSS base). Al
+   abrir el drawer le ponemos `.is-open` y lo convertimos en
+   bottom-sheet con scrim. Se ve y se siente como nativo.
+   -------------------------------------------------------------*/
+.shop-filters-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 14, 14, 0.45);
+  z-index: 998;
+  animation: ib-fade-in 0.2s ease;
+}
+
+@media (max-width: 900px) {
+  .shop-filters {
+    display: block;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    max-height: 88vh;
+    background: var(--cream);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    z-index: 999;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+    transform: translateY(100%);
+    transition: transform .25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+  .shop-filters.is-open    { transform: translateY(0); }
+
+  .shop-filters-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .shop-filters-head h4 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .shop-filters form {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .shop-filters-foot {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 10px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+    background: var(--cream);
+  }
+  .shop-filters-foot .btn-primary,
+  .shop-filters-foot .btn-outline {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+  }
+}
+
+/* En desktop el aside es columna lateral — esconder head/foot. */
+@media (min-width: 901px) {
+  .shop-filters-head,
+  .shop-filters-foot       { display: none; }
+}
+
+/* --- 4. CARRITO · línea con error (Sprint 2 · 2.1) ----------*/
+.cart-row--error {
+  border-color: var(--vino) !important;
+  background: rgba(122, 30, 43, 0.04);
+  position: relative;
+}
+.cart-row-error {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  background: var(--vino);
+  color: var(--cream);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin: -8px -8px 8px;
+}
+.cart-row-error svg        { flex-shrink: 0; color: var(--gold); }
+.cart-row-error strong     { font-weight: 600; }
+.cart-row-error span       { flex: 1; min-width: 160px; opacity: 0.85; line-height: 1.4; }
+.cart-row-error-cta {
+  background: var(--cream);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cart-row-error-cta:hover  { background: var(--gold); }
+
+/* --- 5. Alerts más legibles ---------------------------------*/
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  background: #FFF8E6;
+  border: 1px solid #E5C97A;
+  color: #6B4F00;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.alert svg                 { flex-shrink: 0; margin-top: 2px; color: #B8935A; }
+.alert--error              { background: rgba(122,30,43,0.08); border-color: var(--vino); color: var(--vino); }
+.alert--error svg          { color: var(--vino); }
+.alert--success            { background: rgba(84,120,82,0.08); border-color: #547852; color: #2F5530; }
+.alert--success svg        { color: #547852; }
+
+/* --- 6. PDP · talla agotada y "avísame" ---------------------*/
+.size-chip.is-agotada {
+  position: relative;
+  color: var(--ink-40);
+  background: var(--cream-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-40);
+  text-decoration-thickness: 1.5px;
+  cursor: pointer;  /* clickable to open notify form */
+}
+.size-chip.is-agotada::after {
+  content: '⚐';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.size-chip.is-agotada:hover {
+  border-color: var(--gold-2);
+  color: var(--ink);
+  background: var(--cream);
+}
+
+.notify-form {
+  background: var(--cream);
+  border: 1px solid var(--gold-soft);
+  border-left: 3px solid var(--gold-2);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-top: 14px;
+  font-size: 14px;
+  animation: ib-slide-in 0.2s ease-out;
+}
+.notify-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.notify-head strong        { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--ink); }
+.notify-form p             { font-size: 13px; color: var(--ink-60); margin: 0 0 12px; line-height: 1.5; }
+.notify-input {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.notify-input input {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink);
+}
+.notify-input input.is-invalid { border-color: var(--vino); background: rgba(122,30,43,0.06); }
+.notify-input input:focus  { outline: none; border-color: var(--ink); }
+.notify-input .btn-primary { padding: 10px 18px; font-size: 13px; font-weight: 600; }
+.notify-close              { background: none; border: none; color: var(--ink-60); cursor: pointer; padding: 4px; line-height: 0; }
+.notify-close:hover        { color: var(--ink); }
+.notify-done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2F5530;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 0 0;
+}
+.notify-done svg           { color: #547852; flex-shrink: 0; }
+.notify-done em            { font-style: normal; font-weight: 600; color: var(--ink); }
+
+@media (max-width: 520px) {
+  .notify-input            { grid-template-columns: 1fr; }
+}
+
+/* --- 7. Sale tag rojo ----------------------------------------*/
+.pcard-tag-sale            { background: var(--vino); color: var(--cream); }
+
+/* --- 8. PDP sticky CTA en mobile -----------------------------
+   En iPhone, el botón "Agregar al carrito" puede quedar fuera de
+   la pantalla mientras el cliente revisa la descripción. Sticky
+   bottom resuelve eso.
+   -------------------------------------------------------------*/
+@media (max-width: 720px) {
+  .pdp { padding-bottom: 88px; }
+  .pdp-ctas {
+    position: sticky;
+    bottom: 0;
+    background: var(--cream);
+    margin: 16px -20px 0;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    z-index: 40;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  }
+  .pdp-ctas .btn-primary    { width: 100%; }
+}
+
+/* --- 9. PDP imagen full-bleed en mobile ----------------------*/
+@media (max-width: 720px) {
+  .pdp-main                { gap: 24px; }
+  .pdp-big                 { border-radius: 0; margin: 0 -20px; aspect-ratio: 4/5; }
+  .pdp-thumbs              { padding: 0 4px; }
+  .pdp-info h1             { font-size: 30px; }
+  .pdp-price .big          { font-size: 32px; }
+}
+
+/* --- 10. Drawer del header: ancho mejor en tablet -----------*/
+@media (min-width: 600px) and (max-width: 900px) {
+  .drawer                  { width: min(60vw, 380px); }
+}
+
+@keyframes ib-fade-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ib-slide-in  { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- 11. Body scroll lock cuando hay drawer abierto ---------*/
+body.no-scroll, html.no-scroll { overflow: hidden !important; }
+
+/* --- 11b. FIX critico: `hidden` attr debe esconder de verdad ---
+   `.drawer` y otros elementos tienen `display: flex` que sobrescribe
+   el `[hidden] { display: none }` default del browser. Sin esta
+   regla, el drawer mobile aparece cubriendo la izquierda en desktop. */
+[hidden] { display: none !important; }
+
+/* --- 11c. Drawer y scrim solo en mobile/tablet portrait -------
+   En desktop (>900px) el menu lateral nunca debe aparecer — el
+   header tiene su propia nav horizontal. Aun si el JS abriera el
+   drawer, lo escondemos por CSS. */
+@media (min-width: 901px) {
+  .drawer, .drawer-scrim { display: none !important; }
+}
+
+/* --- 12. Bloque 7 · A11y -----------------------------------*/
+
+/* Skip-to-content link — invisible salvo cuando recibe foco con Tab.
+   WCAG 2.4.1: deja al usuario de teclado saltar el header sin tener
+   que tabbear por todos los enlaces de la nav. */
+.skip-link {
+  position: absolute;
+  top: -100px; left: 0;
+  z-index: 9999;
+  background: var(--ink);
+  color: var(--cream);
+  padding: 12px 20px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom-right-radius: 8px;
+  transition: top .15s;
+}
+.skip-link:focus, .skip-link:focus-visible {
+  top: 0;
+  outline: 3px solid var(--gold-2);
+  outline-offset: 2px;
+}
+
+/* Focus visible pulido — pintamos un outline dorado consistente en
+   botones, links e inputs cuando se navega por teclado, sin afectar
+   los clicks de mouse. */
+*:focus-visible {
+  outline: 3px solid var(--gold-2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Inputs ya tienen su propio focus — no agregamos doble outline. */
+.shop-search input:focus-visible,
+.resena-row input:focus-visible,
+.resena-row textarea:focus-visible,
+.notify-input input:focus-visible {
+  outline-offset: 1px;
+}
+
+/* Botones disabled — el navegador NO les da estilo distintivo por
+   default. */
+button:disabled, .btn-primary:disabled, .btn-outline:disabled,
+button[disabled], .btn-primary[disabled], .btn-outline[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+button:disabled:hover, button[disabled]:hover {
+  background: inherit;
+  transform: none;
+}
+
+/* `.needs-selection`: estado visual "necesita seleccion previa" SIN
+   bloquear el click (a diferencia de `disabled` HTML). La validacion
+   en JS captura el submit y muestra hint. Si JS falla, el form
+   submitea, el server responde con error gracefully. */
+button.needs-selection, .btn-primary.needs-selection {
+  opacity: 0.55;
+  filter: grayscale(0.3);
+}
+button.needs-selection:hover {
+  background: inherit;
+  transform: none;
+}
+
+/* hx-indicator: HTMX agrega `htmx-request` class al elemento mientras
+   esta el request en vuelo. Muestra que la accion esta procesando. */
+.htmx-indicator { opacity: 0; transition: opacity .15s; }
+.htmx-request .htmx-indicator { opacity: 1; }
+.htmx-request.btn-primary, .htmx-request .btn-primary { opacity: 0.7; cursor: wait; }
+
+/* Animaciones de feedback al agregar al carrito */
+@keyframes ib-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.shake { animation: ib-shake .4s ease-in-out; }
+
+@keyframes ib-flash-attention {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 169, 110, 0); }
+  30%, 70% { box-shadow: 0 0 0 6px rgba(201, 169, 110, 0.45); }
+}
+.flash-attention {
+  animation: ib-flash-attention 1.4s ease-in-out;
+  border-radius: 8px;
+}
+
+/* Pulse del cart-dot cuando se agrega un item. La clase la agrega JS
+   en base_public.html cuando llega un OOB swap del badge. */
+@keyframes ib-cart-bounce {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(1.35); }
+  40%  { transform: scale(.92); }
+  70%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+#shop-cart-icon.cart-just-added .cart-dot,
+#shop-cart-icon.cart-just-added .ico {
+  animation: ib-cart-bounce .55s ease-out;
+}
+#shop-cart-icon { position: relative; }
+
+/* Cart-dot mas prominente — antes pasaba desapercibido */
+.shop-cart .cart-dot {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--vino, #7A1E2B);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border: 2px solid var(--cream, #fff);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* prefers-reduced-motion: usuarios con vestibular disorder o ansiedad
+   pueden pedir que el SO desactive animaciones — respetar. WCAG 2.3.3. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- 13. Bloque 12 · Guia de talles + calculadora ----------*/
+.pdp-opt-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pdp-guia-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--vino);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pdp-guia-link:hover { background: rgba(122,30,43,0.06); }
+
+.guia-talles-modal {
+  /* Centrado explicito — el margin:auto default de <dialog> es
+     inconsistente entre browsers (Safari iOS lo rompe con varios
+     viewports). Con position:fixed + translate forzamos el centrado
+     siempre. */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: min(720px, 92vw);
+  max-height: 86vh;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--cream);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.guia-talles-modal::backdrop {
+  background: rgba(14,14,14,0.5);
+  backdrop-filter: blur(2px);
+}
+.guia-talles { padding: 0; }
+
+.guia-talles-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.guia-talles-head h2 {
+  font-family: var(--serif);
+  font-size: 24px;
+  margin: 0;
+  color: var(--ink);
+}
+.guia-talles-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--ink-60);
+}
+.guia-talles-close:hover { background: var(--cream-2); color: var(--ink); }
+
+.guia-talles-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+.guia-talles-tabs button {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--ink-60);
+  cursor: pointer;
+  margin: 0 -1px 0 0;
+}
+.guia-talles-tabs button.active {
+  color: var(--ink);
+  border-bottom-color: var(--vino);
+  font-weight: 600;
+}
+
+.guia-talles section {
+  padding: 20px 24px;
+  max-height: calc(86vh - 130px);
+  overflow-y: auto;
+}
+.guia-talles-help {
+  color: var(--ink-60);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.guia-talles-disclaimer {
+  background: rgba(201,169,110,0.10);
+  border-left: 3px solid var(--gold-2);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  color: var(--ink);
+  margin: 16px 0 0;
+}
+
+.guia-talles-table-wrap { overflow-x: auto; }
+.guia-talles-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.guia-talles-table th,
+.guia-talles-table td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+.guia-talles-table thead th {
+  background: var(--cream-2);
+  font-weight: 600;
+  color: var(--ink);
+  position: sticky;
+  top: 0;
+}
+.guia-talles-table tbody tr:hover { background: var(--cream-2); }
+.guia-talles-table td:first-child { color: var(--vino); }
+
+.guia-calc-form { display: grid; gap: 12px; margin-bottom: 16px; }
+.guia-calc-row { display: block; }
+.guia-calc-row span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.guia-calc-row em {
+  font-weight: 400;
+  color: var(--ink-60);
+  font-size: 12px;
+}
+.guia-calc-row input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  background: white;
+}
+.guia-calc-row input.is-invalid {
+  border-color: var(--vino);
+  background: rgba(122,30,43,0.04);
+}
+.guia-calc-form .btn-primary { justify-self: start; }
+
+.guia-calc-result {
+  background: rgba(84,120,82,0.06);
+  border: 1px solid #547852;
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 12px;
+}
+.calc-result-big {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: var(--ink);
+}
+.calc-result-big strong {
+  color: var(--vino);
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 6px;
+}
+.guia-calc-result p {
+  color: var(--ink-60);
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+@media (max-width: 520px) {
+  .guia-talles-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    /* En mobile el modal cubre todo el viewport — `inset: 0`
+       garantiza posicion correcta incluso en iOS Safari viejos. */
+    inset: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+  }
+  .guia-talles section { max-height: calc(100vh - 130px); }
+}
+
+/* --- 12. Bloque 9 · Resenas reales en PDP --------------------*/
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* Estrellas: el icono ya viene con `fill: currentColor`; pintamos en
+   dorado las que estan "on" y dejamos en gris las apagadas. */
+.ico.star-on { color: var(--gold-2); }
+.pdp-rating .ico:not(.star-on),
+.resena-stars-row .ico:not(.star-on),
+.resenas-avg .ico:not(.star-on) { color: var(--ink-40); }
+
+.pdp-resenas {
+  max-width: 760px;
+  margin: 48px auto 0;
+  padding: 32px 24px;
+  border-top: 1px solid var(--line);
+}
+.pdp-resenas h2 { font-family: var(--serif); font-size: 28px; margin: 0 0 16px; }
+
+.resenas-summary { margin-bottom: 24px; }
+.resenas-avg {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; color: var(--ink-60);
+}
+.resenas-avg strong {
+  font-size: 22px; color: var(--ink); margin-left: 6px; font-weight: 600;
+}
+
+.resenas-list { list-style: none; padding: 0; margin: 0 0 32px; }
+.resena-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.resena-head {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  align-items: center; margin-bottom: 6px;
+}
+.resena-stars-row { display: inline-flex; gap: 2px; }
+.resena-author { font-weight: 600; color: var(--ink); }
+.resena-verified {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; color: #2F5530;
+  background: rgba(84,120,82,0.10);
+  padding: 2px 8px; border-radius: 999px;
+}
+.resena-head time { color: var(--ink-60); font-size: 12px; }
+.resena-titulo { margin: 4px 0; }
+.resena-texto { color: var(--ink); line-height: 1.5; margin: 4px 0 0; }
+.resenas-empty { color: var(--ink-60); margin: 12px 0 24px; }
+
+/* --- Form para enviar resena --------------------------------*/
+.resena-form-wrap {
+  background: var(--cream-2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 16px;
+}
+.resena-form h3 { font-family: var(--serif); font-weight: 600; font-size: 20px; }
+
+.resena-stars {
+  display: inline-flex; gap: 4px;
+  margin-bottom: 14px;
+}
+.resena-star {
+  cursor: pointer;
+  padding: 4px;
+  color: var(--ink-40);
+  transition: color .15s;
+}
+.resena-star input { position: absolute; opacity: 0; pointer-events: none; }
+.resena-star:hover, .resena-star.is-active { color: var(--gold-2); }
+.resena-star input:checked + svg,
+.resena-star input:focus-visible + svg { color: var(--gold-2); }
+
+.resena-row { display: block; margin-bottom: 14px; }
+.resena-label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--ink); margin-bottom: 4px;
+}
+.resena-row input,
+.resena-row textarea {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  background: white;
+}
+.resena-row input:focus,
+.resena-row textarea:focus { outline: none; border-color: var(--ink); }
+.resena-row input[aria-invalid="true"],
+.resena-row textarea[aria-invalid="true"] {
+  border-color: var(--vino);
+  background: rgba(122,30,43,0.04);
+}
+
+.resena-done {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 20px;
+  background: rgba(84,120,82,0.08);
+  border: 1px solid #547852;
+  border-radius: 12px;
+}
+.resena-done svg { color: #547852; flex-shrink: 0; }
+.resena-done strong { font-family: var(--serif); font-size: 18px; }
+.resena-done p { margin: 4px 0 0; color: var(--ink-60); font-size: 14px; }
+

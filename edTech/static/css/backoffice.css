@@ -248,16 +248,27 @@ body.bo {
 .bo-kpi.is-gold    .value { color: var(--bo-gold);    }
 
 /* ---- Grid helpers ------------------------------------------------------- */
+/* BUG-015: usamos minmax(0, 1fr) para que las columnas puedan
+   shrinkear por debajo del min-content cuando el valor de una KPI es
+   muy largo (ej. $155.234.567). Con `1fr` plano, una columna con
+   contenido intrínseco amplio empujaba la cuarta tarjeta fuera del
+   contenedor a viewports intermedios (~1500px). */
 .bo-grid       { display: grid; gap: 20px; }
-.bo-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-.bo-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-.bo-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.bo-grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bo-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bo-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 1100px) {
-  .bo-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
-  .bo-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .bo-grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bo-grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px)  {
   .bo-grid.cols-4, .bo-grid.cols-3, .bo-grid.cols-2 { grid-template-columns: 1fr; }
+}
+
+/* Valor de las KPI: si el monto crece mucho, que reduzca su tamaño en
+   pantallas chicas en vez de overflowear la tarjeta. */
+.bo-kpi .value {
+  overflow-wrap: anywhere;
 }
 
 /* ---- Tablas ------------------------------------------------------------- */

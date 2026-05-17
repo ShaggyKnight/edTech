@@ -14,6 +14,25 @@ class ActualizarCantidadForm(forms.Form):
     cantidad = forms.IntegerField(min_value=0)
 
 
+class ResenaForm(forms.Form):
+    """Form publico para que un cliente envie una resena de un producto.
+
+    Bloque 9. Recibe `producto_id` como hidden + estrellas (1-5) +
+    nombre publico + email (no se publica) + titulo (opcional) + texto.
+    Valida que el email sea valido y que las estrellas esten en rango.
+    La resena queda en estado `pendiente` hasta que la duena la apruebe.
+    """
+    producto_id = forms.IntegerField(min_value=1)
+    estrellas = forms.IntegerField(min_value=1, max_value=5)
+    titulo = forms.CharField(max_length=120, required=False, strip=True)
+    texto = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 4, 'maxlength': 2000}),
+        min_length=10, max_length=2000, strip=True,
+    )
+    nombre_publico = forms.CharField(max_length=80, strip=True)
+    cliente_email = forms.EmailField()
+
+
 class CheckoutForm(forms.Form):
     cliente_nombre = forms.CharField(max_length=200)
     cliente_email = forms.EmailField()

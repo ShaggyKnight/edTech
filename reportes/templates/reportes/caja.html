@@ -36,7 +36,11 @@
       <div class="label">Salidas</div>
       <div class="value">${{ resumen.salidas|floatformat:0|intcomma }}</div>
     </div>
-    <div class="bo-card bo-kpi is-primary">
+    {% comment %}
+      BUG-013: saldo negativo en rojo, positivo en azul (consistente con
+      el Dashboard que ya pinta saldo<0 en rojo).
+    {% endcomment %}
+    <div class="bo-card bo-kpi {% if resumen.saldo < 0 %}is-danger{% else %}is-primary{% endif %}">
       <div class="label">Saldo</div>
       <div class="value">${{ resumen.saldo|floatformat:0|intcomma }}</div>
     </div>

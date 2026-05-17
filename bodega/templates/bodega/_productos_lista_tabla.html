@@ -4,13 +4,58 @@
   filtro AJAX (input "Buscar" + selects familia/colegio/estado) refresque
   solo esta zona sin recargar la pagina.
 
-  Contexto requerido: `productos`.
+  Contexto requerido: `productos`, `filtros`, `puede_editar_activo`.
+  Bloque 11: la tabla esta envuelta en un <form> de bulk action que
+  permite activar/desactivar varios productos a la vez.
 {% endcomment %}
 <div class="bo-card" id="productos-tabla">
   {% if productos %}
+    {% if puede_editar_activo %}
+      {% comment %}
+        Bloque 11: form de bulk que envuelve la tabla. Los checkboxes
+        viajan como ids, los botones del bulk-bar como accion.
+      {% endcomment %}
+      <form id="bulk-productos-form"
+            method="post"
+            action="{% url 'bodega:productos_bulk_action' %}"
+            hx-post="{% url 'bodega:productos_bulk_action' %}"
+            hx-target="#productos-tabla"
+            hx-swap="outerHTML">
+        {% csrf_token %}
+        {# Filtros vigentes para que la tabla se re-renderice con ellos. #}
+        <input type="hidden" name="q" value="{{ filtros.q }}">
+        <input type="hidden" name="familia" value="{{ filtros.familia }}">
+        <input type="hidden" name="colegio" value="{{ filtros.colegio }}">
+        <input type="hidden" name="estado" value="{{ filtros.estado }}">
+
+        {# Barra de bulk: oculta hasta que haya >=1 checkbox marcado. #}
+        <div class="bulk-bar" id="bulk-bar" hidden>
+          <strong><span id="bulk-count">0</span> seleccionado(s)</strong>
+          <div class="bulk-bar-actions">
+            <button type="submit" name="accion" value="activar"
+                    class="bo-btn bo-btn-sm bo-btn-primary">
+              Activar
+            </button>
+            <button type="submit" name="accion" value="desactivar"
+                    class="bo-btn bo-btn-sm">
+              Desactivar
+            </button>
+            <button type="button" id="bulk-clear" class="bo-btn bo-btn-sm bo-btn-ghost">
+              Limpiar selección
+            </button>
+          </div>
+        </div>
+    {% endif %}
+
     <table class="bo-table">
       <thead>
         <tr>
+          {% if puede_editar_activo %}
+            <th style="width:32px;">
+              <input type="checkbox" id="bulk-select-all"
+                     aria-label="Seleccionar todos los productos visibles">
+            </th>
+          {% endif %}
           <th></th>
           <th>Nombre</th>
           <th>Familia</th>
@@ -24,6 +69,13 @@
       <tbody>
         {% for p in productos %}
           <tr {% if not p.activo %}style="opacity:.5;"{% endif %}>
+            {% if puede_editar_activo %}
+              <td>
+                <input type="checkbox" name="ids" value="{{ p.pk }}"
+                       class="bulk-checkbox"
+                       aria-label="Seleccionar {{ p.nombre }}">
+              </td>
+            {% endif %}
             <td>
               {% if p.imagen %}
                 <img class="prod-thumb" src="{{ p.imagen.url }}" alt="{{ p.nombre }}" loading="lazy">
@@ -55,13 +107,7 @@
                 —
               {% endif %}
             </td>
-            <td>
-              {% if p.activo %}
-                <span class="bo-badge bo-badge-success">Activo</span>
-              {% else %}
-                <span class="bo-badge bo-badge-muted">Inactivo</span>
-              {% endif %}
-            </td>
+            {% include 'bodega/_producto_activo_celda.html' with p=p puede_editar_activo=puede_editar_activo %}
             <td>
               <div class="prod-actions">
                 <a href="{% url 'bodega:producto_editar' p.pk %}" class="bo-btn bo-btn-sm">Editar</a>
@@ -74,6 +120,55 @@
         {% endfor %}
       </tbody>
     </table>
+
+    {% if puede_editar_activo %}
+      </form>
+
+      <script>
+        (function () {
+          // Bloque 11: vanilla JS para enable/disable de la bulk-bar
+          // segun cuantos checkboxes esten marcados. Se ejecuta tras
+          // cada swap HTMX (el script se re-incluye en el partial).
+          var form = document.getElementById('bulk-productos-form');
+          if (!form) return;
+          var bar = document.getElementById('bulk-bar');
+          var count = document.getElementById('bulk-count');
+          var selectAll = document.getElementById('bulk-select-all');
+          var clearBtn = document.getElementById('bulk-clear');
+          var checks = form.querySelectorAll('.bulk-checkbox');
+
+          function refresh() {
+            var n = 0;
+            checks.forEach(function (c) { if (c.checked) n++; });
+            count.textContent = String(n);
+            bar.hidden = (n === 0);
+            if (selectAll) {
+              selectAll.checked = (n === checks.length && n > 0);
+              selectAll.indeterminate = (n > 0 && n < checks.length);
+            }
+          }
+
+          checks.forEach(function (c) {
+            c.addEventListener('change', refresh);
+          });
+          if (selectAll) {
+            selectAll.addEventListener('change', function () {
+              var on = selectAll.checked;
+              checks.forEach(function (c) { c.checked = on; });
+              refresh();
+            });
+          }
+          if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+              checks.forEach(function (c) { c.checked = false; });
+              refresh();
+            });
+          }
+          refresh();
+        })();
+      </script>
+    {% endif %}
+
   {% else %}
     <div class="bo-card-body" style="color:var(--bo-muted);">
       No hay productos con los filtros aplicados.

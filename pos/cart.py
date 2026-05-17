@@ -86,9 +86,18 @@ class Cart:
         variante_ids = [int(k.split(':')[1]) for k in self._items if k.startswith('v:')]
         producto_ids = [int(k.split(':')[1]) for k in self._items if k.startswith('p:')]
 
+        # `prefetch_related('valores')`: el template del carrito muestra
+        # un badge de talla por línea (ver `_pos_carrito.html`). Sin
+        # prefetch, se dispara un query extra por variante para listar
+        # sus valores (N+1).
         variantes = {
             v.pk: v
-            for v in ProductoVariante.objects.select_related('producto').filter(pk__in=variante_ids)
+            for v in (
+                ProductoVariante.objects
+                .select_related('producto')
+                .prefetch_related('valores')
+                .filter(pk__in=variante_ids)
+            )
         }
         productos = {p.pk: p for p in Producto.objects.filter(pk__in=producto_ids)}
 

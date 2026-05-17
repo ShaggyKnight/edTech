@@ -24,7 +24,20 @@
         <span class="bo-badge bo-badge-info">{{ recibo.get_canal_display }}</span>
       </div>
     </div>
-    <div style="display:flex; gap:8px;">
+    <div style="display:flex; gap:8px; align-items:center;">
+      {# Mismo toggle que en pos/home.html. Si el cajero entró al POS #}
+      {# en modo pantalla completa, esta pantalla también respeta esa #}
+      {# preferencia (ver pos/_pos_fullscreen.html). #}
+      <button type="button" id="pos-fullscreen-btn" class="pos-fullscreen-toggle"
+              title="Modo pantalla completa (tablet)"
+              onclick="togglePosFullscreen()">
+        <svg class="ico ico--16" aria-hidden="true">
+          <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"
+                fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="pos-fullscreen-label">Pantalla completa</span>
+      </button>
       <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-primary">+ Nueva venta</a>
       <a href="{% url 'pos:ventas' %}" class="bo-btn">Ver ventas</a>
     </div>
@@ -116,4 +129,8 @@
       </div>
     </div>
   </div>
+
+  {# CSS + JS del modo pantalla completa. Lee la preferencia guardada #}
+  {# en localStorage y aplica `body.pos-fullscreen` si corresponde. #}
+  {% include 'pos/_pos_fullscreen.html' %}
 {% endblock %}

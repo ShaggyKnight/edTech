@@ -1,0 +1,41 @@
+{% comment %}
+  Bloque 10: celda de estado (activo/inactivo) con toggle inline.
+
+  Recibe en contexto: `p` (Producto). Si `puede_editar_activo`, el
+  badge es un boton HTMX que postea a toggle-activo. Si no, se ve
+  como badge plano.
+
+  La celda completa se swappa por la respuesta del endpoint
+  (`outerHTML`) tras el POST.
+{% endcomment %}
+<td id="activo-celda-{{ p.pk }}">
+  {% if puede_editar_activo %}
+    <form hx-post="{% url 'bodega:producto_toggle_activo' p.pk %}"
+          hx-target="#activo-celda-{{ p.pk }}"
+          hx-swap="outerHTML"
+          style="display:inline;margin:0;"
+          method="post"
+          action="{% url 'bodega:producto_toggle_activo' p.pk %}">
+      {% csrf_token %}
+      {% if p.activo %}
+        <button type="submit" class="bo-badge bo-badge-success"
+                title="Click para desactivar"
+                style="border:none;cursor:pointer;font:inherit;">
+          Activo
+        </button>
+      {% else %}
+        <button type="submit" class="bo-badge bo-badge-muted"
+                title="Click para activar"
+                style="border:none;cursor:pointer;font:inherit;">
+          Inactivo
+        </button>
+      {% endif %}
+    </form>
+  {% else %}
+    {% if p.activo %}
+      <span class="bo-badge bo-badge-success">Activo</span>
+    {% else %}
+      <span class="bo-badge bo-badge-muted">Inactivo</span>
+    {% endif %}
+  {% endif %}
+</td>

@@ -29,10 +29,10 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from bodega.models import StockTienda
-from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, ValorAtributo
+from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, Resena, ValorAtributo
 from ecommerce.cart import CANAL, Cart
-from ecommerce.emails import enviar_boleta
-from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm
+from ecommerce.emails import enviar_boleta, notificar_dueno_nueva_orden
+from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm, ResenaForm
 from ecommerce.payments import get_online_gateway
 from ecommerce.services import (
     ItemPedido,
@@ -99,6 +99,28 @@ SORT_OPTIONS = {
     'high':     ('-precio_base', 'nombre'),
     'new':      ('-creado',),
 }
+
+
+def _seo_context_catalogo(*, cat_info, colegio):
+    """Devuelve dict con seo_titulo / seo_descripcion / seo_h1 cuando aplica.
+
+    Sprint 3 · 3.3: cuando el visitante llega filtrando por colegio,
+    Google ve un H1 y un title locales ("Uniformes Colegio San Francisco
+    Javier Los Vilos") en vez del genérico "Uniformes Escolares". Es la
+    query de mayor intención de compra de la zona; vale el SEO.
+    """
+    if colegio and cat_info and cat_info['title'].startswith('Uniformes'):
+        # Sufijo geográfico explícito para el match local de "los vilos".
+        return {
+            'seo_titulo': f'Uniformes {colegio.nombre} · Los Vilos · Ideas Boutique',
+            'seo_h1': f'Uniformes {colegio.nombre}',
+            'seo_descripcion': (
+                f'Buzos, chalecos y poleras del {colegio.nombre} en Ideas Boutique '
+                f'(Caupolicán 437-B, Los Vilos). Telas duraderas, atención personal. '
+                f'Tres generaciones vistiendo a las familias de la zona.'
+            ),
+        }
+    return {}
 
 
 def catalogo(request):
@@ -302,6 +324,13 @@ def catalogo(request):
         'query': query,
         'solo_ofertas': solo_ofertas,
         'items_count': cart.items_count,
+        **_seo_context_catalogo(
+            cat_info=cat_info,
+            colegio=(
+                Colegio.objects.filter(pk=int(colegio_id)).first()
+                if aplicar_filtro_colegio else None
+            ),
+        ),
     })
 
 
@@ -400,6 +429,78 @@ def buscar_json(request):
     return JsonResponse({'productos': productos_data, 'colegios': colegios_data})
 
 
+@require_POST
+def enviar_resena(request, pk: int):
+    """Recibe una resena de un cliente para el producto `pk`.
+
+    Bloque 9. La resena queda en estado `pendiente` hasta que la
+    duena la apruebe desde el admin. Sin captcha: el campo `estado`
+    es un filtro implícito contra spam masivo (no se publica nada
+    que no se modere). Si el usuario esta logueado, prellena email
+    + nombre.
+
+    Respuesta:
+    - HTMX: fragment `_resena_done.html` con el agradecimiento. Se
+      hace swap del bloque del form.
+    - No-HTMX: redirect al PDP con messages.
+
+    Feature flag: si `FEATURE_RESENAS=False`, devolvemos 404 — la
+    feature esta oculta y no aceptamos nuevas resenas via web.
+    """
+    from django.conf import settings as dj_settings
+    if not getattr(dj_settings, 'FEATURE_RESENAS', False):
+        raise Http404('Resenas no disponibles')
+
+    producto = get_object_or_404(Producto, pk=pk, activo=True)
+    form = ResenaForm(request.POST)
+
+    if not form.is_valid():
+        if request.htmx:
+            return render(request, 'ecommerce/_resena_form.html', {
+                'producto': producto, 'form': form,
+            }, status=400)
+        messages.error(request, 'Por favor revisa los campos marcados.')
+        return redirect('ecommerce:producto', pk=pk)
+
+    # Cross-check del producto_id del POST con el de la URL (defensa
+    # contra POSTs a otro PDP con producto_id manipulado).
+    if form.cleaned_data['producto_id'] != producto.pk:
+        if request.htmx:
+            return HttpResponse('Producto no coincide.', status=400)
+        return redirect('ecommerce:producto', pk=pk)
+
+    # Si el cliente esta logueado y tiene compra del producto, enlazamos
+    # el recibo mas reciente para marcar la resena como "compra verificada".
+    recibo = None
+    if request.user.is_authenticated and request.user.email:
+        recibo = (
+            ReciboVenta.objects
+            .filter(cliente_email__iexact=request.user.email,
+                    canal=ReciboVenta.CANAL_ONLINE,
+                    estado=ReciboVenta.ESTADO_PAGADO,
+                    detalles__producto=producto)
+            .order_by('-creado').first()
+        )
+
+    Resena.objects.create(
+        producto=producto,
+        estrellas=form.cleaned_data['estrellas'],
+        titulo=form.cleaned_data['titulo'],
+        texto=form.cleaned_data['texto'],
+        nombre_publico=form.cleaned_data['nombre_publico'],
+        cliente_email=form.cleaned_data['cliente_email'],
+        recibo=recibo,
+    )
+
+    if request.htmx:
+        return render(request, 'ecommerce/_resena_done.html', {})
+    messages.success(
+        request,
+        'Gracias por tu resena. La revisaremos antes de publicarla.',
+    )
+    return redirect('ecommerce:producto', pk=pk)
+
+
 @require_GET
 def quick_view(request, pk: int):
     """Vista rápida del producto: fragment HTML que se carga en un
@@ -422,8 +523,12 @@ def quick_view(request, pk: int):
     )
 
     # Variantes activas con stock — solo lo mínimo para el chip.
+    # BUG-014: antes ordenaba por `sku` (alfabético → L, M, S, XL),
+    # inconsistente con el PDP completo (S, M, L, XL). Replicamos la
+    # lógica del PDP: orden canónico por orden_talla/volumen/concentración.
     variantes = []
     if producto.tiene_variantes:
+        from django.db.models import Min
         stock_sq = StockTienda.objects.filter(
             tienda=tienda, variante=OuterRef('pk'),
         ).values('cantidad')[:1]
@@ -431,8 +536,22 @@ def quick_view(request, pk: int):
             producto.variantes
             .filter(activa=True)
             .prefetch_related('valores__atributo')
-            .annotate(stock=Subquery(stock_sq))
-            .order_by('sku')
+            .annotate(
+                stock=Subquery(stock_sq),
+                orden_talla=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Talla'),
+                ),
+                orden_volumen=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Volumen'),
+                ),
+                orden_concentracion=Min(
+                    'valores__orden',
+                    filter=Q(valores__atributo__nombre__iexact='Concentración'),
+                ),
+            )
+            .order_by('orden_talla', 'orden_volumen', 'orden_concentracion', 'sku')
         )
 
     return render(request, 'ecommerce/_quick_view.html', {
@@ -517,7 +636,31 @@ def detalle_producto(request, pk: int):
         for v in variantes
     )
 
+    # Bloque 12: la guia de talles solo aplica a productos con atributo
+    # "Talla" (uniformes, ropa). Perfumes y otros NO la ven.
+    mostrar_guia_talles = 'Talla' in nombres_atributos
+
     cart = Cart(request.session)
+    # Bloque 8: galeria real. Cargamos las imagenes adicionales del PDP.
+    imagenes_galeria = list(producto.imagenes.all())
+
+    # Bloque 9: resenas publicas + form. Gated por FEATURE_RESENAS —
+    # si la flag esta OFF, no cargamos nada del modulo y el template
+    # esconde toda la seccion. Asi evitamos query innecesario.
+    from django.conf import settings as dj_settings
+    feature_resenas = getattr(dj_settings, 'FEATURE_RESENAS', False)
+    resenas_publicas = []
+    resena_form = None
+    if feature_resenas:
+        resenas_publicas = producto.resenas_publicas
+        resena_form_initial = {'producto_id': producto.pk}
+        if request.user.is_authenticated:
+            nombre = (f'{request.user.first_name} {request.user.last_name}'.strip()
+                      or request.user.username)
+            resena_form_initial['nombre_publico'] = nombre
+            resena_form_initial['cliente_email'] = request.user.email or ''
+        resena_form = ResenaForm(initial=resena_form_initial)
+
     return render(request, 'ecommerce/producto.html', {
         'producto': producto,
         'variantes': variantes,
@@ -525,19 +668,53 @@ def detalle_producto(request, pk: int):
         'items_count': cart.items_count,
         'label_eleccion': label_eleccion,
         'chips_anchos': chips_anchos,
+        'imagenes_galeria': imagenes_galeria,
+        'feature_resenas': feature_resenas,
+        'resenas_publicas': resenas_publicas,
+        'resena_form': resena_form,
+        'mostrar_guia_talles': mostrar_guia_talles,
     })
 
 
-def ver_carrito(request):
+def _carrito_contexto(request):
+    """Arma el contexto del carrito — usado tanto por la pagina full
+    como por el partial HTMX tras actualizar/quitar/vaciar."""
     cart = Cart(request.session)
     subtotal_bruto, descuento_total, total_neto = cart.totales()
-    return render(request, 'ecommerce/carrito.html', {
-        'lineas': list(cart.lineas()),
+
+    # Sprint 2 · 2.1: si hay errores guardados del intento de checkout,
+    # los inyectamos en las lineas correspondientes. Se consumen y se
+    # borran al renderizar.
+    cart_errors = request.session.pop('cart_errors', {}) or {}
+    request.session.modified = True
+
+    lineas = list(cart.lineas())
+    for linea in lineas:
+        err = cart_errors.get(linea['key'])
+        if err:
+            linea['error'] = err
+
+    return {
+        'lineas': lineas,
         'subtotal_bruto': subtotal_bruto,
         'descuento_total': descuento_total,
         'total_neto': total_neto,
         'items_count': cart.items_count,
-    })
+    }
+
+
+def _respuesta_carrito_htmx(request):
+    """Tras +/- / quitar / vaciar via HTMX, devuelve solo el partial
+    del contenido (cart-content). Sin HTMX redirige al carrito full.
+    """
+    if request.htmx:
+        return render(request, 'ecommerce/_carrito_contenido.html',
+                      _carrito_contexto(request))
+    return redirect('ecommerce:carrito')
+
+
+def ver_carrito(request):
+    return render(request, 'ecommerce/carrito.html', _carrito_contexto(request))
 
 
 @require_POST
@@ -606,19 +783,19 @@ def actualizar(request):
     form = ActualizarCantidadForm(request.POST)
     if form.is_valid():
         Cart(request.session).set_cantidad(form.cleaned_data['key'], form.cleaned_data['cantidad'])
-    return redirect('ecommerce:carrito')
+    return _respuesta_carrito_htmx(request)
 
 
 @require_POST
 def quitar(request, key: str):
     Cart(request.session).remove(key)
-    return redirect('ecommerce:carrito')
+    return _respuesta_carrito_htmx(request)
 
 
 @require_POST
 def vaciar(request):
     Cart(request.session).clear()
-    return redirect('ecommerce:carrito')
+    return _respuesta_carrito_htmx(request)
 
 
 def checkout(request):
@@ -720,7 +897,29 @@ def checkout_iniciar(request):
             return_url=return_url,
         )
     except StockInsuficienteOnline as exc:
-        messages.error(request, f'Stock insuficiente para {exc.descripcion}: quedan {exc.disponible}.')
+        # Sprint 2 · 2.1: marcar la linea conflictiva en sesion para que
+        # el carrito la renderice con borde rojo + CTA de ajuste. Toast
+        # corto, el detalle vive en la linea.
+        if exc.tipo and exc.item_id:
+            request.session['cart_errors'] = {
+                f'{exc.tipo}:{exc.item_id}': {
+                    'codigo': 'stock_insuficiente',
+                    'titulo': 'Stock insuficiente',
+                    'mensaje': (
+                        f'Quedan {exc.disponible} unidades — tienes '
+                        f'{exc.solicitado} en el carrito.'
+                    ),
+                    'accion': {
+                        'label': f'Ajustar a {exc.disponible}',
+                        'cantidad': exc.disponible,
+                    } if exc.disponible > 0 else None,
+                },
+            }
+            request.session.modified = True
+        messages.error(
+            request,
+            f'Stock insuficiente para {exc.descripcion}. Revisa la línea marcada en rojo.',
+        )
         return redirect('ecommerce:carrito')
     except TiendaOnlineNoConfigurada:
         messages.error(request, 'La tienda online no está configurada todavía.')
@@ -764,6 +963,11 @@ def checkout_retorno(request):
             enviar_boleta(recibo)
         except Exception:  # noqa: BLE001 — el flujo de compra no debe romperse por email.
             log.exception('Error enviando boleta recibo %s', recibo.pk)
+        try:
+            # Sprint 3 · 3.5: avisar a Blanca apenas entra la venta.
+            notificar_dueno_nueva_orden(recibo)
+        except Exception:  # noqa: BLE001 — idem, no bloqueante.
+            log.exception('Error notificando al dueño sobre recibo %s', recibo.pk)
         return redirect('ecommerce:pedido', token=recibo.payment_reference)
 
     return render(request, 'ecommerce/retorno.html', {

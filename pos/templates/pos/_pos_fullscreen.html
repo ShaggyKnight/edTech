@@ -1,0 +1,86 @@
+{% comment %}
+  Modo pantalla completa para tablet en mostrador.
+
+  Incluí este partial en CUALQUIER template del POS que deba respetar
+  la preferencia guardada en localStorage. Provee:
+    - Las reglas CSS que ocultan el shell del backoffice cuando body
+      tiene la clase `pos-fullscreen`.
+    - El init script que lee localStorage al cargar y aplica la clase.
+    - La función global `window.togglePosFullscreen()` que el botón
+      "Pantalla completa" usa para alternar el modo.
+
+  El botón en sí lo renderea cada template (placement varía); este
+  partial solo expone la función. Conventionally el botón usa:
+      id="pos-fullscreen-btn"
+      onclick="togglePosFullscreen()"
+  con un <span id="pos-fullscreen-label"> que cambia de texto.
+
+  La preferencia vive en localStorage['posFullscreen']='1'.
+{% endcomment %}
+<style>
+  body.pos-fullscreen .bo-bar,
+  body.pos-fullscreen .bo-side,
+  body.pos-fullscreen .bo-page-head .bo-crumb {
+    display: none !important;
+  }
+  body.pos-fullscreen .bo-shell { padding-top: 0; }
+  body.pos-fullscreen .bo-main { margin-left: 0 !important; }
+  body.pos-fullscreen .bo-content { padding: 14px 18px; }
+  body.pos-fullscreen .bo-page-head h1 { font-size: 22px; margin: 0; }
+  body.pos-fullscreen .pos-scan-bar { padding: 18px 20px; }
+  body.pos-fullscreen .pos-scan-form input[type="text"] {
+    font-size: 18px;
+    padding: 14px 18px;
+  }
+  .pos-fullscreen-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; background: var(--bo-card);
+    border: 1px solid var(--bo-border); border-radius: 6px;
+    color: var(--bo-text); font-size: 13px; font-weight: 500;
+    cursor: pointer; text-decoration: none; user-select: none;
+    font-family: inherit;
+  }
+  .pos-fullscreen-toggle:hover { border-color: var(--bo-primary); }
+  body.pos-fullscreen .pos-fullscreen-toggle {
+    background: var(--bo-primary-2); color: #fff; border-color: var(--bo-primary-2);
+  }
+</style>
+<script>
+  (function () {
+    var KEY = 'posFullscreen';
+    var body = document.body;
+
+    function actualizarLabel(activo) {
+      var label = document.getElementById('pos-fullscreen-label');
+      if (label) label.textContent = activo ? 'Salir pantalla completa' : 'Pantalla completa';
+    }
+
+    function setEstado(activo) {
+      body.classList.toggle('pos-fullscreen', activo);
+      actualizarLabel(activo);
+      try { localStorage.setItem(KEY, activo ? '1' : '0'); } catch (e) {}
+    }
+
+    window.togglePosFullscreen = function () {
+      var activo = !body.classList.contains('pos-fullscreen');
+      setEstado(activo);
+      // Fullscreen real del browser (best effort). Falla silenciosa si
+      // el browser no lo permite o el usuario cancela el prompt.
+      try {
+        if (activo && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(function () {});
+        } else if (!activo && document.exitFullscreen && document.fullscreenElement) {
+          document.exitFullscreen().catch(function () {});
+        }
+      } catch (e) {}
+    };
+
+    // Restaurar preferencia al cargar la página.
+    try {
+      if (localStorage.getItem(KEY) === '1') {
+        body.classList.add('pos-fullscreen');
+        actualizarLabel(true);
+      }
+    } catch (e) {}
+  })();
+</script>

@@ -15,15 +15,19 @@
       </div>
       <div>
         <h5>Ayuda</h5>
-        <a href="{% url 'index' %}#visitanos">Envíos</a>
-        <a href="{% url 'index' %}#visitanos">Cambios</a>
-        <a href="{% url 'index' %}#uniformes">Tallas</a>
-        <a href="{% url 'index' %}#visitanos">Contacto</a>
+        {% comment %}
+          BUG-008: los 4 links ahora apuntan a /info/ con anchors reales,
+          no a #visitanos del landing que no tenía el contenido prometido.
+        {% endcomment %}
+        <a href="{% url 'info' %}#envios">Envíos</a>
+        <a href="{% url 'info' %}#cambios">Cambios</a>
+        <a href="{% url 'info' %}#tallas">Tallas</a>
+        <a href="{% url 'info' %}#contacto">Contacto</a>
       </div>
       <div>
         <h5>Nosotros</h5>
         <a href="{% url 'index' %}#historia">Nuestra historia</a>
-        <a href="{% url 'index' %}#visitanos">Sucursal</a>
+        <a href="{% url 'info' %}#contacto">Sucursal</a>
         {% if user.is_authenticated %}
           <a href="{% url 'accounts:dashboard' %}">Mi cuenta</a>
         {% else %}

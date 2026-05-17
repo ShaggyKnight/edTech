@@ -7,8 +7,13 @@
   <a href="{% url 'ecommerce:producto' producto.pk %}" class="pcard-link" style="display:block;">
     <div class="pcard-img">
       {% imagen_producto producto as img_url %}
-      <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy">
-      {% if producto.tag %}<span class="pcard-tag">{{ producto.tag }}</span>{% endif %}
+      <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy" width="400" height="500">
+      {# Sprint 2 · 2.9: oferta gana al tag manual. #}
+      {% if producto.tiene_oferta_online %}
+        <span class="pcard-tag pcard-tag-sale">Oferta</span>
+      {% elif producto.tag %}
+        <span class="pcard-tag">{{ producto.tag }}</span>
+      {% endif %}
       <button type="button"
               class="pcard-quick"
               aria-label="Vista rápida de {{ producto.nombre }}"

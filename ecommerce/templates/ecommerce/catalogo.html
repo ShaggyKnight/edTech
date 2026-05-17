@@ -2,13 +2,19 @@
 {% load static humanize %}
 
 {% block titulo %}
-  {% if cat_info %}{{ cat_info.title }} · Ideas Boutique{% else %}Tienda · Ideas Boutique{% endif %}
+  {% if seo_titulo %}{{ seo_titulo }}{% elif cat_info %}{{ cat_info.title }} · Ideas Boutique{% else %}Tienda · Ideas Boutique{% endif %}
 {% endblock %}
+
+{% block meta_description %}
+  {% if seo_descripcion %}{{ seo_descripcion }}{% elif cat_info %}{{ cat_info.title }} en Ideas Boutique, Los Vilos. {{ cat_info.desc }}. Envío a todo Chile, desde 1987.{% else %}Catálogo completo de Ideas Boutique: perfumes originales, uniformes escolares, moda y ropa íntima. Caupolicán 437-B, Los Vilos.{% endif %}
+{% endblock %}
+
+{% if seo_h1 %}{% block og_title %}{{ seo_h1 }} · Ideas Boutique{% endblock %}{% endif %}
 
 {% block body %}
 {% include 'ecommerce/_shop_header.html' with cat_activa=cat_activa items_count=items_count query=query %}
 
-<main class="shop-cat-page">
+<main class="shop-cat-page" id="main-content" tabindex="-1">
   <div class="shop-breadcrumb">
     <a href="{% url 'index' %}">Inicio</a>
     {% if cat_info %}
@@ -21,29 +27,45 @@
   <header class="shop-cat-head" style="--cat-accent: {% if solo_ofertas %}var(--vino){% elif cat_info %}{{ cat_info.accent }}{% else %}var(--gold){% endif %};">
     <div id="shop-cat-info">
       <div class="eyebrow">{% if solo_ofertas %}Ofertas vigentes{% elif cat_info %}Categoría{% else %}Catálogo{% endif %}</div>
-      <h1>{% if solo_ofertas %}Productos en oferta{% elif cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
+      <h1>{% if solo_ofertas %}Productos en oferta{% elif seo_h1 %}{{ seo_h1 }}{% elif cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
       <p>
         {% if solo_ofertas %}Descuentos activos hoy en la tienda online · {% elif cat_info %}{{ cat_info.desc }} · {% endif %}
         {{ total_productos }} producto{{ total_productos|pluralize:"s" }}
       </p>
     </div>
-    <div class="sort-sel">
-      <span>Ordenar:</span>
-      {% comment %}
-        El form="..." engancha el select al form de filtros aunque este
-        visualmente afuera, asi se aplica junto con el resto.
-      {% endcomment %}
-      <select name="sort" form="shop-filters-form">
-        <option value="relevant" {% if sort == 'relevant' %}selected{% endif %}>Más relevantes</option>
-        <option value="low" {% if sort == 'low' %}selected{% endif %}>Menor precio</option>
-        <option value="high" {% if sort == 'high' %}selected{% endif %}>Mayor precio</option>
-        <option value="new" {% if sort == 'new' %}selected{% endif %}>Más nuevos</option>
-      </select>
+    <div class="shop-cat-controls">
+      {# Sprint 2 · 2.5: botón para abrir filtros en mobile/tablet portrait. #}
+      <button type="button" class="filter-toggle" id="shop-filters-open"
+              aria-controls="shop-filters" aria-expanded="false">
+        <svg class="ico ico--14"><use href="#ico-menu"/></svg> Filtrar
+      </button>
+      <div class="sort-sel">
+        <span>Ordenar:</span>
+        {% comment %}
+          El form="..." engancha el select al form de filtros aunque este
+          visualmente afuera, asi se aplica junto con el resto.
+        {% endcomment %}
+        <select name="sort" form="shop-filters-form">
+          <option value="relevant" {% if sort == 'relevant' %}selected{% endif %}>Más relevantes</option>
+          <option value="low" {% if sort == 'low' %}selected{% endif %}>Menor precio</option>
+          <option value="high" {% if sort == 'high' %}selected{% endif %}>Mayor precio</option>
+          <option value="new" {% if sort == 'new' %}selected{% endif %}>Más nuevos</option>
+        </select>
+      </div>
     </div>
   </header>
 
+  {# Scrim para el drawer mobile (CSS lo muestra solo cuando .shop-filters.is-open). #}
+  <div class="shop-filters-scrim" id="shop-filters-scrim" hidden></div>
+
   <div class="shop-cat-body">
-    <aside class="shop-filters">
+    <aside class="shop-filters" id="shop-filters" aria-label="Filtros">
+      <div class="shop-filters-head">
+        <h4>Filtrar</h4>
+        <button type="button" class="drawer-close" id="shop-filters-close" aria-label="Cerrar filtros">
+          <svg class="ico ico--18"><use href="#ico-close"/></svg>
+        </button>
+      </div>
       <form id="shop-filters-form" method="get" action="{% url 'ecommerce:catalogo' %}">
         {% comment %}
           Búsqueda + talla se mantienen al cambiar filtros. La talla vive
@@ -152,6 +174,13 @@
           {% endif %}
         </div>
       </form>
+      {# Sticky bottom CTA — solo visible cuando el aside está en modo drawer (CSS toggle). #}
+      <div class="shop-filters-foot">
+        <button type="button" class="btn-outline" id="shop-filters-clear">Limpiar</button>
+        <button type="button" class="btn-primary" id="shop-filters-apply">
+          Ver {{ total_productos }} resultado{{ total_productos|pluralize:"s" }}
+        </button>
+      </div>
     </aside>
 
     <div class="shop-grid four" id="shop-grid">
@@ -290,6 +319,61 @@
   // Back / forward del navegador.
   window.addEventListener('popstate', function() {
     window.location.reload();
+  });
+
+  // ============ Sprint 2 · 2.5: Drawer de filtros en mobile/tablet portrait ============
+  var filtersAside = document.getElementById('shop-filters');
+  var filtersOpenBtn = document.getElementById('shop-filters-open');
+  var filtersCloseBtn = document.getElementById('shop-filters-close');
+  var filtersScrim = document.getElementById('shop-filters-scrim');
+  var filtersApplyBtn = document.getElementById('shop-filters-apply');
+  var filtersClearBtn = document.getElementById('shop-filters-clear');
+
+  function openFiltersDrawer() {
+    if (!filtersAside) return;
+    filtersAside.classList.add('is-open');
+    if (filtersScrim) filtersScrim.hidden = false;
+    if (filtersOpenBtn) filtersOpenBtn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('no-scroll');
+  }
+  function closeFiltersDrawer() {
+    if (!filtersAside) return;
+    filtersAside.classList.remove('is-open');
+    if (filtersScrim) filtersScrim.hidden = true;
+    if (filtersOpenBtn) filtersOpenBtn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('no-scroll');
+  }
+  if (filtersOpenBtn) filtersOpenBtn.addEventListener('click', openFiltersDrawer);
+  if (filtersCloseBtn) filtersCloseBtn.addEventListener('click', closeFiltersDrawer);
+  if (filtersScrim) filtersScrim.addEventListener('click', closeFiltersDrawer);
+  if (filtersApplyBtn) {
+    // "Ver N resultados" — cierra el drawer; los cambios se aplicaron en vivo
+    // vía los listeners de radio/chip.
+    filtersApplyBtn.addEventListener('click', closeFiltersDrawer);
+  }
+  if (filtersClearBtn) {
+    // Limpia todos los filtros sin cerrar.
+    filtersClearBtn.addEventListener('click', function () {
+      form.querySelectorAll('input[type="radio"]').forEach(function(r) {
+        r.checked = (r.value === '');
+      });
+      form.querySelectorAll('input[type="number"]').forEach(function(n) {
+        n.value = '';
+      });
+      var t = form.querySelector('input[name="talla"][type="hidden"]');
+      if (t) t.value = '';
+      applyFilters();
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && filtersAside && filtersAside.classList.contains('is-open')) {
+      closeFiltersDrawer();
+    }
+  });
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 900 && filtersAside && filtersAside.classList.contains('is-open')) {
+      closeFiltersDrawer();
+    }
   });
 })();
 </script>

@@ -12,6 +12,22 @@
     color: var(--bo-muted); font-size: 14px;
   }
   .prod-actions { display: inline-flex; gap: 4px; }
+
+  /* Bloque 11: bulk action bar — visible solo con >=1 checkbox marcado. */
+  .bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bo-bg-elev, #fff7e6);
+    border-bottom: 1px solid var(--bo-line, #e2d8b6);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    flex-wrap: wrap;
+  }
+  .bulk-bar-actions { display: inline-flex; gap: 6px; }
+  .bulk-checkbox, #bulk-select-all { cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -79,8 +95,10 @@
           </select>
         </div>
         <div style="display:flex; gap:6px;">
-          {# Boton de fallback no-JS — con HTMX no hace falta clickear,
-             pero si JS esta deshabilitado funciona el form GET normal. #}
+          {% comment %}
+            Boton de fallback no-JS — con HTMX no hace falta clickear,
+            pero si JS esta deshabilitado funciona el form GET normal.
+          {% endcomment %}
           <button type="submit" class="bo-btn bo-btn-primary">Filtrar</button>
           <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Limpiar</a>
         </div>

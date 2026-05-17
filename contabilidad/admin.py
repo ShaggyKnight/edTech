@@ -16,6 +16,10 @@ class MovimientoCajaAdmin(admin.ModelAdmin):
     autocomplete_fields = ['tienda', 'recibo_venta', 'usuario']
     readonly_fields = ['fecha']
 
+    def get_queryset(self, request):
+        # Bloque 6 (perf): 3 FKs en list_display.
+        return super().get_queryset(request).select_related('tienda', 'recibo_venta', 'usuario')
+
     @admin.display(description='Monto', ordering='monto')
     def monto_fmt(self, obj):
         prefijo = '+' if obj.tipo == MovimientoCaja.ENTRADA else '−'

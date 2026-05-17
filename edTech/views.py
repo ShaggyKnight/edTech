@@ -18,6 +18,16 @@ def index(request):
     return render(request, 'index.html', contexto)
 
 
+def info(request):
+    """Página de ayuda con secciones: envíos, cambios, tallas, contacto.
+
+    BUG-008: el footer apuntaba todos los links de Ayuda a anchors del
+    landing (#visitanos) que no tenían el contenido prometido. Esta vista
+    consolida los 4 temas en /info/ con anchors reales y copy chileno.
+    """
+    return render(request, 'info.html')
+
+
 @require_GET
 @cache_control(max_age=86400, public=True)
 def robots_txt(request):
@@ -28,10 +38,13 @@ def robots_txt(request):
     cambia el path de los staticfiles, y para que cualquiera que clone
     el repo lo tenga sin pasos extra.
     """
+    from django.conf import settings as dj_settings
     lineas = [
         'User-agent: *',
-        # Bloquea backoffice, POS, reportes y admin Django.
-        'Disallow: /admin/',
+        # Bloquea backoffice, POS, reportes y admin Django. La ruta del
+        # admin viene de settings.ADMIN_URL para que el robots.txt siga
+        # alineado cuando la cambiamos en prod.
+        f'Disallow: /{dj_settings.ADMIN_URL}',
         'Disallow: /bodega/',
         'Disallow: /pos/',
         'Disallow: /reportes/',
@@ -47,9 +60,9 @@ def robots_txt(request):
         # Endpoints AJAX/JSON.
         'Disallow: /tienda/buscar.json',
         '',
-        # Sugerencia de host canonico — el dueno actualiza el dominio cuando
-        # publique. Mientras tanto queda como hint informativo.
-        '# Sitemap: https://www.ideasboutique.cl/sitemap.xml',
+        # Sitemap público (Sprint 3 · 3.2). El host se resuelve relativo al
+        # request, por eso usamos build_absolute_uri en runtime.
+        f'Sitemap: {request.build_absolute_uri("/sitemap.xml")}',
         '',
     ]
     return HttpResponse('\n'.join(lineas), content_type='text/plain; charset=utf-8')

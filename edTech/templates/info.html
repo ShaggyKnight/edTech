@@ -1,0 +1,147 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block titulo %}Ayuda · Ideas Boutique{% endblock %}
+{% block meta_description %}Envíos, cambios, guía de tallas y contacto de Ideas Boutique. Caupolicán 437-B, Los Vilos. Tres generaciones, desde 1987.{% endblock %}
+
+{% block body %}
+<main id="main-content" tabindex="-1" style="max-width:960px;margin:0 auto;padding:48px 24px 80px;">
+
+  <header style="margin-bottom:48px;">
+    <div class="eyebrow" style="color:var(--gold);">Ayuda</div>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:48px;line-height:1.1;margin:8px 0 16px;">
+      Todo lo que necesitas saber.
+    </h1>
+    <p style="font-size:18px;color:var(--ink-60);max-width:600px;">
+      Envíos a todo Chile, política de cambios clara, guía de tallas
+      por colegio y nuestros datos de contacto.
+    </p>
+  </header>
+
+  {# Tabla de contenidos / chips de navegación intra-página. #}
+  <nav aria-label="Secciones de esta página"
+       style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:48px;
+              padding:16px;background:var(--cream-2,#FBF7EE);
+              border-radius:12px;">
+    <a href="#envios"   style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Envíos</a>
+    <a href="#cambios"  style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Cambios</a>
+    <a href="#tallas"   style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Tallas</a>
+    <a href="#contacto" style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Contacto</a>
+  </nav>
+
+  {# ========== ENVÍOS ========== #}
+  <section id="envios" style="margin-bottom:64px;scroll-margin-top:80px;">
+    <div class="eyebrow" style="color:var(--gold);">01</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Envíos a todo Chile.</h2>
+    <p style="color:var(--ink-80);line-height:1.7;">
+      Despachamos desde nuestra tienda en Los Vilos a todo el país.
+      Trabajamos con Starken y Chilexpress; elegís el operador y el
+      destino al finalizar la compra.
+    </p>
+    <ul style="margin-top:16px;line-height:1.9;color:var(--ink-80);">
+      <li><strong>Preparación:</strong> 24 a 48 horas hábiles desde el pago confirmado.</li>
+      <li><strong>Plazo aproximado:</strong> 2 a 5 días hábiles según destino, contados desde el despacho.</li>
+      <li><strong>Costo:</strong> según peso y destino, calculado por la sucursal del operador.</li>
+      <li><strong>Retiro en tienda:</strong> gratis en Caupolicán 437-B, Los Vilos. Te avisamos por WhatsApp cuando esté listo.</li>
+    </ul>
+    <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
+      Si necesitas el pedido urgente o tienes una dirección complicada,
+      contáctanos por WhatsApp antes de comprar y vemos la mejor opción.
+    </p>
+  </section>
+
+  {# ========== CAMBIOS ========== #}
+  <section id="cambios" style="margin-bottom:64px;scroll-margin-top:80px;">
+    <div class="eyebrow" style="color:var(--gold);">02</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Cambios y devoluciones.</h2>
+    <p style="color:var(--ink-80);line-height:1.7;">
+      Tenes <strong>30 días corridos</strong> desde la fecha de compra
+      para cambiar cualquier producto que no te convenza, en la tienda
+      o a través de un envío.
+    </p>
+    <ul style="margin-top:16px;line-height:1.9;color:var(--ink-80);">
+      <li>El producto debe estar <strong>sin uso</strong>, con todas las etiquetas originales.</li>
+      <li>Llevá la <strong>boleta o el número de pedido</strong>; sin eso no podemos procesar el cambio.</li>
+      <li>Los <strong>perfumes</strong> solo se cambian si el sello / celofán está intacto (Ley del Consumidor).</li>
+      <li>Para uniformes con bordados a pedido, los cambios son por talla del mismo modelo.</li>
+    </ul>
+    <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
+      Si compraste por web y el cambio requiere envío, podemos coordinar
+      el retiro y el reenvío por WhatsApp.
+    </p>
+  </section>
+
+  {# ========== TALLAS ========== #}
+  <section id="tallas" style="margin-bottom:64px;scroll-margin-top:80px;">
+    <div class="eyebrow" style="color:var(--gold);">03</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Guía de tallas.</h2>
+    <p style="color:var(--ink-80);line-height:1.7;">
+      En cada ficha de uniforme encontrás una <em>guía de tallas
+      desplegable</em> con las medidas en centímetros: contorno de
+      pecho, largo y manga. Para perfumes, la presentación viene en ml
+      en el nombre del producto.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px;">
+      <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes"
+         style="display:block;padding:24px;background:var(--cream-2,#FBF7EE);
+                border-radius:12px;text-decoration:none;color:var(--ink);">
+        <strong>Uniformes escolares →</strong><br>
+        <span style="color:var(--ink-60);font-size:14px;">Tallas por colegio, modelos oficiales</span>
+      </a>
+      <a href="{% url 'ecommerce:catalogo' %}?cat=moda"
+         style="display:block;padding:24px;background:var(--cream-2,#FBF7EE);
+                border-radius:12px;text-decoration:none;color:var(--ink);">
+        <strong>Moda y ropa íntima →</strong><br>
+        <span style="color:var(--ink-60);font-size:14px;">XS · S · M · L · XL · XXL</span>
+      </a>
+    </div>
+    <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
+      ¿Dudas con la talla? Mandanos una foto del cuerpo del/a usuari@
+      por WhatsApp y te recomendamos la talla correcta.
+    </p>
+  </section>
+
+  {# ========== CONTACTO ========== #}
+  <section id="contacto" style="margin-bottom:32px;scroll-margin-top:80px;">
+    <div class="eyebrow" style="color:var(--gold);">04</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Contacto y horarios.</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:24px;">
+      <div>
+        <strong style="display:block;margin-bottom:4px;">📍 Tienda física</strong>
+        <span style="color:var(--ink-80);line-height:1.7;">
+          Caupolicán 437-B<br>
+          Los Vilos, Región de Coquimbo<br>
+          Chile
+        </span>
+      </div>
+      <div>
+        <strong style="display:block;margin-bottom:4px;">🕐 Horario</strong>
+        <span style="color:var(--ink-80);line-height:1.7;">
+          Lunes a Sábado<br>
+          9:00 – 19:00 hrs<br>
+          <span style="color:var(--ink-60);font-size:14px;">Domingos cerrado</span>
+        </span>
+      </div>
+      <div>
+        <strong style="display:block;margin-bottom:4px;">💬 WhatsApp</strong>
+        {% comment %}
+          BUG-009: el número real va acá; cuando esté configurado en
+          settings.PUBLIC_WHATSAPP, este bloque renderiza un link.
+        {% endcomment %}
+        {% if PUBLIC_WHATSAPP %}
+          <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}"
+             target="_blank" rel="noopener"
+             style="color:var(--gold);font-weight:500;">
+            Escribinos directo →
+          </a>
+        {% else %}
+          <span style="color:var(--ink-60);">Pedidos y reservas</span>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+</main>
+
+{% include 'ecommerce/_shop_footer.html' %}
+{% endblock %}

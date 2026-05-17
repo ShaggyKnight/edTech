@@ -28,6 +28,9 @@ class BodegaAdmin(admin.ModelAdmin):
     list_filter = ['tienda']
     search_fields = ['nombre']
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('tienda')
+
 
 @admin.register(Proveedor)
 class ProveedorAdmin(admin.ModelAdmin):
@@ -41,6 +44,9 @@ class MaterialAdmin(admin.ModelAdmin):
     list_filter = ['activo', 'proveedor']
     search_fields = ['nombre', 'descripcion']
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('proveedor')
+
 
 @admin.register(StockMaterial)
 class StockMaterialAdmin(admin.ModelAdmin):
@@ -48,6 +54,9 @@ class StockMaterialAdmin(admin.ModelAdmin):
     list_filter = ['bodega']
     search_fields = ['material__nombre', 'bodega__nombre']
     readonly_fields = ['creado', 'modificado']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('bodega', 'material')
 
 
 @admin.register(MovimientoMaterial)
@@ -57,6 +66,10 @@ class MovimientoMaterialAdmin(admin.ModelAdmin):
     search_fields = ['referencia', 'material__nombre']
     readonly_fields = ['creado']
 
+    def get_queryset(self, request):
+        # 3 FKs en list_display: bodega + material + usuario.
+        return super().get_queryset(request).select_related('bodega', 'material', 'usuario')
+
 
 @admin.register(Rendimiento)
 class RendimientoAdmin(admin.ModelAdmin):
@@ -64,12 +77,20 @@ class RendimientoAdmin(admin.ModelAdmin):
     list_filter = ['material']
     search_fields = ['material__nombre', 'variante__sku', 'variante__producto__nombre']
 
+    def get_queryset(self, request):
+        return (super().get_queryset(request)
+                .select_related('material', 'variante', 'variante__producto'))
+
 
 @admin.register(StockTienda)
 class StockTiendaAdmin(admin.ModelAdmin):
     list_display = ['tienda', 'variante', 'producto', 'cantidad', 'modificado']
     list_filter = ['tienda']
     search_fields = ['variante__sku', 'producto__nombre']
+
+    def get_queryset(self, request):
+        return (super().get_queryset(request)
+                .select_related('tienda', 'variante', 'variante__producto', 'producto'))
 
 
 class InventarioLineaInline(admin.TabularInline):
@@ -83,6 +104,9 @@ class InventarioAdmin(admin.ModelAdmin):
     list_filter = ['bodega']
     inlines = [InventarioLineaInline]
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('bodega')
+
 
 @admin.register(MovimientoStock)
 class MovimientoStockAdmin(admin.ModelAdmin):
@@ -90,3 +114,8 @@ class MovimientoStockAdmin(admin.ModelAdmin):
     list_filter = ['tipo', 'tienda']
     search_fields = ['referencia', 'variante__sku', 'producto__nombre']
     readonly_fields = ['creado']
+
+    def get_queryset(self, request):
+        # 4 FKs en list_display.
+        return (super().get_queryset(request)
+                .select_related('tienda', 'variante', 'variante__producto', 'producto', 'usuario'))

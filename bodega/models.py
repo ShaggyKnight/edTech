@@ -55,6 +55,8 @@ class Proveedor(models.Model):
 
     class Meta:
         ordering = ['nombre_proveedor']
+        verbose_name = 'proveedor'
+        verbose_name_plural = 'proveedores'
 
     def __str__(self):
         return self.nombre_proveedor
@@ -85,6 +87,8 @@ class Material(models.Model):
 
     class Meta:
         ordering = ['nombre']
+        verbose_name = 'material'
+        verbose_name_plural = 'materiales'
 
     def __str__(self):
         return self.nombre
@@ -126,6 +130,8 @@ class StockTienda(models.Model):
                 name='stocktienda_variante_xor_producto',
             ),
         ]
+        verbose_name = 'stock por tienda'
+        verbose_name_plural = 'stocks por tienda'
 
     def clean(self):
         if bool(self.variante) == bool(self.producto):
@@ -235,6 +241,8 @@ class StockMaterial(models.Model):
     class Meta:
         unique_together = [('bodega', 'material')]
         ordering = ['bodega__nombre', 'material__nombre']
+        verbose_name = 'stock de material'
+        verbose_name_plural = 'stocks de material'
 
     def __str__(self):
         return f'{self.bodega} · {self.material} · {self.cantidad} rollos'
@@ -274,6 +282,8 @@ class MovimientoMaterial(models.Model):
 
     class Meta:
         ordering = ['-creado']
+        verbose_name = 'movimiento de material'
+        verbose_name_plural = 'movimientos de material'
 
     def __str__(self):
         return f'{self.creado:%d-%m-%Y} · {self.tipo} · {self.cantidad} × {self.material}'
@@ -327,6 +337,8 @@ class MovimientoStock(models.Model):
                 name='movimientostock_variante_xor_producto',
             ),
         ]
+        verbose_name = 'movimiento de stock'
+        verbose_name_plural = 'movimientos de stock'
 
     def __str__(self):
         item = self.variante or self.producto

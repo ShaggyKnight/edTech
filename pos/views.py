@@ -99,29 +99,73 @@ def home(request):
         # en cualquiera de sus campos (nombre, sku, valor de atributo).
         # Asi "buzo 10" devuelve solo el Buzo SFJ talla 10, no todos los
         # buzos ni todas las prendas talla 10.
-        from edTech.search import normalize_text
-        q_norm = normalize_text(query)
-        tokens = [t for t in q_norm.split() if t]
+        #
+        # Sinonimos de colegios (Los Vilos): `pos.search` expande
+        # apodos locales como "liceo" -> "lohse", "fraga" -> "javier",
+        # "parro/parroquial" -> "providencia", "publica" -> "almagro".
+        # Asi el cajero busca como en la calle y matchea los colegios
+        # con su nombre formal.
+        from pos.search import (
+            es_token_corto,
+            normalizar_y_expandir,
+            q_valor_exacto,
+        )
+        tokens_expandidos = normalizar_y_expandir(query)
 
-        for token in tokens:
-            # Cada token reduce el queryset. Productos sin variantes:
-            # match en nombre o descripcion.
-            productos_qs = productos_qs.filter(
-                Q(nombre_buscable__contains=token)
-                | Q(descripcion_buscable__contains=token)
-            )
-            # Variantes: match en producto.nombre, sku o ALGUN valor de
-            # atributo. El JOIN a `valores` toma alias distinto en cada
-            # iteracion del loop, lo cual es lo que queremos: cada token
-            # exige UN valor que matchee (no el mismo valor para todos).
-            variantes_qs = variantes_qs.filter(
-                Q(producto__nombre_buscable__contains=token)
-                | Q(sku__icontains=token)
-                | Q(valores__valor__icontains=token)
-            )
+        # Los productos SIN variantes no tienen tallas / volúmenes /
+        # concentraciones. Si TODOS los tokens del query son "cortos"
+        # (talla-letra, talla numérica, concentración o volumen sin
+        # unidad), no tiene sentido buscar entre productos sin variantes
+        # — los excluimos al final.
+        hay_loose_token = any(
+            not es_token_corto(t)
+            for grupo in tokens_expandidos
+            for t in grupo
+        )
+
+        for variantes_token in tokens_expandidos:
+            # Cada token (con sus expansiones) reduce el queryset.
+            # Adentro del token, OR entre las variantes (ej. "liceo"
+            # OR "lohse"). Entre tokens, AND (cada filter encadenado).
+            q_producto = Q()
+            q_variante = Q()
+            for term in variantes_token:
+                if es_token_corto(term):
+                    # Token "corto" (S/M/XL/EDT/EDP, o numérico de
+                    # 1-4 dígitos): SOLO match exacto contra el valor.
+                    # Esto distingue:
+                    #   "s" matchea ValorAtributo "S" (no "gris")
+                    #   "30" matchea "30" y "30 ml" (no "130 ml" ni "300 ml")
+                    #   "edt" matchea "EDT" (no productos con "edt..." en el nombre)
+                    q_variante |= q_valor_exacto(term)
+                    # No contribuye a productos sin variantes.
+                else:
+                    # Token genérico (palabra larga): substring match
+                    # en nombre / descripcion / colegio / sku / valor.
+                    q_producto |= (
+                        Q(nombre_buscable__contains=term)
+                        | Q(descripcion_buscable__contains=term)
+                        | Q(colegio__nombre_buscable__contains=term)
+                    )
+                    q_variante |= (
+                        Q(producto__nombre_buscable__contains=term)
+                        | Q(producto__colegio__nombre_buscable__contains=term)
+                        | Q(sku__icontains=term)
+                        | Q(valores__valor__icontains=term)
+                    )
+            # Si todos los términos del grupo eran cortos, q_producto
+            # queda vacío; `filter(Q())` es no-op — está OK porque el
+            # guard `hay_loose_token` excluye productos abajo.
+            if q_producto.children:
+                productos_qs = productos_qs.filter(q_producto)
+            variantes_qs = variantes_qs.filter(q_variante)
+
+        if not hay_loose_token:
+            productos_qs = productos_qs.none()
 
         # distinct al final porque los JOINs multiples pueden duplicar.
         variantes_qs = variantes_qs.distinct()
+        productos_qs = productos_qs.distinct()
     if familia_id.isdigit():
         f = int(familia_id)
         productos_qs = productos_qs.filter(familia_id=f)

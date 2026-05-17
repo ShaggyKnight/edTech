@@ -378,6 +378,13 @@
 {% endblock %}
 
 {% block content %}
+{% comment %}
+  Todo el contenido del POS vive dentro de `#pos-page-content`. Esto
+  permite que el ciclo "cobrar → recibo → nueva venta" sea un swap
+  HTMX adentro de este wrapper, SIN navegar — asi el modo pantalla
+  completa (fullscreen API del browser) se mantiene en todo el ciclo.
+{% endcomment %}
+<div id="pos-page-content">
   {% comment %}
     Banner de escaneo: el input tiene autofocus, y despues de cada scan
     HTMX recibe HX-Refresh y recarga la pagina (con toast OK/error).
@@ -534,6 +541,8 @@
     {# Carrito #}
     {% include 'pos/_pos_carrito.html' %}
   </div>
+
+</div> {# fin de #pos-page-content #}
 
   {% comment %}
     `posStep(btn, delta)` — handler de los botones [−] / [+] del

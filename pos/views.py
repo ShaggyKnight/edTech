@@ -19,6 +19,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import OuterRef, Q, Subquery
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from bodega.models import MovimientoStock, StockTienda, Tienda
@@ -515,6 +516,19 @@ def checkout(request):
 
     cart.clear()
     messages.success(request, f'Venta #{recibo.pk} procesada por ${recibo.total}.')
+
+    # HTMX flow: en lugar de redirect (que dispara navegacion y rompe
+    # el fullscreen API del browser), renderear el recibo en el mismo
+    # response. HTMX swap-ea `#pos-page-content` y el header
+    # `HX-Push-Url` actualiza la URL del browser sin recargar. Asi el
+    # ciclo "vender → recibo → nueva venta" queda en pantalla completa
+    # de punta a punta.
+    if getattr(request, 'htmx', False):
+        url_recibo = reverse('pos:recibo', args=[recibo.pk])
+        response = render(request, 'pos/recibo.html', {'recibo': recibo})
+        response['HX-Push-Url'] = url_recibo
+        return response
+
     return redirect('pos:recibo', pk=recibo.pk)
 
 

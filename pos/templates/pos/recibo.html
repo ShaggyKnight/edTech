@@ -8,6 +8,13 @@
 {% endblock %}
 
 {% block content %}
+{% comment %}
+  Recibo dentro de `#pos-page-content` para que el ciclo POS sea un
+  swap HTMX (no navegacion). Asi el modo pantalla completa se mantiene
+  cuando el cajero cobra y vuelve a la venta nueva sin perder el
+  fullscreen API del browser. Ver pos/_pos_fullscreen.html.
+{% endcomment %}
+<div id="pos-page-content">
   <div class="bo-page-head">
     <div>
       <div class="bo-crumb">Operación / Ventas / Recibo #{{ recibo.pk }}</div>
@@ -25,9 +32,11 @@
       </div>
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
-      {# Mismo toggle que en pos/home.html. Si el cajero entró al POS #}
-      {# en modo pantalla completa, esta pantalla también respeta esa #}
-      {# preferencia (ver pos/_pos_fullscreen.html). #}
+      {% comment %}
+        Mismo toggle que en pos/home.html. Si el cajero entró al POS
+        en modo pantalla completa, esta pantalla también respeta esa
+        preferencia (ver pos/_pos_fullscreen.html).
+      {% endcomment %}
       <button type="button" id="pos-fullscreen-btn" class="pos-fullscreen-toggle"
               title="Modo pantalla completa (tablet)"
               onclick="togglePosFullscreen()">
@@ -38,7 +47,19 @@
         </svg>
         <span id="pos-fullscreen-label">Pantalla completa</span>
       </button>
-      <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-primary">+ Nueva venta</a>
+      {% comment %}
+        "+ Nueva venta" es HTMX: trae el contenido de pos:home y lo
+        swap-ea en `#pos-page-content`. Como NO navega, el fullscreen
+        API del browser se mantiene → el ciclo de ventas queda en
+        pantalla completa todo el tiempo.
+      {% endcomment %}
+      <a href="{% url 'pos:home' %}"
+         class="bo-btn bo-btn-primary"
+         hx-get="{% url 'pos:home' %}"
+         hx-target="#pos-page-content"
+         hx-select="#pos-page-content"
+         hx-swap="outerHTML"
+         hx-push-url="true">+ Nueva venta</a>
       <a href="{% url 'pos:ventas' %}" class="bo-btn">Ver ventas</a>
     </div>
   </div>
@@ -129,6 +150,12 @@
       </div>
     </div>
   </div>
+
+{% comment %}
+  Cierre de `#pos-page-content`. El JS del fullscreen partial vive
+  fuera del wrapper para no perderse en los swaps HTMX.
+{% endcomment %}
+</div> {# fin de #pos-page-content #}
 
   {# CSS + JS del modo pantalla completa. Lee la preferencia guardada #}
   {# en localStorage y aplica `body.pos-fullscreen` si corresponde. #}

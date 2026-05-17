@@ -82,5 +82,14 @@
         actualizarLabel(true);
       }
     } catch (e) {}
+
+    // Tras cada swap HTMX (Cobrar → recibo, + Nueva venta → home), el
+    // boton #pos-fullscreen-btn es un elemento NUEVO en el DOM con el
+    // label default "Pantalla completa". Re-sync-eamos al estado real
+    // del body — asi el boton refleja correctamente "Salir pantalla
+    // completa" cuando corresponde.
+    document.body.addEventListener('htmx:afterSwap', function () {
+      actualizarLabel(body.classList.contains('pos-fullscreen'));
+    });
   })();
 </script>

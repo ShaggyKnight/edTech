@@ -107,11 +107,13 @@
           </div>
         {% endfor %}
 
-        {# Bloque "Te guardamos el carrito" removido a pedido de la dueña.
-           El backend nunca persistia la suscripcion ni mandaba avisos —
-           el email solo quedaba en localStorage del browser. Si en el
-           futuro se quiere reactivar, ver el commit que introdujo el
-           Sprint 2 · 2.6 y los estilos `.save-cart*` en ideas.css. #}
+        {% comment %}
+          Bloque "Te guardamos el carrito" removido a pedido de la dueña.
+          El backend nunca persistia la suscripcion ni mandaba avisos —
+          el email solo quedaba en localStorage del browser. Si en el
+          futuro se quiere reactivar, ver el commit que introdujo el
+          Sprint 2 · 2.6 y los estilos `.save-cart*` en ideas.css.
+        {% endcomment %}
       </div>
 
       <aside class="cart-summary">

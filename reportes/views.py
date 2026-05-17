@@ -40,7 +40,14 @@ admin_required = user_passes_test(_es_admin, login_url='login')
 @login_required
 @admin_required
 def dashboard(request):
-    """Panel de indicadores del negocio."""
+    """Panel de indicadores del negocio.
+
+    Soporta dos modos de respuesta:
+      - GET normal: pagina completa (`reportes/dashboard.html`).
+      - GET con header `HX-Request: true` (desde HTMX): solo el partial
+        del contenido dinamico (`reportes/_dashboard_content.html`).
+        Esto deja que los filtros refresquen sin recargar.
+    """
     try:
         dias = max(1, min(365, int(request.GET.get('dias', 30))))
     except (TypeError, ValueError):
@@ -52,16 +59,41 @@ def dashboard(request):
     if tienda_id:
         tienda = Tienda.objects.filter(pk=tienda_id).first()
 
-    resumen = resumen_negocio(tienda=tienda, desde=desde, hasta=hasta)
-    serie = ventas_por_periodo(tienda=tienda, desde=desde, hasta=hasta)
+    # Mejora dashboard #3: filtro por canal. Solo aceptamos los valores
+    # validos de ReciboVenta.CANAL_*; cualquier otra cosa se ignora.
+    from pos.models import ReciboVenta
+    canal_filtro = request.GET.get('canal') or None
+    if canal_filtro not in (ReciboVenta.CANAL_PRESENCIAL, ReciboVenta.CANAL_ONLINE):
+        canal_filtro = None
+
+    # `incluir_anterior=True` para mejora #1: calcula la variacion vs el
+    # periodo previo (% bajo cada KPI). Costo extra: 1 query mas a recibos.
+    resumen = resumen_negocio(
+        tienda=tienda, desde=desde, hasta=hasta,
+        canal=canal_filtro, incluir_anterior=True,
+    )
+    serie = ventas_por_periodo(
+        tienda=tienda, desde=desde, hasta=hasta, canal=canal_filtro,
+    )
 
     context = {
         'resumen': resumen,
         'serie': serie,
         'dias': dias,
+        'canal_filtro': canal_filtro,
         'tiendas': Tienda.objects.filter(activa=True).order_by('nombre_organizacion'),
         'tienda_filtro': tienda,
+        # Para los `?desde=...&hasta=...` de los links drill-down (mejora #2).
+        'desde_iso': desde.date().isoformat(),
+        'hasta_iso': hasta.date().isoformat(),
     }
+
+    # HtmxMiddleware (ver edTech.middleware) setea `request.htmx` cuando
+    # el header HX-Request viene en la request. Las requests "hx-boost"
+    # NO se consideran partial — solo las que tienen target explicito
+    # (que es nuestro caso con hx-target=#dashboard-content).
+    if getattr(request, 'htmx', False):
+        return render(request, 'reportes/_dashboard_content.html', context)
     return render(request, 'reportes/dashboard.html', context)
 
 
@@ -198,6 +230,7 @@ def eerr(request):
     from datetime import datetime, timedelta
     from django.utils import timezone
     from bodega.services import resumen_produccion_global
+    from reportes.services import variacion_pct
 
     desde, hasta, modo, anio, mes, label = _parse_periodo(request)
 
@@ -205,6 +238,34 @@ def eerr(request):
     tienda = Tienda.objects.filter(pk=tienda_id).first() if tienda_id else None
 
     eerr_dato = estado_resultados(desde=desde, hasta=hasta, tienda=tienda)
+
+    # Mejora #1: comparativa vs periodo anterior. Calculamos el EERR del
+    # periodo inmediatamente anterior (mismo ancho, terminando donde
+    # empieza el actual) y derivamos las variaciones.
+    ancho = hasta - desde
+    desde_prev = desde - ancho
+    hasta_prev = desde
+    eerr_prev = estado_resultados(desde=desde_prev, hasta=hasta_prev, tienda=tienda)
+
+    eerr_anterior = {
+        'desde': desde_prev,
+        'hasta': hasta_prev,
+        'ingresos': eerr_prev.ingresos,
+        'costo_ventas': eerr_prev.costo_ventas,
+        'margen_bruto': eerr_prev.margen_bruto,
+        'margen_pct': eerr_prev.margen_pct,
+        'utilidad_neta': eerr_prev.utilidad_neta,
+        'var_ingresos': variacion_pct(eerr_dato.ingresos, eerr_prev.ingresos),
+        'var_cogs': variacion_pct(eerr_dato.costo_ventas, eerr_prev.costo_ventas),
+        'var_margen_bruto': variacion_pct(eerr_dato.margen_bruto, eerr_prev.margen_bruto),
+        # Para el margen % calculamos delta en PUNTOS porcentuales (no %).
+        # 40% actual vs 37% anterior → +3 ppts (no "+8% YoY").
+        'delta_margen_pct_ppts': (
+            int((eerr_dato.margen_pct - eerr_prev.margen_pct) * 100)
+            if eerr_prev.margen_pct or eerr_dato.margen_pct else None
+        ),
+        'var_utilidad_neta': variacion_pct(eerr_dato.utilidad_neta, eerr_prev.utilidad_neta),
+    }
 
     # Serie últimos 12 meses (incluye el período seleccionado).
     fin = timezone.localtime()
@@ -223,9 +284,50 @@ def eerr(request):
     # con la materia prima que ya pagaste".
     potencial = resumen_produccion_global()
 
-    return render(request, 'reportes/eerr.html', {
+    # Mejora #3: atajos rapidos de periodo. Construimos query-strings
+    # que el template usa en chips clickeables (HTMX). Cada atajo
+    # corresponde a un periodo predefinido + el `active` flag indica
+    # cual matchea el periodo actual.
+    hoy = timezone.localtime()
+    mes_anterior_anio = hoy.year if hoy.month > 1 else hoy.year - 1
+    mes_anterior_mes = hoy.month - 1 if hoy.month > 1 else 12
+    atajos = [
+        {
+            'label': 'Este mes',
+            'qs': f'periodo=mes&mes={hoy.month}&anio={hoy.year}',
+            'active': modo == 'mes' and anio == hoy.year and mes == hoy.month,
+        },
+        {
+            'label': 'Mes anterior',
+            'qs': f'periodo=mes&mes={mes_anterior_mes}&anio={mes_anterior_anio}',
+            'active': modo == 'mes' and anio == mes_anterior_anio and mes == mes_anterior_mes,
+        },
+        {
+            'label': 'Este año',
+            'qs': f'periodo=anio&anio={hoy.year}',
+            'active': modo == 'anio' and anio == hoy.year,
+        },
+        {
+            'label': 'Año anterior',
+            'qs': f'periodo=anio&anio={hoy.year - 1}',
+            'active': modo == 'anio' and anio == hoy.year - 1,
+        },
+        {
+            'label': 'Últimos 12 meses',
+            'qs': 'periodo=rango&desde='
+                  + (hoy - timedelta(days=365)).strftime('%Y-%m-%d')
+                  + '&hasta=' + hoy.strftime('%Y-%m-%d'),
+            # Active solo si el modo es rango exactamente con esos limites.
+            # No matcheamos rangos custom diferentes.
+            'active': False,
+        },
+    ]
+
+    context = {
         'eerr': eerr_dato,
+        'eerr_anterior': eerr_anterior,
         'potencial': potencial,
+        'atajos': atajos,
         'serie': [{
             'label': p.label,
             'ingresos': float(p.ingresos),
@@ -240,7 +342,12 @@ def eerr(request):
         'tiendas': Tienda.objects.filter(activa=True).order_by('nombre_organizacion'),
         'tienda_filtro': tienda,
         'anios': list(range(2024, timezone.localtime().year + 2)),
-    })
+    }
+    # Mismo patron que `dashboard`: si la request es HTMX, devolvemos
+    # solo el partial del contenido dinamico (~5 KB vs ~28 KB del shell).
+    if getattr(request, 'htmx', False):
+        return render(request, 'reportes/_eerr_content.html', context)
+    return render(request, 'reportes/eerr.html', context)
 
 
 @login_required

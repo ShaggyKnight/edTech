@@ -1,0 +1,32 @@
+{% comment %}
+  Chip de variacion vs periodo anterior — usado en las KPI cards del
+  dashboard. Recibe `pct` (int o None).
+
+  Reglas visuales:
+    - pct is None  → no se muestra nada (no hay info comparable).
+    - pct > 0       → chip verde con ↑
+    - pct < 0       → chip rojo con ↓
+    - pct == 0      → chip gris con →
+
+  Sin texto fijo "vs periodo anterior" porque el header del dashboard
+  ya indica la ventana y el copy se vuelve ruidoso debajo de cada card.
+  El tooltip lo aclara para quien dude.
+{% endcomment %}
+{% if pct is not None %}
+  {% if pct > 0 %}
+    <span class="variacion-chip variacion-up"
+          title="Subió {{ pct }}% vs período anterior">
+      ↑ {{ pct }}%
+    </span>
+  {% elif pct < 0 %}
+    <span class="variacion-chip variacion-down"
+          title="Bajó {{ pct|stringformat:'d' }}% vs período anterior">
+      ↓ {{ pct }}%
+    </span>
+  {% else %}
+    <span class="variacion-chip variacion-flat"
+          title="Sin cambios vs período anterior">
+      → 0%
+    </span>
+  {% endif %}
+{% endif %}

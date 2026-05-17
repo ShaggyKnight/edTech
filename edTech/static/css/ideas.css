@@ -447,8 +447,37 @@ input, select { font-family: inherit; }
 .filter-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .filter-group label { display: block; padding: 6px 0; font-size: 13px; }
 .size-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.size-chip { width: 40px; height: 36px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; font-weight: 500; background: var(--cream); transition: all .2s; }
-.size-chip:hover, .size-chip.active { border-color: var(--ink); background: var(--ink); color: var(--cream); }
+.size-chip {
+  min-width: 40px; height: 36px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+  background: var(--cream); color: var(--ink);
+  cursor: pointer; transition: all .15s;
+  font-family: inherit;
+}
+.size-chip:hover:not(:disabled):not(.disabled),
+.size-chip.active {
+  border-color: var(--ink); background: var(--ink); color: var(--cream);
+}
+.size-chip:disabled,
+.size-chip.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-60, #6a6a6a);
+}
+/* Chip seleccionada: badge sutil indicando que es la elegida. */
+.size-chip.active::after {
+  content: ' ✓';
+  font-weight: 600;
+}
+
+/* Boton primario disabled (botón "Agregar al carrito" del quick view
+   cuando el cliente no eligió talla). */
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .range-labs { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-60); margin-top: 6px; }
 .range-row input { width: 100%; }
 

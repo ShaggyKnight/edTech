@@ -74,22 +74,36 @@ class QuickViewTests(TestCase):
         self.assertIn('hx-post="/tienda/agregar/"', body)
         self.assertIn('Agregar al carrito', body)
 
-    def test_producto_con_variantes_redirige_a_pdp_para_elegir(self):
-        """Si tiene variantes, el CTA principal del modal lleva al PDP
-        completo donde el cliente puede elegir la talla.
-
-        BUG-010: el label era "Elegir y agregar" pero el CTA es solo un
-        link, no agrega nada. Ahora dice "Elegir talla y agregar →" para
-        que el usuario entienda que el agregar pasa en la ficha completa.
+    def test_producto_con_variantes_permite_agregar_desde_modal(self):
+        """Mejora: el modal Vista rápida YA permite elegir talla y agregar
+        sin tener que ir a la PDP completa. Los chips son botones
+        clickeables que setean el `<input name=item_id>` del form HTMX
+        de agregar, que arranca disabled hasta que se elige una talla.
         """
         resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.con_variantes.pk]))
         body = resp.content.decode()
-        # No hay form de agregar inline (porque hay que elegir variante).
-        self.assertNotIn('hx-post="/tienda/agregar/"', body)
-        # BUG-010: copy honesto que aclara dónde pasa el agregar.
-        self.assertIn('Elegir talla y agregar', body)
-        # Lista las variantes disponibles.
-        self.assertIn('size-chip', body)
+
+        # Tiene form HTMX inline de agregar (no solo link a PDP).
+        self.assertIn('hx-post="/tienda/agregar/"', body)
+        self.assertIn('id="qv-agregar-form"', body)
+        # `tipo=v` porque agrega una VARIANTE específica.
+        self.assertIn('name="tipo" value="v"', body)
+
+        # Los chips son botones clickeables con data-variante-id.
+        self.assertIn('<button type="button"', body)
+        self.assertIn('data-variante-id=', body)
+        self.assertIn('onclick="qvSeleccionar(this)"', body)
+
+        # El botón arranca disabled con copy explicito.
+        self.assertIn('id="qv-agregar-btn"', body)
+        self.assertIn('disabled', body)
+        self.assertIn('Elegí una talla primero', body)
+
+        # El handler global qvSeleccionar esta definido.
+        self.assertIn('window.qvSeleccionar', body)
+
+        # Link "Ver detalle completo" se mantiene como secundario.
+        self.assertIn('Ver detalle completo', body)
 
     def test_link_a_pdp_completo(self):
         resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.producto.pk]))

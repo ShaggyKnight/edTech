@@ -33,7 +33,13 @@ SQL
 
 log "Creando DB $DB_NAME..."
 if ! sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw "${DB_NAME}"; then
-  sudo -u postgres createdb -O "${DB_USER}" -E UTF8 -l es_CL.UTF-8 -T template0 "${DB_NAME}"
+  # Intentar con es_CL.UTF-8 primero; si no existe, usar C.UTF-8 (siempre disponible)
+  LC_COLLATE="es_CL.UTF-8"
+  if ! locale -a | grep -q "^es_CL\.utf8"; then
+    log "Locale es_CL.UTF-8 no encontrado; usando C.UTF-8 como fallback"
+    LC_COLLATE="C.UTF-8"
+  fi
+  sudo -u postgres createdb -O "${DB_USER}" -E UTF8 -l "${LC_COLLATE}" -T template0 "${DB_NAME}"
 fi
 
 # Permisos minimos: solo el user 'ideas' puede acceder a esa DB.

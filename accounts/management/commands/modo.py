@@ -73,25 +73,26 @@ class Command(BaseCommand):
         return Path(valor)
 
     def _activar(self, ruta):
-        # No intentamos crear los directorios padre — eso requeriria
-        # permisos de root en /srv. El deploy de produccion crea
-        # /srv/ideas/ con chown a `ideas`, asi que el padre ya existe.
-        # Si no existe, le decimos al operador como arreglarlo en vez
-        # de tirar un PermissionError feo del os.mkdir.
-        if not ruta.parent.exists():
-            raise CommandError(
-                f'El directorio {ruta.parent} no existe. Crealo primero:\n'
-                f'    sudo mkdir -p {ruta.parent}\n'
-                f'    sudo chown ideas:ideas {ruta.parent}'
-            )
+        # Intentamos el touch directo. Si falla, damos un error claro
+        # con los comandos exactos para arreglarlo. NO usamos
+        # `parent.exists()` como pre-check porque puede dar falso
+        # negativo si el user no tiene permiso de stat sobre /srv (la
+        # carpeta padre existe pero pathlib no lo puede confirmar).
         try:
             ruta.touch(exist_ok=True)
+        except FileNotFoundError as e:
+            raise CommandError(
+                f'No se puede crear {ruta}: el directorio padre no existe.\n'
+                f'    sudo mkdir -p {ruta.parent}\n'
+                f'    sudo chown ideas:ideas {ruta.parent}\n'
+                f'Error: {e}'
+            )
         except PermissionError as e:
             raise CommandError(
-                f'No se puede escribir en {ruta}. Permisos:\n'
+                f'No se puede escribir en {ruta}.\n'
                 f'    sudo chown ideas:ideas {ruta.parent}\n'
-                f'    sudo chmod u+w {ruta.parent}\n'
-                f'Error original: {e}'
+                f'    sudo chmod 755 {ruta.parent}\n'
+                f'Error: {e}'
             )
 
     def _desactivar(self, ruta):

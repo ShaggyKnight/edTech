@@ -1,0 +1,96 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Volvemos pronto · Ideas Boutique</title>
+  <meta name="robots" content="noindex">
+  <style>
+    :root {
+      --cream: #FAF6EE;
+      --cream-2: #F2EBDE;
+      --ink: #1B1B1B;
+      --ink-60: #6E6E6E;
+      --vino: #7A1E2B;
+      --gold: #B79255;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    .card {
+      max-width: 520px; width: 100%;
+      background: #fff;
+      border-radius: 14px;
+      padding: 48px 32px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+      text-align: center;
+      border-top: 4px solid var(--gold);
+    }
+    .logo {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--vino);
+      margin-bottom: 32px;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 500;
+      font-size: 36px;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: var(--ink);
+    }
+    p {
+      color: var(--ink-60);
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .small {
+      font-size: 13px;
+      color: var(--ink-60);
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--cream-2);
+    }
+    .small a { color: var(--vino); text-decoration: none; font-weight: 600; }
+    .small a:hover { text-decoration: underline; }
+    .icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 20px;
+      display: block;
+      color: var(--gold);
+    }
+    @media (max-width: 480px) {
+      h1 { font-size: 28px; }
+      .card { padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"></circle>
+      <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+    <div class="logo">Ideas Boutique</div>
+    <h1>Estamos afinando los últimos detalles</h1>
+    <p>Volvemos en unos días con la tienda online completa.</p>
+    <p>Mientras tanto, visitanos en Caupolicán 437-B, Los Vilos.</p>
+    <div class="small">
+      ¿Urgente? Escribinos por
+      <a href="https://wa.me/56992839333" target="_blank" rel="noopener">WhatsApp</a>
+      — atendemos de lunes a sábado, 9 a 19 hs.
+    </div>
+  </main>
+</body>
+</html>

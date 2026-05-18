@@ -111,9 +111,19 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Marca request.htmx para que views/templates puedan ajustar su salida.
     'edTech.middleware.HtmxMiddleware',
+    # Modo mantenimiento: si existe el archivo MAINTENANCE_FLAG_FILE, el
+    # publico ve una pagina de "volvemos pronto" (HTTP 503). Staff/admin
+    # siguen viendo todo. Va DESPUES de Auth + Htmx para tener `request.user`.
+    'edTech.middleware.MaintenanceMiddleware',
     # django-axes: debe ir AL FINAL para ver el resultado del login.
     'axes.middleware.AxesMiddleware',
 ]
+
+# Archivo flag para el modo mantenimiento. Crear/borrar este archivo
+# enciende y apaga el modo sin necesidad de reiniciar gunicorn.
+# Default: BASE_DIR/MAINTENANCE (util en dev). En prod, el .env apunta
+# a /srv/ideas/MAINTENANCE (fuera del checkout de git).
+MAINTENANCE_FLAG_FILE = env('MAINTENANCE_FLAG_FILE', default=str(BASE_DIR / 'MAINTENANCE'))
 
 # Auth backends: AxesStandaloneBackend RECHAZA logins de IPs/usuarios
 # bloqueados antes de llegar al ModelBackend. No autentica por si solo —

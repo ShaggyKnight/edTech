@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from bodega.models import Tienda
 from contabilidad.models import MovimientoCaja
-from contabilidad.services import registrar_ingreso_venta
+from contabilidad.services import registrar_ingreso_venta, registrar_salida
 from pos.models import ReciboVenta
 
 User = get_user_model()
@@ -465,6 +465,7 @@ class CajaViewTests(TestCase):
         self.client.login(username='ana', password='x')
         resp = self.client.post(reverse('reportes:caja'), {
             'tienda': self.tienda.pk,
+            'categoria': MovimientoCaja.GASTO_OPERATIVO,
             'monto': '50000',
             'concepto': 'Arriendo abril',
         }, follow=True)
@@ -472,7 +473,98 @@ class CajaViewTests(TestCase):
         self.assertTrue(MovimientoCaja.objects.filter(
             tipo=MovimientoCaja.SALIDA, monto=Decimal('50000'),
             concepto='Arriendo abril',
+            categoria=MovimientoCaja.GASTO_OPERATIVO,
         ).exists())
+
+    def test_registrar_compra_inventario(self):
+        """Una compra de telas / perfumes debe quedar como
+        `costo_inventario`, no como gasto operativo — es ACTIVO contable,
+        no gasto del periodo. Este test cubre el bug que existia cuando
+        el form forzaba siempre `gasto_operativo`."""
+        self.client.login(username='ana', password='x')
+        self.client.post(reverse('reportes:caja'), {
+            'tienda': self.tienda.pk,
+            'categoria': MovimientoCaja.COSTO_INVENTARIO,
+            'monto': '200000',
+            'concepto': 'Compra de tela polar para buzos',
+        })
+        m = MovimientoCaja.objects.get(concepto='Compra de tela polar para buzos')
+        self.assertEqual(m.categoria, MovimientoCaja.COSTO_INVENTARIO)
+        self.assertEqual(m.tipo, MovimientoCaja.SALIDA)
+
+    def test_registrar_pago_confeccion(self):
+        """Pago a quien cose debe ir como `costo_produccion`, NO como
+        gasto operativo. Tambien es ACTIVO contable."""
+        self.client.login(username='ana', password='x')
+        self.client.post(reverse('reportes:caja'), {
+            'tienda': self.tienda.pk,
+            'categoria': MovimientoCaja.COSTO_PRODUCCION,
+            'monto': '150000',
+            'concepto': 'Pago confección 20 buzos SFJ',
+        })
+        m = MovimientoCaja.objects.get(concepto='Pago confección 20 buzos SFJ')
+        self.assertEqual(m.categoria, MovimientoCaja.COSTO_PRODUCCION)
+
+    def test_form_initial_categoria_es_gasto_operativo(self):
+        """El form arranca con `gasto_operativo` pre-seleccionado en
+        el dropdown (caso mas comun). Este test confirma el initial,
+        no el comportamiento sin data — un POST sin `categoria` falla
+        porque el field es required."""
+        from reportes.forms import CajaSalidaForm
+        form = CajaSalidaForm()
+        self.assertEqual(
+            form.fields['categoria'].initial, MovimientoCaja.GASTO_OPERATIVO,
+        )
+
+    def test_form_categoria_es_requerido(self):
+        """POST sin `categoria` falla — obliga al admin a elegir
+        conscientemente como contabilizar el egreso."""
+        from reportes.forms import CajaSalidaForm
+        form = CajaSalidaForm(data={
+            'tienda': self.tienda.pk,
+            'monto': '50000',
+            'concepto': 'Arriendo',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('categoria', form.errors)
+
+    def test_form_rechaza_categoria_invalida(self):
+        """No se puede usar `ingreso_venta` ni un valor inventado como
+        categoria de salida — el ChoiceField solo acepta las 3 validas."""
+        from reportes.forms import CajaSalidaForm
+        form = CajaSalidaForm(data={
+            'tienda': self.tienda.pk,
+            'categoria': MovimientoCaja.INGRESO_VENTA,   # invalido para salida
+            'monto': '50000',
+            'concepto': 'X',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('categoria', form.errors)
+
+    def test_tabla_muestra_columna_categoria(self):
+        """El listado de movimientos incluye la columna Categoria con
+        badge — para que el admin vea de un vistazo si una salida es
+        gasto, compra de inventario o pago de confeccion."""
+        self.client.login(username='ana', password='x')
+        # Crear movimientos de las 3 categorias para que aparezcan badges.
+        registrar_salida(
+            tienda=self.tienda, monto=Decimal('100'), concepto='Luz',
+            categoria=MovimientoCaja.GASTO_OPERATIVO,
+        )
+        registrar_salida(
+            tienda=self.tienda, monto=Decimal('200'), concepto='Telas',
+            categoria=MovimientoCaja.COSTO_INVENTARIO,
+        )
+        registrar_salida(
+            tienda=self.tienda, monto=Decimal('300'), concepto='Confección',
+            categoria=MovimientoCaja.COSTO_PRODUCCION,
+        )
+        resp = self.client.get(reverse('reportes:caja'))
+        body = resp.content.decode()
+        self.assertIn('<th>Categoría</th>', body)
+        self.assertIn('Gasto operativo', body)
+        self.assertIn('Compra inventario', body)
+        self.assertIn('Confección', body)
 
 
 class ProduccionViewTests(TestCase):

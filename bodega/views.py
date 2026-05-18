@@ -188,7 +188,7 @@ def set_stock(request, pk):
     Si el request viene de HTMX, devuelve solo la fila actualizada.
     """
     if not _puede_reponer(request.user):
-        messages.error(request, 'No tenés permisos para editar stock.')
+        messages.error(request, 'No tienes permisos para editar stock.')
         return redirect('bodega:stock')
 
     fila = get_object_or_404(
@@ -245,7 +245,7 @@ def reponer_stock(request):
     bodeguero/dueño reponen mercadería.
     """
     if not _puede_reponer(request.user):
-        messages.error(request, 'No tenés permisos para reponer stock.')
+        messages.error(request, 'No tienes permisos para reponer stock.')
         return redirect('bodega:stock')
 
     tipo = request.POST.get('tipo', '')
@@ -325,7 +325,7 @@ def stock_agregar(request):
     la audit trail (MovimientoStock con tipo=ENTRADA).
     """
     if not _puede_reponer(request.user):
-        messages.error(request, 'No tenés permisos para cargar stock.')
+        messages.error(request, 'No tienes permisos para cargar stock.')
         return redirect('bodega:stock')
 
     tiendas = Tienda.objects.filter(activa=True).order_by('nombre_organizacion')
@@ -492,7 +492,7 @@ def stock_bulk_agregar(request):
         if not actualizaciones:
             messages.warning(
                 request,
-                'No ingresaste ninguna cantidad mayor a 0. Llená al menos un input.',
+                'No ingresaste ninguna cantidad mayor a 0. Completa al menos un input.',
             )
             return redirect('bodega:stock_bulk_agregar')
 
@@ -709,7 +709,7 @@ def set_precio(request, pk):
     actualizada (para HTMX) o redirige (no-JS).
     """
     if not _puede_gestionar_ofertas(request.user):
-        messages.error(request, 'No tenés permisos para editar precios.')
+        messages.error(request, 'No tienes permisos para editar precios.')
         return redirect('bodega:lista_productos')
 
     producto = get_object_or_404(Producto, pk=pk)
@@ -766,7 +766,7 @@ def productos_bulk_action(request):
     - No-JS: redirect a lista_productos con messages.success.
     """
     if not _puede_gestionar_ofertas(request.user):
-        messages.error(request, 'No tenés permisos para cambios masivos.')
+        messages.error(request, 'No tienes permisos para cambios masivos.')
         return redirect('bodega:lista_productos')
 
     accion = (request.POST.get('accion') or '').strip()
@@ -807,7 +807,7 @@ def producto_toggle_activo(request, pk):
     discontinua productos).
     """
     if not _puede_gestionar_ofertas(request.user):
-        messages.error(request, 'No tenés permisos para cambiar el estado de productos.')
+        messages.error(request, 'No tienes permisos para cambiar el estado de productos.')
         return redirect('bodega:lista_productos')
 
     producto = get_object_or_404(Producto, pk=pk)
@@ -921,7 +921,7 @@ def galeria_reorder(request, pk):
     if not _puede_gestionar_ofertas(request.user):
         if request.htmx:
             return HttpResponse('Sin permisos', status=403)
-        messages.error(request, 'No tenés permisos para reordenar la galería.')
+        messages.error(request, 'No tienes permisos para reordenar la galería.')
         return redirect('bodega:galeria_producto', pk=pk)
 
     from catalogo.models import ProductoImagen

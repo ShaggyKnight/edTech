@@ -47,8 +47,8 @@
       </div>
       <h1>Sumar unidades al stock</h1>
       <div class="sub">
-        Elegí <strong>un solo</strong> producto o variante, escribí cuántas unidades
-        te están entrando, y guardá. Repetí para cada producto.
+        Elige <strong>un solo</strong> producto o variante, escribe cuántas unidades
+        están entrando, y guarda. Repite para cada producto.
       </div>
     </div>
     <a href="{% url 'bodega:stock' %}" class="bo-btn">← Volver al stock</a>
@@ -80,13 +80,13 @@
             matchean. Mismo patron que oferta_form (Bloque 5.B).
           {% endcomment %}
           <input type="search" id="filtro-item"
-                 class="bo-input" placeholder="🔍 Filtrar (escribí nombre o talla)…"
+                 class="bo-input" placeholder="🔍 Filtrar (escribe nombre o talla)…"
                  autocomplete="off"
                  style="margin-bottom:6px;">
 
           <select name="item_combo" id="id_item" required size="12"
                   style="height:auto;">
-            <option value="" disabled selected>— Elegí UN producto o variante —</option>
+            <option value="" disabled selected>— Elige UN producto o variante —</option>
             {% for familia, items in opciones_por_familia %}
               <optgroup label="{{ familia }}">
                 {% for opt in items %}
@@ -116,7 +116,7 @@
                    min="1" max="99999" step="1" required
                    value="1" inputmode="numeric">
             <p class="stock-add-hint">
-              Ej: si te llegaron 12 unidades del producto seleccionado, escribí <strong>12</strong>.
+              Ej: si llegaron 12 unidades del producto seleccionado, escribe <strong>12</strong>.
             </p>
           </div>
           <div style="display:flex;gap:8px;align-self:end;">

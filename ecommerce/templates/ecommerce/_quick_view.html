@@ -45,7 +45,7 @@
 
       {% if producto.tiene_variantes and variantes %}
         <div class="quick-view-variantes">
-          <div class="quick-view-label">Elegí tu talla:</div>
+          <div class="quick-view-label">Elige tu talla:</div>
           <div class="size-chips" id="qv-chips">
             {% for v in variantes %}
               <button type="button"
@@ -80,7 +80,7 @@
             <input type="hidden" name="item_id" value="" id="qv-variante-id">
             <input type="hidden" name="cantidad" value="1">
             <button type="submit" class="btn-primary" id="qv-agregar-btn" disabled>
-              <span id="qv-agregar-label">Elegí una talla primero</span>
+              <span id="qv-agregar-label">Elige una talla primero</span>
             </button>
           </form>
           <a href="{% url 'ecommerce:producto' producto.pk %}" class="btn-outline">

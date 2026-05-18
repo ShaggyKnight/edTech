@@ -97,7 +97,7 @@ class QuickViewTests(TestCase):
         # El botón arranca disabled con copy explicito.
         self.assertIn('id="qv-agregar-btn"', body)
         self.assertIn('disabled', body)
-        self.assertIn('Elegí una talla primero', body)
+        self.assertIn('Elige una talla primero', body)
 
         # El handler global qvSeleccionar esta definido.
         self.assertIn('window.qvSeleccionar', body)

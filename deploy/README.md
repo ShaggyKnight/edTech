@@ -29,7 +29,7 @@ En el panel de Hetzner Cloud:
 2. **Location:** `Nuremberg` (eu-central) o `Ashburn` (us-east) — más cerca de Chile.
 3. **Image:** Ubuntu 24.04.
 4. **Type:** `CX22` (2 vCPU x86, 4 GB RAM, 40 GB SSD, ~€3.79/mes) — suficiente para 1000 productos y ~30 pedidos diarios.
-5. **Networking:** marcar "Public IPv4" y "Public IPv6". Dejá la SSH key que subiste.
+5. **Networking:** marcar "Public IPv4" y "Public IPv6". Deja la SSH key que subiste.
 6. **Cloud config (opcional):** dejar vacío, los scripts lo configuran después.
 7. **Name:** `ideas-prod`.
 
@@ -112,7 +112,7 @@ Lo que hace:
 - Clona el repo a `/srv/ideas/app/`
 - Crea venv en `/srv/ideas/venv/`
 - Instala `requirements.txt`
-- Copia `ideas.env.production.template` → `/srv/ideas/app/.env` (queda vacío, lo llenás vos)
+- Copia `ideas.env.production.template` → `/srv/ideas/app/.env` (queda vacío, lo completas tú)
 - Crea directorios `/srv/ideas/{media,backups,logs}`
 - Instala los `.service` / `.socket` de systemd
 - **No arranca todavía** (falta llenar `.env` y migrar DB)
@@ -275,7 +275,7 @@ curl https://ideasboutique.cl/sitemap.xml
 
 ## Deploy de cambios después del primer deploy
 
-Una vez que el sitio anda y querés subir nuevos commits:
+Una vez que el sitio anda y quieres subir nuevos commits:
 
 ```bash
 ssh ideas@49.13.X.X

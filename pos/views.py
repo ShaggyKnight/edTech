@@ -225,7 +225,7 @@ def agregar_stock(request):
     Cajero y bodeguero no tienen acceso (los gates están acá adentro).
     """
     if not _puede_admin_stock(request.user):
-        messages.error(request, 'No tenés permisos para cargar stock desde el POS.')
+        messages.error(request, 'No tienes permisos para cargar stock desde el POS.')
         return redirect('pos:home')
 
     tienda = get_active_tienda(request)

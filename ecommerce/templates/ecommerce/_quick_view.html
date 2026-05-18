@@ -20,7 +20,17 @@
   <div class="quick-view-grid">
     <div class="quick-view-img">
       {% imagen_producto producto as img_url %}
-      <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy">
+      {% comment %}
+        En el modal queremos que la foto cargue YA — quitamos `lazy`
+        (el cliente acaba de hacer click en "Vista rapida") y agregamos
+        `fetchpriority=high` para que pase delante de otras requests.
+        `decoding=async` deja al browser decodificar en otro thread y
+        no congelar el render del modal mientras dibuja la imagen.
+      {% endcomment %}
+      <img src="{{ img_url }}"
+           alt="{{ producto.nombre }}"
+           fetchpriority="high"
+           decoding="async">
     </div>
 
     <div class="quick-view-info">

@@ -57,6 +57,11 @@ env = environ.Env(
     ADMIN_EMAIL=(str, ''),              # Email del superusuario (recibe 500s)
     AXES_FAILURE_LIMIT=(int, 5),        # 5 intentos fallidos = lockout
     AXES_COOLOFF_HOURS=(int, 1),        # 1 hora de bloqueo
+    # Paths de artifactos generados (collectstatic) y subidos (admin).
+    # En dev quedan adentro del repo. En prod el .env los apunta FUERA
+    # del checkout de git para que `git pull` no los toque.
+    STATIC_ROOT=(str, ''),
+    MEDIA_ROOT=(str, ''),
 )
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -166,7 +171,12 @@ SHORT_DATETIME_FORMAT = 'd-m-Y H:i'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'edTech' / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# STATIC_ROOT y MEDIA_ROOT son configurables via env para que en prod
+# vivan FUERA del checkout de git (/srv/ideas/staticfiles, /srv/ideas/media).
+# Asi `git reset --hard` u otros deploys no tocan los archivos generados
+# por collectstatic ni las imagenes subidas por el admin.
+# Default = dentro del proyecto, util para `runserver` local sin .env.
+STATIC_ROOT = Path(env('STATIC_ROOT')) if env('STATIC_ROOT') else BASE_DIR / 'staticfiles'
 
 # En prod con WhiteNoise usamos el storage con manifest (hash + compresión).
 # Sin WhiteNoise Django sirve staticfiles "crudos" y no hay que forzar el storage.
@@ -174,7 +184,7 @@ if USE_WHITENOISE and not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(env('MEDIA_ROOT')) if env('MEDIA_ROOT') else BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

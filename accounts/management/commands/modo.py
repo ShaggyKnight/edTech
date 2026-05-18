@@ -73,12 +73,36 @@ class Command(BaseCommand):
         return Path(valor)
 
     def _activar(self, ruta):
-        ruta.parent.mkdir(parents=True, exist_ok=True)
-        ruta.touch(exist_ok=True)
+        # No intentamos crear los directorios padre — eso requeriria
+        # permisos de root en /srv. El deploy de produccion crea
+        # /srv/ideas/ con chown a `ideas`, asi que el padre ya existe.
+        # Si no existe, le decimos al operador como arreglarlo en vez
+        # de tirar un PermissionError feo del os.mkdir.
+        if not ruta.parent.exists():
+            raise CommandError(
+                f'El directorio {ruta.parent} no existe. Crealo primero:\n'
+                f'    sudo mkdir -p {ruta.parent}\n'
+                f'    sudo chown ideas:ideas {ruta.parent}'
+            )
+        try:
+            ruta.touch(exist_ok=True)
+        except PermissionError as e:
+            raise CommandError(
+                f'No se puede escribir en {ruta}. Permisos:\n'
+                f'    sudo chown ideas:ideas {ruta.parent}\n'
+                f'    sudo chmod u+w {ruta.parent}\n'
+                f'Error original: {e}'
+            )
 
     def _desactivar(self, ruta):
         if ruta.exists():
-            ruta.unlink()
+            try:
+                ruta.unlink()
+            except PermissionError as e:
+                raise CommandError(
+                    f'No se puede borrar {ruta}. Permisos: '
+                    f'sudo chown ideas:ideas {ruta}. Error: {e}'
+                )
 
     def _mostrar_estado(self, mant, land):
         if mant.exists():

@@ -316,9 +316,92 @@
     applyFilters();
   });
 
-  // Back / forward del navegador.
-  window.addEventListener('popstate', function() {
-    window.location.reload();
+  // ============ Back / forward del navegador ============
+  // Antes haciamos `window.location.reload()` aca — eso preservaba la
+  // logica de filtros pero MATABA el back-forward cache: al volver de
+  // una PDP, el navegador no podia restaurar el catalogo desde memoria
+  // y el cliente perdia su scroll position.
+  //
+  // Nuevo enfoque:
+  //   - Si el browser restaura desde bfcache (`pageshow.persisted`),
+  //     no hacemos nada — el DOM y el scroll ya estan donde el cliente
+  //     los dejo.
+  //   - Si `popstate` dispara y la URL del catalogo cambio respecto a
+  //     la ultima que aplicamos (navegacion entre filtros con flechas
+  //     atras/adelante), re-sincronizamos el form desde la URL y
+  //     aplicamos sin recargar.
+  var lastAppliedUrl = window.location.href;
+
+  function sincronizarFormDesdeUrl() {
+    var params = new URLSearchParams(window.location.search);
+    // Radios (cat, colegio)
+    form.querySelectorAll('input[type="radio"]').forEach(function (r) {
+      r.checked = (params.get(r.name) || '') === r.value;
+    });
+    // Hidden talla
+    var t = form.querySelector('input[name="talla"][type="hidden"]');
+    if (t) t.value = params.get('talla') || '';
+    // Hidden oferta
+    var o = form.querySelector('input[name="oferta"][type="hidden"]');
+    if (o) o.value = params.get('oferta') || '';
+    // Inputs de precio
+    var pmin = form.querySelector('input[name="precio_min"]');
+    if (pmin) pmin.value = params.get('precio_min') || '';
+    var pmax = form.querySelector('input[name="precio_max"]');
+    if (pmax) pmax.value = params.get('precio_max') || '';
+    // Select de sort (vive fuera del form)
+    if (sortSelect) sortSelect.value = params.get('sort') || 'relevant';
+  }
+
+  // Hook el applyFilters original para trackear la ultima URL aplicada.
+  var _applyFilters = applyFilters;
+  applyFilters = function () {
+    lastAppliedUrl = buildUrl();
+    return _applyFilters.apply(this, arguments);
+  };
+
+  window.addEventListener('popstate', function () {
+    // Si la URL es la misma que la ultima aplicada, es bfcache restoring
+    // o navegacion adelante/atras sin cambio real → no hacemos nada.
+    if (window.location.href === lastAppliedUrl) return;
+    sincronizarFormDesdeUrl();
+    // Aplicamos filtros pero SIN volver a pushear estado (ya estamos
+    // en la URL correcta gracias al back/forward del browser).
+    var url = buildUrl();
+    lastAppliedUrl = url;
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+    grid.classList.add('is-loading');
+    fetch(url, {signal: abortCtrl.signal, credentials: 'same-origin'})
+      .then(function (resp) {
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.text();
+      })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        swapInner('shop-grid', doc);
+        swapInner('filter-colegio', doc);
+        swapInner('filter-talla', doc);
+        swapInner('filter-limpiar', doc);
+        if (info) swapInner('shop-cat-info', doc);
+        var t = doc.querySelector('title');
+        if (t) document.title = t.textContent;
+      })
+      .catch(function (e) {
+        if (e.name !== 'AbortError') window.location.href = url;
+      })
+      .finally(function () {
+        grid.classList.remove('is-loading');
+      });
+  });
+
+  // Cuando volvemos a la pagina via bfcache, marcamos la URL actual
+  // como "la ultima aplicada" para que el popstate inmediato (algunos
+  // browsers lo disparan) no relance una fetch innecesaria.
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      lastAppliedUrl = window.location.href;
+    }
   });
 
   // ============ Sprint 2 · 2.5: Drawer de filtros en mobile/tablet portrait ============

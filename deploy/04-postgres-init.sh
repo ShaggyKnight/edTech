@@ -33,7 +33,38 @@ SQL
 
 log "Creando DB $DB_NAME..."
 if ! sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw "${DB_NAME}"; then
-  sudo -u postgres createdb -O "${DB_USER}" -E UTF8 -l es_CL.UTF-8 -T template0 "${DB_NAME}"
+  # Locale para collation: queremos es_CL si esta disponible — sort
+  # con ñ correcto (entre n y o), util para ORDER BY nombre del catalogo.
+  #
+  # Sutileza importante: Linux reporta el locale en `locale -a` con la
+  # forma CANONICA (lowercase, sin guion, ej: `es_CL.utf8`). PostgreSQL
+  # valida estricto y no acepta variantes con mayusculas o guiones
+  # (`es_CL.UTF8`, `es_CL.UTF-8`). Antes pasabamos `es_CL.UTF8` aunque
+  # el OS lo tenia como `es_CL.utf8` -> PG fallaba con
+  # `invalid LC_COLLATE locale name`.
+  #
+  # Solucion: si el locale no esta presente, lo generamos. Despues
+  # extraemos la forma EXACTA como aparece en `locale -a` y la pasamos
+  # a createdb.
+
+  if ! locale -a 2>/dev/null | grep -qi "^es_cl"; then
+    log "Locale es_CL no esta generado, intentando generarlo..."
+    if command -v locale-gen >/dev/null 2>&1; then
+      locale-gen es_CL.UTF-8 || true
+      command -v update-locale >/dev/null && update-locale || true
+    fi
+  fi
+
+  LC_COLLATE="$(locale -a 2>/dev/null | grep -i '^es_cl' | head -1 || true)"
+  if [[ -z "$LC_COLLATE" ]]; then
+    log "Locale es_CL no disponible — usando C.UTF-8 como fallback."
+    log "(Sort case-insensitive de ñ no funcionara optimo, pero el catalogo"
+    log " va a operar normal.)"
+    LC_COLLATE="C.UTF-8"
+  else
+    log "Usando locale: $LC_COLLATE"
+  fi
+  sudo -u postgres createdb -O "${DB_USER}" -E UTF8 -l "${LC_COLLATE}" -T template0 "${DB_NAME}"
 fi
 
 # Permisos minimos: solo el user 'ideas' puede acceder a esa DB.

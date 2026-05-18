@@ -25,6 +25,12 @@ apt-get upgrade -y -qq
 log "Configurando timezone America/Santiago..."
 timedatectl set-timezone America/Santiago
 
+log "Generando locales necesarios (es_CL.UTF-8, es_GL.UTF-8)..."
+apt-get install -y -qq locales
+sed -i 's/^# \(es_CL.UTF-8\)/\1/' /etc/locale.gen
+sed -i 's/^# \(es_GL.UTF-8\)/\1/' /etc/locale.gen
+locale-gen
+
 log "Instalando paquetes core..."
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
   python3 python3-venv python3-dev python3-pip \

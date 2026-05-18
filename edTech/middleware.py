@@ -23,65 +23,92 @@ class HtmxMiddleware:
 
 
 class MaintenanceMiddleware:
-    """Modo mantenimiento toggleable via archivo flag (sin restart).
+    """Modos del sitio toggleables via archivos flag (sin restart).
 
-    Encendido cuando existe `settings.MAINTENANCE_FLAG_FILE` (default
-    `/srv/ideas/MAINTENANCE` en prod). Comandos rapidos:
+    Tres modos posibles, con prioridad MANTENIMIENTO > LANDING > NORMAL:
 
-        sudo -u ideas touch /srv/ideas/MAINTENANCE   # encender
-        sudo -u ideas rm    /srv/ideas/MAINTENANCE   # apagar
+    1. MANTENIMIENTO (`settings.MAINTENANCE_FLAG_FILE` existe):
+       publico ve "Volvemos pronto" (HTTP 503) en TODOS los paths.
+       Google interpreta 503 como "vuelve mas tarde", NO desindexa.
 
-    Tambien `python manage.py mantenimiento on|off`.
+    2. LANDING (`settings.LANDING_ONLY_FLAG_FILE` existe):
+       publico SOLO puede ver la home y `/info/`. Cualquier otro path
+       (ej. `/tienda/`) redirige a `/`. Util para soft-launch: la
+       landing engancha clientes pero la tienda todavia no esta lista.
 
-    Cuando esta encendido:
-      - Superusers y staff pasan normal (para que la duena pueda seguir
-        editando la tienda mientras el publico ve la pagina de mantencion).
-      - El admin (`/admin/` o el `ADMIN_URL` random) queda accesible.
-      - El login (`/cuenta/login/`) tambien, porque sin login no podes
-        pasar como superuser.
-      - Healthcheck (`/healthz`) pasa libre para que monitoring no
-        crea que el site se cayo.
-      - El resto recibe el template `maintenance.html` con HTTP 503
-        (Google interpreta 503 como "vuelve mas tarde" y NO desindexa).
+    3. NORMAL: site abierto.
+
+    En cualquier modo, los siguientes SIEMPRE pasan:
+      - Staff/superusers (para que el dueno siga editando)
+      - /admin/ y el ADMIN_URL custom (para loguearse)
+      - /cuenta/login/, /cuenta/logout/
+      - /static/, /media/, /healthz
+
+    Toggle: `python manage.py modo normal|landing|mantenimiento`
+    O directo: `touch /srv/ideas/MAINTENANCE` etc.
     """
 
-    # Paths que siempre pasan, incluso en modo mantenimiento. Sin esto
-    # la duena no puede loguearse para apagar el modo.
+    # Paths que siempre pasan, en cualquier modo. Sin esto la duena no
+    # podria loguearse para apagar el modo activo.
     SAFE_PREFIXES = ('/admin/', '/cuenta/login/', '/cuenta/logout/',
                      '/static/', '/media/', '/healthz')
 
+    # Paths publicos en modo LANDING. La home + about-us pages.
+    LANDING_OK_PREFIXES = ('/info',)
+    LANDING_OK_EXACT = ('/', '/sitemap.xml', '/robots.txt')
+
     def __init__(self, get_response):
         self.get_response = get_response
-        # Cache del path en un atributo: chequear `Path.exists()` es
-        # microsegundos pero igual lo guardamos.
-        flag = getattr(settings, 'MAINTENANCE_FLAG_FILE', None)
-        self.flag_path = Path(flag) if flag else None
+        # Cache de paths en atributos: `Path.exists()` es microsegundos
+        # pero igual lo evitamos en cada request.
+        m_flag = getattr(settings, 'MAINTENANCE_FLAG_FILE', None)
+        l_flag = getattr(settings, 'LANDING_ONLY_FLAG_FILE', None)
+        self.mant_path = Path(m_flag) if m_flag else None
+        self.landing_path = Path(l_flag) if l_flag else None
         # Admin URL custom (ej. 'admin-xZqR82/') — agregamos al allowlist.
         admin_url = getattr(settings, 'ADMIN_URL', 'admin/')
         self.admin_prefix = '/' + admin_url.strip('/') + '/'
 
     def _en_mantenimiento(self):
-        return self.flag_path is not None and self.flag_path.exists()
+        return self.mant_path is not None and self.mant_path.exists()
 
-    def _path_protegido(self, path):
-        """True si `path` siempre debe pasar, aun en mantencion."""
+    def _solo_landing(self):
+        return self.landing_path is not None and self.landing_path.exists()
+
+    def _safe_path(self, path):
+        """Allowlist comun a todos los modos restringidos."""
         if path.startswith(self.SAFE_PREFIXES):
             return True
         if path.startswith(self.admin_prefix):
             return True
         return False
 
+    def _landing_ok(self, path):
+        """True si el path es publicamente visible en modo LANDING."""
+        if self._safe_path(path):
+            return True
+        if path in self.LANDING_OK_EXACT:
+            return True
+        if path.startswith(self.LANDING_OK_PREFIXES):
+            return True
+        return False
+
     def __call__(self, request):
-        if not self._en_mantenimiento():
-            return self.get_response(request)
+        # Staff pasa siempre, en cualquier modo — para editar en vivo.
+        es_staff = request.user.is_authenticated and request.user.is_staff
 
-        # Staff puede ver el site completo (para editar contenido en vivo).
-        if request.user.is_authenticated and request.user.is_staff:
-            return self.get_response(request)
+        if self._en_mantenimiento():
+            if es_staff or self._safe_path(request.path):
+                return self.get_response(request)
+            return render(request, 'maintenance.html', status=503)
 
-        # Paths que necesitamos accesibles para que la duena pueda
-        # loguearse y apagar el modo.
-        if self._path_protegido(request.path):
-            return self.get_response(request)
+        if self._solo_landing():
+            if es_staff or self._landing_ok(request.path):
+                return self.get_response(request)
+            # Cualquier otra ruta -> la landing. 302 (temporal) porque
+            # cuando salgamos del modo landing queremos que vuelvan a
+            # poder acceder a esas URLs normalmente.
+            from django.shortcuts import redirect
+            return redirect('/')
 
-        return render(request, 'maintenance.html', status=503)
+        return self.get_response(request)

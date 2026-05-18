@@ -119,11 +119,18 @@ MIDDLEWARE = [
     'axes.middleware.AxesMiddleware',
 ]
 
-# Archivo flag para el modo mantenimiento. Crear/borrar este archivo
-# enciende y apaga el modo sin necesidad de reiniciar gunicorn.
-# Default: BASE_DIR/MAINTENANCE (util en dev). En prod, el .env apunta
-# a /srv/ideas/MAINTENANCE (fuera del checkout de git).
+# Archivos flag para los modos del sitio. Crear/borrar estos archivos
+# enciende y apaga los modos sin necesidad de reiniciar gunicorn.
+# Defaults dentro de BASE_DIR para que `runserver` local funcione sin
+# .env; en prod el .env los apunta a /srv/ideas/ (fuera del checkout).
+#
+#   - MAINTENANCE: pagina "Volvemos pronto" (503) en todo el sitio.
+#   - LANDING_ONLY: solo la home (`/`) y `/info/` quedan publicas;
+#     el resto redirige a `/`. Util para soft-launch.
+#
+# Si ambos archivos existen, MAINTENANCE gana.
 MAINTENANCE_FLAG_FILE = env('MAINTENANCE_FLAG_FILE', default=str(BASE_DIR / 'MAINTENANCE'))
+LANDING_ONLY_FLAG_FILE = env('LANDING_ONLY_FLAG_FILE', default=str(BASE_DIR / 'LANDING_ONLY'))
 
 # Auth backends: AxesStandaloneBackend RECHAZA logins de IPs/usuarios
 # bloqueados antes de llegar al ModelBackend. No autentica por si solo —

@@ -55,16 +55,38 @@ if ! sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw "${DB_NAME}"; then
     fi
   fi
 
+  # SEGUNDA SUTILEZA: si postgres arranco ANTES de que se generara el
+  # locale (caso tipico: 03-system-deps.sh instalo locales DESPUES de
+  # que apt instalo postgres en una corrida previa), la libc del
+  # proceso postgres no tiene los locales nuevos cargados — aunque
+  # `locale -a` los muestre, `createdb -l es_CL.utf8` falla con
+  # `invalid LC_COLLATE locale name`.
+  #
+  # Solucion: restart del servicio antes de createdb. Es barato (postgres
+  # vuelve en <1s) y garantiza que setlocale() vea los locales nuevos.
+  log "Reiniciando postgres para que cargue locales recientes..."
+  systemctl restart postgresql || true
+  sleep 1
+
   LC_COLLATE="$(locale -a 2>/dev/null | grep -i '^es_cl' | head -1 || true)"
   if [[ -z "$LC_COLLATE" ]]; then
     log "Locale es_CL no disponible — usando C.UTF-8 como fallback."
-    log "(Sort case-insensitive de ñ no funcionara optimo, pero el catalogo"
-    log " va a operar normal.)"
     LC_COLLATE="C.UTF-8"
   else
     log "Usando locale: $LC_COLLATE"
   fi
-  sudo -u postgres createdb -O "${DB_USER}" -E UTF8 -l "${LC_COLLATE}" -T template0 "${DB_NAME}"
+
+  # Si pese a todo postgres rechaza el locale (raro, pero pasa en
+  # imagenes con libc raras), caemos a C.UTF-8 que es interno de glibc
+  # y siempre funciona. El catalogo funciona normal — el unico costo
+  # es que el ORDER BY de palabras con ñ no respeta la regla del
+  # diccionario espanol (ñ va al final como en byte sort).
+  if ! sudo -u postgres createdb -O "${DB_USER}" -E UTF8 \
+       -l "${LC_COLLATE}" -T template0 "${DB_NAME}" 2>/dev/null; then
+    log "Postgres rechazo '${LC_COLLATE}'. Fallback automatico a C.UTF-8."
+    sudo -u postgres createdb -O "${DB_USER}" -E UTF8 \
+         -l "C.UTF-8" -T template0 "${DB_NAME}"
+  fi
 fi
 
 # Permisos minimos: solo el user 'ideas' puede acceder a esa DB.

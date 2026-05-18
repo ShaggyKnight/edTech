@@ -1,0 +1,166 @@
+{% comment %}
+  Contenido interno del POS home, sin el wrapper `<div id="pos-page-content">`
+  ni el shell de base.html. Se usa en 2 contextos:
+    1. `home.html` lo incluye dentro del wrapper para render full-page.
+    2. `pos.views.home` lo renderea DIRECTAMENTE cuando recibe una
+       petición HTMX (ej. click "+ Nueva venta" desde el recibo).
+       HTMX swap-ea el `innerHTML` de `#pos-page-content` con esto —
+       sin shell, sin doctype, sin navegacion — asi el modo pantalla
+       completa del browser se mantiene activo todo el ciclo de venta.
+{% endcomment %}
+{% comment %}
+  Banner de escaneo: el input tiene autofocus, y despues de cada scan
+  HTMX recibe HX-Refresh y recarga la pagina (con toast OK/error).
+  El escaner USB clasico actua como teclado: envia digitos seguidos
+  de Enter → submit del form → POST → toast.
+{% endcomment %}
+<div class="pos-scan-bar">
+  <form method="post" action="{% url 'pos:escanear' %}"
+        hx-post="{% url 'pos:escanear' %}"
+        hx-swap="none"
+        hx-on::after-request="if(event.detail.successful){this.reset();this.querySelector('input').focus();}"
+        class="pos-scan-form">
+    {% csrf_token %}
+    <svg class="ico ico--22"><use href="#ico-bag"/></svg>
+    <input type="text" name="codigo" autocomplete="off" autofocus required
+           placeholder="Escanear código de barras o tipeá y Enter…"
+           aria-label="Código de barras">
+    <button type="submit" class="bo-btn bo-btn-primary">Agregar</button>
+  </form>
+</div>
+
+<div class="bo-page-head">
+  <div>
+    <div class="bo-crumb">Operación / POS</div>
+    <h1>Punto de venta</h1>
+    <div class="sub">
+      Tienda activa: <strong>{{ tienda.nombre_organizacion }}</strong>
+      {% if tiendas_disponibles %}
+        <form method="post" action="{% url 'pos:seleccionar_tienda' %}" style="display:inline-block; margin-left:8px;">
+          {% csrf_token %}
+          <select name="tienda_id" class="bo-select" style="width:auto; padding: 4px 10px; font-size: 12px;" onchange="this.form.submit()">
+            {% for t in tiendas_disponibles %}
+              <option value="{{ t.pk }}" {% if t.pk == tienda.pk %}selected{% endif %}>
+                {{ t.nombre_organizacion }}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    {% comment %}
+      Botón modo pantalla completa: ideal para dejar el POS fijo en
+      una tablet en el mostrador. Oculta topbar/sidebar y maximiza
+      el banner de escaneo. La preferencia queda en localStorage.
+    {% endcomment %}
+    <button type="button" id="pos-fullscreen-btn" class="pos-fullscreen-toggle"
+            title="Modo pantalla completa (tablet)"
+            onclick="togglePosFullscreen()">
+      <svg class="ico ico--16" aria-hidden="true">
+        <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"
+              fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="pos-fullscreen-label">Pantalla completa</span>
+    </button>
+    <a href="{% url 'pos:ventas' %}" class="bo-btn">Ver ventas</a>
+  </div>
+</div>
+
+<div class="pos-grid">
+  {# ─── Buscador + filtros + tabla productos ─── #}
+  <div class="bo-card">
+    <div class="bo-card-head">
+      <h3>Productos</h3>
+      {% comment %}
+        Live search: cada keystroke (con 250ms de debounce) hace un
+        GET con HTMX que devuelve solo el tbody — sin recargar la
+        pagina. `hx-trigger="input changed delay:250ms, search"`
+        captura tipeo normal y el "search" event del input type=search.
+        Mantiene el "Enter" como submit tradicional (fallback no-JS).
+      {% endcomment %}
+      <form method="get" action="{% url 'pos:home' %}" class="pos-search-wrap"
+            style="flex:1; max-width:340px;"
+            hx-get="{% url 'pos:home' %}"
+            hx-trigger="input changed delay:250ms from:input[name='q'], change from:input[name='familia'], change from:input[name='stock']"
+            hx-target="#pos-productos-tbody"
+            hx-swap="outerHTML"
+            hx-push-url="true">
+        {# Persistimos los filtros activos durante la busqueda. #}
+        <input type="hidden" name="familia" value="{{ familia_activa|default:'' }}">
+        <input type="hidden" name="stock" value="{% if mostrar_todos %}todos{% endif %}">
+        <svg class="ico ico--16"><use href="#ico-search"/></svg>
+        <input type="search" name="q" value="{{ query }}" class="pos-search-input"
+               placeholder="Nombre, SKU o talla…"
+               autocomplete="off">
+      </form>
+    </div>
+
+    {# ─── Filtros: chips de familia + toggle stock ─── #}
+    <div class="bo-card-body" style="padding-top:14px; padding-bottom:14px; border-bottom:1px solid var(--bo-border-soft);">
+      <div class="pos-filters">
+        {% comment %}
+          Al cambiar de familia LIMPIAMOS el `q` de búsqueda. El
+          cajero usualmente busca un producto puntual y luego quiere
+          "ver todas las poleras" — no tiene sentido arrastrar el
+          término anterior. Si el cajero quiere combinar, usa el
+          input de búsqueda que SÍ persiste el filtro de familia.
+        {% endcomment %}
+        {# Chip "Todas las familias" — solo conserva el toggle de stock. #}
+        <a class="pos-chip {% if not familia_activa %}active{% endif %}"
+           href="?{% if mostrar_todos %}stock=todos{% endif %}">
+          Todas
+        </a>
+        {% for f in familias %}
+          <a class="pos-chip {% if familia_activa == f.pk %}active{% endif %}"
+             href="?familia={{ f.pk }}{% if mostrar_todos %}&stock=todos{% endif %}">
+            {{ f.nombre }}
+          </a>
+        {% endfor %}
+
+        <div style="flex:1;"></div>
+
+        {# Toggle stock #}
+        {% if mostrar_todos %}
+          <a class="pos-toggle"
+             href="?{% if familia_activa %}familia={{ familia_activa }}&{% endif %}{% if query %}q={{ query }}{% endif %}"
+             title="Mostrando todos. Click para volver al filtro por defecto.">
+            Todos los productos
+          </a>
+        {% else %}
+          <a class="pos-toggle on"
+             href="?stock=todos{% if familia_activa %}&familia={{ familia_activa }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+             title="Solo productos con stock. Click para mostrar agotados también.">
+            Solo con stock
+          </a>
+        {% endif %}
+
+        {% if query or familia_activa or mostrar_todos %}
+          <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-sm">Limpiar</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="max-height: 600px; overflow-y: auto;">
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>SKU / Talla</th>
+            <th>Familia</th>
+            <th class="num">Precio</th>
+            <th class="num">Stock</th>
+            <th></th>
+            {% if puede_agregar_stock %}<th>Cargar</th>{% endif %}
+          </tr>
+        </thead>
+        {% include 'pos/_pos_productos_tbody.html' %}
+      </table>
+    </div>
+  </div>
+
+  {# Carrito #}
+  {% include 'pos/_pos_carrito.html' %}
+</div>

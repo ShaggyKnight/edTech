@@ -141,6 +141,12 @@ class Producto(models.Model):
         from edTech.search import normalize_text
         self.nombre_buscable = normalize_text(self.nombre)
         self.descripcion_buscable = normalize_text(self.descripcion)
+        # Si la imagen excede los umbrales (>1400 px o >500 KB), la
+        # reducimos antes de guardar. Idempotente: en saves sucesivos
+        # sobre la misma imagen ya optimizada no hace nada.
+        if self.imagen:
+            from catalogo.imagenes import optimizar_imagen_field
+            optimizar_imagen_field(self.imagen)
         super().save(*args, **kwargs)
 
     @cached_property
@@ -376,6 +382,15 @@ class ProductoImagen(models.Model):
 
     def __str__(self):
         return f'{self.producto.nombre} · img #{self.pk}'
+
+    def save(self, *args, **kwargs):
+        # Mismo umbral que Producto.imagen — reducimos imagenes grandes
+        # en upload para que el catalogo en mobile/tablet no espere
+        # varios MB por foto. Ver catalogo/imagenes.py.
+        if self.imagen:
+            from catalogo.imagenes import optimizar_imagen_field
+            optimizar_imagen_field(self.imagen)
+        super().save(*args, **kwargs)
 
 
 class ProductoVariante(models.Model):

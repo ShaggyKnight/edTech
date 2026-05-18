@@ -609,8 +609,8 @@ def detalle_producto(request, pk: int):
         variantes = producto.variantes.none()
 
     # Label dinámico para el selector. Una polera tiene atributos {Talla},
-    # un perfume {Volumen, Concentración} — el cliente pelo "Elegí tu talla"
-    # como si fuera el mismo producto, así que adaptamos el copy.
+    # un perfume {Volumen, Concentración} — al cliente le diríamos
+    # "Elige tu talla" en ambos casos, así que adaptamos el copy.
     nombres_atributos = set()
     for v in variantes:
         for val in v.valores.all():

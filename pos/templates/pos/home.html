@@ -51,20 +51,235 @@
   .pos-scan-form button:hover {
     background: #fff;
   }
-  .pos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+  .pos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
   @media (max-width: 1100px) { .pos-grid { grid-template-columns: 1fr; } }
   .pos-cart-empty {
-    text-align: center; padding: 40px 20px; color: var(--bo-muted);
+    text-align: center; padding: 60px 20px; color: var(--bo-muted);
+    font-size: 15px;
   }
-  .pos-line { padding: 12px 16px; border-bottom: 1px solid var(--bo-border-soft); }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Carrito STICKY con scroll interno solo en las líneas.
+   * El footer (totales + Cobrar) queda SIEMPRE visible — sin
+   * importar cuántos items haya agregado el cajero, el botón
+   * "Cobrar" no se va abajo del fold.
+   * ────────────────────────────────────────────────────────────── */
+  .pos-carrito {
+    position: sticky;
+    top: 14px;
+    /* `calc` deja un colchón abajo para que no toque el viewport. */
+    max-height: calc(100vh - 28px);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;   /* el header/footer son rigidos; la lista scroll-ea */
+  }
+  /* Fullscreen: el topbar y crumb desaparecen → más alto disponible. */
+  body.pos-fullscreen .pos-carrito {
+    top: 8px;
+    max-height: calc(100vh - 16px);
+  }
+  /* Mobile/tablet portrait: se rompe el sticky (no hay 2 columnas) y
+     volvemos al layout natural. */
+  @media (max-width: 1100px) {
+    .pos-carrito { position: static; max-height: none; }
+  }
+
+  .pos-carrito-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--bo-border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bo-card);
+    flex-shrink: 0;
+  }
+  .pos-carrito-count {
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--bo-muted);
+  }
+  .pos-carrito-vaciar {
+    background: transparent;
+    border: 1px solid var(--bo-border);
+    color: var(--bo-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .pos-carrito-vaciar:hover {
+    color: var(--bo-danger);
+    border-color: var(--bo-danger);
+  }
+
+  /* La lista ocupa todo el espacio que sobra entre header/footer. */
+  .pos-carrito-lineas {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 80px;
+  }
+
+  .pos-line {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--bo-border-soft);
+  }
   .pos-line:last-child { border-bottom: none; }
-  .pos-line .name { font-weight: 600; color: var(--bo-text); }
-  .pos-line .meta { font-size: 12px; color: var(--bo-muted); margin-top: 2px; }
-  .pos-line .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
-  .pos-qty input { width: 60px; text-align: center; }
-  .pos-totals { padding: 16px; background: var(--bo-bg); border-top: 1px solid var(--bo-border-soft); }
-  .pos-totals .line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
-  .pos-totals .line.total { padding-top: 12px; border-top: 1px solid var(--bo-border); margin-top: 8px; font-size: 18px; font-weight: 600; }
+  .pos-line-info .name {
+    font-weight: 600;
+    color: var(--bo-text);
+    font-size: 14px;
+  }
+  .pos-line-info .meta {
+    font-size: 12px;
+    color: var(--bo-muted);
+    margin-top: 4px;
+  }
+  .pos-line-qty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .pos-line-subtotal {
+    flex: 1;
+    text-align: right;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--bo-text);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Stepper [ − ] [ N ] [ + ] — botones grandes (44px+) para
+   * uso táctil sin precisión. Pensado para Blanca (55, no-tech).
+   * ────────────────────────────────────────────────────────────── */
+  .pos-stepper {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--bo-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bo-card);
+  }
+  .pos-step-btn {
+    background: var(--bo-bg);
+    border: 0;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--bo-text);
+    cursor: pointer;
+    line-height: 1;
+    transition: background .12s, color .12s;
+  }
+  .pos-step-btn:hover {
+    background: var(--bo-primary-soft, #DDF1FF);
+    color: var(--bo-primary-2);
+  }
+  .pos-step-btn:active { background: var(--bo-primary-2); color: #fff; }
+  .pos-step-minus { border-right: 1px solid var(--bo-border); }
+  .pos-step-plus  { border-left:  1px solid var(--bo-border); }
+  .pos-step-input {
+    width: 48px;
+    height: 44px;
+    text-align: center;
+    border: 0;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--bo-text);
+    outline: none;
+    /* Esconder las flechas nativas del number input — usamos las nuestras. */
+    -moz-appearance: textfield;
+  }
+  .pos-step-input::-webkit-outer-spin-button,
+  .pos-step-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .pos-line-quitar {
+    background: transparent;
+    border: 1px solid var(--bo-border);
+    color: var(--bo-danger);
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  .pos-line-quitar:hover {
+    background: var(--bo-danger);
+    color: #fff;
+    border-color: var(--bo-danger);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Footer fijo del carrito (totales + Cobrar). Siempre visible.
+   * ────────────────────────────────────────────────────────────── */
+  .pos-carrito-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--bo-border);
+    background: var(--bo-card);
+  }
+  .pos-totals { padding: 14px 16px; background: var(--bo-bg); }
+  .pos-totals .line {
+    display: flex; justify-content: space-between;
+    padding: 4px 0; font-size: 13px;
+  }
+  .pos-totals .line.total {
+    padding-top: 12px;
+    border-top: 1px solid var(--bo-border);
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .pos-checkout-form { padding: 14px 16px; }
+  .pos-cliente-details {
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .pos-cliente-details summary {
+    cursor: pointer;
+    padding: 8px 10px;
+    background: var(--bo-bg);
+    border-radius: 6px;
+    color: var(--bo-muted);
+    user-select: none;
+    list-style: none;   /* esconde el triangulo default; usamos uno propio */
+  }
+  .pos-cliente-details summary::before {
+    content: "▸ ";
+    display: inline-block;
+    transition: transform .15s;
+  }
+  .pos-cliente-details[open] summary::before { transform: rotate(90deg); }
+  .pos-cliente-details[open] summary { margin-bottom: 10px; }
+
+  /* Botón Cobrar — el más prominente de la pantalla. Tamaño grande
+     para uso táctil, color primario fuerte, texto leíble desde lejos. */
+  .pos-cobrar-btn {
+    width: 100%;
+    background: var(--bo-success, #17C653);
+    color: #fff;
+    border: 0;
+    padding: 18px 16px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .12s, transform .08s;
+    box-shadow: 0 2px 8px rgba(23, 198, 83, 0.25);
+  }
+  .pos-cobrar-btn:hover { background: #14B14B; }
+  .pos-cobrar-btn:active { transform: translateY(1px); }
   /* Buscador con icono lupa a la izquierda — flex en lugar de
      position:absolute para que el texto del input NUNCA se superponga
      al icono (bug reportado). */
@@ -163,162 +378,42 @@
 {% endblock %}
 
 {% block content %}
+{% comment %}
+  Wrapper estable `#pos-page-content`. El INTERIOR se renderea desde
+  `_pos_home_inner.html`, asi `pos.views.home` puede devolver SOLO el
+  inner cuando la request es HTMX (ej. "+ Nueva venta" desde recibo) —
+  HTMX hace innerHTML swap sin perder el modo pantalla completa del
+  browser.
+{% endcomment %}
+<div id="pos-page-content">
+  {% include 'pos/_pos_home_inner.html' %}
+</div>
+
   {% comment %}
-    Banner de escaneo: el input tiene autofocus, y despues de cada scan
-    HTMX recibe HX-Refresh y recarga la pagina (con toast OK/error).
-    El escaner USB clasico actua como teclado: envia digitos seguidos
-    de Enter → submit del form → POST → toast.
+    `posStep(btn, delta)` — handler de los botones [−] / [+] del
+    stepper del carrito. Suma/resta `delta` al input number del mismo
+    form y dispara el submit HTMX. No usamos `name=cantidad` en los
+    botones para evitar el conflicto con el input (Django se queda
+    con el ultimo valor del POST).
   {% endcomment %}
-  <div class="pos-scan-bar">
-    <form method="post" action="{% url 'pos:escanear' %}"
-          hx-post="{% url 'pos:escanear' %}"
-          hx-swap="none"
-          hx-on::after-request="if(event.detail.successful){this.reset();this.querySelector('input').focus();}"
-          class="pos-scan-form">
-      {% csrf_token %}
-      <svg class="ico ico--22"><use href="#ico-bag"/></svg>
-      <input type="text" name="codigo" autocomplete="off" autofocus required
-             placeholder="Escanear código de barras o tipeá y Enter…"
-             aria-label="Código de barras">
-      <button type="submit" class="bo-btn bo-btn-primary">Agregar</button>
-    </form>
-  </div>
-
-  <div class="bo-page-head">
-    <div>
-      <div class="bo-crumb">Operación / POS</div>
-      <h1>Punto de venta</h1>
-      <div class="sub">
-        Tienda activa: <strong>{{ tienda.nombre_organizacion }}</strong>
-        {% if tiendas_disponibles %}
-          <form method="post" action="{% url 'pos:seleccionar_tienda' %}" style="display:inline-block; margin-left:8px;">
-            {% csrf_token %}
-            <select name="tienda_id" class="bo-select" style="width:auto; padding: 4px 10px; font-size: 12px;" onchange="this.form.submit()">
-              {% for t in tiendas_disponibles %}
-                <option value="{{ t.pk }}" {% if t.pk == tienda.pk %}selected{% endif %}>
-                  {{ t.nombre_organizacion }}
-                </option>
-              {% endfor %}
-            </select>
-          </form>
-        {% endif %}
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      {% comment %}
-        Botón modo pantalla completa: ideal para dejar el POS fijo en
-        una tablet en el mostrador. Oculta topbar/sidebar y maximiza
-        el banner de escaneo. La preferencia queda en localStorage.
-      {% endcomment %}
-      <button type="button" id="pos-fullscreen-btn" class="pos-fullscreen-toggle"
-              title="Modo pantalla completa (tablet)"
-              onclick="togglePosFullscreen()">
-        <svg class="ico ico--16" aria-hidden="true">
-          <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"
-                fill="none" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span id="pos-fullscreen-label">Pantalla completa</span>
-      </button>
-      <a href="{% url 'pos:ventas' %}" class="bo-btn">Ver ventas</a>
-    </div>
-  </div>
-
-  <div class="pos-grid">
-    {# ─── Buscador + filtros + tabla productos ─── #}
-    <div class="bo-card">
-      <div class="bo-card-head">
-        <h3>Productos</h3>
-        {% comment %}
-          Live search: cada keystroke (con 250ms de debounce) hace un
-          GET con HTMX que devuelve solo el tbody — sin recargar la
-          pagina. `hx-trigger="input changed delay:250ms, search"`
-          captura tipeo normal y el "search" event del input type=search.
-          Mantiene el "Enter" como submit tradicional (fallback no-JS).
-        {% endcomment %}
-        <form method="get" action="{% url 'pos:home' %}" class="pos-search-wrap"
-              style="flex:1; max-width:340px;"
-              hx-get="{% url 'pos:home' %}"
-              hx-trigger="input changed delay:250ms from:input[name='q'], change from:input[name='familia'], change from:input[name='stock']"
-              hx-target="#pos-productos-tbody"
-              hx-swap="outerHTML"
-              hx-push-url="true">
-          {# Persistimos los filtros activos durante la busqueda. #}
-          <input type="hidden" name="familia" value="{{ familia_activa|default:'' }}">
-          <input type="hidden" name="stock" value="{% if mostrar_todos %}todos{% endif %}">
-          <svg class="ico ico--16"><use href="#ico-search"/></svg>
-          <input type="search" name="q" value="{{ query }}" class="pos-search-input"
-                 placeholder="Nombre, SKU o talla…"
-                 autocomplete="off">
-        </form>
-      </div>
-
-      {# ─── Filtros: chips de familia + toggle stock ─── #}
-      <div class="bo-card-body" style="padding-top:14px; padding-bottom:14px; border-bottom:1px solid var(--bo-border-soft);">
-        <div class="pos-filters">
-          {% comment %}
-            Al cambiar de familia LIMPIAMOS el `q` de búsqueda. El
-            cajero usualmente busca un producto puntual y luego quiere
-            "ver todas las poleras" — no tiene sentido arrastrar el
-            término anterior. Si el cajero quiere combinar, usa el
-            input de búsqueda que SÍ persiste el filtro de familia.
-          {% endcomment %}
-          {# Chip "Todas las familias" — solo conserva el toggle de stock. #}
-          <a class="pos-chip {% if not familia_activa %}active{% endif %}"
-             href="?{% if mostrar_todos %}stock=todos{% endif %}">
-            Todas
-          </a>
-          {% for f in familias %}
-            <a class="pos-chip {% if familia_activa == f.pk %}active{% endif %}"
-               href="?familia={{ f.pk }}{% if mostrar_todos %}&stock=todos{% endif %}">
-              {{ f.nombre }}
-            </a>
-          {% endfor %}
-
-          <div style="flex:1;"></div>
-
-          {# Toggle stock #}
-          {% if mostrar_todos %}
-            <a class="pos-toggle"
-               href="?{% if familia_activa %}familia={{ familia_activa }}&{% endif %}{% if query %}q={{ query }}{% endif %}"
-               title="Mostrando todos. Click para volver al filtro por defecto.">
-              Todos los productos
-            </a>
-          {% else %}
-            <a class="pos-toggle on"
-               href="?stock=todos{% if familia_activa %}&familia={{ familia_activa }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
-               title="Solo productos con stock. Click para mostrar agotados también.">
-              Solo con stock
-            </a>
-          {% endif %}
-
-          {% if query or familia_activa or mostrar_todos %}
-            <a href="{% url 'pos:home' %}" class="bo-btn bo-btn-sm">Limpiar</a>
-          {% endif %}
-        </div>
-      </div>
-
-      <div style="max-height: 600px; overflow-y: auto;">
-        <table class="bo-table">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>SKU / Talla</th>
-              <th>Familia</th>
-              <th class="num">Precio</th>
-              <th class="num">Stock</th>
-              <th></th>
-              {% if puede_agregar_stock %}<th>Cargar</th>{% endif %}
-            </tr>
-          </thead>
-          {% include 'pos/_pos_productos_tbody.html' %}
-        </table>
-      </div>
-    </div>
-
-    {# Carrito #}
-    {% include 'pos/_pos_carrito.html' %}
-  </div>
+  <script>
+    function posStep(btn, delta) {
+      var form = btn.closest('form');
+      if (!form) return;
+      var input = form.querySelector('input[name="cantidad"]');
+      if (!input) return;
+      var val = parseInt(input.value, 10) || 0;
+      val = Math.max(0, val + delta);
+      input.value = val;
+      // Dispara el submit HTMX. Usamos requestSubmit en vez de submit()
+      // porque submit() salta el listener de HTMX en algunos browsers.
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.submit();
+      }
+    }
+  </script>
 
   {# CSS + JS del modo pantalla completa. La preferencia (localStorage) #}
   {# se aplica también en pos/recibo.html para que el modo persista #}

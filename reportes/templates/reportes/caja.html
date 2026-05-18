@@ -87,6 +87,7 @@
               <th>Fecha</th>
               <th>Tienda</th>
               <th>Tipo</th>
+              <th>Categoría</th>
               <th>Concepto</th>
               <th class="num">Monto</th>
               <th>Usuario</th>
@@ -103,6 +104,25 @@
                     <span class="bo-badge bo-badge-success">{{ m.get_tipo_display }}</span>
                   {% else %}
                     <span class="bo-badge bo-badge-warning">{{ m.get_tipo_display }}</span>
+                  {% endif %}
+                </td>
+                {% comment %}
+                  Badge por categoria. Las 3 categorias de salida tienen
+                  significado contable distinto — `gasto_operativo` va al
+                  EERR como gasto del periodo, `costo_inventario` y
+                  `costo_produccion` son ACTIVOS (engordan el inventario).
+                {% endcomment %}
+                <td>
+                  {% if m.categoria == 'ingreso_venta' %}
+                    <span class="bo-badge bo-badge-success">Venta</span>
+                  {% elif m.categoria == 'gasto_operativo' %}
+                    <span class="bo-badge bo-badge-warning">Gasto operativo</span>
+                  {% elif m.categoria == 'costo_inventario' %}
+                    <span class="bo-badge bo-badge-info">Compra inventario</span>
+                  {% elif m.categoria == 'costo_produccion' %}
+                    <span class="bo-badge" style="background:rgba(122,30,43,0.12);color:#7A1E2B;">Confección</span>
+                  {% else %}
+                    <span class="bo-badge bo-badge-muted">{{ m.get_categoria_display }}</span>
                   {% endif %}
                 </td>
                 <td>{{ m.concepto }}</td>

@@ -89,7 +89,7 @@
       </div>
       <h1>⚡ Carga masiva de stock</h1>
       <div class="sub">
-        Cargá cantidades para muchos productos a la vez. Las cantidades
+        Carga cantidades para muchos productos a la vez. Las cantidades
         se <strong>SUMAN</strong> al stock actual — no lo reemplazan.
         {{ total_filas }} ítem{{ total_filas|pluralize:"s" }} ·
         <strong style="color:var(--bo-danger);">{{ total_sin_stock }}</strong> sin stock.
@@ -192,9 +192,9 @@
       <div class="bo-card">
         <div class="bo-card-body" style="color:var(--bo-muted);text-align:center;padding:48px 24px;">
           {% if solo_sin_stock %}
-            🎉 Todos los productos tienen stock. Sacá el filtro "solo sin stock" para ver todos.
+            🎉 Todos los productos tienen stock. Quita el filtro "solo sin stock" para ver todos.
           {% else %}
-            No hay productos activos en el sistema. <a href="{% url 'bodega:producto_nuevo' %}">Creá uno →</a>
+            No hay productos activos en el sistema. <a href="{% url 'bodega:producto_nuevo' %}">Crea uno →</a>
           {% endif %}
         </div>
       </div>

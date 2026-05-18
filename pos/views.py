@@ -19,6 +19,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import OuterRef, Q, Subquery
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from bodega.models import MovimientoStock, StockTienda, Tienda
@@ -196,10 +197,20 @@ def home(request):
         'puede_agregar_stock': _puede_admin_stock(request.user),
     }
 
-    # Live search: si la request viene de HTMX, devolvemos solo el tbody.
-    # Es lo unico que el cliente necesita reemplazar — ahorra render del
-    # resto de la pagina y reduce el payload.
+    # HTMX flow: distinguimos por el id del target. HTMX manda el header
+    # `HX-Target` con el id del elemento que va a ser swap-eado.
+    #   - Target = "pos-productos-tbody" → live search del POS (buscador
+    #     o cambio de filtro). Devolvemos solo el tbody.
+    #   - Target = "pos-page-content" → click "+ Nueva venta" desde el
+    #     recibo. Devolvemos el inner del home (sin shell) para que el
+    #     ciclo de venta mantenga el modo pantalla completa.
+    #   - Sin target → fallback al tbody (compatible con el flujo viejo).
+    # BUG fix: antes el flujo nueva-venta caia en el branch del live
+    # search y devolvia solo un <tbody>, dejando la pantalla en blanco.
     if request.htmx:
+        hx_target = request.headers.get('HX-Target', '')
+        if hx_target == 'pos-page-content':
+            return render(request, 'pos/_pos_home_inner.html', contexto)
         return render(request, 'pos/_pos_productos_tbody.html', contexto)
     return render(request, 'pos/home.html', contexto)
 
@@ -214,7 +225,7 @@ def agregar_stock(request):
     Cajero y bodeguero no tienen acceso (los gates están acá adentro).
     """
     if not _puede_admin_stock(request.user):
-        messages.error(request, 'No tenés permisos para cargar stock desde el POS.')
+        messages.error(request, 'No tienes permisos para cargar stock desde el POS.')
         return redirect('pos:home')
 
     tienda = get_active_tienda(request)
@@ -515,6 +526,19 @@ def checkout(request):
 
     cart.clear()
     messages.success(request, f'Venta #{recibo.pk} procesada por ${recibo.total}.')
+
+    # HTMX flow: en lugar de redirect (que dispara navegacion y rompe
+    # el fullscreen API del browser), devolver SOLO el inner del recibo
+    # (sin shell base.html). HTMX hace innerHTML swap sobre
+    # `#pos-page-content` y el header `HX-Push-Url` actualiza la URL
+    # del browser sin recargar. Asi el ciclo "vender → recibo → nueva
+    # venta" queda en pantalla completa de punta a punta.
+    if getattr(request, 'htmx', False):
+        url_recibo = reverse('pos:recibo', args=[recibo.pk])
+        response = render(request, 'pos/_pos_recibo_inner.html', {'recibo': recibo})
+        response['HX-Push-Url'] = url_recibo
+        return response
+
     return redirect('pos:recibo', pk=recibo.pk)
 
 
@@ -528,6 +552,13 @@ def ver_recibo(request, pk: int):
         ),
         pk=pk,
     )
+    # Si la peticion es HTMX y apunta al wrapper del POS, devolvemos
+    # solo el inner del recibo (sin shell base.html). Esto pasa cuando
+    # el usuario navega entre POS y recibo dentro del ciclo de venta
+    # sin perder el modo pantalla completa.
+    if (getattr(request, 'htmx', False)
+            and request.headers.get('HX-Target', '') == 'pos-page-content'):
+        return render(request, 'pos/_pos_recibo_inner.html', {'recibo': recibo})
     return render(request, 'pos/recibo.html', {'recibo': recibo})
 
 

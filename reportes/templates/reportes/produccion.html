@@ -29,7 +29,7 @@
 
   {% if not bodega %}
     <div class="bo-alert bo-alert-warning">
-      No hay bodegas creadas. Andá al
+      No hay bodegas creadas. Ve al
       <a href="{% url 'admin:bodega_bodega_add' %}" style="color:inherit;font-weight:600;">admin</a>
       para crear una.
     </div>
@@ -54,7 +54,7 @@
     <div class="bo-card bo-kpi is-success">
       <div class="label">Margen potencial</div>
       <div class="value">${{ resumen.margen_potencial_total|floatformat:0|intcomma }}</div>
-      <div class="sub">Si confeccionás y vendés todo lo que la tela permite</div>
+      <div class="sub">Si confeccionas y vendes todo lo que la tela permite</div>
     </div>
   </div>
 

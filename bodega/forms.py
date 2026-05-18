@@ -23,7 +23,7 @@ from catalogo.models import (
 
 
 # Atributos que tienen sentido en un selector de variante. Si más adelante
-# agregás "Color" o "Tipo", los listás acá. El form solo muestra los que
+# se agregan "Color" o "Tipo", se listan acá. El form solo muestra los que
 # tienen valores cargados.
 ATRIBUTOS_VARIANTES = ('Talla', 'Volumen', 'Concentración')
 
@@ -61,8 +61,8 @@ class ProductoForm(forms.ModelForm):
         }
         help_texts = {
             'colegio': 'Solo si es uniforme escolar (lleva insignia bordada).',
-            'tiene_variantes': 'Marcá si el producto se vende por talla, volumen, etc. '
-                               'En el siguiente paso definís las variantes.',
+            'tiene_variantes': 'Marca si el producto se vende por talla, volumen, etc. '
+                               'En el siguiente paso defines las variantes.',
             'precio_costo': 'Costo unitario. Sirve para calcular margen y valorizar inventario.',
             'codigo_barras': 'Solo aplica si NO tiene variantes. Para productos con '
                              'variantes, el código vive en cada variante. Si está '
@@ -239,7 +239,7 @@ class OfertaForm(forms.ModelForm):
         help_texts = {
             'nombre': 'Identificable. Ej. "Black Friday 2026", "SFJ uniforme -10%".',
             'producto': 'Aplica a todas las variantes del producto. Vacío si la oferta es por variante específica.',
-            'variante': 'Solo si la oferta aplica a una variante puntual (ej. solo el Yara 30 ml). Si elegís variante, ignora el producto de arriba.',
+            'variante': 'Solo si la oferta aplica a una variante puntual (ej. solo el Yara 30 ml). Si eliges variante, ignora el producto de arriba.',
             'valor': 'Si tipo=Porcentaje: 0-100. Si tipo=Monto fijo: pesos a descontar.',
             'canal': 'Donde aplica: solo en la tienda fisica, solo online, o en ambos.',
         }

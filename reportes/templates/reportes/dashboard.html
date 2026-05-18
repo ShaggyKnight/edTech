@@ -13,12 +13,14 @@
     <div>
       <div class="bo-crumb">Reportes / Dashboard</div>
       <h1>Resumen del negocio</h1>
-      <div class="sub">
-        {% comment %}
-          BUG-006: ventana MÓVIL — los totales no coinciden con EERR
-          (que usa mes/año calendario). El copy lo aclara para evitar
-          el "¿por qué Dashboard y EERR muestran distinto?".
-        {% endcomment %}
+      {% comment %}
+        BUG-006: ventana MÓVIL — los totales no coinciden con EERR
+        (que usa mes/año calendario). El copy lo aclara.
+
+        Mejora: este `<div id="dashboard-periodo-info">` se actualiza
+        via `hx-swap-oob="true"` desde el partial al cambiar `dias`.
+      {% endcomment %}
+      <div id="dashboard-periodo-info" class="sub" style="opacity:.8;">
         Últimos {{ dias }} días corridos:
         {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
         <span style="opacity:0.7;">·
@@ -28,7 +30,25 @@
       </div>
     </div>
 
-    <form method="get" class="bo-form-inline">
+    {% comment %}
+      Filtros HTMX auto-submit. Cada cambio de `<select>` dispara un
+      GET a esta misma URL pero con `HX-Request: true`. La view detecta
+      el header y devuelve SOLO el partial `_dashboard_content.html`,
+      que HTMX inyecta en `#dashboard-content` sin recargar la pagina.
+
+      - `hx-trigger="change"`: dispara al cambiar cualquier select hijo
+      - `hx-push-url="true"`: actualiza la URL del browser (compartible)
+      - `hx-indicator="#dashboard-loading"`: muestra spinner durante el fetch
+      - Ya no hay boton "Actualizar" (con JS off cae al submit normal del form)
+    {% endcomment %}
+    <form method="get"
+          class="bo-form-inline"
+          hx-get="{% url 'reportes:dashboard' %}"
+          hx-trigger="change from:select"
+          hx-target="#dashboard-content"
+          hx-swap="innerHTML"
+          hx-push-url="true"
+          hx-indicator="#dashboard-loading">
       <div class="bo-field">
         <label>Últimos</label>
         <select name="dias" class="bo-select">
@@ -50,8 +70,29 @@
           {% endfor %}
         </select>
       </div>
-      <button type="submit" class="bo-btn bo-btn-primary">Actualizar</button>
+      <div class="bo-field">
+        <label>Canal</label>
+        <select name="canal" class="bo-select">
+          <option value=""           {% if not canal_filtro %}selected{% endif %}>Todos</option>
+          <option value="presencial" {% if canal_filtro == 'presencial' %}selected{% endif %}>Presencial</option>
+          <option value="online"     {% if canal_filtro == 'online' %}selected{% endif %}>Online</option>
+        </select>
+      </div>
+      <span id="dashboard-loading" class="htmx-indicator"
+            style="display:inline-flex;align-items:center;gap:6px;color:var(--bo-muted);font-size:13px;">
+        <span class="dashboard-spinner" aria-hidden="true"></span>
+        Actualizando…
+      </span>
+      {% comment %}
+        Fallback no-JS: si el cliente tiene JS apagado, el submit del
+        form va por GET tradicional (recarga la pagina). Hidden por
+        default; visible solo si JS off.
+      {% endcomment %}
+      <noscript>
+        <button type="submit" class="bo-btn bo-btn-primary">Actualizar</button>
+      </noscript>
     </form>
+
     <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
       <a href="{% url 'reportes:eerr' %}" class="bo-btn bo-btn-sm">Estado de Resultados</a>
       <a href="{% url 'reportes:balance' %}" class="bo-btn bo-btn-sm">Balance General</a>
@@ -60,185 +101,168 @@
     </div>
   </div>
 
-  {# ─────────── KPI cards ─────────── #}
-  <div class="bo-grid cols-4" style="margin-bottom: 20px;">
-    <div class="bo-card bo-kpi is-primary">
-      <div class="label">Ventas totales</div>
-      <div class="value">${{ resumen.total_ventas|floatformat:0|intcomma }}</div>
-      <div class="sub">{{ resumen.n_ventas }} venta{{ resumen.n_ventas|pluralize }} pagada{{ resumen.n_ventas|pluralize }}</div>
-    </div>
-    <div class="bo-card bo-kpi">
-      <div class="label">Presencial</div>
-      <div class="value">${{ resumen.ventas_por_canal.presencial.total|floatformat:0|intcomma }}</div>
-      <div class="sub">{{ resumen.ventas_por_canal.presencial.n_ventas }} ventas</div>
-    </div>
-    <div class="bo-card bo-kpi">
-      <div class="label">Online</div>
-      <div class="value">${{ resumen.ventas_por_canal.online.total|floatformat:0|intcomma }}</div>
-      <div class="sub">{{ resumen.ventas_por_canal.online.n_ventas }} ventas</div>
-    </div>
-    {% comment %}
-      BUG-013: la tarjeta SIEMPRE iba con is-success (verde) sin importar
-      el signo. Negativo en verde era engañoso. Ahora: saldo < 0 → rojo,
-      saldo >= 0 → verde (semántica habitual del backoffice).
-    {% endcomment %}
-    <div class="bo-card bo-kpi {% if resumen.caja.saldo < 0 %}is-danger{% else %}is-success{% endif %}">
-      <div class="label">Saldo de caja</div>
-      <div class="value">${{ resumen.caja.saldo|floatformat:0|intcomma }}</div>
-      <div class="sub">
-        +${{ resumen.caja.entradas|floatformat:0|intcomma }} /
-        −${{ resumen.caja.salidas|floatformat:0|intcomma }}
-      </div>
-    </div>
+  {# Contenedor de contenido dinamico. HTMX swap-ea solo aca. #}
+  <div id="dashboard-content">
+    {% include 'reportes/_dashboard_content.html' %}
   </div>
 
-  <div class="bo-grid cols-2" style="margin-bottom: 20px;">
-    <div class="bo-card bo-kpi is-gold">
-      <div class="label">Valor de inventario</div>
-      <div class="value">${{ resumen.valor_inventario|floatformat:0|intcomma }}</div>
-      <div class="sub">Stock actual × precio de costo + materiales en bodega</div>
-    </div>
-    <div class="bo-card bo-kpi">
-      <div class="label">Promedio por venta</div>
-      <div class="value">
-        {% comment %}BUG-005: widthratio devuelve un entero sin separadores; lo pasamos por intcomma.{% endcomment %}
-        ${% if resumen.n_ventas %}{% widthratio resumen.total_ventas resumen.n_ventas 1 as prom_venta %}{{ prom_venta|intcomma }}{% else %}0{% endif %}
-      </div>
-      <div class="sub">Total / cantidad de recibos</div>
-    </div>
-  </div>
-
-  {# ─────────── Charts ─────────── #}
-  <div class="bo-grid cols-2" style="margin-bottom: 20px;">
-    <div class="bo-card">
-      <div class="bo-card-head">
-        <h3>Ventas por día</h3>
-      </div>
-      <div class="bo-card-body">
-        <canvas id="chartSerie" class="bo-chart"></canvas>
-      </div>
-    </div>
-    <div class="bo-card">
-      <div class="bo-card-head">
-        <h3>Distribución por canal</h3>
-      </div>
-      <div class="bo-card-body">
-        <canvas id="chartCanal" class="bo-chart bo-chart-sm"></canvas>
-      </div>
-    </div>
-  </div>
-
-  {# ─────────── Tabla top productos ─────────── #}
-  <div class="bo-card">
-    <div class="bo-card-head">
-      <h3>Top productos vendidos</h3>
-    </div>
-    {% if resumen.top_productos %}
-      <table class="bo-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th class="num">Unidades</th>
-            <th class="num">Ingreso</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in resumen.top_productos %}
-            <tr>
-              <td>{{ p.descripcion }}</td>
-              <td class="num">{{ p.unidades }}</td>
-              <td class="num">${{ p.ingreso|floatformat:0|intcomma }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <div class="bo-card-body" style="color: var(--bo-muted);">
-        Sin ventas en la ventana seleccionada.
-      </div>
-    {% endif %}
-  </div>
-
-  {# Datos para charts (JSON-safe en script tag) #}
-  {{ serie|json_script:"data-serie" }}
-  <script id="data-canal" type="application/json">
-    {
-      "labels": ["Presencial", "Online"],
-      "data": [
-        {{ resumen.ventas_por_canal.presencial.total|default:0|stringformat:"f"|floatformat:0 }},
-        {{ resumen.ventas_por_canal.online.total|default:0|stringformat:"f"|floatformat:0 }}
-      ]
+  <style>
+    /* Spinner del indicator HTMX (.htmx-indicator se hace visible cuando
+       HTMX agrega .htmx-request al ancestro). */
+    .htmx-indicator { opacity: 0; transition: opacity .2s; }
+    .htmx-request .htmx-indicator,
+    .htmx-request.htmx-indicator { opacity: 1; }
+    .dashboard-spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--bo-border, #ddd);
+      border-top-color: var(--bo-primary, #1B84FF);
+      border-radius: 50%;
+      display: inline-block;
+      animation: dashboard-spin .8s linear infinite;
     }
-  </script>
+    @keyframes dashboard-spin { to { transform: rotate(360deg); } }
+    /* Fade-out suave del contenido mientras se refresca para que el
+       cambio se sienta vivo. */
+    #dashboard-content.htmx-swapping {
+      opacity: 0.4;
+      transition: opacity .15s;
+    }
+
+    /* KPI clickeable (drill-down). Mantiene el look de card pero indica
+       que se puede clickear via hover + cursor. */
+    a.kpi-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    a.kpi-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+    a.kpi-link:focus-visible {
+      outline: 2px solid var(--bo-primary, #1B84FF);
+      outline-offset: 2px;
+    }
+
+    /* Chip de variacion vs periodo anterior. */
+    .variacion-chip {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      vertical-align: middle;
+      letter-spacing: 0.02em;
+    }
+    .variacion-up   { background: var(--bo-success-soft, #DFFBE6); color: #0E7B3F; }
+    .variacion-down { background: var(--bo-danger-soft,  #FEE2E2); color: #B42318; }
+    .variacion-flat { background: var(--bo-border-soft,  #F1F1F4); color: #6B7280; }
+  </style>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const css = getComputedStyle(document.documentElement);
-    const colors = {
-      primary: css.getPropertyValue('--bo-primary').trim() || '#1B84FF',
-      gold:    css.getPropertyValue('--bo-gold').trim()    || '#C9A96E',
-      success: css.getPropertyValue('--bo-success').trim() || '#17C653',
-      grid:    css.getPropertyValue('--bo-border-soft').trim() || '#F1F1F4',
-      muted:   css.getPropertyValue('--bo-muted').trim()   || '#71717A',
-    };
-
-    // Serie diaria
-    const serie = JSON.parse(document.getElementById('data-serie').textContent || '[]');
-    const ctxS = document.getElementById('chartSerie');
-    if (ctxS && window.Chart) {
-      new Chart(ctxS, {
-        type: 'line',
-        data: {
-          labels: serie.map(d => d.fecha),
-          datasets: [{
-            label: 'Ventas $',
-            data: serie.map(d => parseFloat(d.total) || 0),
-            borderColor: colors.primary,
-            backgroundColor: colors.primary + '22',
-            borderWidth: 2, fill: true, tension: 0.3,
-            pointRadius: 3, pointBackgroundColor: colors.primary,
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { color: colors.grid }, ticks: { color: colors.muted } },
-            y: { grid: { color: colors.grid }, ticks: { color: colors.muted,
-                 callback: v => '$' + v.toLocaleString('es-CL') } }
-          }
-        }
-      });
+  /*
+   * renderDashboardCharts() — re-crea los Chart.js a partir de los
+   * datos JSON embebidos en el partial. Idempotente: destruye el
+   * chart anterior (si existe) antes de instanciar uno nuevo, para
+   * evitar memory leaks cuando el user cambia el filtro muchas veces.
+   *
+   * Se llama:
+   *   - Una vez al DOMContentLoaded (primera render)
+   *   - Una vez por cada swap HTMX (script inline al final del partial)
+   */
+  (function () {
+    function getColors() {
+      const css = getComputedStyle(document.documentElement);
+      return {
+        primary: css.getPropertyValue('--bo-primary').trim() || '#1B84FF',
+        gold:    css.getPropertyValue('--bo-gold').trim()    || '#C9A96E',
+        success: css.getPropertyValue('--bo-success').trim() || '#17C653',
+        grid:    css.getPropertyValue('--bo-border-soft').trim() || '#F1F1F4',
+        muted:   css.getPropertyValue('--bo-muted').trim()   || '#71717A',
+      };
     }
 
-    // Donut por canal
-    const canalRaw = JSON.parse(document.getElementById('data-canal').textContent);
-    const ctxC = document.getElementById('chartCanal');
-    if (ctxC && window.Chart) {
-      new Chart(ctxC, {
-        type: 'doughnut',
-        data: {
-          labels: canalRaw.labels,
-          datasets: [{
-            data: canalRaw.data,
-            backgroundColor: [colors.primary, colors.gold],
-            borderWidth: 0,
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false, cutout: '65%',
-          plugins: {
-            legend: { position: 'bottom', labels: { color: colors.muted } },
-            tooltip: {
-              callbacks: { label: ctx => ctx.label + ': $' +
-                (ctx.parsed || 0).toLocaleString('es-CL') }
+    function readJson(id) {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      try { return JSON.parse(el.textContent); } catch (e) { return null; }
+    }
+
+    window.renderDashboardCharts = function () {
+      if (!window.Chart) {
+        // Chart.js todavia no cargo (defer). Reintenta cuando este listo.
+        setTimeout(window.renderDashboardCharts, 100);
+        return;
+      }
+      const colors = getColors();
+
+      // ─── Linea: ventas por dia ─────────────────────────────────
+      const serie = readJson('data-serie') || [];
+      const canvasS = document.getElementById('chartSerie');
+      if (canvasS) {
+        // Destruir el chart anterior atado a este canvas si existe.
+        const prev = Chart.getChart(canvasS);
+        if (prev) prev.destroy();
+        new Chart(canvasS, {
+          type: 'line',
+          data: {
+            labels: serie.map(d => d.fecha),
+            datasets: [{
+              label: 'Ventas $',
+              data: serie.map(d => parseFloat(d.total) || 0),
+              borderColor: colors.primary,
+              backgroundColor: colors.primary + '22',
+              borderWidth: 2, fill: true, tension: 0.3,
+              pointRadius: 3, pointBackgroundColor: colors.primary,
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: colors.grid }, ticks: { color: colors.muted } },
+              y: { grid: { color: colors.grid }, ticks: { color: colors.muted,
+                   callback: v => '$' + v.toLocaleString('es-CL') } }
             }
           }
-        }
-      });
-    }
-  });
+        });
+      }
+
+      // ─── Donut: distribucion por canal ─────────────────────────
+      const canalRaw = readJson('data-canal') || { labels: [], data: [] };
+      const canvasC = document.getElementById('chartCanal');
+      if (canvasC) {
+        const prev = Chart.getChart(canvasC);
+        if (prev) prev.destroy();
+        new Chart(canvasC, {
+          type: 'doughnut',
+          data: {
+            labels: canalRaw.labels,
+            datasets: [{
+              data: canalRaw.data,
+              backgroundColor: [colors.primary, colors.gold],
+              borderWidth: 0,
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: {
+              legend: { position: 'bottom', labels: { color: colors.muted } },
+              tooltip: {
+                callbacks: { label: ctx => ctx.label + ': $' +
+                  (ctx.parsed || 0).toLocaleString('es-CL') }
+              }
+            }
+          }
+        });
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', window.renderDashboardCharts);
+  })();
 </script>
 {% endblock %}

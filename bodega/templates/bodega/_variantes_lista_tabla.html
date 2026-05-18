@@ -67,7 +67,7 @@
         <a href="{% url 'bodega:variantes' producto.pk %}" style="color:var(--bo-primary-2);font-weight:600;">Limpiar filtros</a>
       {% else %}
         Este producto todavía no tiene variantes.
-        <a href="{% url 'bodega:variante_nueva' producto.pk %}" style="color:var(--bo-primary-2);font-weight:600;">Creá la primera →</a>
+        <a href="{% url 'bodega:variante_nueva' producto.pk %}" style="color:var(--bo-primary-2);font-weight:600;">Crea la primera →</a>
       {% endif %}
     </div>
   {% endif %}

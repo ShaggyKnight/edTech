@@ -326,7 +326,10 @@ AXES_NEVER_LOCKOUT_WHITELIST = False
 # X-Forwarded-For real, no la IP del proxy. AxesMiddleware respeta esto
 # si lo configuramos con la lista de proxies confiables. En dev queda
 # vacio; en prod (ver .env.example) se setea con la IP del balanceador.
-AXES_PROXY_COUNT = env.int('AXES_PROXY_COUNT', default=0)
+# En axes 7+ la opcion vive bajo el namespace `ipware` (django-axes usa
+# la lib django-ipware internamente). El nombre viejo `AXES_PROXY_COUNT`
+# imprime un warning de deprecacion al arrancar.
+AXES_IPWARE_PROXY_COUNT = env.int('AXES_PROXY_COUNT', default=0)
 # Apagar axes durante la suite de tests: el Client.login() de Django no
 # pasa el `request` que AxesBackend exige. Cada test que quiera probar
 # el lockout puede usar `@override_settings(AXES_ENABLED=True)` o el

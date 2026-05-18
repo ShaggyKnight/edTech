@@ -1,0 +1,197 @@
+{% load humanize %}
+{% comment %}
+  Contenido dinamico del Dashboard que se re-renderea via HTMX cuando
+  el admin cambia los filtros (dias / tienda / canal). El shell
+  `dashboard.html` lo incluye en la primera carga; las peticiones
+  HTMX subsiguientes piden solo este partial.
+
+  Contexto: resumen, serie, dias, canal_filtro, tienda_filtro,
+            desde_iso, hasta_iso.
+{% endcomment %}
+
+{% comment %}
+  Header del periodo via hx-swap-oob — refresca el copy del periodo
+  arriba del form cuando el cliente cambia un filtro.
+  IMPORTANTE: este bloque SOLO se emite cuando la peticion es HTMX
+  (cambio de filtro). En la carga inicial el shell `dashboard.html`
+  ya renderea el mismo texto en `#dashboard-periodo-info` — si lo
+  duplicaramos aca, aparece dos veces en pantalla.
+{% endcomment %}
+{% if request.htmx %}
+  <div id="dashboard-periodo-info" hx-swap-oob="true" class="sub" style="opacity:.8;">
+    Últimos {{ dias }} días corridos:
+    {{ resumen.desde|date:"d-m-Y" }} — {{ resumen.hasta|date:"d-m-Y" }}
+    {% if canal_filtro %}
+      · canal <strong>{{ canal_filtro }}</strong>
+    {% endif %}
+    <span style="opacity:0.7;">·
+      para análisis por mes o año usá
+      <a href="{% url 'reportes:eerr' %}">Estado de Resultados</a>
+    </span>
+  </div>
+{% endif %}
+
+{% comment %}
+  Mejora #2 (drill-down): cada KPI card es un <a> que linkea al detalle
+  con los mismos filtros activos (canal / tienda / ventana).
+  Mejora #1 (comparativa): bajo el valor de cada card, chip con el %
+  variacion vs el periodo anterior (verde si subio, rojo si bajo).
+{% endcomment %}
+
+{# ─────────── KPI cards ─────────── #}
+<div class="bo-grid cols-4" style="margin-bottom: 20px;">
+
+  {# Ventas totales → drill a /pos/ventas/ con misma ventana + canal. #}
+  <a class="bo-card bo-kpi is-primary kpi-link"
+     href="{% url 'pos:ventas' %}?desde={{ desde_iso }}&hasta={{ hasta_iso }}{% if canal_filtro %}&canal={{ canal_filtro }}{% endif %}{% if tienda_filtro %}&tienda={{ tienda_filtro.pk }}{% endif %}"
+     title="Ver el detalle de las {{ resumen.n_ventas }} ventas">
+    <div class="label">Ventas totales</div>
+    <div class="value">${{ resumen.total_ventas|floatformat:0|intcomma }}</div>
+    <div class="sub">
+      {{ resumen.n_ventas }} venta{{ resumen.n_ventas|pluralize }} pagada{{ resumen.n_ventas|pluralize }}
+      {% include 'reportes/_variacion_chip.html' with pct=resumen.anterior.var_total %}
+    </div>
+  </a>
+
+  {# Presencial — siempre se ve, pero si hay filtro canal=online queda en 0. #}
+  <a class="bo-card bo-kpi kpi-link"
+     href="{% url 'pos:ventas' %}?canal=presencial&desde={{ desde_iso }}&hasta={{ hasta_iso }}{% if tienda_filtro %}&tienda={{ tienda_filtro.pk }}{% endif %}"
+     title="Ver ventas presenciales">
+    <div class="label">Presencial</div>
+    <div class="value">${{ resumen.ventas_por_canal.presencial.total|floatformat:0|intcomma }}</div>
+    <div class="sub">
+      {{ resumen.ventas_por_canal.presencial.n_ventas }} ventas
+      {% include 'reportes/_variacion_chip.html' with pct=resumen.anterior.var_presencial %}
+    </div>
+  </a>
+
+  <a class="bo-card bo-kpi kpi-link"
+     href="{% url 'pos:ventas' %}?canal=online&desde={{ desde_iso }}&hasta={{ hasta_iso }}{% if tienda_filtro %}&tienda={{ tienda_filtro.pk }}{% endif %}"
+     title="Ver ventas online">
+    <div class="label">Online</div>
+    <div class="value">${{ resumen.ventas_por_canal.online.total|floatformat:0|intcomma }}</div>
+    <div class="sub">
+      {{ resumen.ventas_por_canal.online.n_ventas }} ventas
+      {% include 'reportes/_variacion_chip.html' with pct=resumen.anterior.var_online %}
+    </div>
+  </a>
+
+  {% comment %}
+    BUG-013: saldo < 0 → is-danger (rojo); saldo ≥ 0 → is-success (verde).
+    Drill-down: click → /reportes/caja/ con el mismo filtro de tienda.
+  {% endcomment %}
+  <a class="bo-card bo-kpi kpi-link {% if resumen.caja.saldo < 0 %}is-danger{% else %}is-success{% endif %}"
+     href="{% url 'reportes:caja' %}{% if tienda_filtro %}?tienda={{ tienda_filtro.pk }}{% endif %}"
+     title="Ver movimientos de caja">
+    <div class="label">Saldo de caja</div>
+    <div class="value">${{ resumen.caja.saldo|floatformat:0|intcomma }}</div>
+    <div class="sub">
+      +${{ resumen.caja.entradas|floatformat:0|intcomma }} /
+      −${{ resumen.caja.salidas|floatformat:0|intcomma }}
+      {% include 'reportes/_variacion_chip.html' with pct=resumen.anterior.var_caja %}
+    </div>
+  </a>
+</div>
+
+<div class="bo-grid cols-2" style="margin-bottom: 20px;">
+  {# Valor de inventario → drill al listado de stock. #}
+  <a class="bo-card bo-kpi is-gold kpi-link"
+     href="{% url 'bodega:stock' %}{% if tienda_filtro %}?tienda={{ tienda_filtro.pk }}{% endif %}"
+     title="Ver el detalle del stock">
+    <div class="label">Valor de inventario</div>
+    <div class="value">${{ resumen.valor_inventario|floatformat:0|intcomma }}</div>
+    <div class="sub">Stock actual × precio de costo + materiales en bodega</div>
+  </a>
+  <div class="bo-card bo-kpi">
+    <div class="label">Promedio por venta</div>
+    <div class="value">
+      {% comment %}BUG-005: widthratio devuelve un entero sin separadores; lo pasamos por intcomma.{% endcomment %}
+      ${% if resumen.n_ventas %}{% widthratio resumen.total_ventas resumen.n_ventas 1 as prom_venta %}{{ prom_venta|intcomma }}{% else %}0{% endif %}
+    </div>
+    <div class="sub">Total / cantidad de recibos</div>
+  </div>
+</div>
+
+{# ─────────── Charts ─────────── #}
+{% comment %}
+  Wrappers con altura fija — Chart.js + maintainAspectRatio:false sin
+  un padre con altura causa loop infinito de crecimiento.
+{% endcomment %}
+<div class="bo-grid cols-2" style="margin-bottom: 20px;">
+  <div class="bo-card">
+    <div class="bo-card-head">
+      <h3>Ventas por día</h3>
+    </div>
+    <div class="bo-card-body">
+      <div class="bo-chart-wrap" style="height: 280px;">
+        <canvas id="chartSerie"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="bo-card">
+    <div class="bo-card-head">
+      <h3>Distribución por canal</h3>
+    </div>
+    <div class="bo-card-body">
+      <div class="bo-chart-wrap bo-chart-sm" style="height: 220px;">
+        <canvas id="chartCanal"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ─────────── Tabla top productos ─────────── #}
+<div class="bo-card">
+  <div class="bo-card-head">
+    <h3>Top productos vendidos</h3>
+  </div>
+  {% if resumen.top_productos %}
+    <table class="bo-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="num">Unidades</th>
+          <th class="num">Ingreso</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in resumen.top_productos %}
+          <tr>
+            <td>{{ p.descripcion }}</td>
+            <td class="num">{{ p.unidades }}</td>
+            <td class="num">${{ p.ingreso|floatformat:0|intcomma }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="bo-card-body" style="color: var(--bo-muted);">
+      Sin ventas en la ventana seleccionada.
+    </div>
+  {% endif %}
+</div>
+
+{% comment %}
+  Datos JSON para los charts. Re-emitir en cada swap para que el JS
+  inline de abajo los relea con los valores nuevos.
+{% endcomment %}
+{{ serie|json_script:"data-serie" }}
+<script id="data-canal" type="application/json">
+  {
+    "labels": ["Presencial", "Online"],
+    "data": [
+      {{ resumen.ventas_por_canal.presencial.total|default:0|stringformat:"f"|floatformat:0 }},
+      {{ resumen.ventas_por_canal.online.total|default:0|stringformat:"f"|floatformat:0 }}
+    ]
+  }
+</script>
+
+{% comment %}
+  Re-renderea los charts despues de swap. La funcion vive en el shell
+  (dashboard.html). Idempotente: destruye los charts viejos antes.
+{% endcomment %}
+<script>
+  if (window.renderDashboardCharts) {
+    window.renderDashboardCharts();
+  }
+</script>

@@ -1,0 +1,268 @@
+{% load humanize %}
+{% comment %}
+  Contenido dinamico del Estado de Resultados que se re-renderea via
+  HTMX al cambiar los filtros (periodo / mes / anio / rango / tienda).
+  El shell `eerr.html` lo incluye en la primera carga; peticiones HTMX
+  posteriores piden solo este partial.
+
+  Contexto: eerr, potencial, serie, periodo, tienda_filtro.
+{% endcomment %}
+
+{% comment %}
+  OOB swap del header — actualiza "Período: ..." al cambiar filtros.
+  Solo se emite cuando es request HTMX: en la carga inicial el shell
+  `eerr.html` ya renderea el mismo texto en `#eerr-periodo-info`. Si
+  lo duplicaramos aca, aparece dos veces en pantalla.
+{% endcomment %}
+{% if request.htmx %}
+  <div id="eerr-periodo-info" hx-swap-oob="true" class="sub">
+    Período: <strong>{{ periodo.label }}</strong>
+    {% if tienda_filtro %}
+      · tienda <strong>{{ tienda_filtro.nombre_organizacion }}</strong>
+    {% endif %}
+  </div>
+{% endif %}
+
+{# ─── KPIs ─── #}
+{% comment %}
+  Mejora #1: chip de variacion vs periodo anterior bajo cada KPI.
+  Para margen %, mostramos delta en PUNTOS porcentuales (ppts) en vez
+  de variacion % — es la convencion contable. 40% vs 37% = +3 ppts.
+{% endcomment %}
+<div class="bo-grid cols-4" style="margin-bottom:20px;">
+  <div class="bo-card bo-kpi is-primary">
+    <div class="label">Ingresos</div>
+    <div class="value">${{ eerr.ingresos|floatformat:0|intcomma }}</div>
+    <div class="sub">
+      Ventas pagadas en el período
+      {% include 'reportes/_variacion_chip.html' with pct=eerr_anterior.var_ingresos %}
+    </div>
+  </div>
+  <div class="bo-card bo-kpi is-warning">
+    <div class="label">Costo de ventas (COGS)</div>
+    <div class="value">${{ eerr.costo_ventas|floatformat:0|intcomma }}</div>
+    <div class="sub">
+      Σ cantidad × precio_costo vendido
+      {% include 'reportes/_variacion_chip.html' with pct=eerr_anterior.var_cogs %}
+    </div>
+  </div>
+  <div class="bo-card bo-kpi is-success">
+    <div class="label">Margen bruto</div>
+    <div class="value">${{ eerr.margen_bruto|floatformat:0|intcomma }}</div>
+    {% comment %}
+      BUG-007: el sub mostraba dos unidades distintas. Ahora una sola
+      expresion con widthratio. Adicional: chip en PUNTOS porcentuales
+      (ppts) — relevante porque margen es ya un %.
+    {% endcomment %}
+    <div class="sub">
+      {% if eerr.ingresos %}
+        {% widthratio eerr.margen_bruto eerr.ingresos 100 %}% del ingreso
+      {% else %}
+        — sin ingresos en el período
+      {% endif %}
+      {% if eerr_anterior.delta_margen_pct_ppts is not None %}
+        {% if eerr_anterior.delta_margen_pct_ppts > 0 %}
+          <span class="variacion-chip variacion-up"
+                title="Margen subió {{ eerr_anterior.delta_margen_pct_ppts }} puntos porcentuales vs período anterior">
+            ↑ +{{ eerr_anterior.delta_margen_pct_ppts }} ppts
+          </span>
+        {% elif eerr_anterior.delta_margen_pct_ppts < 0 %}
+          <span class="variacion-chip variacion-down"
+                title="Margen bajó {{ eerr_anterior.delta_margen_pct_ppts }} puntos porcentuales vs período anterior">
+            ↓ {{ eerr_anterior.delta_margen_pct_ppts }} ppts
+          </span>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="bo-card bo-kpi {% if eerr.utilidad_neta < 0 %}is-danger{% else %}is-gold{% endif %}">
+    <div class="label">Utilidad neta</div>
+    <div class="value">${{ eerr.utilidad_neta|floatformat:0|intcomma }}</div>
+    <div class="sub">
+      Margen bruto − gastos operativos
+      {% include 'reportes/_variacion_chip.html' with pct=eerr_anterior.var_utilidad_neta %}
+    </div>
+  </div>
+</div>
+
+{# ─── Detalle del EERR ─── #}
+<div class="bo-grid cols-2" style="margin-bottom:20px;">
+  <div class="bo-card">
+    <div class="bo-card-head"><h3>Estado de Resultados — detalle</h3></div>
+    <table class="bo-table">
+      <tbody>
+        <tr>
+          <td><strong>Ingresos</strong></td>
+          <td class="num"><strong>${{ eerr.ingresos|floatformat:0|intcomma }}</strong></td>
+        </tr>
+        <tr style="color:var(--bo-muted);">
+          <td style="padding-left:24px;">(−) Costo de ventas</td>
+          <td class="num">−${{ eerr.costo_ventas|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr style="background:var(--bo-bg);">
+          <td><strong>= Margen bruto</strong></td>
+          <td class="num"><strong>${{ eerr.margen_bruto|floatformat:0|intcomma }}</strong></td>
+        </tr>
+        <tr style="color:var(--bo-muted);">
+          <td style="padding-left:24px;">(−) Gastos operativos</td>
+          <td class="num">−${{ eerr.gastos_operativos|floatformat:0|intcomma }}</td>
+        </tr>
+        <tr style="background:var(--bo-bg); border-top:2px solid var(--bo-text);">
+          <td style="font-size:14px;"><strong>Utilidad neta</strong></td>
+          <td class="num" style="font-size:16px;color:{% if eerr.utilidad_neta < 0 %}var(--bo-danger){% else %}var(--bo-success){% endif %};">
+            <strong>${{ eerr.utilidad_neta|floatformat:0|intcomma }}</strong>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bo-card">
+    <div class="bo-card-head"><h3>Top gastos del período</h3></div>
+    {% if eerr.desglose_gastos %}
+      <table class="bo-table">
+        <thead>
+          <tr><th>Concepto</th><th class="num">Monto</th></tr>
+        </thead>
+        <tbody>
+          {% for g in eerr.desglose_gastos %}
+            <tr>
+              <td>{{ g.concepto }}</td>
+              <td class="num">${{ g.monto|floatformat:0|intcomma }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="bo-card-body" style="color:var(--bo-muted);">Sin gastos registrados en el período.</div>
+    {% endif %}
+  </div>
+</div>
+
+{# ─── Mejora #6: desglose por linea de negocio (Familia) ─── #}
+{% if eerr.desglose_por_familia %}
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-head">
+      <h3>Desglose por línea de negocio</h3>
+      <span style="color:var(--bo-muted);font-size:12px;">
+        Cuál familia rinde más en el período
+      </span>
+    </div>
+    <table class="bo-table">
+      <thead>
+        <tr>
+          <th>Familia</th>
+          <th class="num">Unidades</th>
+          <th class="num">Ingresos</th>
+          <th class="num">COGS</th>
+          <th class="num">Margen bruto</th>
+          <th class="num">Margen %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fam in eerr.desglose_por_familia %}
+          <tr>
+            <td><strong>{{ fam.familia }}</strong></td>
+            <td class="num">{{ fam.n_lineas }}</td>
+            <td class="num">${{ fam.ingresos|floatformat:0|intcomma }}</td>
+            <td class="num" style="color:var(--bo-muted);">−${{ fam.cogs|floatformat:0|intcomma }}</td>
+            <td class="num"><strong>${{ fam.margen|floatformat:0|intcomma }}</strong></td>
+            <td class="num">
+              {% if fam.ingresos %}
+                {% widthratio fam.margen fam.ingresos 100 %}%
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot style="background:var(--bo-bg);">
+        <tr>
+          <td><strong>Total</strong></td>
+          <td class="num">—</td>
+          <td class="num"><strong>${{ eerr.ingresos|floatformat:0|intcomma }}</strong></td>
+          <td class="num" style="color:var(--bo-muted);">
+            −${{ eerr.costo_ventas|floatformat:0|intcomma }}
+          </td>
+          <td class="num"><strong>${{ eerr.margen_bruto|floatformat:0|intcomma }}</strong></td>
+          <td class="num">
+            {% if eerr.ingresos %}
+              <strong>{% widthratio eerr.margen_bruto eerr.ingresos 100 %}%</strong>
+            {% endif %}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+{% endif %}
+
+{# ─── Chart de evolución mensual ─── #}
+<div class="bo-card" style="margin-bottom:20px;">
+  <div class="bo-card-head">
+    <h3>Evolución mensual (últimos 12 meses)</h3>
+  </div>
+  <div class="bo-card-body">
+    {% comment %}
+      Wrapper con altura fija — Chart.js (responsive + maintainAspectRatio
+      false) crece infinitamente si el padre del canvas no tiene altura.
+    {% endcomment %}
+    <div class="bo-chart-wrap" style="height: 320px;">
+      <canvas id="chartEvolucion"></canvas>
+    </div>
+  </div>
+</div>
+
+{# ─── Potencial: lo que la materia prima ya comprada permitiría ─── #}
+{% if potencial.capacidad_unidades %}
+  <div class="bo-card" style="border-left: 4px solid var(--bo-gold);">
+    <div class="bo-card-head">
+      <h3>Potencial de confección con la materia prima en bodega</h3>
+      <a href="{% url 'reportes:produccion' %}" class="bo-btn bo-btn-sm">Ver detalle por variante →</a>
+    </div>
+    <div class="bo-card-body">
+      <p style="margin-top:0; color: var(--bo-muted);">
+        Si confeccionas y vendes todo lo que tu tela actual permite,
+        puedes sumar este margen adicional al EERR de los próximos meses.
+        La materia prima ya está pagada (se ve en el balance como activo).
+      </p>
+      <div class="bo-grid cols-4">
+        <div>
+          <div class="bo-kpi-label" style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Capacidad total</div>
+          <div style="font-size:22px;font-weight:700;margin-top:4px;">{{ potencial.capacidad_unidades }}</div>
+          <div style="color:var(--bo-muted);font-size:12px;">prendas confeccionables</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Ingreso potencial</div>
+          <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--bo-primary-2);">
+            ${{ potencial.valor_potencial_total|floatformat:0|intcomma }}
+          </div>
+          <div style="color:var(--bo-muted);font-size:12px;">a precio de venta</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Costo potencial</div>
+          <div style="font-size:22px;font-weight:700;margin-top:4px;color:#B5860C;">
+            ${{ potencial.costo_potencial_total|floatformat:0|intcomma }}
+          </div>
+          <div style="color:var(--bo-muted);font-size:12px;">tela + confección + accesorios</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--bo-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Margen potencial</div>
+          <div style="font-size:22px;font-weight:700;margin-top:4px;color:var(--bo-success);">
+            ${{ potencial.margen_potencial_total|floatformat:0|intcomma }}
+          </div>
+          <div style="color:var(--bo-muted);font-size:12px;">se sumaría a la utilidad</div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{{ serie|json_script:"data-eerr-serie" }}
+
+{# Re-render del chart tras swap. La funcion vive en eerr.html (shell). #}
+<script>
+  if (window.renderEerrChart) {
+    window.renderEerrChart();
+  }
+</script>

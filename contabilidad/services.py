@@ -14,7 +14,7 @@ Principios:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Optional
 
@@ -185,6 +185,10 @@ class EstadoResultados:
     gastos_operativos: Decimal
     utilidad_neta: Decimal
     desglose_gastos: list     # [{categoria, label, monto}]
+    # Mejora EERR: desglose por linea de negocio (Familia del catalogo).
+    # Cada item: {familia, ingresos, cogs, margen, margen_pct, n_lineas}.
+    # Ordenado por margen descendente.
+    desglose_por_familia: list = field(default_factory=list)
 
 
 def estado_resultados(
@@ -259,6 +263,11 @@ def estado_resultados(
         .order_by('-monto')[:10]
     )
 
+    # Desglose por familia (linea de negocio). Cada familia con su
+    # ingreso, su COGS y su margen. Util para decidir cual linea
+    # priorizar — ej. perfumes vs uniformes vs moda.
+    desglose_familia = _desglose_por_familia(detalles_qs)
+
     return EstadoResultados(
         desde=desde, hasta=hasta,
         ingresos=ingresos,
@@ -268,7 +277,80 @@ def estado_resultados(
         gastos_operativos=gastos_operativos,
         utilidad_neta=utilidad_neta,
         desglose_gastos=desglose,
+        desglose_por_familia=desglose_familia,
     )
+
+
+def _desglose_por_familia(detalles_qs) -> list[dict]:
+    """Agrega ingresos y COGS por Familia del catalogo.
+
+    Cada `ReciboVentaDetalle` apunta o a un `ProductoVariante` (y de ahi
+    al `Producto`) o a un `Producto` directo. La `Familia` cuelga del
+    Producto. Hacemos las 2 agregaciones por separado y las mergeamos
+    en Python (mas claro que un union/exists complejo en SQL).
+
+    Devuelve lista ordenada por margen descendente:
+        [{familia, ingresos, cogs, margen, margen_pct, n_lineas}, ...]
+    """
+    # Ingresos por familia desde variantes.
+    ing_var = (
+        detalles_qs.filter(variante__isnull=False)
+        .values(fam=F('variante__producto__familia__nombre'))
+        .annotate(
+            ingresos=Coalesce(
+                Sum(F('cantidad') * F('precio_unitario') - F('descuento')),
+                Value(Decimal('0')), output_field=DecimalField(),
+            ),
+            cogs=Coalesce(
+                Sum(F('cantidad') * F('variante__producto__precio_costo')),
+                Value(Decimal('0')), output_field=DecimalField(),
+            ),
+            n_lineas=Sum('cantidad'),
+        )
+    )
+    # Idem desde productos sin variantes.
+    ing_prod = (
+        detalles_qs.filter(producto__isnull=False)
+        .values(fam=F('producto__familia__nombre'))
+        .annotate(
+            ingresos=Coalesce(
+                Sum(F('cantidad') * F('precio_unitario') - F('descuento')),
+                Value(Decimal('0')), output_field=DecimalField(),
+            ),
+            cogs=Coalesce(
+                Sum(F('cantidad') * F('producto__precio_costo')),
+                Value(Decimal('0')), output_field=DecimalField(),
+            ),
+            n_lineas=Sum('cantidad'),
+        )
+    )
+
+    # Merge en Python (familia es el key).
+    agg: dict[str, dict] = {}
+    for row in list(ing_var) + list(ing_prod):
+        fam_nombre = row['fam'] or '(sin familia)'
+        bucket = agg.setdefault(fam_nombre, {
+            'familia': fam_nombre,
+            'ingresos': Decimal('0'),
+            'cogs': Decimal('0'),
+            'n_lineas': 0,
+        })
+        bucket['ingresos'] += row['ingresos']
+        bucket['cogs'] += row['cogs']
+        bucket['n_lineas'] += int(row['n_lineas'] or 0)
+
+    # Calcular margen y margen_pct.
+    out = []
+    for bucket in agg.values():
+        margen = bucket['ingresos'] - bucket['cogs']
+        margen_pct = (margen / bucket['ingresos']) if bucket['ingresos'] > 0 else Decimal('0')
+        out.append({
+            **bucket,
+            'margen': margen,
+            'margen_pct': margen_pct,
+        })
+    out.sort(key=lambda d: d['margen'], reverse=True)
+    return out
 
 
 @dataclass

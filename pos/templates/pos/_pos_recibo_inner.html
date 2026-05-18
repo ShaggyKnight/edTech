@@ -1,0 +1,140 @@
+{% load humanize %}
+{% comment %}
+  Contenido interno del recibo, sin el wrapper `<div id="pos-page-content">`
+  ni el shell de base.html. Se usa en 2 contextos:
+    1. `recibo.html` lo incluye dentro del wrapper para render full-page.
+    2. `pos.views.ver_recibo` lo renderea DIRECTAMENTE cuando recibe una
+       petición HTMX, asi HTMX swap-ea el `innerHTML` de
+       `#pos-page-content` con este contenido — sin shell ni doctype.
+  Esto mantiene el modo pantalla completa del browser durante todo el
+  ciclo de venta (cobrar → recibo → nueva venta).
+{% endcomment %}
+<div class="bo-page-head">
+  <div>
+    <div class="bo-crumb">Operación / Ventas / Recibo #{{ recibo.pk }}</div>
+    <h1>Recibo #{{ recibo.pk }}</h1>
+    <div class="sub">
+      {{ recibo.creado|date:"d-m-Y H:i" }} · {{ recibo.tienda.nombre_organizacion }}
+      {% if recibo.estado == 'pagado' %}
+        <span class="bo-badge bo-badge-success">{{ recibo.get_estado_display }}</span>
+      {% elif recibo.estado == 'fallido' %}
+        <span class="bo-badge bo-badge-danger">{{ recibo.get_estado_display }}</span>
+      {% else %}
+        <span class="bo-badge bo-badge-warning">{{ recibo.get_estado_display }}</span>
+      {% endif %}
+      <span class="bo-badge bo-badge-info">{{ recibo.get_canal_display }}</span>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button type="button" id="pos-fullscreen-btn" class="pos-fullscreen-toggle"
+            title="Modo pantalla completa (tablet)"
+            onclick="togglePosFullscreen()">
+      <svg class="ico ico--16" aria-hidden="true">
+        <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"
+              fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="pos-fullscreen-label">Pantalla completa</span>
+    </button>
+    {% comment %}
+      "+ Nueva venta" es HTMX: la view detecta `request.htmx` y
+      devuelve `_pos_home_inner.html` (sin shell). HTMX swap-ea el
+      innerHTML de `#pos-page-content` — sin navegacion, el fullscreen
+      API del browser se mantiene activo.
+    {% endcomment %}
+    <a href="{% url 'pos:home' %}"
+       class="bo-btn bo-btn-primary"
+       hx-get="{% url 'pos:home' %}"
+       hx-target="#pos-page-content"
+       hx-swap="innerHTML"
+       hx-push-url="true">+ Nueva venta</a>
+    <a href="{% url 'pos:ventas' %}" class="bo-btn">Ver ventas</a>
+  </div>
+</div>
+
+{% if recibo.cliente_nombre or recibo.cliente_email or recibo.cliente_rut %}
+  <div class="bo-card" style="margin-bottom:20px;">
+    <div class="bo-card-head">
+      <h3>Cliente</h3>
+    </div>
+    <div class="bo-card-body">
+      {% if recibo.cliente_nombre %}<strong>{{ recibo.cliente_nombre }}</strong><br>{% endif %}
+      {% if recibo.cliente_rut %}<span style="color:var(--bo-muted);">RUT:</span> {{ recibo.cliente_rut }}<br>{% endif %}
+      {% if recibo.cliente_email %}<span style="color:var(--bo-muted);">Email:</span> {{ recibo.cliente_email }}{% endif %}
+    </div>
+  </div>
+{% endif %}
+
+<div class="bo-card" style="margin-bottom:20px;">
+  <div class="bo-card-head"><h3>Detalle</h3></div>
+  <table class="bo-table">
+    <thead>
+      <tr>
+        <th>Descripción</th>
+        <th class="num">Cantidad</th>
+        <th class="num">Precio unit.</th>
+        <th class="num">Descuento</th>
+        <th class="num">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in recibo.detalles.all %}
+        <tr>
+          <td>{{ d.descripcion }}</td>
+          <td class="num">{{ d.cantidad }}</td>
+          <td class="num">${{ d.precio_unitario|floatformat:0|intcomma }}</td>
+          <td class="num">
+            {% if d.descuento %}<span style="color:var(--bo-vino);">-${{ d.descuento|floatformat:0|intcomma }}</span>{% else %}—{% endif %}
+          </td>
+          <td class="num"><strong>${{ d.subtotal|floatformat:0|intcomma }}</strong></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4" class="num" style="border-top:1px solid var(--bo-border);">Subtotal</td>
+        <td class="num" style="border-top:1px solid var(--bo-border);">${{ recibo.subtotal|floatformat:0|intcomma }}</td>
+      </tr>
+      {% if recibo.descuento %}
+        <tr>
+          <td colspan="4" class="num">Descuento</td>
+          <td class="num" style="color:var(--bo-vino);">-${{ recibo.descuento|floatformat:0|intcomma }}</td>
+        </tr>
+      {% endif %}
+      <tr>
+        <td colspan="4" class="num" style="font-size:18px;font-weight:600;border-top:2px solid var(--bo-text);">TOTAL</td>
+        <td class="num" style="font-size:24px;font-weight:700;border-top:2px solid var(--bo-text);">${{ recibo.total|floatformat:0|intcomma }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div class="bo-grid cols-2">
+  <div class="bo-card">
+    <div class="bo-card-head"><h3>Pago</h3></div>
+    <div class="bo-card-body">
+      {% if recibo.payment_provider %}
+        <div style="margin-bottom:6px;"><span style="color:var(--bo-muted);">Proveedor:</span> <code>{{ recibo.payment_provider }}</code></div>
+      {% endif %}
+      {% if recibo.payment_reference %}
+        <div><span style="color:var(--bo-muted);">Referencia:</span> <code>{{ recibo.payment_reference }}</code></div>
+      {% else %}
+        <div style="color:var(--bo-muted);">Sin información de pago registrada.</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="bo-card">
+    <div class="bo-card-head"><h3>Documento tributario</h3></div>
+    <div class="bo-card-body">
+      {% if recibo.dte_folio %}
+        <div style="margin-bottom:6px;"><span style="color:var(--bo-muted);">Tipo:</span> {{ recibo.dte_tipo }} (boleta electrónica)</div>
+        <div><span style="color:var(--bo-muted);">Folio:</span> <strong>{{ recibo.dte_folio }}</strong></div>
+        {% if recibo.dte_url_pdf %}
+          <div style="margin-top:8px;"><a href="{{ recibo.dte_url_pdf }}" class="bo-btn bo-btn-sm" target="_blank">Descargar PDF</a></div>
+        {% endif %}
+      {% else %}
+        <div style="color:var(--bo-muted);">Sin DTE emitido aún.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>

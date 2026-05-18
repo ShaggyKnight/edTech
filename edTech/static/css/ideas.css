@@ -386,7 +386,11 @@ input, select { font-family: inherit; }
 /* Product card */
 .pcard { background: var(--cream); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); transition: all .2s; }
 .pcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-.pcard-img { aspect-ratio: 3/4; background: var(--cream-2); position: relative; overflow: hidden; }
+/* aspect-ratio 4/5 coincide con el `width="400" height="500"` que el
+   `_pcard.html` pone en el <img>. Antes era 3/4 (mas alargado), que
+   no matcheaba ninguna dimension real de las fotos y se notaba feo
+   en tablet (3 cols angostas → card alta y delgada). */
+.pcard-img { aspect-ratio: 4/5; background: var(--cream-2); position: relative; overflow: hidden; }
 .pcard-img img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Boton "Vista rapida": aparece en hover sobre la card (desktop) y
@@ -417,8 +421,12 @@ input, select { font-family: inherit; }
   transform: translateX(-50%) translateY(0);
 }
 .pcard-quick:hover { background: var(--gold-2); color: var(--ink); }
-@media (max-width: 768px) {
-  /* En mobile el hover no existe — siempre visible. */
+/* En cualquier device touch (mobile y tablet) el hover no existe, asi
+   que el boton arranca siempre visible. Antes usabamos `max-width:768px`
+   pero las iPad portrait (744-900px) caian en desktop y el cliente tenia
+   que tocar la card una vez para que apareciera el boton.
+   `(hover: none)` cubre touch sin importar el ancho. */
+@media (hover: none) {
   .pcard-quick { opacity: 0.95; transform: translateX(-50%) translateY(0); }
 }
 .pcard-tag { position: absolute; top: 10px; left: 10px; background: var(--ink); color: var(--cream); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; }
@@ -447,8 +455,37 @@ input, select { font-family: inherit; }
 .filter-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .filter-group label { display: block; padding: 6px 0; font-size: 13px; }
 .size-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.size-chip { width: 40px; height: 36px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; font-weight: 500; background: var(--cream); transition: all .2s; }
-.size-chip:hover, .size-chip.active { border-color: var(--ink); background: var(--ink); color: var(--cream); }
+.size-chip {
+  min-width: 40px; height: 36px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+  background: var(--cream); color: var(--ink);
+  cursor: pointer; transition: all .15s;
+  font-family: inherit;
+}
+.size-chip:hover:not(:disabled):not(.disabled),
+.size-chip.active {
+  border-color: var(--ink); background: var(--ink); color: var(--cream);
+}
+.size-chip:disabled,
+.size-chip.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-60, #6a6a6a);
+}
+/* Chip seleccionada: badge sutil indicando que es la elegida. */
+.size-chip.active::after {
+  content: ' ✓';
+  font-weight: 600;
+}
+
+/* Boton primario disabled (botón "Agregar al carrito" del quick view
+   cuando el cliente no eligió talla). */
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .range-labs { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-60); margin-top: 6px; }
 .range-row input { width: 100%; }
 
@@ -465,9 +502,14 @@ input, select { font-family: inherit; }
   border: 1px solid var(--line);
   position: relative;
 }
+/* `object-fit: contain` (no cover) para que el cliente VEA el producto
+   completo. Cover recortaba imagenes no 1:1 (las del catalogo van de
+   AR 0.91 a 1.25). El padding visual lo provee el fondo `--cream` del
+   contenedor. El "padding" interno de 24px da aire al producto. */
 .pdp-big img {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 24px;
   animation: pdp-fade .25s ease-out;
 }
 @keyframes pdp-fade {
@@ -570,11 +612,10 @@ input, select { font-family: inherit; }
 .pdp-perks strong { display: block; font-size: 12px; font-weight: 600; }
 .pdp-perks span { font-size: 11px; color: var(--ink-60); }
 
-.pdp-tabs .tabs-head { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
-.pdp-tabs .tabs-head button { padding: 14px 24px; font-size: 14px; font-weight: 500; color: var(--ink-60); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .2s; }
-.pdp-tabs .tabs-head button.active { color: var(--ink); border-color: var(--gold); }
-.prose { max-width: 720px; }
-.prose p { margin-bottom: 12px; color: var(--ink-60); }
+/* Las clases `.pdp-tabs` y `.prose` se removieron junto con la seccion
+   de pestanas de la PDP (Descripcion / Guia de talles / Envio y cambios)
+   que era cosmetica: las pestanas no hacian nada y solo mostraban la
+   descripcion ya visible arriba. Si vuelven, agregar de nuevo aca. */
 .prose ul { padding-left: 20px; }
 .prose li { padding: 4px 0; color: var(--ink-60); }
 
@@ -1081,7 +1122,7 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
   border-radius: 10px;
   overflow: hidden;
 }
-.quick-view-img img { width: 100%; height: 100%; object-fit: cover; }
+.quick-view-img img { width: 100%; height: 100%; object-fit: contain; padding: 12px; }
 .quick-view-cat {
   font-size: 11px;
   color: var(--ink-60);

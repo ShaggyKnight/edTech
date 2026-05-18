@@ -113,6 +113,10 @@ def caja(request):
                     monto=form.cleaned_data['monto'],
                     concepto=form.cleaned_data['concepto'],
                     usuario=request.user,
+                    # `categoria` ahora es seleccionable en el form: corrige
+                    # el bug contable donde toda salida se contaba como
+                    # gasto operativo en el EERR. Ver reportes.forms.
+                    categoria=form.cleaned_data['categoria'],
                 )
                 messages.success(request, 'Salida registrada.')
                 return redirect(reverse('reportes:caja'))

@@ -442,26 +442,17 @@
     </div>
   </div>
 
-  <section class="pdp-tabs">
-    <div class="tabs-head">
-      <button class="active">Descripción</button>
-      <button>Guía de talles</button>
-      <button>Envío y cambios</button>
-    </div>
-    <div class="tabs-body">
-      <div class="prose">
-        {% if producto.descripcion %}
-          <p>{{ producto.descripcion|linebreaksbr }}</p>
-        {% else %}
-          <p>Producto seleccionado por la familia Contreras para tu tranquilidad. Si tienes dudas sobre talla, tela o calce, escríbenos por WhatsApp y te ayudamos en persona.</p>
-          <ul>
-            <li>Vendido y garantizado por Ideas Boutique, Los Vilos.</li>
-            <li>Cambios sin costo dentro de los 15 días si el producto está sin uso.</li>
-          </ul>
-        {% endif %}
-      </div>
-    </div>
-  </section>
+  {% comment %}
+    Antes habia aca una `<section class="pdp-tabs">` con 3 pestanas:
+    Descripcion, Guia de talles, Envio y cambios. La sacamos porque:
+      - La descripcion ya aparece arriba en la columna de info.
+      - "Guia de talles" se abre con su propio boton al lado de las
+        tallas (modal con calculadora) — la pestana era redundante.
+      - "Envio y cambios" todavia no esta definido como politica
+        validada y mostrar contenido placeholder daria mala senial.
+    Si alguna vez se vuelve a necesitar tabs, hay que recuperar tambien
+    los estilos `.pdp-tabs .tabs-head` en ideas.css.
+  {% endcomment %}
 
   {% if feature_resenas %}
     {# Bloque 9 · Resenas reales. Gated por FEATURE_RESENAS. #}

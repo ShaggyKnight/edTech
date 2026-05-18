@@ -612,11 +612,10 @@ input, select { font-family: inherit; }
 .pdp-perks strong { display: block; font-size: 12px; font-weight: 600; }
 .pdp-perks span { font-size: 11px; color: var(--ink-60); }
 
-.pdp-tabs .tabs-head { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
-.pdp-tabs .tabs-head button { padding: 14px 24px; font-size: 14px; font-weight: 500; color: var(--ink-60); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .2s; }
-.pdp-tabs .tabs-head button.active { color: var(--ink); border-color: var(--gold); }
-.prose { max-width: 720px; }
-.prose p { margin-bottom: 12px; color: var(--ink-60); }
+/* Las clases `.pdp-tabs` y `.prose` se removieron junto con la seccion
+   de pestanas de la PDP (Descripcion / Guia de talles / Envio y cambios)
+   que era cosmetica: las pestanas no hacian nada y solo mostraban la
+   descripcion ya visible arriba. Si vuelven, agregar de nuevo aca. */
 .prose ul { padding-left: 20px; }
 .prose li { padding: 4px 0; color: var(--ink-60); }
 

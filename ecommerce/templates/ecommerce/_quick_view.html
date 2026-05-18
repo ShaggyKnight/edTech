@@ -27,15 +27,22 @@
       <div class="quick-view-cat">{{ producto.familia.nombre }}{% if producto.colegio %} · {{ producto.colegio.nombre }}{% endif %}</div>
       <h2 class="quick-view-nombre">{{ producto.nombre }}</h2>
 
-      <div class="quick-view-price">
+      {% comment %}
+        Ids estables para que el JS pueda actualizar el precio cuando se
+        clickea una chip de talla. El span "Desde" se oculta una vez que
+        el cliente eligio una variante (ya no es un rango — es un precio).
+      {% endcomment %}
+      <div class="quick-view-price" id="qv-precio-box">
         {% if producto.tiene_oferta_online %}
-          <span class="big pdp-price-sale">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
-          <span class="pdp-price-old">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+          <span class="big pdp-price-sale" id="qv-precio-actual">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
+          <span class="pdp-price-old" id="qv-precio-old">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
         {% elif producto.precios_varian_por_variante %}
-          <span class="quick-view-from">Desde</span>
-          <span class="big">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+          <span class="quick-view-from" id="qv-precio-desde">Desde</span>
+          <span class="big" id="qv-precio-actual">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+          <span class="pdp-price-old" id="qv-precio-old" hidden></span>
         {% else %}
-          <span class="big">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+          <span class="big" id="qv-precio-actual">${{ producto.precio_minimo|floatformat:0|intcomma }}</span>
+          <span class="pdp-price-old" id="qv-precio-old" hidden></span>
         {% endif %}
       </div>
 
@@ -48,12 +55,19 @@
           <div class="quick-view-label">Elige tu talla:</div>
           <div class="size-chips" id="qv-chips">
             {% for v in variantes %}
+              {% comment %}
+                Guardamos ambos precios en la chip — `precio` (regular) y
+                `precio-oferta` (con descuento si aplica). Si difieren, el
+                JS muestra el precio tachado al lado del precio actual.
+              {% endcomment %}
               <button type="button"
                       class="size-chip{% if not v.stock %} disabled{% endif %}"
                       {% if not v.stock %}disabled aria-disabled="true"{% endif %}
                       title="{% if v.stock %}Stock: {{ v.stock }}{% else %}Agotada{% endif %}"
                       data-variante-id="{{ v.pk }}"
                       data-variante-precio="{{ v.precio_oferta_online|floatformat:0 }}"
+                      data-variante-precio-regular="{{ v.precio|floatformat:0 }}"
+                      data-variante-en-oferta="{% if v.tiene_oferta_online %}1{% else %}0{% endif %}"
                       onclick="qvSeleccionar(this)">
                 {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}
               </button>
@@ -127,14 +141,39 @@
       var hidden = document.getElementById('qv-variante-id');
       if (hidden) hidden.value = chip.dataset.varianteId;
 
+      var precio = parseInt(chip.dataset.variantePrecio || '0', 10);
+      var precioRegular = parseInt(chip.dataset.variantePrecioRegular || '0', 10);
+      var enOferta = chip.dataset.varianteEnOferta === '1';
+      var fmt = function (n) { return '$' + n.toLocaleString('es-CL'); };
+
+      // Actualizar el precio grande de arriba — ya no decimos "Desde",
+      // ahora es el precio EXACTO de la variante elegida.
+      var precioActual = document.getElementById('qv-precio-actual');
+      var precioOld = document.getElementById('qv-precio-old');
+      var precioDesde = document.getElementById('qv-precio-desde');
+      if (precioDesde) precioDesde.hidden = true;
+      if (precioActual) {
+        precioActual.textContent = fmt(precio);
+        // Si esta variante esta en oferta, pintamos el precio actual en
+        // rojo (clase pdp-price-sale) y mostramos el regular tachado.
+        if (enOferta && precioRegular > precio) {
+          precioActual.classList.add('pdp-price-sale');
+          if (precioOld) {
+            precioOld.textContent = fmt(precioRegular);
+            precioOld.hidden = false;
+          }
+        } else {
+          precioActual.classList.remove('pdp-price-sale');
+          if (precioOld) precioOld.hidden = true;
+        }
+      }
+
       // Habilitar boton + actualizar texto con el precio de esa variante.
       var btn = document.getElementById('qv-agregar-btn');
       var label = document.getElementById('qv-agregar-label');
       if (btn) btn.disabled = false;
       if (label) {
-        var precio = parseInt(chip.dataset.variantePrecio || '0', 10);
-        var precioFmt = '$' + precio.toLocaleString('es-CL');
-        label.textContent = 'Agregar al carrito · ' + precioFmt;
+        label.textContent = 'Agregar al carrito · ' + fmt(precio);
       }
     };
   </script>

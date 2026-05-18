@@ -386,7 +386,11 @@ input, select { font-family: inherit; }
 /* Product card */
 .pcard { background: var(--cream); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); transition: all .2s; }
 .pcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-.pcard-img { aspect-ratio: 3/4; background: var(--cream-2); position: relative; overflow: hidden; }
+/* aspect-ratio 4/5 coincide con el `width="400" height="500"` que el
+   `_pcard.html` pone en el <img>. Antes era 3/4 (mas alargado), que
+   no matcheaba ninguna dimension real de las fotos y se notaba feo
+   en tablet (3 cols angostas → card alta y delgada). */
+.pcard-img { aspect-ratio: 4/5; background: var(--cream-2); position: relative; overflow: hidden; }
 .pcard-img img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Boton "Vista rapida": aparece en hover sobre la card (desktop) y
@@ -417,8 +421,12 @@ input, select { font-family: inherit; }
   transform: translateX(-50%) translateY(0);
 }
 .pcard-quick:hover { background: var(--gold-2); color: var(--ink); }
-@media (max-width: 768px) {
-  /* En mobile el hover no existe — siempre visible. */
+/* En cualquier device touch (mobile y tablet) el hover no existe, asi
+   que el boton arranca siempre visible. Antes usabamos `max-width:768px`
+   pero las iPad portrait (744-900px) caian en desktop y el cliente tenia
+   que tocar la card una vez para que apareciera el boton.
+   `(hover: none)` cubre touch sin importar el ancho. */
+@media (hover: none) {
   .pcard-quick { opacity: 0.95; transform: translateX(-50%) translateY(0); }
 }
 .pcard-tag { position: absolute; top: 10px; left: 10px; background: var(--ink); color: var(--cream); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; }

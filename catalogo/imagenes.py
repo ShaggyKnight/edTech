@@ -155,5 +155,15 @@ def optimizar_imagen_field(image_field) -> Tuple[bool, str]:
     # `save(save=False)` no llama a model.save() — solo reemplaza el
     # archivo del FieldFile. Quien llamo es responsable de hacer
     # instance.save(update_fields=['imagen']) si quiere persistir.
+    nombre_disco_anterior = image_field.name  # ej: 'productos/foo.png'
     image_field.save(nuevo_nombre, ContentFile(datos), save=False)
+    # Django NO borra el archivo viejo automaticamente al reemplazar.
+    # Si la extension cambio (png -> jpg) o el storage le puso un sufijo
+    # para evitar conflicto, el original queda huerfano consumiendo
+    # disco. Lo limpiamos explicitamente cuando el path cambio.
+    if nombre_disco_anterior and nombre_disco_anterior != image_field.name:
+        try:
+            image_field.storage.delete(nombre_disco_anterior)
+        except Exception:
+            pass  # archivo ya no existe / sin permisos / etc — no es fatal
     return True, f'{nombre_original} -> {nuevo_nombre} ({len(datos)//1024} KB)'

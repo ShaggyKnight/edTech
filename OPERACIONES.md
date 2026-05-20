@@ -397,7 +397,7 @@ git config core.hooksPath .githooks
 ```
 
 Esto rechaza commits que incluyan `Co-Authored-By:` a herramientas AI
-(política definida en `CLAUDE.md`). Sin este paso, el hook no corre
+(política definida en `AGENTS.md`). Sin este paso, el hook no corre
 porque vive en `.githooks/` versionado, no en `.git/hooks/` que no se
 clona.
 

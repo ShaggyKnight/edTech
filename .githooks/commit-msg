@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pre-receive: rechaza el commit si el mensaje incluye una linea de
-# coautoria a herramientas de AI. Ver CLAUDE.md.
+# coautoria a herramientas de AI. Ver AGENTS.md.
 #
 # El argumento $1 es el path al archivo temporal con el mensaje del
 # commit que git va a registrar.
@@ -13,7 +13,7 @@ PATTERN='(?i)^^Co-Authored-By:.*(claude|anthropic|copilot|chatgpt|openai|gpt-)'
 
 if grep -qiE '^Co-Authored-By:.*(claude|anthropic|copilot|chatgpt|openai|gpt-)' "$MSG_FILE"; then
   echo "ERROR: el mensaje del commit incluye una linea 'Co-Authored-By:'" >&2
-  echo "       referenciando una herramienta de AI. Ver CLAUDE.md."        >&2
+  echo "       referenciando una herramienta de AI. Ver AGENTS.md."        >&2
   echo                                                                      >&2
   echo "Linea(s) ofensiva(s):"                                             >&2
   grep -niE '^Co-Authored-By:.*(claude|anthropic|copilot|chatgpt|openai|gpt-)' "$MSG_FILE" >&2

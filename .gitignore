@@ -1,6 +1,32 @@
-# ===== Estado local del asistente de codigo (NOT para el repo) =====
-# Contiene worktrees efimeros y settings.local.json.
+# ===== Estado local de herramientas de asistencia AI (NOT para el repo) =====
+# Las herramientas guardan worktrees efimeros, settings locales, historial
+# de chats, transcripciones, etc. Nada de esto debe llegar al repo.
 .claude/
+.claude.json
+claude.local.*
+.anthropic/
+.anthropic.json
+
+# Otras herramientas de AI conocidas (variantes locales)
+.aider*
+.aider.chat.history.md
+.aider.input.history
+.cursor/
+.cursorignore
+.cursorrules.local
+.continue/
+.codeium/
+.github-copilot/
+.aichat/
+.openai/
+.chatgpt/
+.gpt-engineer/
+
+# Archivos generados por asistentes (drafts, scratch, transcripciones)
+*.ai-draft
+*.claude-draft
+ai-scratch/
+ai-notes/
 
 # ===== Python / Django =====
 __pycache__/

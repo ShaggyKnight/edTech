@@ -296,7 +296,7 @@ Usuario probado: admin (autenticado en backoffice y tienda)
   Solo modifican Meta options (no tocan schema); idempotentes.
 - ✅ Resuelto en commit pendiente.
 
-## Notas para Claude Code
+## Notas para mantenimiento
 - No hay tests automatizados conocidos; verificación es manual en el navegador.
 - El admin login es `admin` (ya estoy logueado en cookies; si trabajás en otro
   entorno, pediremos credenciales aparte — no las pegues en el repo).

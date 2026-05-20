@@ -1,5 +1,5 @@
-# ===== Claude Code local state (NOT para el repo) =====
-# Contiene worktrees efímeros y settings.local.json.
+# ===== Estado local del asistente de codigo (NOT para el repo) =====
+# Contiene worktrees efimeros y settings.local.json.
 .claude/
 
 # ===== Python / Django =====

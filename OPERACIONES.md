@@ -388,7 +388,22 @@ restart-app
 
 ---
 
-## 10. Contactos y referencias
+## 10. Setup al clonar el repo en una máquina nueva
+
+Después de `git clone`, activá el hook que valida los mensajes de commit:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Esto rechaza commits que incluyan `Co-Authored-By:` a herramientas AI
+(política definida en `CLAUDE.md`). Sin este paso, el hook no corre
+porque vive en `.githooks/` versionado, no en `.git/hooks/` que no se
+clona.
+
+---
+
+## 11. Contactos y referencias
 
 - **Dominio**: ideasboutique.cl (DNS gestionado en NIC.cl o Cloudflare según corresponda)
 - **VPS**: Hetzner Cloud — [console.hetzner.cloud](https://console.hetzner.cloud)

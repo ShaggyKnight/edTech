@@ -143,11 +143,12 @@ class Command(BaseCommand):
         return fam
 
     def _get_tienda_default(self):
-        """Primera tienda activa marcada como ecommerce (o cualquiera activa)."""
+        """Primera tienda activa — donde dejar el stock inicial."""
         from bodega.models import Tienda
-        # Prioridad: ecommerce activa, despues cualquier activa.
-        return (Tienda.objects.filter(activa=True, es_ecommerce=True).first()
-                or Tienda.objects.filter(activa=True).first())
+        # Si despues necesitamos diferenciar entre tienda fisica y ecommerce,
+        # podemos agregar un campo es_ecommerce a Tienda. Por ahora, cualquier
+        # tienda activa.
+        return Tienda.objects.filter(activa=True).first()
 
     def _procesar(self, entry, familia, update_precios, con_stock, tienda,
                   cantidad_stock, stats):

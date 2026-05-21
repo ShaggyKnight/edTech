@@ -121,6 +121,57 @@ class Producto(models.Model):
                   'vive a nivel de variante; este campo solo se usa para '
                   'productos sin variantes (ej. perfumes).',
     )
+
+    # ── Metadata para perfumeria ──────────────────────────────────────
+    # Campos opcionales que solo aplican a la familia "Perfumes". Los
+    # productos de uniformes los dejan vacios. Si en el futuro hay otras
+    # familias con specs propios (ej. cosmetica), se replican aca o se
+    # separan a un modelo dedicado.
+
+    GENERO_MUJER = 'mujer'
+    GENERO_HOMBRE = 'hombre'
+    GENERO_UNISEX = 'unisex'
+    GENEROS = [
+        (GENERO_MUJER, 'Mujer'),
+        (GENERO_HOMBRE, 'Hombre'),
+        (GENERO_UNISEX, 'Unisex'),
+    ]
+
+    CONCENTRACION_EDP = 'EDP'
+    CONCENTRACION_EDT = 'EDT'
+    CONCENTRACION_EDC = 'EDC'
+    CONCENTRACION_BODY = 'BODY'
+    CONCENTRACION_SET = 'SET'
+    CONCENTRACIONES = [
+        (CONCENTRACION_EDP, 'Eau de Parfum (EDP)'),
+        (CONCENTRACION_EDT, 'Eau de Toilette (EDT)'),
+        (CONCENTRACION_EDC, 'Eau de Cologne (EDC)'),
+        (CONCENTRACION_BODY, 'Body Spray'),
+        (CONCENTRACION_SET, 'Set / Estuche'),
+    ]
+
+    marca = models.CharField(max_length=80, blank=True, db_index=True)
+    concentracion = models.CharField(
+        max_length=10, blank=True, choices=CONCENTRACIONES,
+        help_text='Solo para perfumeria. Vacio en otras familias.',
+    )
+    medida_ml = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Solo para liquidos (perfumes). Vacio en otras familias.',
+    )
+    familia_olfativa = models.CharField(
+        max_length=80, blank=True, db_index=True,
+        help_text='Ej: "Oriental Gourmand", "Floral Frutal". Solo perfumes.',
+    )
+    notas_clave = models.CharField(
+        max_length=300, blank=True,
+        help_text='Notas olfativas separadas por " · " (ej. "Rosa · Vainilla · Sandalo").',
+    )
+    genero = models.CharField(
+        max_length=10, blank=True, choices=GENEROS,
+        help_text='Solo para perfumeria. Permite filtros mujer/hombre/unisex.',
+    )
+
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)
 

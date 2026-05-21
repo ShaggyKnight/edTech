@@ -79,7 +79,8 @@ class MockEmissorTests(TestCase):
 
     def test_emitir_si_corresponde_persiste_folio(self):
         recibo = self._recibo()
-        with self.settings(DTE_EMISSOR='mock'):
+        with self.settings(DTE_EMISSOR='mock',
+                           DTE_CANALES_HABILITADOS=['presencial', 'online']):
             result = emitir_si_corresponde(recibo)
         self.assertIsNotNone(result)
         recibo.refresh_from_db()
@@ -93,7 +94,8 @@ class MockEmissorTests(TestCase):
             total=Decimal('10000'),
             estado=ReciboVenta.ESTADO_PENDIENTE,
         )
-        with self.settings(DTE_EMISSOR='mock'):
+        with self.settings(DTE_EMISSOR='mock',
+                           DTE_CANALES_HABILITADOS=['presencial', 'online']):
             self.assertIsNone(emitir_si_corresponde(recibo))
         recibo.refresh_from_db()
         self.assertEqual(recibo.dte_folio, '')
@@ -103,7 +105,45 @@ class MockEmissorTests(TestCase):
         recibo = self._recibo()
         recibo.dte_folio = 'M00000001'
         recibo.save()
-        with self.settings(DTE_EMISSOR='mock'):
+        with self.settings(DTE_EMISSOR='mock',
+                           DTE_CANALES_HABILITADOS=['presencial', 'online']):
+            self.assertIsNone(emitir_si_corresponde(recibo))
+
+    # ─── Filtro por canal (estrategia "online primero") ─────────────────
+
+    def test_no_emite_si_canal_no_esta_habilitado(self):
+        """Default DTE_CANALES_HABILITADOS=['online']: presencial NO emite."""
+        recibo = self._recibo()  # canal=PRESENCIAL
+        with self.settings(DTE_EMISSOR='mock',
+                           DTE_CANALES_HABILITADOS=['online']):
+            self.assertIsNone(emitir_si_corresponde(recibo))
+        recibo.refresh_from_db()
+        self.assertEqual(recibo.dte_folio, '')
+
+    def test_emite_si_canal_online_habilitado(self):
+        """Default DTE_CANALES_HABILITADOS=['online']: online SI emite."""
+        recibo = ReciboVenta.objects.create(
+            canal=ReciboVenta.CANAL_ONLINE,
+            tienda=self.tienda,
+            total=Decimal('10000'),
+            estado=ReciboVenta.ESTADO_PAGADO,
+        )
+        with self.settings(DTE_EMISSOR='mock',
+                           DTE_CANALES_HABILITADOS=['online']):
+            result = emitir_si_corresponde(recibo)
+        self.assertIsNotNone(result)
+        recibo.refresh_from_db()
+        self.assertTrue(recibo.dte_folio)
+
+    def test_canales_habilitados_vacio_no_emite_nada(self):
+        """Si la lista esta vacia, ni online ni presencial emiten."""
+        recibo = ReciboVenta.objects.create(
+            canal=ReciboVenta.CANAL_ONLINE,
+            tienda=self.tienda,
+            total=Decimal('10000'),
+            estado=ReciboVenta.ESTADO_PAGADO,
+        )
+        with self.settings(DTE_EMISSOR='mock', DTE_CANALES_HABILITADOS=[]):
             self.assertIsNone(emitir_si_corresponde(recibo))
 
     def test_falla_de_emissor_no_rompe_y_no_guarda(self):
@@ -114,7 +154,8 @@ class MockEmissorTests(TestCase):
             def emitir(self, r):
                 raise DteEmissorError('servicio caído')
 
-        with patch('pos.dte.get_emissor', return_value=_Boom()):
+        with patch('pos.dte.get_emissor', return_value=_Boom()), \
+                self.settings(DTE_CANALES_HABILITADOS=['presencial', 'online']):
             result = emitir_si_corresponde(recibo)
         self.assertIsNone(result)
         recibo.refresh_from_db()
@@ -123,7 +164,14 @@ class MockEmissorTests(TestCase):
         self.assertEqual(recibo.estado, ReciboVenta.ESTADO_PAGADO)
 
 
-@override_settings(PAYMENT_GATEWAY='mock', DTE_EMISSOR='mock')
+@override_settings(
+    PAYMENT_GATEWAY='mock',
+    DTE_EMISSOR='mock',
+    # Habilitamos ambos canales en este test suite: queremos validar que el
+    # pipeline `procesar_venta` SI emite cuando todo esta configurado para
+    # emitir. El test del filtro por canal va en MockEmissorTests.
+    DTE_CANALES_HABILITADOS=['presencial', 'online'],
+)
 class ProcesarVentaConDteTests(TestCase):
     """Smoke: procesar_venta integra la emisión de DTE."""
 

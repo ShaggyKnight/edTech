@@ -220,11 +220,25 @@ def emitir_si_corresponde(recibo: ReciboVenta) -> Optional[DteResult]:
     Política de error: NO romper la venta si la emisión falla. Se loggea y
     se devuelve None — el recibo queda pagado pero sin folio, el dueño
     puede reemitir manualmente desde el admin más tarde.
+
+    Política de canal: solo emite si `recibo.canal` está en
+    `settings.DTE_CANALES_HABILITADOS`. Default `['online']`: las ventas
+    online sí emiten boleta SII, las del POS presencial NO (hasta que se
+    integre la máquina TUU en la tienda física).
     """
     if recibo.estado != ReciboVenta.ESTADO_PAGADO:
         return None
     if recibo.dte_folio:
         return None  # ya emitido (idempotencia)
+
+    canales_ok = getattr(settings, 'DTE_CANALES_HABILITADOS', ['online'])
+    if recibo.canal not in canales_ok:
+        log.info(
+            'DTE no emitido: canal "%s" no esta en DTE_CANALES_HABILITADOS=%s '
+            '(recibo #%s queda pagado pero sin folio SII).',
+            recibo.canal, canales_ok, recibo.pk,
+        )
+        return None
 
     emissor = get_emissor()
     if emissor is None:

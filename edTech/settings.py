@@ -39,6 +39,12 @@ env = environ.Env(
     OPENFACTURA_API_KEY=(str, ''),
     OPENFACTURA_BASE_URL=(str, 'https://api.haulmer.com'),
     OPENFACTURA_RUT_EMISOR=(str, ''),
+    # Lista de canales (separados por coma) que SI generan boleta SII.
+    # Estrategia: arrancamos solo con online. Cuando la tienda fisica este
+    # operativa y la maquina TUU integrada, agregar `presencial` al .env.
+    # Mientras esta vacio, los recibos del canal NO emiten DTE — pasan
+    # por todo el flujo de venta pero sin folio SII.
+    DTE_CANALES_HABILITADOS=(list, ['online']),
     # Sprint 3 · SEO + ops (opcionales, no-op si vacíos).
     SITE_URL=(str, ''),
     OWNER_NOTIFICATION_EMAIL=(str, ''),
@@ -310,6 +316,9 @@ DTE_EMISSOR = env('DTE_EMISSOR')
 OPENFACTURA_API_KEY = env('OPENFACTURA_API_KEY')
 OPENFACTURA_BASE_URL = env('OPENFACTURA_BASE_URL')
 OPENFACTURA_RUT_EMISOR = env('OPENFACTURA_RUT_EMISOR')
+# Canales habilitados para emision SII. Hoy solo `online` — la tienda
+# fisica + POS presencial NO emite hasta que se integre TUU.
+DTE_CANALES_HABILITADOS = env('DTE_CANALES_HABILITADOS')
 
 # Sprint 3 · 3.5/3.9 — SEO + notificaciones + analytics.
 SITE_URL = env('SITE_URL')                              # ej: https://ideasboutique.cl

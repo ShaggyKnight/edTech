@@ -96,6 +96,11 @@ class ProductoVarianteForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         instance = kwargs.get('instance')
 
+        # SKU es opcional: si queda vacio, se autogenera en save() desde
+        # marca + nombre del producto + valores seleccionados.
+        if 'sku' in self.fields:
+            self.fields['sku'].required = False
+
         for nombre in ATRIBUTOS_VARIANTES:
             try:
                 attr = Atributo.objects.get(nombre=nombre)
@@ -133,7 +138,8 @@ class ProductoVarianteForm(forms.ModelForm):
             }),
         }
         help_texts = {
-            'sku': 'Código único. Ej: BUZO-SFJ-M, YARA-30ML-EDP.',
+            'sku': 'Código único. Vacío = se genera automático desde '
+                   'marca + nombre + valores (ej. YARA-LATTAFA-100ML-EDP).',
             'precio_override': 'Si esta variante tiene precio distinto al producto base. '
                                'Vacío = usa el precio del producto.',
             'codigo_barras': 'Si la variante tiene EAN-13 de fábrica, ingresalo. '
@@ -142,6 +148,7 @@ class ProductoVarianteForm(forms.ModelForm):
 
     def save(self, commit=True, producto=None):
         from catalogo.barcode import generar_codigo_interno
+        from catalogo.sku import sugerir_desde_variante
         v = super().save(commit=False)
         if producto:
             v.producto = producto
@@ -158,11 +165,14 @@ class ProductoVarianteForm(forms.ModelForm):
                 val = self.cleaned_data.get(key)
                 if val:
                     v.valores.add(val)
-            # Autogenerar codigo si quedó vacio. Hace falta el pk asi que
-            # va despues del save().
+            # Autogenerar SKU si quedó vacío. Hace falta el M2M de valores
+            # ya guardado, por eso va despues del v.valores.add().
+            if not v.sku:
+                v.sku = sugerir_desde_variante(v)
+            # Autogenerar codigo de barras si quedó vacio (también necesita pk).
             if not v.codigo_barras:
                 v.codigo_barras = generar_codigo_interno('v', v.pk)
-                v.save(update_fields=['codigo_barras'])
+            v.save(update_fields=['sku', 'codigo_barras'])
         return v
 
 

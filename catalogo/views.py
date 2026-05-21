@@ -1,13 +1,13 @@
 """Vistas del app catalogo.
 
-Por ahora solo el endpoint AJAX que el admin usa para el boton
-"Generar SKU" en el form de ProductoVariante. La parte publica del
-catalogo (catalogo, PDP, etc.) vive en `ecommerce`.
+Por ahora solo el endpoint AJAX que el admin Django y el backoffice de
+bodega usan para el boton "Generar SKU" en el form de variante.
+La parte publica del catalogo (catalogo, PDP, etc.) vive en `ecommerce`.
 """
 
 import json
 
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -15,8 +15,19 @@ from catalogo.models import Producto, ValorAtributo
 from catalogo.sku import generar_sku_unico
 
 
+def _puede_generar_sku(user) -> bool:
+    """Mismo criterio que el backoffice de bodega: admin, bodeguero o
+    superuser. Cajeros no — ellos no crean variantes."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user.groups.filter(name__in=['admin', 'bodeguero']).exists()
+
+
 @require_POST
-@staff_member_required
+@login_required
+@user_passes_test(_puede_generar_sku, login_url='login')
 def admin_sugerir_sku(request):
     """Construye un SKU desde producto + valores de atributo seleccionados.
 

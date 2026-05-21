@@ -25,8 +25,15 @@
         {% endif %}
 
         <div class="bo-field">
-          <label for="{{ form.sku.id_for_label }}">SKU *</label>
-          {{ form.sku }}
+          <label for="{{ form.sku.id_for_label }}">SKU</label>
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <div style="flex:1;">{{ form.sku }}</div>
+            <button type="button" class="bo-btn" id="bo-sku-generar"
+                    data-producto-id="{{ producto.pk }}"
+                    title="Construye un SKU desde marca + nombre del producto + valores seleccionados">
+              Generar
+            </button>
+          </div>
           {% if form.sku.help_text %}
             <small style="color:var(--bo-muted);font-size:11px;">{{ form.sku.help_text }}</small>
           {% endif %}
@@ -77,4 +84,69 @@
       <a href="{% url 'bodega:variantes' producto.pk %}" class="bo-btn">Cancelar</a>
     </div>
   </form>
+
+  {% comment %}
+    Boton "Generar" del SKU: pide al endpoint AJAX que arme el codigo
+    a partir del producto + valores seleccionados, y lo llena en el
+    input. Si el cajero deja vacio y guarda, el form lo autogenera
+    igual en .save() — el boton es para ver el SKU antes de guardar.
+  {% endcomment %}
+  <script>
+  (function () {
+    var btn = document.getElementById('bo-sku-generar');
+    if (!btn) return;
+    var skuInput = document.getElementById('{{ form.sku.id_for_label }}');
+    var productoId = btn.dataset.productoId;
+    var endpointUrl = "{% url 'catalogo:admin_sugerir_sku' %}";
+
+    function valoresSeleccionados() {
+      // Recolecta todos los selects de atributos (campos attr_<id>) y
+      // devuelve los pk de los ValorAtributo seleccionados.
+      var ids = [];
+      document.querySelectorAll('select[name^="attr_"]').forEach(function (sel) {
+        if (sel.value) ids.push(parseInt(sel.value, 10));
+      });
+      return ids;
+    }
+
+    function getCookie(name) {
+      var v = ('; ' + document.cookie).split('; ' + name + '=');
+      if (v.length === 2) return v.pop().split(';').shift();
+      return '';
+    }
+
+    btn.addEventListener('click', async function () {
+      btn.disabled = true;
+      var original = btn.textContent;
+      btn.textContent = 'Generando…';
+      try {
+        var resp = await fetch(endpointUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({
+            producto_id: parseInt(productoId, 10),
+            valor_ids: valoresSeleccionados(),
+            excluir_pk: null,
+          }),
+        });
+        var data = await resp.json();
+        if (data.sku) {
+          skuInput.value = data.sku;
+          skuInput.style.background = '#FFF3C4';
+          setTimeout(function () { skuInput.style.background = ''; }, 800);
+        } else {
+          alert('No se pudo generar el SKU: ' + (data.error || 'error desconocido'));
+        }
+      } catch (e) {
+        alert('Error al generar el SKU: ' + e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    });
+  })();
+  </script>
 {% endblock %}

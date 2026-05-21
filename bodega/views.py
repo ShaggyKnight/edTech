@@ -879,10 +879,19 @@ def producto_editar(request, pk):
             o.estado_visual = _estado_oferta(o, ahora)
             ofertas.append(o)
 
+    # Variantes del producto, con sus valores precargados para evitar
+    # N+1 al renderizar cada fila.
+    variantes = list(
+        p.variantes.all()
+        .prefetch_related('valores__atributo')
+        .order_by('-activa', 'sku')
+    )
+
     return render(request, 'bodega/producto_form.html', {
         'form': form, 'modo': 'editar', 'producto': p,
         'titulo': f'Editar — {p.nombre}',
         'ofertas': ofertas,
+        'variantes': variantes,
         'puede_gestionar_ofertas': _puede_gestionar_ofertas(request.user),
     })
 

@@ -139,72 +139,169 @@
   </form>
 
   {% comment %}
-    Panel inline de ofertas que afectan a este producto. Va fuera del
-    form de arriba para que los botones de acción (crear oferta, pausar,
-    borrar) no envíen accidentalmente el form del producto. Solo visible
-    para admin/superuser — el bodeguero no gestiona ofertas.
+    Pestañas con tablas de Variantes y Ofertas. Fuera del form de arriba
+    para que sus botones no envien accidentalmente el form del producto.
+    Variantes las ve cualquiera con perm de reponer; Ofertas solo
+    admin/superuser. La tab activa por default es la primera disponible.
   {% endcomment %}
-  {% if modo == 'editar' and puede_gestionar_ofertas %}
-    <div class="bo-card" style="margin-top:24px;">
-      <div class="bo-card-head" style="display:flex;justify-content:space-between;align-items:center;">
-        <h3>Ofertas que afectan a este producto</h3>
-        <a href="{% url 'bodega:oferta_nueva' %}?producto={{ producto.pk }}"
-           class="bo-btn bo-btn-sm bo-btn-primary">+ Nueva oferta</a>
+  {% if modo == 'editar' %}
+    <div class="bo-card" style="margin-top:24px;"
+         x-data="{ tab: '{% if producto.tiene_variantes %}variantes{% elif puede_gestionar_ofertas %}ofertas{% else %}variantes{% endif %}' }">
+      <div class="bo-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--bo-line);padding:0 16px;">
+        <button type="button" class="bo-tab"
+                :class="{ 'bo-tab-active': tab === 'variantes' }"
+                @click="tab = 'variantes'"
+                style="padding:14px 18px;background:none;border:0;border-bottom:2px solid transparent;cursor:pointer;font-size:14px;font-weight:500;color:var(--bo-muted);">
+          Variantes
+          <span class="bo-badge bo-badge-muted" style="margin-left:6px;">{{ variantes|length }}</span>
+        </button>
+        {% if puede_gestionar_ofertas %}
+          <button type="button" class="bo-tab"
+                  :class="{ 'bo-tab-active': tab === 'ofertas' }"
+                  @click="tab = 'ofertas'"
+                  style="padding:14px 18px;background:none;border:0;border-bottom:2px solid transparent;cursor:pointer;font-size:14px;font-weight:500;color:var(--bo-muted);">
+            Ofertas
+            <span class="bo-badge bo-badge-muted" style="margin-left:6px;">{{ ofertas|length }}</span>
+          </button>
+        {% endif %}
       </div>
-      {% if ofertas %}
-        <table class="bo-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Aplica a</th>
-              <th class="num">Descuento</th>
-              <th>Vigencia</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for o in ofertas %}
-              <tr {% if not o.activa %}style="opacity:.55;"{% endif %}>
-                <td><strong>{{ o.nombre }}</strong></td>
-                <td>
-                  {% if o.variante %}
-                    <span style="font-size:11px;color:var(--bo-muted);">SKU {{ o.variante.sku }}</span>
-                  {% else %}
-                    <span style="font-size:11px;color:var(--bo-muted);">Todas las variantes</span>
-                  {% endif %}
-                </td>
-                <td class="num">
-                  {% if o.tipo == 'porcentaje' %}−{{ o.valor|floatformat:0 }}%{% else %}−${{ o.valor|floatformat:0 }}{% endif %}
-                </td>
-                <td style="font-size:12px;">
-                  {{ o.fecha_inicio|date:"d-m-Y" }} → {{ o.fecha_fin|date:"d-m-Y" }}
-                </td>
-                <td>
-                  {% if o.estado_visual == 'vigente' %}
-                    <span class="bo-badge bo-badge-success">Vigente</span>
-                  {% elif o.estado_visual == 'programada' %}
-                    <span class="bo-badge bo-badge-info">Programada</span>
-                  {% elif o.estado_visual == 'vencida' %}
-                    <span class="bo-badge bo-badge-muted">Vencida</span>
-                  {% else %}
-                    <span class="bo-badge bo-badge-warning">Pausada</span>
-                  {% endif %}
-                </td>
-                <td>
-                  <a href="{% url 'bodega:oferta_editar' o.pk %}" class="bo-btn bo-btn-sm">Editar</a>
-                </td>
+
+      {# ─── Tab: Variantes ─────────────────────────────────────────── #}
+      <div x-show="tab === 'variantes'" x-cloak>
+        <div class="bo-card-head" style="display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;">Variantes de este producto</h3>
+          <div style="display:flex;gap:6px;">
+            <a href="{% url 'bodega:variantes' producto.pk %}" class="bo-btn bo-btn-sm">Ir a la lista completa</a>
+            <a href="{% url 'bodega:variante_nueva' producto.pk %}" class="bo-btn bo-btn-sm bo-btn-primary">+ Nueva variante</a>
+          </div>
+        </div>
+        {% if variantes %}
+          <table class="bo-table">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Valores</th>
+                <th class="num">Precio override</th>
+                <th>Codigo de barras</th>
+                <th>Estado</th>
+                <th></th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      {% else %}
-        <div class="bo-card-body" style="color:var(--bo-muted);">
-          Este producto no tiene ofertas todavía.
-          <a href="{% url 'bodega:oferta_nueva' %}?producto={{ producto.pk }}"
-             style="color:var(--bo-primary-2);font-weight:600;">Crear la primera →</a>
+            </thead>
+            <tbody>
+              {% for v in variantes %}
+                <tr {% if not v.activa %}style="opacity:.55;"{% endif %}>
+                  <td><strong>{{ v.sku }}</strong></td>
+                  <td style="font-size:12px;color:var(--bo-muted);">
+                    {% for val in v.valores.all %}
+                      <span class="bo-badge bo-badge-muted">{{ val.atributo.nombre }}: {{ val.valor }}</span>
+                    {% empty %}
+                      <span style="color:var(--bo-muted);">—</span>
+                    {% endfor %}
+                  </td>
+                  <td class="num">
+                    {% if v.precio_override %}${{ v.precio_override|floatformat:0 }}{% else %}<span style="color:var(--bo-muted);">heredado</span>{% endif %}
+                  </td>
+                  <td style="font-size:11px;color:var(--bo-muted);">{{ v.codigo_barras|default:"—" }}</td>
+                  <td>
+                    {% if v.activa %}
+                      <span class="bo-badge bo-badge-success">Activa</span>
+                    {% else %}
+                      <span class="bo-badge bo-badge-muted">Inactiva</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'bodega:variante_editar' producto.pk v.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="bo-card-body" style="color:var(--bo-muted);">
+            {% if producto.tiene_variantes %}
+              Marcaste <em>"tiene variantes"</em> pero todavía no agregaste ninguna.
+              <a href="{% url 'bodega:variante_nueva' producto.pk %}"
+                 style="color:var(--bo-primary-2);font-weight:600;">Crear la primera →</a>
+            {% else %}
+              Este producto no usa variantes. Para vender en distintos tamanos
+              o concentraciones, tickeá <em>"Tiene variantes"</em> arriba.
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      {# ─── Tab: Ofertas (solo admin) ──────────────────────────────── #}
+      {% if puede_gestionar_ofertas %}
+        <div x-show="tab === 'ofertas'" x-cloak>
+          <div class="bo-card-head" style="display:flex;justify-content:space-between;align-items:center;">
+            <h3 style="margin:0;">Ofertas que afectan a este producto</h3>
+            <a href="{% url 'bodega:oferta_nueva' %}?producto={{ producto.pk }}"
+               class="bo-btn bo-btn-sm bo-btn-primary">+ Nueva oferta</a>
+          </div>
+          {% if ofertas %}
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Aplica a</th>
+                  <th class="num">Descuento</th>
+                  <th>Vigencia</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for o in ofertas %}
+                  <tr {% if not o.activa %}style="opacity:.55;"{% endif %}>
+                    <td><strong>{{ o.nombre }}</strong></td>
+                    <td>
+                      {% if o.variante %}
+                        <span style="font-size:11px;color:var(--bo-muted);">SKU {{ o.variante.sku }}</span>
+                      {% else %}
+                        <span style="font-size:11px;color:var(--bo-muted);">Todas las variantes</span>
+                      {% endif %}
+                    </td>
+                    <td class="num">
+                      {% if o.tipo == 'porcentaje' %}−{{ o.valor|floatformat:0 }}%{% else %}−${{ o.valor|floatformat:0 }}{% endif %}
+                    </td>
+                    <td style="font-size:12px;">
+                      {{ o.fecha_inicio|date:"d-m-Y" }} → {{ o.fecha_fin|date:"d-m-Y" }}
+                    </td>
+                    <td>
+                      {% if o.estado_visual == 'vigente' %}
+                        <span class="bo-badge bo-badge-success">Vigente</span>
+                      {% elif o.estado_visual == 'programada' %}
+                        <span class="bo-badge bo-badge-info">Programada</span>
+                      {% elif o.estado_visual == 'vencida' %}
+                        <span class="bo-badge bo-badge-muted">Vencida</span>
+                      {% else %}
+                        <span class="bo-badge bo-badge-warning">Pausada</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'bodega:oferta_editar' o.pk %}" class="bo-btn bo-btn-sm">Editar</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div class="bo-card-body" style="color:var(--bo-muted);">
+              Este producto no tiene ofertas todavía.
+              <a href="{% url 'bodega:oferta_nueva' %}?producto={{ producto.pk }}"
+                 style="color:var(--bo-primary-2);font-weight:600;">Crear la primera →</a>
+            </div>
+          {% endif %}
         </div>
       {% endif %}
     </div>
+
+    {# Estilo del tab activo. Lo dejamos inline aca para no obligar a tocar
+       el CSS global por una sola pantalla. Acentua color + borde inferior. #}
+    <style>
+      .bo-tab:hover { color: var(--bo-ink); }
+      .bo-tab-active { color: var(--bo-ink) !important; border-bottom-color: var(--bo-primary, #C9A96E) !important; }
+      [x-cloak] { display: none !important; }
+    </style>
   {% endif %}
 {% endblock %}

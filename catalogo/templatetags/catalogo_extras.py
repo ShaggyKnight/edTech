@@ -48,3 +48,16 @@ def imagen_producto(producto):
         nombre_fam = producto.familia.nombre
     nombre_prod = producto.nombre if producto else ''
     return static(_svg_para_familia(nombre_fam, nombre_prod))
+
+
+@register.filter
+def split(value, separator='·'):
+    """Divide un string por `separator` y devuelve la lista, con cada
+    item ya .strip()-eado. Ej: "Rosa · Vainilla" → ["Rosa", "Vainilla"].
+
+    Útil para los chips de notas olfativas en el PDP de perfumes, que se
+    almacenan en una sola CharField con separador " · ".
+    """
+    if not value:
+        return []
+    return [p.strip() for p in str(value).split(separator) if p.strip()]

@@ -74,7 +74,10 @@
     </div>
 
     <div class="pdp-info">
-      <div class="pdp-school">{{ producto.familia.nombre }}</div>
+      <div class="pdp-school">
+        {{ producto.familia.nombre }}
+        {% if producto.marca %} · <em style="font-style:italic;color:var(--vino);">{{ producto.marca }}</em>{% endif %}
+      </div>
       <h1>{{ producto.nombre }}</h1>
 
       {% if feature_resenas %}
@@ -132,6 +135,41 @@
 
         {% if producto.descripcion %}
           <p style="color: var(--ink-60); margin: 16px 0;">{{ producto.descripcion|linebreaksbr }}</p>
+        {% endif %}
+
+        {% comment %}
+          Bloque de perfumería: familia olfativa + notas clave. Solo se
+          renderiza si el producto tiene esos datos (vacío para uniformes
+          y otros tipos). Las notas se separan por " · " en el JSON; las
+          partimos a chips para que sean escaneables.
+        {% endcomment %}
+        {% if producto.familia_olfativa or producto.notas_clave %}
+          <div class="pdp-perfume-meta" style="margin: 16px 0; padding: 14px 16px; background: var(--cream-2); border-radius: 10px;">
+            {% if producto.familia_olfativa %}
+              <div style="margin-bottom: 10px;">
+                <span style="font-size: 11px; color: var(--ink-60); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; display:block; margin-bottom:4px;">
+                  Familia olfativa
+                </span>
+                <span class="bo-badge" style="background: var(--gold); color: var(--ink); padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                  {{ producto.familia_olfativa }}
+                </span>
+              </div>
+            {% endif %}
+            {% if producto.notas_clave %}
+              <div>
+                <span style="font-size: 11px; color: var(--ink-60); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; display:block; margin-bottom:6px;">
+                  Notas clave
+                </span>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  {% for nota in producto.notas_clave|split:"·" %}
+                    <span style="background: #fff; border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; font-size: 12px; color: var(--ink); font-family: var(--serif, Georgia, serif); font-style: italic;">
+                      {{ nota }}
+                    </span>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
         {% endif %}
 
         <form method="post" action="{% url 'ecommerce:agregar' %}" id="pdp-form"

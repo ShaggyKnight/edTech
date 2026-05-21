@@ -1,0 +1,56 @@
+{% extends 'emails/_base.html' %}
+{% load humanize %}
+
+{% block titulo %}✦ Nueva venta online #{{ recibo.pk }}{% endblock %}
+{% block preheader %}Entró pedido #{{ recibo.pk }} · ${{ recibo.total|floatformat:0|intcomma }} · {{ recibo.cliente_nombre }}{% endblock %}
+
+{% block heading %}Entró una venta online ✦{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 18px;font-size:16px;">Hola Blanca, acaba de entrar el pedido <strong>#{{ recibo.pk }}</strong> por <strong style="color:#7A1E2B;">${{ recibo.total|floatformat:0|intcomma }}</strong>.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:8px 0 20px;">
+  <tr><td style="padding:18px 22px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;padding-bottom:8px;">Cliente</td>
+        <td align="right" style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;padding-bottom:8px;">Total</td>
+      </tr>
+      <tr>
+        <td style="font-size:16px;font-weight:600;">{{ recibo.cliente_nombre|default:"—" }}</td>
+        <td align="right" style="font-family:Georgia,serif;font-size:24px;font-weight:600;">${{ recibo.total|floatformat:0|intcomma }}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="font-size:13px;color:#6a6a6a;padding-top:4px;">
+          {{ recibo.cliente_email|default:"sin email" }}{% if recibo.cliente_telefono %} · {{ recibo.cliente_telefono }}{% endif %}
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:14px 22px;border-top:1px solid #E5DCC8;">
+    <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;margin-bottom:8px;">Productos</div>
+    {% for det in recibo.detalles.all %}
+    <div style="font-size:14px;line-height:1.5;margin-bottom:4px;"><strong>{{ det.cantidad }}×</strong> {{ det.descripcion }}</div>
+    {% endfor %}
+  </td></tr>
+  {% if recibo.cliente_direccion %}
+  <tr><td style="padding:14px 22px;border-top:1px solid #E5DCC8;">
+    <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;margin-bottom:6px;">Envío</div>
+    <div style="font-size:14px;line-height:1.5;color:#1F1F1F;">{{ recibo.cliente_direccion|linebreaksbr }}</div>
+  </td></tr>
+  {% endif %}
+</table>
+
+<p style="font-size:14px;color:#6a6a6a;">El pago ya está confirmado. Prepará el pedido cuando puedas.</p>
+{% endblock %}
+
+{% block cta %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+<td style="background:#7A1E2B;border-radius:999px;">
+  <a href="{{ admin_url }}" style="display:inline-block;color:#F5EFE4;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 28px;letter-spacing:0.02em;">
+    Abrir en el panel →
+  </a>
+</td></tr></table>
+{% endblock %}
+
+{% block footer_legal %}Este correo es interno — solo lo recibís vos como dueña del negocio.{% endblock %}

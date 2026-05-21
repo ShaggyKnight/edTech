@@ -1,0 +1,43 @@
+{% extends 'emails/_base.html' %}
+
+{% block titulo %}¿Está empezando a quedar chico? · Ideas Boutique{% endblock %}
+{% block preheader %}Llegó febrero. Te ayudamos a renovar el uniforme.{% endblock %}
+
+{% block heading %}Llegó <em style="color:#8B7A5A;font-style:italic;">febrero</em>. ¿Estás lista para marzo?{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 18px;">Hola {{ cliente_nombre }}, todos los años por estas fechas miramos los uniformes y nos preguntamos: <em>¿le sigue quedando?</em></p>
+
+<p style="margin:0 0 18px;">El año pasado le compraste a <strong>{{ hijos|length }} hijo{{ hijos|length|pluralize:"s" }}</strong>:</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:8px 0 20px;">
+  {% for hijo in hijos %}
+  <tr><td style="padding:14px 22px;{% if not forloop.last %}border-bottom:1px solid #E5DCC8;{% endif %}">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td>
+        <strong style="font-family:Georgia,serif;font-size:18px;">{{ hijo.nombre }}</strong><br>
+        <span style="font-size:13px;color:#6a6a6a;">
+          {% if hijo.talla_buzo %}Buzo {{ hijo.talla_buzo }} · {% endif %}{% if hijo.talla_polera %}Polera {{ hijo.talla_polera }} · {% endif %}{% if hijo.talla_chaleco %}Chaleco {{ hijo.talla_chaleco }}{% endif %}
+        </span>
+      </td>
+      <td align="right" style="font-size:12px;color:#8B7A5A;font-style:italic;">{{ hijo.colegio }}</td>
+    </tr></table>
+  </td></tr>
+  {% endfor %}
+</table>
+
+<p style="margin:0 0 18px;font-size:14px;color:#6a6a6a;">Si subió un talle, actualizalo desde tu cuenta y te dejamos el set listo. {% if descuento_segundo_hijo %}<strong style="color:#7A1E2B;">Como tenés más de un hijo, aprovechás 10% de descuento en el segundo set.</strong>{% endif %}</p>
+{% endblock %}
+
+{% block cta %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+<td style="background:#0E0E0E;border-radius:999px;">
+  <a href="{{ familia_url }}" style="display:inline-block;color:#C9A96E;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;letter-spacing:0.02em;">
+    Actualizar talles →
+  </a>
+</td></tr></table>
+
+<p style="text-align:center;margin:18px 0 0;font-size:13px;color:#6a6a6a;">
+  O escribinos por WhatsApp y te preparamos todo.
+</p>
+{% endblock %}

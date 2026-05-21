@@ -1,0 +1,65 @@
+{% extends 'emails/_base.html' %}
+{% load humanize %}
+
+{% block titulo %}Boleta #{{ recibo.pk }} · Ideas Boutique{% endblock %}
+{% block preheader %}Gracias por tu compra. Total ${{ recibo.total|floatformat:0|intcomma }} · Pedido #{{ recibo.pk }}.{% endblock %}
+
+{% block heading %}Gracias por tu compra, <em style="color:#8B7A5A;font-style:italic;">{{ recibo.cliente_nombre|default:"vecina/o" }}</em>.{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 14px;">Tu pedido <strong>#{{ recibo.pk }}</strong> quedó confirmado.{% if recibo.dte_url_pdf %} Adjuntamos tu boleta electrónica.{% endif %}</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:18px 0;">
+  <tr><td style="padding:18px 22px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;border-bottom:1px solid #E5DCC8;">Detalle del pedido</td></tr>
+  {% for det in recibo.detalles.all %}
+  <tr><td style="padding:12px 22px;border-bottom:1px solid #E5DCC8;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="font-size:14px;">{{ det.descripcion }}<br><span style="color:#6a6a6a;font-size:12px;">{{ det.cantidad }} × ${{ det.precio_unitario|floatformat:0|intcomma }}</span></td>
+        <td align="right" style="font-family:Georgia,serif;font-size:16px;font-weight:600;white-space:nowrap;">${% widthratio det.precio_unitario 1 det.cantidad %}</td>
+      </tr>
+    </table>
+  </td></tr>
+  {% endfor %}
+  {% if recibo.descuento %}
+  <tr><td style="padding:10px 22px;font-size:13px;color:#7A1E2B;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td>Descuentos aplicados</td>
+      <td align="right">−${{ recibo.descuento|floatformat:0|intcomma }}</td>
+    </tr></table>
+  </td></tr>
+  {% endif %}
+  <tr><td style="padding:16px 22px;background:#FBF7EE;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td style="font-size:14px;font-weight:600;">Total</td>
+      <td align="right" style="font-family:Georgia,serif;font-size:24px;font-weight:600;">${{ recibo.total|floatformat:0|intcomma }}</td>
+    </tr></table>
+  </td></tr>
+</table>
+
+<p style="margin:18px 0 0;font-size:14px;">Pagado con <strong>{{ recibo.payment_provider|default:"Webpay" }}</strong> el {{ recibo.creado|date:"d-m-Y \a \l\a\s H:i" }}.</p>
+{% endblock %}
+
+{% block cta %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+<td style="background:#0E0E0E;border-radius:999px;">
+  <a href="{{ recibo_url }}" style="display:inline-block;color:#C9A96E;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 28px;letter-spacing:0.02em;">
+    Ver mi pedido
+  </a>
+</td></tr></table>
+
+{% if recibo.dte_url_pdf %}
+<p style="text-align:center;margin:14px 0 0;font-size:13px;color:#6a6a6a;">
+  ¿Necesitás solo el PDF de la boleta? <a href="{{ recibo.dte_url_pdf }}" style="color:#8B7A5A;">Descargalo acá</a>.
+</p>
+{% endif %}
+{% endblock %}
+
+{% block footer_extra %}
+<tr><td style="padding:0 40px 28px;">
+  <div style="background:#FAF7F1;border-left:3px solid #C9A96E;padding:16px 20px;font-size:13px;color:#1F1F1F;line-height:1.6;border-radius:0 8px 8px 0;">
+    <strong style="font-family:Georgia,serif;font-size:15px;">¿Algo que ajustar?</strong><br>
+    Si compraste uniforme escolar, hacemos ajustes <strong>sin costo hasta marzo</strong>. Pasá por el local o escribinos por WhatsApp y te coordinamos.
+  </div>
+</td></tr>
+{% endblock %}

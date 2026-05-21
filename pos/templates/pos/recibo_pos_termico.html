@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+{% comment %}
+  Recibo POS imprimible térmico 80mm.
+  - Ancho fijo 80mm (302px @ 96dpi)
+  - Fuente monospace para alineación con columna de precios
+  - Sin imágenes pesadas (logo SVG inline)
+  - Margen impresión = 0
+  - Pensado para Star/Epson térmica USB
+  - Se abre con window.print() automático al cargar
+{% endcomment %}
+<head>
+<meta charset="utf-8">
+<title>Recibo #{{ recibo.pk }}</title>
+<style>
+  @page { size: 80mm auto; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    width: 80mm;
+    margin: 0;
+    padding: 4mm 3mm;
+    font-family: 'Menlo','Consolas','Courier New',monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #000;
+    background: white;
+  }
+  .logo { text-align: center; margin-bottom: 4mm; }
+  .logo svg { display: block; margin: 0 auto; }
+  .nombre {
+    font-family: Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    margin-top: 2mm;
+  }
+  .lema {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 4px;
+    margin-top: 1mm;
+    opacity: 0.85;
+  }
+  .head {
+    text-align: center;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 3mm;
+    margin-bottom: 3mm;
+    font-size: 10px;
+  }
+  .meta {
+    margin-bottom: 3mm;
+    font-size: 10.5px;
+  }
+  .meta .row { display: flex; justify-content: space-between; padding: 0.5mm 0; }
+  .meta .row b { font-weight: 700; }
+  .items { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2mm 0; margin: 2mm 0; }
+  .item { margin-bottom: 1.5mm; }
+  .item .desc { font-weight: 700; }
+  .item .sub {
+    display: flex;
+    justify-content: space-between;
+    padding-left: 2mm;
+    font-size: 10px;
+    color: #000;
+  }
+  .totales { margin-top: 3mm; }
+  .totales .row { display: flex; justify-content: space-between; padding: 0.8mm 0; }
+  .totales .row.descuento { color: #000; font-style: italic; }
+  .totales .row.total {
+    border-top: 1px dashed #000;
+    padding-top: 1.5mm;
+    margin-top: 1mm;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .pago {
+    margin-top: 3mm;
+    padding-top: 2mm;
+    border-top: 1px dashed #000;
+    font-size: 10.5px;
+  }
+  .pago .row { display: flex; justify-content: space-between; padding: 0.5mm 0; }
+  .vuelto {
+    margin-top: 2mm;
+    padding: 1.5mm;
+    border: 1px solid #000;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .dte {
+    margin-top: 3mm;
+    padding-top: 2mm;
+    border-top: 1px dashed #000;
+    font-size: 9.5px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .qr {
+    text-align: center;
+    margin: 3mm 0;
+  }
+  .qr img, .qr svg { width: 30mm; height: 30mm; }
+  .footer {
+    margin-top: 4mm;
+    padding-top: 3mm;
+    border-top: 1px dashed #000;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1.6;
+  }
+  .footer .gracias {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-style: italic;
+    margin-bottom: 2mm;
+  }
+  .barcode { text-align: center; margin: 3mm 0; }
+  .barcode .num { font-size: 11px; letter-spacing: 2px; margin-top: 1mm; }
+  @media screen {
+    body { box-shadow: 0 4px 24px rgba(0,0,0,0.1); margin: 24px auto; }
+  }
+</style>
+</head>
+<body onload="window.print()">
+
+<div class="logo">
+  <svg width="38" height="38" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="28" stroke="#000" stroke-width="1.6" fill="none"/>
+    <circle cx="32" cy="32" r="22" stroke="#000" stroke-width="0.9" fill="none"/>
+    <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="32" font-weight="600" fill="#000">i</text>
+  </svg>
+  <div class="nombre">IDEAS</div>
+  <div class="lema">BOUTIQUE</div>
+</div>
+
+<div class="head">
+  Familia Contreras · Desde 1987<br>
+  Caupolicán 437-B · Los Vilos<br>
+  RUT 12.345.678-9 · Tel +56 9 0000 0000
+</div>
+
+<div class="meta">
+  <div class="row"><span>Boleta</span><b>#{{ recibo.pk }}</b></div>
+  <div class="row"><span>Fecha</span><span>{{ recibo.creado|date:"d-m-Y H:i" }}</span></div>
+  {% if recibo.vendedor %}<div class="row"><span>Cajero/a</span><span>{{ recibo.vendedor.first_name|default:recibo.vendedor.username }}</span></div>{% endif %}
+  {% if recibo.cliente_rut %}<div class="row"><span>RUT cliente</span><span>{{ recibo.cliente_rut }}</span></div>{% endif %}
+</div>
+
+<div class="items">
+  {% for det in recibo.detalles.all %}
+  <div class="item">
+    <div class="desc">{{ det.descripcion|truncatechars:38 }}</div>
+    <div class="sub">
+      <span>{{ det.cantidad }} × ${{ det.precio_unitario|floatformat:0 }}</span>
+      <span>${% widthratio det.precio_unitario 1 det.cantidad %}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="totales">
+  {% if recibo.descuento %}
+  <div class="row descuento"><span>Descuentos</span><span>−${{ recibo.descuento|floatformat:0 }}</span></div>
+  {% endif %}
+  <div class="row total"><span>TOTAL</span><span>${{ recibo.total|floatformat:0 }}</span></div>
+</div>
+
+<div class="pago">
+  <div class="row"><span>Pago</span><b>{{ recibo.payment_provider|default:"Tarjeta"|upper }}</b></div>
+  {% if recibo.payment_reference %}<div class="row"><span>Ref.</span><span>{{ recibo.payment_reference|truncatechars:20 }}</span></div>{% endif %}
+  {% if recibo.efectivo_recibido %}
+  <div class="row"><span>Recibido</span><span>${{ recibo.efectivo_recibido|floatformat:0 }}</span></div>
+  <div class="vuelto">VUELTO ${{ recibo.efectivo_vuelto|floatformat:0 }}</div>
+  {% endif %}
+</div>
+
+{% if recibo.dte_folio %}
+<div class="dte">
+  Boleta Electrónica<br>
+  Folio {{ recibo.dte_folio }} · Tipo {{ recibo.dte_tipo|default:"39" }}<br>
+  Resol. SII {{ resol_sii|default:"N/A" }}
+</div>
+{% if recibo.dte_url_pdf %}
+<div class="qr">
+  {# Reemplazar por <img src="..." onload="window.print()"> con QR generado por DTE #}
+  <svg width="120" height="120" viewBox="0 0 100 100"><rect width="100" height="100" fill="#000" opacity="0.05"/><text x="50" y="55" text-anchor="middle" font-size="6" fill="#000">QR DTE</text></svg>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="footer">
+  <div class="gracias">¡Gracias por tu compra!</div>
+  Cambios y devoluciones dentro de los 15 días<br>
+  con boleta y producto sin uso.<br>
+  Ajustes de uniforme escolar sin costo hasta marzo.<br><br>
+  ideasboutique.cl
+</div>
+
+</body>
+</html>

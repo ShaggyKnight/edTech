@@ -1,0 +1,32 @@
+Hola {{ recibo.cliente_nombre|default:"vecina/o" }},
+
+Gracias por tu compra. Tu pedido #{{ recibo.pk }} quedó confirmado.
+
+DETALLE
+─────────────────────────────────────────
+{% for det in recibo.detalles.all %}{{ det.cantidad }}× {{ det.descripcion }} ............ ${{ det.precio_unitario|floatformat:0 }}
+{% endfor %}
+─────────────────────────────────────────{% if recibo.descuento %}
+Descuentos                        −${{ recibo.descuento|floatformat:0 }}{% endif %}
+TOTAL                              ${{ recibo.total|floatformat:0 }}
+
+Pagado con {{ recibo.payment_provider|default:"Webpay" }} el {{ recibo.creado|date:"d-m-Y H:i" }}.
+
+Ver el pedido online:
+{{ recibo_url }}
+
+{% if recibo.dte_url_pdf %}Boleta electrónica (PDF):
+{{ recibo.dte_url_pdf }}
+{% endif %}
+
+¿Algo que ajustar?
+Si compraste uniforme escolar, hacemos ajustes sin costo
+hasta marzo. Pasá por el local o escribinos por WhatsApp.
+
+─────────────────────────────────────────
+Familia Contreras
+Ideas Boutique · Caupolicán 437-B, Los Vilos
+Lun a Sáb · 9:00 – 19:00
+ideasboutique.cl
+
+Tres generaciones en Los Vilos, desde 1987.

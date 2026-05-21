@@ -1,0 +1,39 @@
+{% extends 'emails/_base.html' %}
+{% load humanize %}
+
+{% block titulo %}Te guardamos el carrito · Ideas Boutique{% endblock %}
+{% block preheader %}{{ items|length }} productos por ${{ total|floatformat:0|intcomma }} esperándote.{% endblock %}
+
+{% block heading %}Te guardamos lo que dejaste en el carrito.{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 18px;font-size:16px;">Hola {{ nombre|default:"" }}, dejaste estos productos en tu carrito el {{ fecha|date:"d \d\e F" }}.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:8px 0 20px;">
+  {% for item in items %}
+  <tr><td style="padding:14px 22px;border-bottom:1px solid #E5DCC8;font-size:14px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td>{{ item.cantidad }}× {{ item.nombre }}</td>
+      <td align="right" style="font-family:Georgia,serif;font-size:15px;font-weight:600;white-space:nowrap;">${{ item.subtotal|floatformat:0|intcomma }}</td>
+    </tr></table>
+  </td></tr>
+  {% endfor %}
+  <tr><td style="padding:14px 22px;background:#FBF7EE;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td style="font-size:14px;font-weight:600;">Total</td>
+      <td align="right" style="font-family:Georgia,serif;font-size:20px;font-weight:600;">${{ total|floatformat:0|intcomma }}</td>
+    </tr></table>
+  </td></tr>
+</table>
+
+<p style="font-size:14px;color:#6a6a6a;">{% if hay_uniforme %}Si es uniforme escolar y dudás con el talle, <a href="{{ calc_url }}" style="color:#8B7A5A;">usá la calculadora</a> o escribinos por WhatsApp. Hacemos ajustes sin costo hasta marzo.{% else %}Si necesitás ayuda con algún producto, escribinos por WhatsApp y te orientamos al tiro.{% endif %}</p>
+{% endblock %}
+
+{% block cta %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+<td style="background:#0E0E0E;border-radius:999px;">
+  <a href="{{ retomar_url }}" style="display:inline-block;color:#C9A96E;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;letter-spacing:0.02em;">
+    Retomar mi compra →
+  </a>
+</td></tr></table>
+{% endblock %}

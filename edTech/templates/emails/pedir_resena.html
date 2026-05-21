@@ -1,0 +1,33 @@
+{% extends 'emails/_base.html' %}
+{% load humanize %}
+
+{% block titulo %}¿Qué te pareció tu compra?{% endblock %}
+{% block preheader %}Tu opinión nos ayuda muchísimo. 2 minutos y te lo agradecemos.{% endblock %}
+
+{% block heading %}¿Qué te pareció <em style="color:#8B7A5A;font-style:italic;">{{ producto.nombre }}</em>?{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 18px;">Hola {{ cliente_nombre|default:"vecina/o" }}, ya pasaron unas semanas desde que recibiste tu pedido. Si te dio tiempo de usarlo, nos ayudaría un montón saber tu opinión.</p>
+
+<p style="margin:0 0 24px;">Las reseñas de las familias del barrio son lo que más confianza dan a otras mamás que están por comprar el primer uniforme.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:8px 0 24px;">
+  <tr><td align="center" style="padding:24px;">
+    <div style="font-family:Georgia,serif;font-size:24px;letter-spacing:8px;color:#C9A96E;margin-bottom:10px;">★ ★ ★ ★ ★</div>
+    <div style="font-size:13px;color:#6a6a6a;">Tocá las estrellas para abrir la reseña</div>
+  </td></tr>
+</table>
+{% endblock %}
+
+{% block cta %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+<td style="background:#0E0E0E;border-radius:999px;">
+  <a href="{{ resena_url }}" style="display:inline-block;color:#C9A96E;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;letter-spacing:0.02em;">
+    Dejar mi reseña →
+  </a>
+</td></tr></table>
+
+<p style="text-align:center;margin:18px 0 0;font-size:12px;color:#8B7A5A;font-style:italic;">
+  Lleva 2 minutos. Es 100% opcional.
+</p>
+{% endblock %}

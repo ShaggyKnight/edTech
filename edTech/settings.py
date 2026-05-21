@@ -57,6 +57,16 @@ env = environ.Env(
     # que la duena tenga banda para moderar las resenas. La data
     # (model + admin + tests) se mantiene — solo se oculta el UI.
     FEATURE_RESENAS=(bool, False),
+    # Feature flags de emails transaccionales. Todos arrancan apagados
+    # hasta que la duena haya validado los templates con envios manuales
+    # y se monten los cron/celery para los programados. Activar uno a
+    # uno conforme se prueben.
+    FEATURE_EMAIL_BIENVENIDA=(bool, False),
+    FEATURE_EMAIL_RESET_PASSWORD=(bool, False),
+    FEATURE_EMAIL_STOCK_DISPONIBLE=(bool, False),
+    FEATURE_EMAIL_CARRITO_ABANDONADO=(bool, False),
+    FEATURE_EMAIL_PEDIR_RESENA=(bool, False),
+    FEATURE_EMAIL_RECORDATORIO_FAMILIA=(bool, False),
     # Hardening (ver SECURITY.md). En dev quedan en defaults seguros;
     # en prod el .env los redefine.
     ADMIN_URL=(str, 'admin/'),          # Cambiar en prod por path no-obvio
@@ -330,6 +340,13 @@ PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del 
 # se oculta en la UI publica hasta que la duena tenga ancho de banda
 # para moderar. Se prende cambiando FEATURE_RESENAS=True en .env.
 FEATURE_RESENAS = env('FEATURE_RESENAS')
+# Emails transaccionales — apagados por default.
+FEATURE_EMAIL_BIENVENIDA = env('FEATURE_EMAIL_BIENVENIDA')
+FEATURE_EMAIL_RESET_PASSWORD = env('FEATURE_EMAIL_RESET_PASSWORD')
+FEATURE_EMAIL_STOCK_DISPONIBLE = env('FEATURE_EMAIL_STOCK_DISPONIBLE')
+FEATURE_EMAIL_CARRITO_ABANDONADO = env('FEATURE_EMAIL_CARRITO_ABANDONADO')
+FEATURE_EMAIL_PEDIR_RESENA = env('FEATURE_EMAIL_PEDIR_RESENA')
+FEATURE_EMAIL_RECORDATORIO_FAMILIA = env('FEATURE_EMAIL_RECORDATORIO_FAMILIA')
 
 
 # --- Hardening de autenticacion y exposicion ----------------------------

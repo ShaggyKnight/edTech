@@ -564,6 +564,30 @@ def ver_recibo(request, pk: int):
 
 @login_required
 @permission_required('pos.view_reciboventa', raise_exception=True)
+def recibo_imprimir(request, pk: int):
+    """Recibo imprimible para impresora térmica 80mm o A4 elegante.
+
+    `?f=termico` (default): formato angosto monospace, se auto-imprime
+    al cargar (window.print()).
+    `?f=a4`: layout A4 elegante, el cajero tipea Ctrl+P cuando quiere.
+
+    Templates: pos/recibo_pos_termico.html, pos/recibo_pos_a4.html.
+    """
+    recibo = get_object_or_404(
+        ReciboVenta.objects.select_related('tienda', 'vendedor').prefetch_related(
+            'detalles__variante__producto', 'detalles__producto',
+        ),
+        pk=pk,
+    )
+    formato = (request.GET.get('f') or 'termico').lower()
+    if formato not in ('termico', 'a4'):
+        formato = 'termico'
+    template = f'pos/recibo_pos_{formato}.html'
+    return render(request, template, {'recibo': recibo})
+
+
+@login_required
+@permission_required('pos.view_reciboventa', raise_exception=True)
 def ventas(request):
     """Listado de ventas con filtros por tienda, canal, estado y fechas.
 

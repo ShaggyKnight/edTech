@@ -1,0 +1,154 @@
+{% comment %}
+  Recibo POS A4 — para impresoras estándar (no térmicas).
+  Diseño boutique elegante con logo grande, tabla clara, espacio para
+  firma manual si el dueño lo pide. Una sola página A4.
+  Útil para:
+  - Reimprimir un recibo viejo desde admin
+  - Imprimir cuando la térmica falla
+  - Adjuntar al cliente que pide "comprobante grande"
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Recibo #{{ recibo.pk }} · Ideas Boutique</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    color: #0E0E0E;
+    background: white;
+    line-height: 1.55;
+  }
+  .doc { max-width: 178mm; margin: 0 auto; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0E0E0E; padding-bottom: 16px; margin-bottom: 24px; }
+  .brand-block { display: flex; align-items: center; gap: 14px; }
+  .brand-text .nombre { font-family: Georgia, 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; letter-spacing: 4px; line-height: 1; }
+  .brand-text .lema { font-size: 9px; letter-spacing: 6px; opacity: 0.7; margin-top: 4px; }
+  .brand-text .legal { font-size: 10px; color: #6a6a6a; margin-top: 8px; line-height: 1.6; }
+  .doc-id { text-align: right; }
+  .doc-id .label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #8B7A5A; font-weight: 600; }
+  .doc-id .num { font-family: Georgia, serif; font-size: 32px; font-weight: 600; color: #7A1E2B; line-height: 1; margin-top: 4px; }
+  .doc-id .fecha { font-size: 11px; color: #6a6a6a; margin-top: 4px; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .meta-card { background: #FBF7EE; border: 1px solid #E5DCC8; padding: 12px 16px; border-radius: 6px; }
+  .meta-card .label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8B7A5A; font-weight: 600; margin-bottom: 4px; }
+  .meta-card .val { font-size: 13px; font-weight: 500; }
+  .meta-card .sub { font-size: 11px; color: #6a6a6a; margin-top: 2px; }
+  table.items { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  table.items th { background: #0E0E0E; color: #C9A96E; padding: 10px 12px; text-align: left; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  table.items th.num { text-align: right; }
+  table.items td { padding: 10px 12px; border-bottom: 1px solid #E5DCC8; vertical-align: top; }
+  table.items td.num { text-align: right; font-family: Georgia, serif; }
+  table.items td.cant { width: 60px; text-align: center; }
+  table.items tr:last-child td { border-bottom: none; }
+  .totales-row { display: flex; justify-content: flex-end; }
+  .totales { width: 260px; }
+  .totales .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+  .totales .row.descuento { color: #7A1E2B; }
+  .totales .row.total { border-top: 2px solid #0E0E0E; padding-top: 12px; margin-top: 8px; font-size: 14px; font-weight: 700; }
+  .totales .row.total .v { font-family: Georgia, serif; font-size: 26px; font-weight: 600; }
+  .pago-bloque { margin-top: 24px; padding: 14px 18px; background: #FBF7EE; border-left: 3px solid #C9A96E; border-radius: 0 6px 6px 0; }
+  .pago-bloque .label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8B7A5A; font-weight: 600; margin-bottom: 4px; }
+  .pago-bloque strong { font-size: 14px; }
+  .footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid #E5DCC8; display: flex; justify-content: space-between; font-size: 10px; color: #6a6a6a; }
+  .footer .gracias { font-family: Georgia, serif; font-style: italic; font-size: 14px; color: #8B7A5A; }
+  .firma { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .firma .linea { border-top: 1px solid #0E0E0E; padding-top: 4px; text-align: center; font-size: 10px; color: #6a6a6a; }
+  @media screen {
+    body { background: #f5f1e8; padding: 24px 0; }
+    .doc { background: white; padding: 24mm 18mm; box-shadow: 0 4px 32px rgba(0,0,0,0.1); }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<div class="header">
+  <div class="brand-block">
+    <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="28" stroke="#C9A96E" stroke-width="1.6" fill="none"/>
+      <circle cx="32" cy="32" r="22" stroke="#C9A96E" stroke-width="0.9" fill="none" opacity="0.55"/>
+      <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="32" font-weight="600" fill="#C9A96E">i</text>
+    </svg>
+    <div class="brand-text">
+      <div class="nombre">IDEAS</div>
+      <div class="lema">BOUTIQUE</div>
+      <div class="legal">Familia Contreras<br>Caupolicán 437-B · Los Vilos<br>RUT 12.345.678-9</div>
+    </div>
+  </div>
+  <div class="doc-id">
+    <div class="label">{% if recibo.dte_folio %}Boleta Electrónica{% else %}Comprobante{% endif %}</div>
+    <div class="num">#{{ recibo.pk }}</div>
+    <div class="fecha">{{ recibo.creado|date:"d \d\e F \d\e Y" }} · {{ recibo.creado|date:"H:i" }}</div>
+  </div>
+</div>
+
+<div class="meta-grid">
+  <div class="meta-card">
+    <div class="label">Cliente</div>
+    <div class="val">{{ recibo.cliente_nombre|default:"Consumidor final" }}</div>
+    {% if recibo.cliente_rut %}<div class="sub">RUT {{ recibo.cliente_rut }}</div>{% endif %}
+    {% if recibo.cliente_email %}<div class="sub">{{ recibo.cliente_email }}</div>{% endif %}
+  </div>
+  <div class="meta-card">
+    <div class="label">Venta</div>
+    <div class="val">{% if recibo.canal == 'online' %}Online · {{ recibo.payment_provider|default:"Webpay" }}{% else %}Presencial · {{ recibo.payment_provider|default:"Tarjeta" }}{% endif %}</div>
+    {% if recibo.vendedor %}<div class="sub">Cajero/a: {{ recibo.vendedor.first_name|default:recibo.vendedor.username }}</div>{% endif %}
+  </div>
+</div>
+
+<table class="items">
+  <thead><tr>
+    <th class="cant">Cant</th>
+    <th>Detalle</th>
+    <th class="num">P. unit</th>
+    <th class="num">Subtotal</th>
+  </tr></thead>
+  <tbody>
+    {% for det in recibo.detalles.all %}
+    <tr>
+      <td class="cant">{{ det.cantidad }}</td>
+      <td>{{ det.descripcion }}</td>
+      <td class="num">${{ det.precio_unitario|floatformat:0 }}</td>
+      <td class="num">${% widthratio det.precio_unitario 1 det.cantidad %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="totales-row">
+  <div class="totales">
+    <div class="row"><span>Subtotal</span><span>${{ recibo.subtotal|floatformat:0 }}</span></div>
+    {% if recibo.descuento %}<div class="row descuento"><span>Descuentos</span><span>−${{ recibo.descuento|floatformat:0 }}</span></div>{% endif %}
+    <div class="row total"><span>Total</span><span class="v">${{ recibo.total|floatformat:0 }}</span></div>
+  </div>
+</div>
+
+<div class="pago-bloque">
+  <div class="label">Forma de pago</div>
+  <strong>{{ recibo.payment_provider|default:"Tarjeta"|capfirst }}</strong>
+  {% if recibo.payment_reference %} · Ref. {{ recibo.payment_reference|truncatechars:24 }}{% endif %}
+</div>
+
+{% if mostrar_firma %}
+<div class="firma">
+  <div><div class="linea">Firma cliente</div></div>
+  <div><div class="linea">Firma Ideas Boutique</div></div>
+</div>
+{% endif %}
+
+<div class="footer">
+  <div class="gracias">¡Gracias por tu compra!</div>
+  <div style="text-align:right;">
+    ideasboutique.cl · Lun a Sáb 9-19<br>
+    Cambios dentro de 15 días con boleta · Ajustes de uniforme gratis hasta marzo
+  </div>
+</div>
+
+</div>
+</body>
+</html>

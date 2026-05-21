@@ -474,11 +474,10 @@ input, select { font-family: inherit; }
   text-decoration: line-through;
   text-decoration-color: var(--ink-60, #6a6a6a);
 }
-/* Chip seleccionada: badge sutil indicando que es la elegida. */
-.size-chip.active::after {
-  content: ' ✓';
-  font-weight: 600;
-}
+/* Chip seleccionada: el feedback visual viene del fondo/borde (cambio
+   de color por la clase `.active`). Antes habia un check ✓ via ::after
+   pero quedaba ruidoso — el cambio de fondo ya basta para indicar la
+   talla elegida. */
 
 /* Boton primario disabled (botón "Agregar al carrito" del quick view
    cuando el cliente no eligió talla). */

@@ -447,7 +447,13 @@ class ProductoImagen(models.Model):
 class ProductoVariante(models.Model):
     """SKU vendible. Cada combinación de valores de atributo es una variante."""
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='variantes')
-    sku = models.CharField(max_length=60, unique=True)
+    sku = models.CharField(
+        max_length=60, unique=True, blank=True,
+        help_text=(
+            'Codigo unico. Si lo dejas en blanco, se autogenera desde marca + '
+            'nombre + valores de atributos (ej. LATTAFA-YARA-100ML-EDP).'
+        ),
+    )
     precio_override = models.DecimalField(
         max_digits=10,
         decimal_places=2,

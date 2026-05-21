@@ -1,4 +1,6 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.html import format_html
 
 from .models import Atributo, Colegio, Familia, Oferta, Producto, ProductoImagen, ProductoVariante, Resena, ValorAtributo
@@ -19,6 +21,10 @@ class ProductoVarianteInline(admin.TabularInline):
     model = ProductoVariante
     extra = 0
     filter_horizontal = ['valores']
+    fields = ['sku', 'valores', 'precio_override', 'activa', 'codigo_barras']
+    # SKU auto-llenado: si el cajero deja vacio, lo generamos en
+    # ProductoVariante.save() (ver hook abajo). Tambien tiene un boton
+    # explicito "Generar SKU" en el form de ProductoVariante admin.
 
 
 class ProductoImagenInline(admin.TabularInline):
@@ -51,10 +57,10 @@ class ColegioAdmin(admin.ModelAdmin):
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['thumb', 'nombre', 'familia', 'colegio', 'precio_base', 'precio_costo', 'tiene_variantes', 'activo']
+    list_display = ['thumb', 'nombre', 'marca', 'familia', 'colegio', 'precio_base', 'tiene_variantes', 'activo']
     list_display_links = ['nombre']
-    list_filter = ['familia', 'colegio', 'activo', 'tiene_variantes']
-    search_fields = ['nombre', 'descripcion']
+    list_filter = ['familia', 'colegio', 'genero', 'concentracion', 'activo', 'tiene_variantes']
+    search_fields = ['nombre', 'descripcion', 'marca', 'familia_olfativa']
     inlines = [ProductoImagenInline, ProductoVarianteInline]
     readonly_fields = ['preview']
 
@@ -66,8 +72,47 @@ class ProductoAdmin(admin.ModelAdmin):
         (None, {'fields': ('nombre', 'familia', 'colegio', 'descripcion', 'activo')}),
         ('Precios', {'fields': ('precio_base', 'precio_costo')}),
         ('Imagen', {'fields': ('imagen', 'preview')}),
-        ('Variantes', {'fields': ('tiene_variantes',)}),
+        ('Perfumeria (opcional)', {
+            'classes': ('collapse',),
+            'fields': ('marca', 'concentracion', 'medida_ml', 'genero',
+                       'familia_olfativa', 'notas_clave'),
+            'description': (
+                'Metadata especifica de perfumes (vacio en uniformes y otras '
+                'familias). Si el producto tiene varias presentaciones, '
+                'usar variantes para la combinacion volumen + concentracion.'
+            ),
+        }),
+        ('Variantes', {
+            'fields': ('tiene_variantes',),
+            'description': (
+                'Marcar SI el producto se vende en varias combinaciones '
+                '(ej. talla, color, volumen). Al guardar, si esta marcado y '
+                'aun no hay variantes configuradas, vas a ser redirigido a '
+                'configurarlas (paso siguiente del wizard).'
+            ),
+        }),
     )
+
+    def response_change(self, request, obj):
+        # Wizard: si tiene_variantes esta marcado y no hay variantes
+        # creadas todavia, mostramos un mensaje claro y dejamos al usuario
+        # en la misma pagina para que use el inline de abajo. Si quiere
+        # crear via el admin separado, le damos un link directo.
+        if obj.tiene_variantes and not obj.variantes.exists():
+            messages.warning(
+                request,
+                format_html(
+                    'Marcaste "tiene variantes" pero todavia no agregaste '
+                    'ninguna. Configurá las combinaciones en la seccion '
+                    '<b>Variantes de producto</b> al final de esta pagina, '
+                    'o <a href="{}?producto={}">crear una variante por separado</a>.',
+                    reverse('admin:catalogo_productovariante_add'),
+                    obj.pk,
+                ),
+            )
+        return super().response_change(request, obj)
+
+    response_add = response_change
 
     def thumb(self, obj):
         if obj.imagen:
@@ -100,10 +145,41 @@ class ProductoVarianteAdmin(admin.ModelAdmin):
     list_filter = ['activa']
     search_fields = ['sku', 'producto__nombre']
     filter_horizontal = ['valores']
+    actions = ['regenerar_sku']
+    change_form_template = 'admin/catalogo/productovariante/change_form.html'
+
+    class Media:
+        js = ('admin/js/sku_generator.js',)
 
     def get_queryset(self, request):
         # Bloque 6 (perf): `producto` se muestra en list_display.
         return super().get_queryset(request).select_related('producto')
+
+    def save_related(self, request, form, formsets, change):
+        """Si el SKU quedo en blanco, autogeneramos despues de guardar
+        los valores de atributo (M2M). save_related corre DESPUES que
+        Django persiste el M2M, asi que `valores` ya esta disponible.
+        """
+        super().save_related(request, form, formsets, change)
+        variante = form.instance
+        if not variante.sku:
+            from catalogo.sku import sugerir_desde_variante
+            variante.sku = sugerir_desde_variante(variante)
+            variante.save(update_fields=['sku'])
+
+    @admin.action(description='Regenerar SKU desde marca + nombre + valores')
+    def regenerar_sku(self, request, queryset):
+        from catalogo.sku import sugerir_desde_variante
+        actualizadas = 0
+        for v in queryset:
+            nuevo = sugerir_desde_variante(v)
+            if nuevo != v.sku:
+                v.sku = nuevo
+                v.save(update_fields=['sku'])
+                actualizadas += 1
+        self.message_user(
+            request, f'{actualizadas} variante(s) con SKU regenerado.'
+        )
 
 
 @admin.register(Oferta)

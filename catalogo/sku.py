@@ -57,17 +57,33 @@ def generar_sku(*, marca: str = '', nombre: str = '',
     """Construye un SKU desde los componentes. NO consulta la BD.
 
     Para garantizar unicidad usar `generar_sku_unico` (abajo).
+
+    Si el `nombre` ya contiene la `marca` (matching por palabras completas),
+    no la duplicamos. Ej: nombre="Yara (Lattafa)" + marca="Lattafa" ->
+    SKU empieza con YARA-LATTAFA (no LATTAFA-YARA-LATTAFA).
     """
+    # Limpiamos a longitud "completa" PRIMERO para que el dedup compare
+    # palabras enteras. Despues recortamos por seccion al armar el SKU
+    # final. Asi "Carolina Herrera" siempre matchea aunque se trunque.
+    marca_full = _limpiar(marca, max_len=100)
+    nombre_full = _limpiar(nombre, max_len=100)
+
+    palabras_nombre = set(nombre_full.split('-')) if nombre_full else set()
+    palabras_marca = set(marca_full.split('-')) if marca_full else set()
+    marca_ya_en_nombre = (
+        palabras_marca and palabras_marca.issubset(palabras_nombre)
+    )
+
     partes = []
-    if marca:
-        partes.append(_limpiar(marca, max_len=15))
-    if nombre:
-        partes.append(_limpiar(nombre, max_len=25))
+    if marca_full and not marca_ya_en_nombre:
+        partes.append(marca_full[:15].rstrip('-'))
+    if nombre_full:
+        partes.append(nombre_full[:25].rstrip('-'))
     for v in (valores or []):
         if v:
             partes.append(_formato_valor(v))
     sku = '-'.join(p for p in partes if p)
-    return sku[:60]  # cap al maximo del modelo
+    return sku[:60]
 
 
 def generar_sku_unico(*, marca: str = '', nombre: str = '',

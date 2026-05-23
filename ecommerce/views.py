@@ -26,6 +26,7 @@ from django.db.models import Exists, OuterRef, Q, Subquery
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from bodega.models import StockTienda
@@ -33,12 +34,16 @@ from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante
 from ecommerce.cart import CANAL, Cart
 from ecommerce.emails import enviar_boleta, notificar_dueno_nueva_orden
 from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm, ResenaForm
-from ecommerce.payments import get_online_gateway
+from ecommerce.gateways import (
+    get_gateway, get_gateways_activos, get_gateway_default,
+    get_online_gateway,  # alias retrocompat
+)
 from ecommerce.services import (
     ItemPedido,
     PedidoNoEncontrado,
     StockInsuficienteOnline,
     TiendaOnlineNoConfigurada,
+    aplicar_resultado_pago,
     confirmar_pedido,
     get_tienda_online,
     iniciar_pedido,
@@ -803,6 +808,9 @@ def checkout(request):
     if cart.is_empty():
         return redirect('ecommerce:carrito')
     subtotal_bruto, descuento_total, total_neto = cart.totales()
+    # Multi-gateway: si hay > 1 gateway activo, mostramos radio buttons
+    # en el template. Si hay solo 1, va directo (sin selector visible).
+    gateways = get_gateways_activos()
     return render(request, 'ecommerce/checkout.html', {
         'lineas': list(cart.lineas()),
         'subtotal_bruto': subtotal_bruto,
@@ -810,6 +818,8 @@ def checkout(request):
         'total_neto': total_neto,
         'items_count': cart.items_count,
         'form': CheckoutForm(initial=_checkout_initial(request)),
+        'gateways': gateways,
+        'gateway_default': gateways[0].provider if gateways else 'mock',
     })
 
 
@@ -885,6 +895,17 @@ def checkout_iniciar(request):
     ]
 
     return_url = request.build_absolute_uri(reverse('ecommerce:checkout_retorno'))
+
+    # Gateway elegido por el cliente (radio button del checkout). Si
+    # el form no trae uno, usamos el primero activo (default). Validamos
+    # contra la lista activa para que no se pueda forzar uno arbitrario
+    # via POST manipulation.
+    gateway_elegido = (request.POST.get('gateway') or '').strip()
+    activos_nombres = [g.provider for g in get_gateways_activos()]
+    if gateway_elegido and gateway_elegido not in activos_nombres:
+        messages.error(request, 'Método de pago no disponible.')
+        return redirect('ecommerce:carrito')
+
     try:
         recibo, init = iniciar_pedido(
             items=items,
@@ -895,6 +916,7 @@ def checkout_iniciar(request):
             cliente_direccion=form.cleaned_data.get('cliente_direccion', ''),
             cliente_usuario=request.user if request.user.is_authenticated else None,
             return_url=return_url,
+            gateway_nombre=gateway_elegido,
         )
     except StockInsuficienteOnline as exc:
         # Sprint 2 · 2.1: marcar la linea conflictiva en sesion para que
@@ -985,15 +1007,77 @@ def ver_pedido(request, token: str):
     return render(request, 'ecommerce/pedido.html', {'recibo': recibo})
 
 
-def mock_pago(request):
-    """Simulador de pasarela para el gateway 'mock'.
+@csrf_exempt
+@require_POST
+def pago_webhook(request, gateway):
+    """Endpoint webhook server-to-server para que el gateway notifique
+    el resultado final del pago de forma asincronica.
 
-    Sólo se expone si el gateway activo es el mock; con otros gateways
-    (p.ej. webpay real) esta vista devuelve 404.
+    Por que existe (incluso teniendo redirect callback):
+      - Si el cliente cierra el browser entre el pago y el retorno al
+        sitio, sin webhook nunca nos enteramos del resultado real.
+      - Algunos gateways como Khipu confirman transferencias en horas
+        (no instantaneo) — el webhook es la unica via.
+
+    Cada gateway valida la firma/HMAC de su request en su metodo
+    `webhook()`. Si la firma es invalida, devolvemos 401 sin tocar
+    nada. Si es valida, actualizamos el ReciboVenta.
     """
-    gateway = get_online_gateway()
-    if gateway.provider != 'mock-online':
-        raise Http404('Mock deshabilitado')
+    try:
+        gw = get_gateway(gateway)
+    except KeyError:
+        log.warning('Webhook recibido para gateway desconocido: %s', gateway)
+        return HttpResponse(status=404)
+
+    result = gw.webhook(request)
+    if not result.handled:
+        # Firma invalida o evento no relevante — log y 401.
+        log.warning(
+            'Webhook %s NO procesado: %s', gateway, result.detalle,
+        )
+        return HttpResponse(result.detalle, status=401, content_type='text/plain')
+
+    if result.recibo_pk and result.payment_result:
+        try:
+            recibo = ReciboVenta.objects.get(pk=result.recibo_pk)
+            aplicar_resultado_pago(recibo, result.payment_result)
+            # Si el pago quedo confirmado por el webhook (cliente cerro
+            # browser antes del redirect), disparamos boleta + email.
+            if recibo.estado == ReciboVenta.ESTADO_PAGADO:
+                try:
+                    enviar_boleta(recibo)
+                except Exception:  # noqa: BLE001
+                    log.exception('Error enviando boleta tras webhook %s recibo %s',
+                                  gateway, recibo.pk)
+                try:
+                    notificar_dueno_nueva_orden(recibo)
+                except Exception:  # noqa: BLE001
+                    log.exception('Error notificando dueno tras webhook %s recibo %s',
+                                  gateway, recibo.pk)
+        except ReciboVenta.DoesNotExist:
+            log.warning('Webhook %s para recibo inexistente: pk=%s',
+                        gateway, result.recibo_pk)
+
+    return HttpResponse('OK', status=200, content_type='text/plain')
+
+
+def mock_pago(request):
+    """Simulador de pasarela para los gateways en modo mock.
+
+    Se expone cuando hay AL MENOS UN gateway en modo mock activo
+    (el mock puro, o KLAP/Khipu en mock_mode por faltarles credenciales).
+    Asi el `mock_pago` puede recibir tokens de KLAP-MOCK-X o KHIPU-MOCK-X
+    durante el desarrollo sin credenciales reales.
+    """
+    activos = get_gateways_activos()
+    # Aceptamos si hay algun gateway en mock-mode (mock puro o
+    # KLAP/Khipu sin credenciales).
+    hay_mock = any(
+        g.provider == 'mock' or getattr(g, 'mock_mode', False)
+        for g in activos
+    )
+    if not hay_mock:
+        raise Http404('Mock deshabilitado — todos los gateways estan en modo real')
 
     token = request.GET.get('token', '')
     return_url = request.GET.get('return_url', '')

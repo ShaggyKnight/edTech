@@ -7,7 +7,7 @@ from django.test import TestCase, override_settings
 
 from bodega.models import MovimientoStock, StockTienda, Tienda
 from catalogo.models import Familia, Producto
-from ecommerce.payments import OnlinePaymentInit
+from ecommerce.gateways import OnlinePaymentInit
 from ecommerce.services import (
     ItemPedido,
     StockInsuficienteOnline,

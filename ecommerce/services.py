@@ -29,7 +29,12 @@ from django.db.models import F
 
 from bodega.models import MovimientoStock, StockTienda, Tienda
 from catalogo.models import Producto, ProductoVariante
-from ecommerce.payments import OnlinePaymentInit, get_online_gateway
+from ecommerce.gateways import (
+    OnlinePaymentInit,
+    get_gateway,
+    get_gateway_default,
+    get_online_gateway,  # alias retrocompat de get_gateway_default
+)
 from pos.models import ReciboVenta, ReciboVentaDetalle
 from pos.payments import ESTADO_PAGADO, PaymentGatewayError, PaymentResult
 
@@ -93,6 +98,7 @@ def iniciar_pedido(
     cliente_direccion: str = '',
     cliente_usuario=None,
     return_url: str,
+    gateway_nombre: str = '',
 ) -> tuple[ReciboVenta, OnlinePaymentInit]:
     """Crea un recibo 'online' pendiente y devuelve la URL para redirect."""
     items = list(items)
@@ -149,7 +155,17 @@ def iniciar_pedido(
 
     # Iniciamos el pago fuera del lock de stock: la pasarela no debería
     # reservar stock, y queremos liberar la transacción rápido.
-    gateway = get_online_gateway()
+    # gateway_nombre: el cliente eligio uno especifico en el checkout
+    # (multi-gateway). Si no se pasa, usamos el default.
+    if gateway_nombre:
+        try:
+            gateway = get_gateway(gateway_nombre)
+        except KeyError as exc:
+            raise PaymentGatewayError(f'Gateway invalido: {exc}') from exc
+    else:
+        # get_online_gateway es alias de get_gateway_default; preservado
+        # como mock-point estable para los tests.
+        gateway = get_online_gateway()
     try:
         init = gateway.iniciar_pago(recibo, return_url=return_url)
     except PaymentGatewayError as exc:
@@ -185,13 +201,20 @@ def confirmar_pedido(*, token: str) -> ReciboVenta:
     ):
         return recibo  # idempotencia: ya estaba resuelto
 
-    gateway = get_online_gateway()
+    # Confirmar contra el gateway que originalmente proceso el pago.
+    # Si por alguna razon no esta registrado, fallback al default.
+    # get_online_gateway() = alias estable (los tests lo mockean).
+    try:
+        gateway = (get_gateway(recibo.payment_provider)
+                   if recibo.payment_provider else get_online_gateway())
+    except KeyError:
+        gateway = get_online_gateway()
     result = gateway.confirmar_pago(token)
-    return _aplicar_resultado(recibo, result)
+    return aplicar_resultado_pago(recibo, result)
 
 
 @transaction.atomic
-def _aplicar_resultado(recibo: ReciboVenta, result: PaymentResult) -> ReciboVenta:
+def aplicar_resultado_pago(recibo: ReciboVenta, result: PaymentResult) -> ReciboVenta:
     """Aplica el PaymentResult al recibo; descuenta stock solo si pagó."""
     # Re-lee bajo lock por si se está confirmando dos veces en paralelo.
     recibo = ReciboVenta.objects.select_for_update().get(pk=recibo.pk)

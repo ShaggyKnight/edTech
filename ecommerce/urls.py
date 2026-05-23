@@ -22,6 +22,11 @@ urlpatterns = [
     path('pedido/<str:token>/', views.ver_pedido, name='pedido'),
     path('mock-pago/', views.mock_pago, name='mock_pago'),
 
+    # Webhooks server-to-server de cada gateway. Validan firma HMAC
+    # internamente — un POST sin firma valida es ignorado con 401.
+    # No requieren CSRF token (los gateways no son browsers).
+    path('pago/webhook/<slug:gateway>/', views.pago_webhook, name='pago_webhook'),
+
     # Cuenta del cliente (flujo boutique, separado del login de staff).
     path('cuenta/login/', views_cuenta.BoutiqueLoginView.as_view(), name='login'),
     path('cuenta/logout/', views_cuenta.BoutiqueLogoutView.as_view(), name='logout'),

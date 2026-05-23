@@ -104,11 +104,50 @@
         {{ form.cliente_direccion }}
       </div>
 
-      <button type="submit" class="btn-primary lg full">
+      {% if gateways|length > 1 %}
+        {# Selector de metodo de pago — solo se muestra si hay >1 activo. #}
+        <div class="field" style="margin-top:18px;">
+          <label style="margin-bottom:10px;display:block;">Método de pago</label>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            {% for g in gateways %}
+              <label class="gateway-option"
+                     style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;
+                            border:1.5px solid var(--line);border-radius:10px;cursor:pointer;
+                            background:#fff;transition:all .15s;">
+                <input type="radio" name="gateway" value="{{ g.provider }}"
+                       {% if g.provider == gateway_default %}checked{% endif %}
+                       style="margin-top:3px;accent-color:var(--vino);">
+                <span style="display:flex;flex-direction:column;gap:2px;flex:1;">
+                  <span style="font-weight:600;font-size:15px;">
+                    {{ g.icono }} {{ g.nombre_publico }}
+                  </span>
+                  {% if g.subtitulo %}
+                    <span style="font-size:12px;color:var(--ink-60);">{{ g.subtitulo }}</span>
+                  {% endif %}
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% elif gateways %}
+        {# Un solo gateway: input hidden con su nombre. #}
+        <input type="hidden" name="gateway" value="{{ gateways.0.provider }}">
+      {% endif %}
+
+      <button type="submit" class="btn-primary lg full" style="margin-top:18px;">
         <svg class="ico ico--16"><use href="#ico-shield"/></svg>
         Pagar ${{ total_neto|floatformat:0|intcomma }}
       </button>
     </form>
+
+    <style>
+      .gateway-option:hover { border-color: var(--vino); }
+      .gateway-option:has(input:checked) {
+        border-color: var(--vino);
+        background: rgba(122,30,43,0.04);
+        box-shadow: 0 0 0 3px rgba(122,30,43,0.08);
+      }
+    </style>
   </div>
 
   <aside class="checkout-summary">

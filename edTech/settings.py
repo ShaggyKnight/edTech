@@ -28,11 +28,24 @@ env = environ.Env(
     TUU_DEVICE_SERIAL=(str, ''),
     TUU_BASE_URL=(str, 'https://integrations.payment.haulmer.com'),
     TUU_DTE_TIPO=(str, '39'),
-    ECOMMERCE_PAYMENT_GATEWAY=(str, 'mock'),
+    # Antiguo: un solo gateway online. Reemplazado por la lista
+    # ECOMMERCE_GATEWAYS_ACTIVOS. Se mantiene como alias retrocompat —
+    # si se setea, se considera como el unico activo.
+    ECOMMERCE_PAYMENT_GATEWAY=(str, ''),
     ECOMMERCE_TIENDA_ID=(int, 0),
-    WEBPAY_COMMERCE_CODE=(str, ''),
-    WEBPAY_API_KEY=(str, ''),
-    WEBPAY_BASE_URL=(str, 'https://webpay3gint.transbank.cl'),
+    # Multi-gateway: lista CSV de gateways habilitados (`klap`, `khipu`,
+    # `mock`). El primero es el default si no se especifica otro.
+    ECOMMERCE_GATEWAYS_ACTIVOS=(list, ['mock']),
+    ECOMMERCE_GATEWAY_DEFAULT=(str, ''),
+    # KLAP (tarjeta credito/debito) — pasarela KLAP/Multicaja.
+    KLAP_COMMERCE_ID=(str, ''),
+    KLAP_API_KEY=(str, ''),
+    KLAP_WEBHOOK_SECRET=(str, ''),
+    KLAP_BASE_URL=(str, 'https://sandbox.klap.cl'),
+    # Khipu (transferencia bancaria) — comision mas baja.
+    KHIPU_RECEIVER_ID=(str, ''),
+    KHIPU_SECRET=(str, ''),
+    KHIPU_BASE_URL=(str, 'https://payment-api.khipu.com'),
     DEFAULT_FROM_EMAIL=(str, 'ventas@ideas.local'),
     EMAIL_BACKEND=(str, 'django.core.mail.backends.console.EmailBackend'),
     DTE_EMISSOR=(str, 'mock'),
@@ -310,11 +323,29 @@ TUU_DTE_TIPO = env('TUU_DTE_TIPO')
 
 # Pagos ecommerce (Webpay / Transbank). Usar gateway 'mock' en dev.
 ECOMMERCE_PAYMENT_GATEWAY = env('ECOMMERCE_PAYMENT_GATEWAY')
+ECOMMERCE_GATEWAYS_ACTIVOS = env('ECOMMERCE_GATEWAYS_ACTIVOS')
+ECOMMERCE_GATEWAY_DEFAULT = env('ECOMMERCE_GATEWAY_DEFAULT')
+# Si esta seteado el viejo ECOMMERCE_PAYMENT_GATEWAY (singular), lo
+# usamos como unico gateway activo (retrocompat con .env preexistentes).
+if ECOMMERCE_PAYMENT_GATEWAY:
+    ECOMMERCE_GATEWAYS_ACTIVOS = [ECOMMERCE_PAYMENT_GATEWAY]
+    ECOMMERCE_GATEWAY_DEFAULT = ECOMMERCE_PAYMENT_GATEWAY
+
+# KLAP — pasarela tarjetas
+KLAP_COMMERCE_ID = env('KLAP_COMMERCE_ID')
+KLAP_API_KEY = env('KLAP_API_KEY')
+KLAP_WEBHOOK_SECRET = env('KLAP_WEBHOOK_SECRET')
+KLAP_BASE_URL = env('KLAP_BASE_URL')
+
+# Khipu — transferencia bancaria
+KHIPU_RECEIVER_ID = env('KHIPU_RECEIVER_ID')
+KHIPU_SECRET = env('KHIPU_SECRET')
+KHIPU_BASE_URL = env('KHIPU_BASE_URL')
 # pk de bodega.Tienda que surte el canal online (0 = sin configurar)
 ECOMMERCE_TIENDA_ID = env('ECOMMERCE_TIENDA_ID') or None
-WEBPAY_COMMERCE_CODE = env('WEBPAY_COMMERCE_CODE')
-WEBPAY_API_KEY = env('WEBPAY_API_KEY')
-WEBPAY_BASE_URL = env('WEBPAY_BASE_URL')
+# Webpay (Transbank) — removido del codigo en commit 2026-05-21. Si en
+# el futuro se vuelve a integrar Webpay como alternativa, agregar el
+# adapter en ecommerce/gateways/webpay.py y registrar en _REGISTRY.
 
 # Email (boleta al cliente online). Por defecto console backend en dev.
 EMAIL_BACKEND = env('EMAIL_BACKEND')

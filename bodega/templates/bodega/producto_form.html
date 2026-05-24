@@ -296,8 +296,10 @@
       {% endif %}
     </div>
 
-    {# Estilo del tab activo. Lo dejamos inline aca para no obligar a tocar
-       el CSS global por una sola pantalla. Acentua color + borde inferior. #}
+    {% comment %}
+      Estilo del tab activo. Lo dejamos inline aca para no obligar a tocar
+      el CSS global por una sola pantalla. Acentua color + borde inferior.
+    {% endcomment %}
     <style>
       .bo-tab:hover { color: var(--bo-ink); }
       .bo-tab-active { color: var(--bo-ink) !important; border-bottom-color: var(--bo-primary, #C9A96E) !important; }

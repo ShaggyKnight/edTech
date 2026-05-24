@@ -64,11 +64,13 @@
   {% endcomment %}
   <div class="bo-card" style="margin-bottom:20px;">
     <div class="bo-card-body">
-      {# Alpine x-data: el modo actual del periodo controla cuales campos
-         estan habilitados. Los selectores siempre se renderean (no se
-         ocultan) — los no aplicables van con `disabled`, que ademas hace
-         que el browser NO los envie como query string. Asi se ve claro
-         qué filtros están vivos en cada momento. #}
+      {% comment %}
+        Alpine x-data: el modo actual del periodo controla cuales campos
+        estan habilitados. Los selectores siempre se renderean (no se
+        ocultan) — los no aplicables van con `disabled`, que ademas hace
+        que el browser NO los envie como query string. Asi se ve claro
+        qué filtros están vivos en cada momento.
+      {% endcomment %}
       <form method="get"
             class="bo-form-inline"
             x-data="{ modo: '{{ periodo.modo }}' }"

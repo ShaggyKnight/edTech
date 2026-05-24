@@ -2,8 +2,10 @@
 
 {% block extrahead %}
   {{ block.super }}
-  {# Pasamos al JS la URL del endpoint que genera SKU. Asi el static JS
-     no tiene que hardcodear nada — funciona en cualquier ADMIN_URL custom. #}
+  {% comment %}
+    Pasamos al JS la URL del endpoint que genera SKU. Asi el static JS
+    no tiene que hardcodear nada — funciona en cualquier ADMIN_URL custom.
+  {% endcomment %}
   <script>
     window.SKU_GEN_URL = "{% url 'catalogo:admin_sugerir_sku' %}";
     window.SKU_VARIANTE_PK = {{ object_id|default:"null" }};

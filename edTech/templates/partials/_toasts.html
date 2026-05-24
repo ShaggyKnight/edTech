@@ -15,8 +15,10 @@
 {% if messages %}
   {% for m in messages %}
     {% with tag=m.tags|default:"info" %}
-      {# Si el mensaje tiene extra_tags="cart-add", el toast es clickeable
-         y lleva al carrito. La X cierra sin navegar. #}
+      {% comment %}
+        Si el mensaje tiene extra_tags="cart-add", el toast es clickeable
+        y lleva al carrito. La X cierra sin navegar.
+      {% endcomment %}
       {% if "cart-add" in m.tags %}
         <a class="toast toast-success toast-link"
            href="{% url 'ecommerce:carrito' %}"

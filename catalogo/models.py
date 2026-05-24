@@ -192,21 +192,13 @@ class Producto(models.Model):
         from edTech.search import normalize_text
         self.nombre_buscable = normalize_text(self.nombre)
         self.descripcion_buscable = normalize_text(self.descripcion)
-        # Si la imagen excede los umbrales (>1400 px o >500 KB), la
-        # reducimos antes de guardar. Idempotente: en saves sucesivos
-        # sobre la misma imagen ya optimizada no hace nada. Si la
-        # optimizacion falla (formato raro, sin Pillow, etc.), se
-        # loguea pero NO bloquea el save del producto — el usuario
-        # puede subir la imagen y nosotros la procesamos despues.
-        if self.imagen:
-            try:
-                from catalogo.imagenes import optimizar_imagen_field
-                optimizar_imagen_field(self.imagen)
-            except Exception:
-                import logging
-                logging.getLogger(__name__).exception(
-                    'No se pudo optimizar imagen de producto %s', self.nombre,
-                )
+        # NOTA: la optimizacion de imagen NO se hace aca. Estaba causando
+        # "I/O operation on closed file" porque optimizar_imagen_field
+        # leia + cerraba el UploadedFile antes que Django escribiera el
+        # archivo a disco. La optimizacion ahora corre via post_save
+        # signal (ver _optimizar_imagen_post_save abajo) cuando el
+        # archivo ya esta persistido como FieldFile normal, sin riesgo
+        # de doble lectura.
         super().save(*args, **kwargs)
 
     @cached_property
@@ -445,19 +437,8 @@ class ProductoImagen(models.Model):
 
     def save(self, *args, **kwargs):
         # Mismo umbral que Producto.imagen — reducimos imagenes grandes
-        # en upload para que el catalogo en mobile/tablet no espere
-        # varios MB por foto. Ver catalogo/imagenes.py.
-        # No bloquea el save si falla la optimizacion (igual que en Producto).
-        if self.imagen:
-            try:
-                from catalogo.imagenes import optimizar_imagen_field
-                optimizar_imagen_field(self.imagen)
-            except Exception:
-                import logging
-                logging.getLogger(__name__).exception(
-                    'No se pudo optimizar imagen de galeria producto %s',
-                    self.producto_id,
-                )
+        # NOTA: idem Producto.save — la optimizacion va via post_save
+        # para no interferir con el flujo de upload de Django.
         super().save(*args, **kwargs)
 
 
@@ -597,3 +578,50 @@ class Oferta(models.Model):
 
     def aplica_a_canal(self, canal):
         return self.canal == canal or self.canal == self.CANAL_AMBOS
+
+
+# ─── Signals: optimizacion de imagen post-upload ────────────────────
+# El optimizador (resize + recompress) NO se invoca durante Producto.save()
+# porque rompe el flujo de upload de Django: el UploadedFile se cierra y
+# despues storage.save() falla con "I/O operation on closed file".
+#
+# Solucion: post_save signal. Corre DESPUES de que Django persiste el
+# archivo a disco, entonces lo que recibe el optimizador es un FieldFile
+# normal (archivo real en disk) sin riesgo de doble lectura. Si la
+# optimizacion cambia el path (jpg vs png), persistimos el nuevo nombre
+# con un .update() que NO re-dispara el signal (evita recursion).
+
+from django.db.models.signals import post_save  # noqa: E402
+from django.dispatch import receiver  # noqa: E402
+
+
+def _optimizar_imagen_post_save(sender, instance, created, raw, **kwargs):
+    """Optimiza la imagen de un producto/galeria despues de guardar."""
+    if raw:
+        return  # fixture load — no tocar
+    imagen = getattr(instance, 'imagen', None)
+    if not imagen or not imagen.name:
+        return
+    try:
+        from catalogo.imagenes import optimizar_imagen_field
+        cambiada, _msg = optimizar_imagen_field(imagen)
+        if cambiada:
+            # El optimizador cambio el path (jpg vs png u otro). Persistimos
+            # el nuevo nombre con un UPDATE que NO dispara post_save de nuevo.
+            sender.objects.filter(pk=instance.pk).update(imagen=imagen.name)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            'No se pudo optimizar imagen post-save de %s pk=%s',
+            sender.__name__, instance.pk,
+        )
+
+
+@receiver(post_save, sender=Producto)
+def _producto_optimizar_imagen(sender, instance, created, raw=False, **kwargs):
+    _optimizar_imagen_post_save(sender, instance, created, raw, **kwargs)
+
+
+@receiver(post_save, sender=ProductoImagen)
+def _producto_imagen_optimizar(sender, instance, created, raw=False, **kwargs):
+    _optimizar_imagen_post_save(sender, instance, created, raw, **kwargs)

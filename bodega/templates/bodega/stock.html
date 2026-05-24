@@ -131,16 +131,10 @@
           <div class="bo-field">
             <label>Mostrar</label>
             <select name="solo" class="bo-select">
-              <option value="">Default (con stock)</option>
-              <option value="bajo" {% if filtros.solo == "bajo" %}selected{% endif %}>Solo stock bajo</option>
+              <option value="">Solo con stock (default)</option>
+              <option value="bajo" {% if filtros.solo == "bajo" %}selected{% endif %}>Solo stock bajo (≤{{ umbral_bajo }})</option>
               <option value="cero" {% if filtros.solo == "cero" %}selected{% endif %}>Solo agotados</option>
-            </select>
-          </div>
-          <div class="bo-field">
-            <label>Stock</label>
-            <select name="stock" class="bo-select">
-              <option value="">Solo con stock</option>
-              <option value="todos" {% if mostrar_todos %}selected{% endif %}>Incluir agotados</option>
+              <option value="todos" {% if filtros.solo == "todos" %}selected{% endif %}>Todos (con y sin stock)</option>
             </select>
           </div>
         </div>

@@ -104,8 +104,14 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
         tienda_id = (request.GET.get('tienda') or '').strip()
         familia_id = (request.GET.get('familia') or '').strip()
         colegio_id = (request.GET.get('colegio') or '').strip()
+        # Filtro unificado de visibilidad de stock. Antes habian dos
+        # selectores ("Mostrar" y "Stock") que se pisaban — `solo` ahora
+        # tiene 4 opciones que cubren todos los casos. Retrocompat: el
+        # viejo `stock=todos` se sigue aceptando.
         solo = (request.GET.get('solo') or '').strip()
-        mostrar_todos = request.GET.get('stock') == 'todos'
+        if request.GET.get('stock') == 'todos' and not solo:
+            solo = 'todos'  # retrocompat con URLs viejas
+        mostrar_todos = (solo == 'todos')
         q = (request.GET.get('q') or '').strip()
 
         if tienda_id.isdigit():
@@ -120,7 +126,10 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
             qs = qs.filter(cantidad=STOCK_AGOTADO)
         elif solo == 'bajo':
             qs = qs.filter(cantidad__lte=STOCK_BAJO, cantidad__gt=0)
-        elif not mostrar_todos:
+        elif solo == 'todos':
+            # No aplica filtro de cantidad — muestra TODO.
+            pass
+        else:
             # Default: oculta agotados.
             qs = qs.filter(cantidad__gt=0)
         if q:

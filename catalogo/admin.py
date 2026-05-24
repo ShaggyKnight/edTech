@@ -76,20 +76,9 @@ class ProductoAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
             'fields': ('marca', 'concentracion', 'medida_ml', 'genero',
                        'familia_olfativa', 'notas_clave'),
-            'description': (
-                'Metadata especifica de perfumes (vacio en uniformes y otras '
-                'familias). Si el producto tiene varias presentaciones, '
-                'usar variantes para la combinacion volumen + concentracion.'
-            ),
         }),
         ('Variantes', {
             'fields': ('tiene_variantes',),
-            'description': (
-                'Marcar SI el producto se vende en varias combinaciones '
-                '(ej. talla, color, volumen). Al guardar, si esta marcado y '
-                'aun no hay variantes configuradas, vas a ser redirigido a '
-                'configurarlas (paso siguiente del wizard).'
-            ),
         }),
     )
 

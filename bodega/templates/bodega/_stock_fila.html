@@ -86,7 +86,10 @@
           <input type="hidden" name="tipo" value="p">
           <input type="hidden" name="item_id" value="{{ s.producto.pk }}">
         {% endif %}
-        <input type="number" name="cantidad" value="1" min="1" max="9999" title="Unidades a sumar">
+        {# value="1" se selecciona al focus para que tipear "20" reemplace
+           (en vez de concatenar "120"). onfocus.select() cubre click+tab. #}
+        <input type="number" name="cantidad" value="1" min="1" max="9999"
+               title="Unidades a sumar" onfocus="this.select()">
         <button type="submit" title="Sumar al stock">+ Reponer</button>
       </form>
     </td>

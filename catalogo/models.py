@@ -194,10 +194,19 @@ class Producto(models.Model):
         self.descripcion_buscable = normalize_text(self.descripcion)
         # Si la imagen excede los umbrales (>1400 px o >500 KB), la
         # reducimos antes de guardar. Idempotente: en saves sucesivos
-        # sobre la misma imagen ya optimizada no hace nada.
+        # sobre la misma imagen ya optimizada no hace nada. Si la
+        # optimizacion falla (formato raro, sin Pillow, etc.), se
+        # loguea pero NO bloquea el save del producto — el usuario
+        # puede subir la imagen y nosotros la procesamos despues.
         if self.imagen:
-            from catalogo.imagenes import optimizar_imagen_field
-            optimizar_imagen_field(self.imagen)
+            try:
+                from catalogo.imagenes import optimizar_imagen_field
+                optimizar_imagen_field(self.imagen)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    'No se pudo optimizar imagen de producto %s', self.nombre,
+                )
         super().save(*args, **kwargs)
 
     @cached_property
@@ -438,9 +447,17 @@ class ProductoImagen(models.Model):
         # Mismo umbral que Producto.imagen — reducimos imagenes grandes
         # en upload para que el catalogo en mobile/tablet no espere
         # varios MB por foto. Ver catalogo/imagenes.py.
+        # No bloquea el save si falla la optimizacion (igual que en Producto).
         if self.imagen:
-            from catalogo.imagenes import optimizar_imagen_field
-            optimizar_imagen_field(self.imagen)
+            try:
+                from catalogo.imagenes import optimizar_imagen_field
+                optimizar_imagen_field(self.imagen)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    'No se pudo optimizar imagen de galeria producto %s',
+                    self.producto_id,
+                )
         super().save(*args, **kwargs)
 
 

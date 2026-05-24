@@ -84,8 +84,12 @@ class PosFiltrosTests(TestCase):
         self.assertNotContains(resp, 'Eau de Toilette')
 
 
-class AgregarStockTests(TestCase):
-    """Carga rápida de stock desde el POS — solo admin/superuser."""
+class SumarStockRemovidoDelPosTests(TestCase):
+    """Confirmar que el POS NO tiene mas la opcion de cargar stock.
+
+    El stock se maneja desde /bodega/stock/ por bodegueros y admins —
+    el POS solo opera ventas. Removido 2026-05-21.
+    """
 
     @classmethod
     def setUpTestData(cls):
@@ -95,97 +99,23 @@ class AgregarStockTests(TestCase):
             familia=cls.fam, nombre='Buzo',
             precio_base=Decimal('25000'), tiene_variantes=False,
         )
-        # Cajero con permisos POS.
-        cls.cajero = User.objects.create_user('caj', password='x')
-        cls.cajero.user_permissions.add(
-            *Permission.objects.filter(codename='add_reciboventa')
-        )
-        # Admin (superuser).
         cls.admin = User.objects.create_superuser('root', 'r@x.cl', 'x')
-        # Admin via grupo (no superuser pero en grupo `admin`).
-        cls.grupo_admin, _ = Group.objects.get_or_create(name='admin')
-        cls.admin_grupo = User.objects.create_user('manager', password='x')
-        cls.admin_grupo.groups.add(cls.grupo_admin)
-        cls.admin_grupo.user_permissions.add(
-            *Permission.objects.filter(codename='add_reciboventa')
-        )
 
     def _set_tienda(self):
         s = self.client.session
         s['tienda_activa_id'] = self.tienda.pk
         s.save()
 
-    def test_cajero_no_puede_cargar_stock(self):
-        self.client.force_login(self.cajero)
-        self._set_tienda()
-        resp = self.client.post(reverse('pos:agregar_stock'), {
-            'tipo': 'p', 'item_id': self.producto.pk, 'cantidad': 5,
-        })
-        # Redirige y no crea stock.
-        self.assertEqual(resp.status_code, 302)
-        self.assertFalse(StockTienda.objects.filter(producto=self.producto).exists())
+    def test_url_agregar_stock_ya_no_existe(self):
+        from django.urls import NoReverseMatch
+        with self.assertRaises(NoReverseMatch):
+            reverse('pos:agregar_stock')
 
-    def test_superuser_puede_cargar_stock(self):
+    def test_boton_sumar_stock_no_aparece_ni_para_admin(self):
+        """El boton "+ Stock" se removio del POS. Ni admin lo ve."""
         self.client.force_login(self.admin)
-        self._set_tienda()
-        resp = self.client.post(reverse('pos:agregar_stock'), {
-            'tipo': 'p', 'item_id': self.producto.pk, 'cantidad': 12,
-        })
-        self.assertEqual(resp.status_code, 302)
-        st = StockTienda.objects.get(producto=self.producto, tienda=self.tienda)
-        self.assertEqual(st.cantidad, 12)
-        # Audit log creado.
-        self.assertEqual(
-            MovimientoStock.objects.filter(
-                tipo=MovimientoStock.ENTRADA, producto=self.producto,
-            ).count(), 1,
-        )
-
-    def test_admin_grupo_tambien_puede(self):
-        self.client.force_login(self.admin_grupo)
-        self._set_tienda()
-        resp = self.client.post(reverse('pos:agregar_stock'), {
-            'tipo': 'p', 'item_id': self.producto.pk, 'cantidad': 7,
-        })
-        self.assertEqual(resp.status_code, 302)
-        st = StockTienda.objects.get(producto=self.producto, tienda=self.tienda)
-        self.assertEqual(st.cantidad, 7)
-
-    def test_carga_acumula_sobre_stock_existente(self):
-        StockTienda.objects.create(
-            tienda=self.tienda, producto=self.producto, cantidad=3,
-        )
-        self.client.force_login(self.admin)
-        self._set_tienda()
-        self.client.post(reverse('pos:agregar_stock'), {
-            'tipo': 'p', 'item_id': self.producto.pk, 'cantidad': 10,
-        })
-        st = StockTienda.objects.get(producto=self.producto)
-        self.assertEqual(st.cantidad, 13)
-
-    def test_cantidad_invalida_no_aplica(self):
-        self.client.force_login(self.admin)
-        self._set_tienda()
-        resp = self.client.post(reverse('pos:agregar_stock'), {
-            'tipo': 'p', 'item_id': self.producto.pk, 'cantidad': 0,
-        })
-        self.assertEqual(resp.status_code, 302)
-        self.assertFalse(StockTienda.objects.exists())
-
-    def test_boton_cargar_no_aparece_para_cajero(self):
-        """Smoke: en el HTML del POS el form de +Stock no aparece si user no es admin."""
-        self.client.force_login(self.cajero)
         self._set_tienda()
         StockTienda.objects.create(tienda=self.tienda, producto=self.producto, cantidad=5)
         resp = self.client.get(reverse('pos:home'))
-        # El form action /pos/agregar-stock/ solo se renderea para admin.
         self.assertNotContains(resp, '/pos/agregar-stock/')
         self.assertNotContains(resp, '+ Stock')
-
-    def test_boton_cargar_aparece_para_admin(self):
-        self.client.force_login(self.admin)
-        self._set_tienda()
-        StockTienda.objects.create(tienda=self.tienda, producto=self.producto, cantidad=5)
-        resp = self.client.get(reverse('pos:home'))
-        self.assertContains(resp, '/pos/agregar-stock/')
-        self.assertContains(resp, '+ Stock')

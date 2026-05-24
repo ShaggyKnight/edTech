@@ -64,8 +64,14 @@
   {% endcomment %}
   <div class="bo-card" style="margin-bottom:20px;">
     <div class="bo-card-body">
+      {# Alpine x-data: el modo actual del periodo controla cuales campos
+         estan habilitados. Los selectores siempre se renderean (no se
+         ocultan) — los no aplicables van con `disabled`, que ademas hace
+         que el browser NO los envie como query string. Asi se ve claro
+         qué filtros están vivos en cada momento. #}
       <form method="get"
             class="bo-form-inline"
+            x-data="{ modo: '{{ periodo.modo }}' }"
             hx-get="{% url 'reportes:eerr' %}"
             hx-trigger="change from:select, change from:input[type=date] delay:300ms"
             hx-target="#eerr-content"
@@ -74,51 +80,47 @@
             hx-indicator="#eerr-loading">
         <div class="bo-field">
           <label>Período</label>
-          <select name="periodo" class="bo-select">
+          <select name="periodo" class="bo-select" @change="modo = $event.target.value">
             <option value="mes"   {% if periodo.modo == 'mes' %}selected{% endif %}>Mes</option>
             <option value="anio"  {% if periodo.modo == 'anio' %}selected{% endif %}>Año</option>
             <option value="rango" {% if periodo.modo == 'rango' %}selected{% endif %}>Rango libre</option>
           </select>
         </div>
-        {% if periodo.modo == 'mes' %}
-          <div class="bo-field">
-            <label>Mes</label>
-            <select name="mes" class="bo-select">
-              <option value="1"  {% if periodo.mes == 1 %}selected{% endif %}>Enero</option>
-              <option value="2"  {% if periodo.mes == 2 %}selected{% endif %}>Febrero</option>
-              <option value="3"  {% if periodo.mes == 3 %}selected{% endif %}>Marzo</option>
-              <option value="4"  {% if periodo.mes == 4 %}selected{% endif %}>Abril</option>
-              <option value="5"  {% if periodo.mes == 5 %}selected{% endif %}>Mayo</option>
-              <option value="6"  {% if periodo.mes == 6 %}selected{% endif %}>Junio</option>
-              <option value="7"  {% if periodo.mes == 7 %}selected{% endif %}>Julio</option>
-              <option value="8"  {% if periodo.mes == 8 %}selected{% endif %}>Agosto</option>
-              <option value="9"  {% if periodo.mes == 9 %}selected{% endif %}>Septiembre</option>
-              <option value="10" {% if periodo.mes == 10 %}selected{% endif %}>Octubre</option>
-              <option value="11" {% if periodo.mes == 11 %}selected{% endif %}>Noviembre</option>
-              <option value="12" {% if periodo.mes == 12 %}selected{% endif %}>Diciembre</option>
-            </select>
-          </div>
-        {% endif %}
-        {% if periodo.modo != 'rango' %}
-          <div class="bo-field">
-            <label>Año</label>
-            <select name="anio" class="bo-select">
-              {% for a in anios %}
-                <option value="{{ a }}" {% if periodo.anio == a %}selected{% endif %}>{{ a }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        {% endif %}
-        {% if periodo.modo == 'rango' %}
-          <div class="bo-field">
-            <label>Desde</label>
-            <input type="date" name="desde" class="bo-input" value="{{ periodo.desde }}">
-          </div>
-          <div class="bo-field">
-            <label>Hasta</label>
-            <input type="date" name="hasta" class="bo-input" value="{{ periodo.hasta }}">
-          </div>
-        {% endif %}
+        <div class="bo-field" :class="{ 'is-disabled': modo !== 'mes' }">
+          <label>Mes</label>
+          <select name="mes" class="bo-select" :disabled="modo !== 'mes'">
+            <option value="1"  {% if periodo.mes == 1 %}selected{% endif %}>Enero</option>
+            <option value="2"  {% if periodo.mes == 2 %}selected{% endif %}>Febrero</option>
+            <option value="3"  {% if periodo.mes == 3 %}selected{% endif %}>Marzo</option>
+            <option value="4"  {% if periodo.mes == 4 %}selected{% endif %}>Abril</option>
+            <option value="5"  {% if periodo.mes == 5 %}selected{% endif %}>Mayo</option>
+            <option value="6"  {% if periodo.mes == 6 %}selected{% endif %}>Junio</option>
+            <option value="7"  {% if periodo.mes == 7 %}selected{% endif %}>Julio</option>
+            <option value="8"  {% if periodo.mes == 8 %}selected{% endif %}>Agosto</option>
+            <option value="9"  {% if periodo.mes == 9 %}selected{% endif %}>Septiembre</option>
+            <option value="10" {% if periodo.mes == 10 %}selected{% endif %}>Octubre</option>
+            <option value="11" {% if periodo.mes == 11 %}selected{% endif %}>Noviembre</option>
+            <option value="12" {% if periodo.mes == 12 %}selected{% endif %}>Diciembre</option>
+          </select>
+        </div>
+        <div class="bo-field" :class="{ 'is-disabled': modo === 'rango' }">
+          <label>Año</label>
+          <select name="anio" class="bo-select" :disabled="modo === 'rango'">
+            {% for a in anios %}
+              <option value="{{ a }}" {% if periodo.anio == a %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="bo-field" :class="{ 'is-disabled': modo !== 'rango' }">
+          <label>Desde</label>
+          <input type="date" name="desde" class="bo-input"
+                 value="{{ periodo.desde }}" :disabled="modo !== 'rango'">
+        </div>
+        <div class="bo-field" :class="{ 'is-disabled': modo !== 'rango' }">
+          <label>Hasta</label>
+          <input type="date" name="hasta" class="bo-input"
+                 value="{{ periodo.hasta }}" :disabled="modo !== 'rango'">
+        </div>
         <div class="bo-field">
           <label>Tienda</label>
           <select name="tienda" class="bo-select">
@@ -144,6 +146,13 @@
           <button type="submit" class="bo-btn bo-btn-primary">Aplicar</button>
         </noscript>
       </form>
+      <style>
+        /* Campo deshabilitado: opacidad reducida + label gris para que se
+           vea claro que ese filtro no aplica al periodo elegido. El
+           atributo `disabled` ya impide que se envíe en el query string. */
+        .bo-field.is-disabled { opacity: 0.4; }
+        .bo-field.is-disabled label { color: var(--bo-muted); }
+      </style>
     </div>
   </div>
 

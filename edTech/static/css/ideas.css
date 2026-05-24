@@ -961,6 +961,14 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
 .toast-warning { --toast-color: #b87f1a; }
 .toast-info    { --toast-color: var(--gold-2, #b08951); }
 .toast-msg { flex: 1; }
+/* Toasts clickeables (ej. "agregado al carrito → /carrito/"): subrayan
+   sutil al hover para indicar que son interactivos. */
+.toast-link { color: var(--ink); transition: transform .15s, box-shadow .15s; }
+.toast-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+.toast-link:hover .toast-msg { text-decoration: underline; }
 .toast-close {
   border: 0;
   background: none;

@@ -44,17 +44,6 @@
           <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not v.stock %}disabled{% endif %}>+ Agregar</button>
         </form>
       </td>
-      {% if puede_agregar_stock %}
-        <td>
-          <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
-            {% csrf_token %}
-            <input type="hidden" name="tipo" value="v">
-            <input type="hidden" name="item_id" value="{{ v.pk }}">
-            <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
-            <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
-          </form>
-        </td>
-      {% endif %}
     </tr>
   {% endfor %}
   {% for p in productos %}
@@ -83,22 +72,11 @@
           <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm" {% if not p.stock %}disabled{% endif %}>+ Agregar</button>
         </form>
       </td>
-      {% if puede_agregar_stock %}
-        <td>
-          <form method="post" action="{% url 'pos:agregar_stock' %}" class="pos-stock-form">
-            {% csrf_token %}
-            <input type="hidden" name="tipo" value="p">
-            <input type="hidden" name="item_id" value="{{ p.pk }}">
-            <input type="number" name="cantidad" value="1" min="1" max="999" title="Unidades a sumar">
-            <button type="submit" title="Sumar al stock de esta tienda">+ Stock</button>
-          </form>
-        </td>
-      {% endif %}
     </tr>
   {% endfor %}
   {% if not variantes and not productos %}
     <tr>
-      <td colspan="{% if puede_agregar_stock %}7{% else %}6{% endif %}"
+      <td colspan="6"
           style="text-align:center;color:var(--bo-muted);padding:30px;">
         No hay productos que coincidan con los filtros.
       </td>

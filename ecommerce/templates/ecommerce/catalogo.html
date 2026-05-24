@@ -149,6 +149,95 @@
           {% endif %}
         </div>
 
+        {# ─── Filtros de perfumería (solo cuando cat=perfumes) ─── #}
+        <div id="filter-perfume">
+          {% if perfume_aplicable %}
+            <div class="filter-group">
+              <div class="filter-title">Para</div>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="genero" value=""
+                       {% if not genero_activo %}checked{% endif %}>
+                Todos
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="genero" value="mujer"
+                       {% if genero_activo == 'mujer' %}checked{% endif %}>
+                Mujer
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="genero" value="hombre"
+                       {% if genero_activo == 'hombre' %}checked{% endif %}>
+                Hombre
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="genero" value="unisex"
+                       {% if genero_activo == 'unisex' %}checked{% endif %}>
+                Unisex
+              </label>
+            </div>
+
+            <div class="filter-group">
+              <div class="filter-title">Concentración</div>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="concentracion" value=""
+                       {% if not concentracion_activa %}checked{% endif %}>
+                Todas
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="concentracion" value="EDP"
+                       {% if concentracion_activa == 'EDP' %}checked{% endif %}>
+                Eau de Parfum (EDP)
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="concentracion" value="EDT"
+                       {% if concentracion_activa == 'EDT' %}checked{% endif %}>
+                Eau de Toilette (EDT)
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="concentracion" value="EDC"
+                       {% if concentracion_activa == 'EDC' %}checked{% endif %}>
+                Eau de Cologne (EDC)
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="concentracion" value="BODY"
+                       {% if concentracion_activa == 'BODY' %}checked{% endif %}>
+                Body Spray
+              </label>
+              <label style="display:block;padding:4px 0;">
+                <input type="radio" name="concentracion" value="SET"
+                       {% if concentracion_activa == 'SET' %}checked{% endif %}>
+                Set / Estuche
+              </label>
+            </div>
+
+            {% if marcas_disponibles %}
+              <div class="filter-group">
+                <div class="filter-title">Marca</div>
+                <select name="marca" class="shop-select"
+                        style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
+                  <option value="">Todas las marcas</option>
+                  {% for m in marcas_disponibles %}
+                    <option value="{{ m }}" {% if marca_activa == m %}selected{% endif %}>{{ m }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            {% endif %}
+
+            {% if familias_olfativas_disponibles %}
+              <div class="filter-group">
+                <div class="filter-title">Familia olfativa</div>
+                <select name="familia_olfativa" class="shop-select"
+                        style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
+                  <option value="">Todas</option>
+                  {% for f in familias_olfativas_disponibles %}
+                    <option value="{{ f }}" {% if familia_olfativa_activa == f %}selected{% endif %}>{{ f }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+
         <div class="filter-group">
           <div class="filter-title">Precio</div>
           <div style="display:flex;gap:8px;align-items:center;">
@@ -261,9 +350,11 @@
       });
   }
 
-  // Radios (categoria, colegio): cambio aplica directo.
+  // Radios (categoria, colegio, perfume género, perfume concentración):
+  // cambio aplica directo. Selects dentro del form (marca, familia
+  // olfativa) tambien — cubrimos ambos con un solo handler.
   form.addEventListener('change', function(e) {
-    if (!e.target.matches('input[type="radio"]')) return;
+    if (!e.target.matches('input[type="radio"], select')) return;
     if (e.target.name === 'cat') {
       // Cambiar de categoria descarta la talla — las tallas dependen
       // del subset de productos visibles y muchas veces no aplican

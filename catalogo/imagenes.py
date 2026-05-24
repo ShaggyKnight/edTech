@@ -115,7 +115,16 @@ def optimizar_imagen_field(image_field) -> Tuple[bool, str]:
         return False, 'ya cumple umbrales'
 
     try:
-        image_field.open('rb')
+        # Algunos backends (S3, uploads en memoria) requieren seek(0)
+        # explicito antes de leer. open('rb') no siempre lo asegura.
+        try:
+            image_field.open('rb')
+        except Exception:
+            pass
+        try:
+            image_field.file.seek(0)
+        except Exception:
+            pass
         with Image.open(image_field.file) as im:
             im.load()
             original_format = (im.format or 'JPEG').upper()

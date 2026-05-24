@@ -194,7 +194,6 @@ def home(request):
         'descuento_total': descuento_total,
         'total_neto': total_neto,
         'items_count': cart.items_count,
-        'puede_agregar_stock': _puede_admin_stock(request.user),
     }
 
     # HTMX flow: distinguimos por el id del target. HTMX manda el header
@@ -215,80 +214,9 @@ def home(request):
     return render(request, 'pos/home.html', contexto)
 
 
-@login_required
-@require_POST
-def agregar_stock(request):
-    """Suma stock a un producto/variante en la tienda activa.
-
-    Endpoint operativo para admins: cuando llega mercadería al POS, en
-    vez de ir al Django admin, se carga directo desde la tabla.
-    Cajero y bodeguero no tienen acceso (los gates están acá adentro).
-    """
-    if not _puede_admin_stock(request.user):
-        messages.error(request, 'No tienes permisos para cargar stock desde el POS.')
-        return redirect('pos:home')
-
-    tienda = get_active_tienda(request)
-    if tienda is None:
-        messages.error(request, 'Seleccioná una tienda primero.')
-        return redirect('pos:home')
-
-    tipo = request.POST.get('tipo', '')
-    try:
-        item_id = int(request.POST.get('item_id', 0))
-        cantidad = int(request.POST.get('cantidad', 0))
-    except (TypeError, ValueError):
-        messages.error(request, 'Datos inválidos.')
-        return redirect('pos:home')
-
-    if cantidad <= 0:
-        messages.error(request, 'La cantidad a sumar debe ser mayor a 0.')
-        return redirect('pos:home')
-
-    from django.db import transaction
-    from django.db.models import F
-
-    with transaction.atomic():
-        if tipo == 'v':
-            if not ProductoVariante.objects.filter(pk=item_id, activa=True).exists():
-                messages.error(request, 'Variante no disponible.')
-                return redirect('pos:home')
-            fila, _ = StockTienda.objects.select_for_update().get_or_create(
-                tienda=tienda, variante_id=item_id, defaults={'cantidad': 0},
-            )
-        elif tipo == 'p':
-            if not Producto.objects.filter(
-                pk=item_id, activo=True, tiene_variantes=False,
-            ).exists():
-                messages.error(request, 'Producto no disponible.')
-                return redirect('pos:home')
-            fila, _ = StockTienda.objects.select_for_update().get_or_create(
-                tienda=tienda, producto_id=item_id, defaults={'cantidad': 0},
-            )
-        else:
-            messages.error(request, 'Tipo inválido.')
-            return redirect('pos:home')
-
-        StockTienda.objects.filter(pk=fila.pk).update(
-            cantidad=F('cantidad') + cantidad,
-        )
-        mov_kwargs = {
-            'tienda': tienda, 'tipo': MovimientoStock.ENTRADA,
-            'cantidad': cantidad, 'usuario': request.user,
-            'referencia': f'Carga rápida POS por {request.user.username}',
-        }
-        if tipo == 'v':
-            mov_kwargs['variante_id'] = item_id
-        else:
-            mov_kwargs['producto_id'] = item_id
-        MovimientoStock.objects.create(**mov_kwargs)
-
-    messages.success(request, f'+{cantidad} unidades agregadas al stock.')
-    # Preserva los filtros/query del referer si los hay.
-    qs = request.META.get('HTTP_REFERER', '')
-    if qs and 'pos' in qs:
-        return redirect(qs)
-    return redirect('pos:home')
+# NOTA: la vista `agregar_stock` se removio el 2026-05-21. El POS no
+# debe permitir cargar stock — eso se gestiona desde /bodega/stock/
+# por bodegueros y admins. El POS solo opera ventas.
 
 
 @login_required

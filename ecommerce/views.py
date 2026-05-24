@@ -156,6 +156,14 @@ def catalogo(request):
     sort = (request.GET.get('sort') or 'relevant').strip()
     if sort not in SORT_OPTIONS:
         sort = 'relevant'
+    # Filtros especificos de perfumeria. Solo se aplican (y solo se
+    # muestran en el sidebar) cuando cat=perfumes. Si el cliente cambia
+    # de categoria, se ignoran silenciosamente para no esconder productos.
+    perfume_aplicable = cat_slug == 'perfumes'
+    genero = (request.GET.get('genero') or '').strip().lower()
+    marca = (request.GET.get('marca') or '').strip()
+    familia_olfativa = (request.GET.get('familia_olfativa') or '').strip()
+    concentracion = (request.GET.get('concentracion') or '').strip().upper()
 
     tiene_stock_variante = StockTienda.objects.filter(
         tienda=tienda, variante__producto=OuterRef('pk'), cantidad__gt=0
@@ -206,6 +214,18 @@ def catalogo(request):
         productos_qs = productos_qs.annotate(
             hay_stock_talla=Exists(variantes_con_talla),
         ).filter(hay_stock_talla=True)
+
+    # Filtros de perfumeria — solo cuando estamos en /tienda/?cat=perfumes.
+    # En otras categorias se ignoran (no rompen la URL si quedan colados).
+    if perfume_aplicable:
+        if genero in ('mujer', 'hombre', 'unisex'):
+            productos_qs = productos_qs.filter(genero=genero)
+        if marca:
+            productos_qs = productos_qs.filter(marca=marca)
+        if familia_olfativa:
+            productos_qs = productos_qs.filter(familia_olfativa=familia_olfativa)
+        if concentracion in ('EDP', 'EDT', 'EDC', 'BODY', 'SET'):
+            productos_qs = productos_qs.filter(concentracion=concentracion)
 
     if precio_min:
         try:
@@ -308,6 +328,23 @@ def catalogo(request):
             'next_page_url': next_page_url,
         })
 
+    # Valores disponibles para los filtros de perfumeria — solo de los
+    # productos actualmente visibles. Asi el sidebar no ofrece "marca: Yara"
+    # si esa marca no tiene stock en este momento.
+    marcas_disponibles = []
+    familias_olfativas_disponibles = []
+    if perfume_aplicable:
+        marcas_disponibles = list(
+            Producto.objects.filter(pk__in=productos_visibles_ids)
+            .exclude(marca='').order_by('marca')
+            .values_list('marca', flat=True).distinct()
+        )
+        familias_olfativas_disponibles = list(
+            Producto.objects.filter(pk__in=productos_visibles_ids)
+            .exclude(familia_olfativa='').order_by('familia_olfativa')
+            .values_list('familia_olfativa', flat=True).distinct()
+        )
+
     return render(request, 'ecommerce/catalogo.html', {
         'productos': page_obj.object_list,
         'next_page_url': next_page_url,
@@ -329,6 +366,14 @@ def catalogo(request):
         'query': query,
         'solo_ofertas': solo_ofertas,
         'items_count': cart.items_count,
+        # Filtros de perfumeria (solo activos cuando cat=perfumes).
+        'perfume_aplicable': perfume_aplicable,
+        'genero_activo': genero if perfume_aplicable else '',
+        'marca_activa': marca if perfume_aplicable else '',
+        'familia_olfativa_activa': familia_olfativa if perfume_aplicable else '',
+        'concentracion_activa': concentracion if perfume_aplicable else '',
+        'marcas_disponibles': marcas_disponibles,
+        'familias_olfativas_disponibles': familias_olfativas_disponibles,
         **_seo_context_catalogo(
             cat_info=cat_info,
             colegio=(
@@ -754,6 +799,7 @@ def agregar(request):
         messages.success(
             request,
             f'+ {variante.producto.nombre} ({variante.sku}) agregado al carrito.',
+            extra_tags='cart-add',  # toast clickeable → /tienda/carrito/
         )
     else:
         producto = Producto.objects.filter(
@@ -765,6 +811,7 @@ def agregar(request):
         cart.add_producto(item_id, cantidad)
         messages.success(
             request, f'+ {producto.nombre} agregado al carrito.',
+            extra_tags='cart-add',
         )
 
     return _respuesta_agregar(request)

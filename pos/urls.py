@@ -18,7 +18,6 @@ urlpatterns = [
     path('recibo/<int:pk>/imprimir/', views.recibo_imprimir, name='recibo_imprimir'),
     path('ventas/', views.ventas, name='ventas'),
     path('tienda/seleccionar/', views.seleccionar_tienda, name='seleccionar_tienda'),
-    path('agregar-stock/', views.agregar_stock, name='agregar_stock'),
 
     # PWA: manifest + service worker. La ruta del SW vive bajo /pos/ a
     # proposito — su scope queda restringido al POS.

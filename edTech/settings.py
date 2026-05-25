@@ -48,6 +48,22 @@ env = environ.Env(
     KHIPU_BASE_URL=(str, 'https://payment-api.khipu.com'),
     DEFAULT_FROM_EMAIL=(str, 'ventas@ideas.local'),
     EMAIL_BACKEND=(str, 'django.core.mail.backends.console.EmailBackend'),
+    # SMTP — solo necesarios si EMAIL_BACKEND apunta a smtp.EmailBackend.
+    # Defaults pensados para Zoho Mail (datacenter US). Si tu cuenta es EU,
+    # cambialo a `smtp.zoho.eu` en el .env.
+    EMAIL_HOST=(str, 'smtp.zoho.com'),
+    EMAIL_PORT=(int, 587),
+    EMAIL_USE_TLS=(bool, True),
+    EMAIL_HOST_USER=(str, ''),
+    EMAIL_HOST_PASSWORD=(str, ''),
+    # SERVER_EMAIL: de donde salen los mails automaticos de Django (alertas
+    # de error a ADMINS cuando DEBUG=False). Si esta vacio, usa
+    # DEFAULT_FROM_EMAIL.
+    SERVER_EMAIL=(str, ''),
+    # Timeout en segundos para abrir el socket SMTP. Sin esto, un Zoho
+    # caido haria que `send_mail()` cuelgue al request hasta que el SO
+    # corte. 10s es razonable para SMTP transactional.
+    EMAIL_TIMEOUT=(int, 10),
     DTE_EMISSOR=(str, 'mock'),
     OPENFACTURA_API_KEY=(str, ''),
     OPENFACTURA_BASE_URL=(str, 'https://api.haulmer.com'),
@@ -348,8 +364,17 @@ ECOMMERCE_TIENDA_ID = env('ECOMMERCE_TIENDA_ID') or None
 # adapter en ecommerce/gateways/webpay.py y registrar en _REGISTRY.
 
 # Email (boleta al cliente online). Por defecto console backend en dev.
+# En prod (Hetzner VPS) usamos SMTP de Zoho — ver .env.example seccion email.
 EMAIL_BACKEND = env('EMAIL_BACKEND')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env('EMAIL_PORT')
+EMAIL_USE_TLS = env('EMAIL_USE_TLS')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_TIMEOUT = env('EMAIL_TIMEOUT')
+# Si no se setea SERVER_EMAIL en .env, cae al DEFAULT_FROM_EMAIL.
+SERVER_EMAIL = env('SERVER_EMAIL') or DEFAULT_FROM_EMAIL
 
 # Emisión de boleta/factura electrónica al SII (DTE).
 # Opciones: mock | openfactura | none | ruta.modulo.ClaseEmissor

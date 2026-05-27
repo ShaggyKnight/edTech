@@ -1,0 +1,47 @@
+{% extends 'base_public.html' %}
+
+{% block titulo %}Aviso cancelado · Ideas Boutique{% endblock %}
+
+{% block content %}
+<div style="max-width:560px; margin:80px auto; padding:0 20px; text-align:center;">
+
+  {% if estado == 'cancelado' %}
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:36px; margin:0 0 12px;">
+      Listo, cancelado.
+    </h1>
+    <p style="color:#5a5a5a; font-size:16px; line-height:1.6;">
+      No te vamos a avisar más sobre la reposición de
+      <em>{{ aviso.variante }}</em>.
+    </p>
+    <p style="color:#8B7A5A; font-size:14px; margin-top:30px;">
+      Si más adelante querés que te avisemos, podés volver al producto y
+      marcar la opción otra vez.
+    </p>
+
+  {% elif estado == 'ya_estaba_cancelado' %}
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:36px; margin:0 0 12px;">
+      Ya estaba cancelado.
+    </h1>
+    <p style="color:#5a5a5a; font-size:16px; line-height:1.6;">
+      No te vamos a mandar más avisos sobre esta talla.
+    </p>
+
+  {% else %}
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:36px; margin:0 0 12px;">
+      Hmm, no encontramos ese aviso.
+    </h1>
+    <p style="color:#5a5a5a; font-size:16px; line-height:1.6;">
+      El link puede estar mal copiado o el aviso ya no existe.
+      Si seguís recibiendo emails que no querés, escribinos por WhatsApp
+      y lo solucionamos.
+    </p>
+  {% endif %}
+
+  <a href="{% url 'ecommerce:catalogo' %}"
+     style="display:inline-block; margin-top:36px; padding:14px 32px;
+            background:#0E0E0E; color:#C9A96E; text-decoration:none;
+            border-radius:999px; font-weight:600; letter-spacing:0.02em;">
+    Volver a la tienda →
+  </a>
+</div>
+{% endblock %}

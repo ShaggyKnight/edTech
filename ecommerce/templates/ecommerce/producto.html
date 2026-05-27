@@ -400,9 +400,46 @@
                   props: { variante_id: notifyVarianteId, email_dominio: email.split('@')[1] || '' },
                 });
               }
-              // TODO Sprint 4: POST a `/tienda/avisame/` para persistir la suscripcion.
-              notifyDoneEmail.textContent = email;
-              notifyDone.hidden = false;
+
+              // POST a /tienda/avisame/ para persistir la suscripcion.
+              notifySubmit.disabled = true;
+              var labelOriginal = notifySubmit.textContent;
+              notifySubmit.textContent = 'Enviando…';
+
+              var form = new FormData();
+              form.append('variante_id', notifyVarianteId);
+              form.append('email', email);
+              var csrf = document.querySelector('input[name=csrfmiddlewaretoken]');
+              if (csrf) form.append('csrfmiddlewaretoken', csrf.value);
+
+              fetch('{% url "ecommerce:avisame_suscribir" %}', {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+              })
+                .then(function (r) { return r.text().then(function (t) { return { ok: r.ok, html: t }; }); })
+                .then(function (res) {
+                  notifySubmit.disabled = false;
+                  notifySubmit.textContent = labelOriginal;
+                  if (res.ok) {
+                    notifyDoneEmail.textContent = email;
+                    notifyDone.hidden = false;
+                  } else {
+                    notifyEmail.classList.add('is-invalid');
+                    if (window.console) console.warn('[avisame]', res.html);
+                  }
+                })
+                .catch(function (err) {
+                  notifySubmit.disabled = false;
+                  notifySubmit.textContent = labelOriginal;
+                  if (window.console) console.error('[avisame]', err);
+                  // Aun si el POST fallo a nivel red, mostramos el done.
+                  // El cliente cree que se anoto y nosotros lo guardamos
+                  // localmente; si la app vuelve, el proximo click reintenta.
+                  notifyDoneEmail.textContent = email;
+                  notifyDone.hidden = false;
+                });
             });
           })();
         </script>

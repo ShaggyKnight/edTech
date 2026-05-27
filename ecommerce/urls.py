@@ -32,4 +32,10 @@ urlpatterns = [
     path('cuenta/logout/', views_cuenta.BoutiqueLogoutView.as_view(), name='logout'),
     path('cuenta/registro/', views_cuenta.registro, name='registro'),
     path('cuenta/pedidos/', views_cuenta.mis_pedidos, name='mis_pedidos'),
+
+    # "Avísame cuando vuelva" — suscripcion del cliente a reposicion de
+    # stock de una variante agotada. POST desde el PDP.
+    path('avisame/', views.avisame_suscribir, name='avisame_suscribir'),
+    path('avisame/cancelar/<str:token>/', views.avisame_cancelar,
+         name='avisame_cancelar'),
 ]

@@ -1160,3 +1160,97 @@ def mock_pago(request):
         'token': token,
         'return_url': return_url,
     })
+
+
+# ─────────────────────────────────────────────────────────────────────
+# "Avísame cuando vuelva" — suscripcion a reposicion de stock
+# ─────────────────────────────────────────────────────────────────────
+import re as _re_avisame  # noqa: E402
+
+_RE_EMAIL = _re_avisame.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+
+
+@require_POST
+def avisame_suscribir(request):
+    """Cliente pide ser notificado cuando vuelva una variante a stock.
+
+    POST /tienda/avisame/  form-encoded:
+      variante_id: int (required)
+      email: str (required, validado server-side)
+
+    Idempotente: si ya existe un aviso para (variante, email), lo
+    'resucita' (notificado=None, cancelado=None). El usuario espera
+    recibir aviso de nuevo cuando vuelva la talla, no que el sistema
+    le diga 'ya te avise una vez'.
+
+    Response HTML chico que HTMX inyecta donde corresponda.
+    """
+    from .models import AvisoStockReposicion
+
+    variante_id = (request.POST.get('variante_id') or '').strip()
+    email = (request.POST.get('email') or '').strip().lower()
+
+    if not (variante_id.isdigit() and _RE_EMAIL.match(email)):
+        return HttpResponse(
+            '<div class="notify-error">Datos invalidos. '
+            'Revisa el email y reintenta.</div>',
+            status=400,
+        )
+
+    try:
+        variante = ProductoVariante.objects.select_related('producto').get(
+            pk=int(variante_id), activa=True,
+        )
+    except ProductoVariante.DoesNotExist:
+        return HttpResponse(
+            '<div class="notify-error">Esa talla ya no esta disponible.</div>',
+            status=404,
+        )
+
+    aviso, created = AvisoStockReposicion.objects.get_or_create(
+        variante=variante, email=email,
+    )
+    if not created and (aviso.notificado is not None or aviso.cancelado is not None):
+        # Resucitar: cliente quiere recibir aviso DE NUEVO.
+        aviso.notificado = None
+        aviso.cancelado = None
+        aviso.save(update_fields=['notificado', 'cancelado'])
+
+    log.info(
+        'Avisame: %s suscripto a variante=%s (%s)',
+        email, variante.pk, 'nuevo' if created else 'resucitado',
+    )
+
+    return HttpResponse(
+        '<div class="notify-done">'
+        '<strong>&check; Listo.</strong> Te escribimos a '
+        f'<em>{email}</em> apenas vuelva.'
+        '</div>'
+    )
+
+
+@require_GET
+def avisame_cancelar(request, token):
+    """Cliente clickea el link de unsubscribe en el email. Marca el aviso
+    como cancelado (no se borra para mantener metricas)."""
+    from django.utils import timezone
+
+    from .models import AvisoStockReposicion
+
+    aviso = AvisoStockReposicion.objects.filter(token=token).first()
+    if not aviso:
+        return render(request, 'ecommerce/avisame_cancelado.html', {
+            'estado': 'no_encontrado',
+        })
+
+    if aviso.cancelado is None:
+        aviso.cancelado = timezone.now()
+        aviso.save(update_fields=['cancelado'])
+        estado = 'cancelado'
+    else:
+        estado = 'ya_estaba_cancelado'
+
+    return render(request, 'ecommerce/avisame_cancelado.html', {
+        'estado': estado,
+        'aviso': aviso,
+    })

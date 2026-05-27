@@ -80,6 +80,20 @@ class ReciboVenta(models.Model):
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)
 
+    # Despacho (solo aplica al canal online — los presenciales se llevan
+    # en el momento). Null = nuevo / pendiente; set = ya despachado.
+    despachado_en = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Cuando se entrego al cliente / courier. Null = en cola.',
+    )
+    despachado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='despachos_realizados',
+        help_text='Quien marco el pedido como despachado.',
+    )
+
     class Meta:
         ordering = ['-creado']
         indexes = [
@@ -90,10 +104,22 @@ class ReciboVenta(models.Model):
             # patron — aca dejamos un btree estandar (suficiente con
             # las cantidades reales esperadas por el comercio).
             models.Index(fields=['cliente_email']),
+            # Cola de despacho: filtramos por canal + estado pagado +
+            # despachado_en null. Compuesto cubre el query principal.
+            models.Index(fields=['canal', 'despachado_en']),
         ]
 
     def __str__(self):
         return f'Recibo #{self.pk} [{self.canal}] - {self.creado:%d-%m-%Y %H:%M}'
+
+    @property
+    def en_cola_despacho(self) -> bool:
+        """True si el pedido online esta pagado y todavia sin despachar."""
+        return (
+            self.canal == self.CANAL_ONLINE
+            and self.estado == self.ESTADO_PAGADO
+            and self.despachado_en is None
+        )
 
 
 class ReciboVentaDetalle(models.Model):

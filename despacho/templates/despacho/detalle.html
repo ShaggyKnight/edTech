@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block titulo %}Pedido #{{ pedido.pk }} · Despacho{% endblock %}
+
+{% block content %}
+<div style="max-width:900px; margin:24px auto; padding:0 16px;">
+
+  <div style="margin-bottom:18px;">
+    <a href="{% url 'despacho:cola' %}"
+       style="color:#7A1E2B; text-decoration:none; font-size:13px;">
+      ← Volver a la cola
+    </a>
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:32px; margin:8px 0 0;">
+      Pedido #{{ pedido.pk }}
+      {% if pedido.despachado_en %}
+        <span style="font-size:14px; background:#c8e6c9; color:#2e7d32; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">
+          ✓ DESPACHADO
+        </span>
+      {% else %}
+        <span style="font-size:14px; background:#fff3e0; color:#e65100; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">
+          EN COLA
+        </span>
+      {% endif %}
+    </h1>
+    <div style="color:var(--bo-muted); margin-top:4px;">
+      Entrado el {{ pedido.creado|date:"d-m-Y H:i" }} ({{ pedido.creado|naturaltime }})
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px; background:#e8f5e9;">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+
+    <div class="bo-card">
+      <div style="padding:14px 18px;">
+        <div style="font-size:12px; text-transform:uppercase; color:var(--bo-muted); letter-spacing:1px; margin-bottom:8px;">
+          Cliente
+        </div>
+        <div style="font-size:18px; font-weight:600;">{{ pedido.cliente_nombre|default:"Sin nombre" }}</div>
+        <div style="margin-top:8px; font-size:14px; line-height:1.6;">
+          📧 <a href="mailto:{{ pedido.cliente_email }}" style="color:#7A1E2B;">{{ pedido.cliente_email|default:"—" }}</a><br>
+          📞 {{ pedido.cliente_telefono|default:"sin teléfono" }}<br>
+          🆔 {{ pedido.cliente_rut|default:"sin RUT" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="bo-card">
+      <div style="padding:14px 18px;">
+        <div style="font-size:12px; text-transform:uppercase; color:var(--bo-muted); letter-spacing:1px; margin-bottom:8px;">
+          Entrega
+        </div>
+        {% if pedido.cliente_direccion %}
+          <div style="font-size:14px; line-height:1.6; white-space:pre-line;">{{ pedido.cliente_direccion }}</div>
+        {% else %}
+          <div style="color:var(--bo-muted); font-style:italic;">Retira en local (sin dirección de envío).</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="bo-card" style="margin-bottom:18px;">
+    <div style="padding:14px 18px 0;">
+      <div style="font-size:12px; text-transform:uppercase; color:var(--bo-muted); letter-spacing:1px; margin-bottom:8px;">
+        Productos a preparar
+      </div>
+    </div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#FBF7EE;">
+          <th style="text-align:left; padding:12px 18px; font-size:12px;">Cantidad</th>
+          <th style="text-align:left; padding:12px 18px; font-size:12px;">Producto</th>
+          <th style="text-align:left; padding:12px 18px; font-size:12px;">SKU</th>
+          <th style="text-align:right; padding:12px 18px; font-size:12px;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for det in pedido.detalles.all %}
+        <tr style="border-bottom:1px solid #E5DCC8;">
+          <td style="padding:14px 18px; font-size:22px; font-weight:600;">{{ det.cantidad }}×</td>
+          <td style="padding:14px 18px;">
+            <div style="font-weight:600;">{{ det.descripcion }}</div>
+            {% if det.variante %}
+              <div style="font-size:12px; color:var(--bo-muted);">
+                {% for val in det.variante.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}
+              </div>
+            {% endif %}
+          </td>
+          <td style="padding:14px 18px; font-family:monospace; font-size:13px;">
+            {{ det.variante.sku|default:"—" }}
+          </td>
+          <td style="padding:14px 18px; text-align:right; font-weight:600;">
+            ${{ det.subtotal|default:0|floatformat:0|intcomma }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background:#FBF7EE;">
+          <td colspan="3" style="padding:14px 18px; text-align:right; font-weight:600;">Total</td>
+          <td style="padding:14px 18px; text-align:right; font-family:Georgia,serif; font-size:22px; font-weight:600;">
+            ${{ pedido.total|floatformat:0|intcomma }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  {% if pedido.despachado_en %}
+    <div class="bo-card" style="margin-bottom:18px;">
+      <div style="padding:14px 18px;">
+        <div style="font-size:12px; text-transform:uppercase; color:var(--bo-muted); letter-spacing:1px; margin-bottom:8px;">
+          Despachado
+        </div>
+        <div style="font-size:14px;">
+          ✓ {{ pedido.despachado_en|date:"d-m-Y H:i" }} ({{ pedido.despachado_en|naturaltime }})<br>
+          por {{ pedido.despachado_por.get_full_name|default:pedido.despachado_por.username|default:"—" }}
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:right;">
+      <form method="post" action="{% url 'despacho:desmarcar_despachado' pedido.pk %}"
+            onsubmit="return confirm('¿Reabrir el pedido y volverlo a la cola?');">
+        {% csrf_token %}
+        <button type="submit" class="bo-btn">
+          ↶ Reabrir (volver a cola)
+        </button>
+      </form>
+    </div>
+  {% else %}
+    <div style="text-align:right;">
+      <form method="post" action="{% url 'despacho:marcar_despachado' pedido.pk %}"
+            onsubmit="return confirm('¿Confirmar despacho del pedido #{{ pedido.pk }}? Esto registra la fecha y tu usuario como responsable.');">
+        {% csrf_token %}
+        <button type="submit" class="bo-btn"
+                style="background:#2e7d32; color:#fff; border:none; font-size:16px; padding:14px 32px;">
+          ✓ Marcar como despachado
+        </button>
+      </form>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

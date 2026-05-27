@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block titulo %}Despacho · Pedidos online{% endblock %}
+
+{% block content %}
+<div style="max-width:1200px; margin:24px auto; padding:0 16px;">
+
+  <div style="margin-bottom:24px;">
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:32px; margin:0 0 4px;">
+      Despacho de pedidos online
+    </h1>
+    <p style="color:var(--bo-muted); margin:0;">
+      Pedidos pagados a la espera de empaque y despacho.
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px;
+                  background:{% if 'error' in message.tags %}#fee{% elif 'success' in message.tags %}#e8f5e9{% else %}#fffde7{% endif %};">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {# Tabs: nuevos vs despachados #}
+  <div style="display:flex; gap:8px; margin-bottom:18px;">
+    <a href="?estado=nuevos"
+       style="padding:10px 18px; border-radius:8px; text-decoration:none;
+              {% if estado_filtro != 'despachados' %}background:#7A1E2B; color:#fff;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
+      🆕 Nuevos
+      <span style="background:rgba(255,255,255,.2); padding:2px 8px; border-radius:10px; margin-left:6px; font-size:12px;">
+        {{ contadores.nuevos }}
+      </span>
+    </a>
+    <a href="?estado=despachados"
+       style="padding:10px 18px; border-radius:8px; text-decoration:none;
+              {% if estado_filtro == 'despachados' %}background:#0E0E0E; color:#C9A96E;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
+      ✓ Despachados (últimos 100)
+      <span style="background:rgba(255,255,255,.2); padding:2px 8px; border-radius:10px; margin-left:6px; font-size:12px;">
+        {{ contadores.despachados }}
+      </span>
+    </a>
+  </div>
+
+  <div class="bo-card">
+    {% if pedidos %}
+    <table class="bo-table" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#FBF7EE; text-align:left;">
+          <th style="padding:14px 16px;">#</th>
+          <th style="padding:14px 16px;">Fecha</th>
+          <th style="padding:14px 16px;">Cliente</th>
+          <th style="padding:14px 16px;">Items</th>
+          <th style="padding:14px 16px; text-align:right;">Total</th>
+          {% if estado_filtro == 'despachados' %}
+            <th style="padding:14px 16px;">Despachado</th>
+          {% endif %}
+          <th style="padding:14px 16px; text-align:right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pedido in pedidos %}
+        <tr style="border-bottom:1px solid #E5DCC8;">
+          <td style="padding:14px 16px; font-weight:600;">
+            #{{ pedido.pk }}
+          </td>
+          <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
+            {{ pedido.creado|date:"d-m H:i" }}
+            <div style="color:var(--bo-muted); font-size:11px;">
+              {{ pedido.creado|naturaltime }}
+            </div>
+          </td>
+          <td style="padding:14px 16px;">
+            <div style="font-weight:600;">{{ pedido.cliente_nombre|default:"—" }}</div>
+            <div style="font-size:12px; color:var(--bo-muted);">
+              {{ pedido.cliente_email|default:"sin email" }}
+            </div>
+          </td>
+          <td style="padding:14px 16px; font-size:13px;">
+            {% with detalles=pedido.detalles.all %}
+              {{ detalles|length }} ítem{{ detalles|length|pluralize:"s" }}
+              <div style="color:var(--bo-muted); font-size:11px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                {% for d in detalles %}{{ d.descripcion }}{% if not forloop.last %}, {% endif %}{% endfor %}
+              </div>
+            {% endwith %}
+          </td>
+          <td style="padding:14px 16px; text-align:right; font-family:Georgia,serif; font-weight:600;">
+            ${{ pedido.total|floatformat:0|intcomma }}
+          </td>
+          {% if estado_filtro == 'despachados' %}
+            <td style="padding:14px 16px; font-size:12px;">
+              {{ pedido.despachado_en|date:"d-m H:i" }}
+              <div style="color:var(--bo-muted);">
+                {{ pedido.despachado_por.get_full_name|default:pedido.despachado_por.username|default:"—" }}
+              </div>
+            </td>
+          {% endif %}
+          <td style="padding:14px 16px; text-align:right; white-space:nowrap;">
+            <a href="{% url 'despacho:detalle' pedido.pk %}" class="bo-btn"
+               style="text-decoration:none;">
+              Ver
+            </a>
+            {% if not pedido.despachado_en %}
+            <form method="post" action="{% url 'despacho:marcar_despachado' pedido.pk %}"
+                  style="display:inline; margin-left:4px;"
+                  onsubmit="return confirm('¿Marcar pedido #{{ pedido.pk }} como despachado?');">
+              {% csrf_token %}
+              <button type="submit" class="bo-btn" style="background:#2e7d32; color:#fff; border:none;">
+                ✓ Despachar
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <div style="padding:60px 20px; text-align:center; color:var(--bo-muted);">
+        {% if estado_filtro == 'despachados' %}
+          Todavía no hay pedidos despachados.
+        {% else %}
+          <div style="font-size:48px; opacity:.3;">📦</div>
+          <p>No hay pedidos pendientes de despachar.</p>
+          <p style="font-size:13px;">Cuando entre una nueva venta online, aparecerá acá.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

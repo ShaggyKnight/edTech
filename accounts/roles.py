@@ -7,8 +7,9 @@ sobre qué permisos tiene cada rol — la data migration los aplica al poblar la
 ADMIN = 'admin'
 CAJERO = 'cajero'
 BODEGUERO = 'bodeguero'
+DESPACHADOR = 'despachador'
 
-ALL_ROLES = (ADMIN, CAJERO, BODEGUERO)
+ALL_ROLES = (ADMIN, CAJERO, BODEGUERO, DESPACHADOR)
 
 
 ROLE_PERMISSIONS = {
@@ -47,6 +48,23 @@ ROLE_PERMISSIONS = {
             'inventario': ['add', 'change', 'view'],
             'inventariolinea': ['add', 'change', 'delete', 'view'],
             'movimientostock': ['add', 'view'],
+        },
+    },
+    # Despachador prepara y despacha pedidos online. Ve solo lo necesario
+    # para identificar productos a empacar (sin precios costo, sin proveedores)
+    # y para marcar el pedido como despachado.
+    DESPACHADOR: {
+        'catalogo': {
+            'producto': ['view'],
+            'productovariante': ['view'],
+        },
+        'bodega': {
+            'tienda': ['view'],
+            'stocktienda': ['view'],
+        },
+        'pos': {
+            'reciboventa': ['view', 'change'],   # change = marcar despachado
+            'reciboventadetalle': ['view'],
         },
     },
     # admin recibe todos los permisos dinámicamente en la migración

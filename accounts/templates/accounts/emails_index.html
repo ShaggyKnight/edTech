@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Preview de emails · Ideas Boutique{% endblock %}
+
+{% block content %}
+<div style="max-width:1100px; margin:24px auto; padding:0 16px;">
+
+  <div style="margin-bottom:24px;">
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:32px; margin:0 0 8px;">
+      Preview de emails transaccionales
+    </h1>
+    <p style="color:var(--bo-muted); margin:0;">
+      Renderea cada email con mock data para verificar diseño, copy y feature flags
+      antes de activarlos en producción. El link <strong>HTML</strong> abre el preview
+      en el browser; <strong>Enviar a mí</strong> manda el email real vía SMTP de Zoho.
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px;
+                  background:{% if 'error' in message.tags %}#fee{% else %}#e8f5e9{% endif %};
+                  border:1px solid {% if 'error' in message.tags %}#e57373{% else %}#a5d6a7{% endif %};">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="bo-card">
+    <table class="bo-table" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#FBF7EE; text-align:left;">
+          <th style="padding:14px 16px; border-bottom:2px solid #E5DCC8;">Email</th>
+          <th style="padding:14px 16px; border-bottom:2px solid #E5DCC8;">Para quién</th>
+          <th style="padding:14px 16px; border-bottom:2px solid #E5DCC8;">Feature flag</th>
+          <th style="padding:14px 16px; border-bottom:2px solid #E5DCC8; text-align:right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr style="border-bottom:1px solid #E5DCC8;">
+          <td style="padding:16px;">
+            <div style="font-weight:600; font-size:15px; margin-bottom:4px;">
+              {{ item.entry.nombre }}
+            </div>
+            <div style="font-size:13px; color:var(--bo-muted); line-height:1.45; margin-bottom:6px;">
+              {{ item.entry.descripcion }}
+            </div>
+            <div style="font-size:12px; color:#8B7A5A; font-style:italic;">
+              Subject: <code>{{ item.entry.subject_template }}</code>
+            </div>
+          </td>
+          <td style="padding:16px; font-size:13px; vertical-align:top;">
+            {{ item.entry.para_quien }}
+          </td>
+          <td style="padding:16px; font-size:12px; vertical-align:top;">
+            {% if item.entry.feature_flag %}
+              <code>{{ item.entry.feature_flag }}</code>
+              <span style="display:inline-block; padding:2px 8px; margin-left:4px; border-radius:10px; font-weight:600;
+                background:{% if item.flag_estado == 'on' %}#c8e6c9{% else %}#ffcdd2{% endif %};
+                color:{% if item.flag_estado == 'on' %}#2e7d32{% else %}#c62828{% endif %};">
+                {{ item.flag_estado|upper }}
+              </span>
+            {% else %}
+              <span style="color:#8B7A5A; font-style:italic;">siempre activo</span>
+            {% endif %}
+          </td>
+          <td style="padding:16px; text-align:right; vertical-align:top; white-space:nowrap;">
+            <a href="{% url 'accounts:email_preview' item.entry.slug %}"
+               class="bo-btn"
+               style="text-decoration:none; margin-right:6px;">
+              HTML
+            </a>
+            <form method="post"
+                  action="{% url 'accounts:email_enviar_demo' item.entry.slug %}"
+                  style="display:inline;"
+                  onsubmit="return confirm('¿Mandar el email de demo a tu inbox?');">
+              {% csrf_token %}
+              <button type="submit" class="bo-btn"
+                      style="background:#7A1E2B; color:#fff; border:none;">
+                Enviar a mí
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:24px; padding:16px; background:#FBF7EE; border:1px solid #E5DCC8; border-radius:10px; font-size:13px; line-height:1.6;">
+    <strong>💡 Cómo usar este preview</strong>
+    <ul style="margin:8px 0 0; padding-left:22px;">
+      <li><strong>HTML</strong> renderea el template con mock data en una nueva ventana — útil para iterar diseño, ver responsive, copy.</li>
+      <li><strong>Enviar a mí</strong> manda el email real vía SMTP de Zoho a <code>{{ request.user.email|default:"tu email" }}</code>. Útil para ver cómo se ve en Gmail/Outlook/Apple Mail (renderers reales).</li>
+      <li>Los <strong>feature flags</strong> en rojo (OFF) significan que el email <strong>no se manda automáticamente</strong> en producción. Encendelos en <code>.env</code> con <code>FEATURE_EMAIL_*=True</code> cuando estés conforme con el diseño.</li>
+      <li>Si encontrás un bug en algún template (variable que no existe, link roto), abrí <code>accounts/email_previews.py</code> y comparalo con <code>ecommerce/emails.py</code> — varios pasan contextos desalineados.</li>
+    </ul>
+  </div>
+
+</div>
+{% endblock %}

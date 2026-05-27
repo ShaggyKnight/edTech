@@ -78,6 +78,9 @@ env = environ.Env(
     SITE_URL=(str, ''),
     OWNER_NOTIFICATION_EMAIL=(str, ''),
     ANALYTICS_DOMAIN=(str, ''),
+    # Microsoft Clarity project ID — heatmaps + session replays.
+    # Vacio en dev/local = sin tracking. En prod se setea en .env.
+    CLARITY_PROJECT_ID=(str, ''),
     # BUG-009: número de WhatsApp del local. Formato E.164 sin + ni
     # espacios (ej. '56912345678'). Vacío = el bloque "WhatsApp directo"
     # se muestra como texto plano (estado actual hasta que se configure).
@@ -135,6 +138,7 @@ INSTALLED_APPS = [
     'ecommerce.apps.EcommerceConfig',
     'contabilidad.apps.ContabilidadConfig',
     'reportes.apps.ReportesConfig',
+    'despacho.apps.DespachoConfig',
 ]
 
 LOGIN_URL = 'login'
@@ -390,6 +394,7 @@ DTE_CANALES_HABILITADOS = env('DTE_CANALES_HABILITADOS')
 SITE_URL = env('SITE_URL')                              # ej: https://ideasboutique.cl
 OWNER_NOTIFICATION_EMAIL = env('OWNER_NOTIFICATION_EMAIL')  # email de Blanca
 ANALYTICS_DOMAIN = env('ANALYTICS_DOMAIN')              # dominio Plausible (vacío = sin analytics)
+CLARITY_PROJECT_ID = env('CLARITY_PROJECT_ID')          # Microsoft Clarity (vacío = sin heatmaps)
 PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del local, ej '56912345678'
 
 # Feature flags. Bloque 9 (resenas) sigue codeado y testeado pero

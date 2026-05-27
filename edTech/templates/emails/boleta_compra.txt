@@ -19,9 +19,10 @@ Ver el pedido online:
 {{ recibo.dte_url_pdf }}
 {% endif %}
 
-¿Algo que ajustar?
-Si compraste uniforme escolar, hacemos ajustes sin costo
-hasta marzo. Pasá por el local o escribinos por WhatsApp.
+¿Algo no está bien?
+Si recibís el pedido y algo falla — talla equivocada,
+producto distinto al pedido, o cualquier inconveniente —
+escribinos por WhatsApp y lo solucionamos.
 
 ─────────────────────────────────────────
 Familia Contreras

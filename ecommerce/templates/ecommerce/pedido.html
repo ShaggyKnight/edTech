@@ -1,88 +1,433 @@
-{% extends "base.html" %}
-{% load humanize %}
+{% extends 'base_public.html' %}
+{% load humanize static catalogo_extras %}
 
-{% block titulo %}Pedido #{{ recibo.pk }}{% endblock %}
+{% block titulo %}Pedido #{{ recibo.pk }} · Ideas Boutique{% endblock %}
+{% block meta_description %}Detalle de tu pedido #{{ recibo.pk }} en Ideas Boutique.{% endblock %}
 
-{% block content %}
-<div class="container" style="padding: 20px; max-width: 800px;">
-    <div class="panel panel-success">
-        <div class="panel-heading">
-            <h3 class="panel-title">
-                <span class="glyphicon glyphicon-ok-circle"></span>
-                ¡Gracias por tu compra!
-            </h3>
+{% comment %}
+  B-001 · página pública del pedido online.
+
+  Cambios vs versión anterior (que extendía base.html del backoffice):
+  - Extiende base_public.html → mismo header/footer que el resto de
+    la tienda, favicon dorado, fuentes Cormorant + Inter.
+  - Hero de confirmación con check verde + número de pedido grande.
+  - Timeline visual del estado (pagado → en preparación → listo →
+    retirado / despachado).
+  - Tabla de detalle con miniatura, talla y precio en columnas
+    alineadas; subtotal correcto (precio_unit × cantidad − descuento).
+  - Bloque de método de pago + referencia del gateway.
+  - Si hay DTE: link directo al PDF + folio + tipo.
+  - CTAs claras: WhatsApp · seguir comprando · imprimir.
+  - Microcopy de "qué pasa ahora" para que el cliente sepa el próximo
+    paso sin tener que escribir a Blanca.
+
+  Variables esperadas en el contexto (todas opcionales salvo recibo):
+    recibo                       — ReciboVenta
+    items_count                  — int (badge del carrito en header)
+    es_retiro_local              — bool (sin envío)
+    pickup_slot                  — SlotRetiro asignado, opcional
+    tracking_url, tracking_code  — si despacho, opcional
+{% endcomment %}
+
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
+
+<main class="pedido-page">
+
+  {# ============== HERO DE CONFIRMACIÓN ============== #}
+  <header class="pedido-hero">
+    <div class="pedido-hero-check" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="56" height="56">
+        <circle cx="32" cy="32" r="28" fill="none" stroke="#547852" stroke-width="2.5"/>
+        <path d="M20 33 l9 9 l16 -19" fill="none" stroke="#547852"
+              stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="eyebrow">¡Gracias por tu compra!</div>
+    <h1>
+      Pedido <span class="pedido-num">#{{ recibo.pk }}</span>
+    </h1>
+    <p class="pedido-sub">
+      {% if recibo.cliente_nombre %}{{ recibo.cliente_nombre|capfirst }}, t{% else %}T{% endif %}u pedido quedó
+      <strong>pagado</strong> el {{ recibo.creado|date:"d \d\e F" }} a las {{ recibo.creado|date:"H:i" }}.
+      {% if recibo.cliente_email %}
+        Te enviamos la confirmación a <strong>{{ recibo.cliente_email }}</strong>.
+      {% endif %}
+    </p>
+  </header>
+
+  {# ============== TIMELINE DE ESTADO ============== #}
+  <section class="pedido-timeline" aria-label="Estado del pedido">
+    <ol>
+      <li class="step done">
+        <span class="dot"></span>
+        <div>
+          <strong>Pagado</strong>
+          <span>{{ recibo.creado|date:"d-m-Y H:i" }}</span>
         </div>
-        <div class="panel-body">
-            <p>Tu pedido <strong>#{{ recibo.pk }}</strong> fue pagado exitosamente.</p>
-            {% if recibo.cliente_email %}
-                <p>Te enviamos la boleta a <strong>{{ recibo.cliente_email }}</strong>.</p>
+      </li>
+      <li class="step {% if not recibo.despachado_en %}current{% else %}done{% endif %}">
+        <span class="dot"></span>
+        <div>
+          <strong>En preparación</strong>
+          <span>{% if recibo.despachado_en %}Listo el {{ recibo.despachado_en|date:"d-m H:i" }}{% else %}Estamos armando tu pedido{% endif %}</span>
+        </div>
+      </li>
+      {% if es_retiro_local %}
+        <li class="step {% if recibo.despachado_en %}current{% endif %}">
+          <span class="dot"></span>
+          <div>
+            <strong>Listo para retiro</strong>
+            <span>{% if pickup_slot %}{{ pickup_slot.fecha|date:"D d-m" }} · {{ pickup_slot.hora_inicio|time:"H:i" }}{% else %}Te avisamos por WhatsApp{% endif %}</span>
+          </div>
+        </li>
+        <li class="step">
+          <span class="dot"></span>
+          <div>
+            <strong>Retirado</strong>
+            <span>Caupolicán 437-B · Los Vilos</span>
+          </div>
+        </li>
+      {% else %}
+        <li class="step {% if recibo.despachado_en %}current{% endif %}">
+          <span class="dot"></span>
+          <div>
+            <strong>Despachado</strong>
+            <span>{% if tracking_code %}Tracking {{ tracking_code }}{% elif recibo.despachado_en %}Salió el {{ recibo.despachado_en|date:"d-m H:i" }}{% else %}24–72 h hábiles{% endif %}</span>
+          </div>
+        </li>
+        <li class="step">
+          <span class="dot"></span>
+          <div>
+            <strong>Entregado</strong>
+            <span>En tu domicilio</span>
+          </div>
+        </li>
+      {% endif %}
+    </ol>
+  </section>
+
+  {# ============== QUÉ PASA AHORA ============== #}
+  <section class="pedido-callout">
+    {% if recibo.despachado_en %}
+      {% if es_retiro_local %}
+        Tu pedido ya está <strong>listo para retiro</strong> en
+        <strong>Caupolicán 437-B, Los Vilos</strong>. Lun a Sáb · 9:00–19:00.
+        Llevá la boleta (digital o impresa).
+      {% else %}
+        Tu pedido <strong>ya salió</strong> el {{ recibo.despachado_en|date:"d-m H:i" }}.
+        Llega entre 24 y 72 horas hábiles a tu domicilio.
+      {% endif %}
+    {% elif es_retiro_local %}
+      <strong>Te avisamos por WhatsApp</strong> apenas tu pedido esté
+      listo para retiro. Pasá por <strong>Caupolicán 437-B, Los Vilos</strong>
+      con la boleta (digital o impresa). Lun a Sáb · 9:00–19:00.
+    {% else %}
+      <strong>Estamos preparando tu pedido.</strong> Te escribimos por
+      WhatsApp cuando salga del local. Llega entre 24 y 72 horas hábiles
+      a tu domicilio.
+    {% endif %}
+  </section>
+
+  {# ============== DETALLE DEL PEDIDO ============== #}
+  <section class="pedido-detalle">
+    <h2>Detalle</h2>
+    <ul class="pedido-items">
+      {% for d in recibo.detalles.all %}
+        <li class="pedido-item">
+          <div class="pedido-item-thumb">
+            {% if d.variante and d.variante.producto %}
+              {% imagen_producto d.variante.producto as img_url %}
+              <img src="{{ img_url }}" alt="" loading="lazy" width="80" height="80">
+            {% elif d.producto %}
+              {% imagen_producto d.producto as img_url %}
+              <img src="{{ img_url }}" alt="" loading="lazy" width="80" height="80">
+            {% else %}
+              <div class="pedido-item-fallback" aria-hidden="true">i</div>
             {% endif %}
+          </div>
+          <div class="pedido-item-meta">
+            <div class="pedido-item-nombre">{{ d.descripcion }}</div>
+            <div class="pedido-item-detalle">
+              {{ d.cantidad }} × ${{ d.precio_unitario|floatformat:0|intcomma }}
+              {% if d.descuento %}
+                · <span class="pedido-item-desc">−${{ d.descuento|floatformat:0|intcomma }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="pedido-item-sub">
+            ${{ d.subtotal|floatformat:0|intcomma }}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <dl class="pedido-totales">
+      <div class="row">
+        <dt>Subtotal</dt>
+        <dd>${{ recibo.subtotal|floatformat:0|intcomma }}</dd>
+      </div>
+      {% if recibo.descuento %}
+        <div class="row descuento">
+          <dt>Descuentos aplicados</dt>
+          <dd>−${{ recibo.descuento|floatformat:0|intcomma }}</dd>
         </div>
+      {% endif %}
+      <div class="row total">
+        <dt>Total pagado</dt>
+        <dd>${{ recibo.total|floatformat:0|intcomma }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  {# ============== PAGO + BOLETA ============== #}
+  <section class="pedido-grid">
+    <div class="pedido-card">
+      <div class="pedido-card-head">Forma de pago</div>
+      <div class="pedido-card-body">
+        <strong>{{ recibo.payment_provider|default:"Webpay"|capfirst }}</strong>
+        {% if recibo.payment_reference %}
+          <div class="pedido-card-sub">
+            Ref. <code>{{ recibo.payment_reference|truncatechars:24 }}</code>
+          </div>
+        {% endif %}
+      </div>
     </div>
 
-    <div class="page-header">
-        <h2>
-            Detalle del pedido
-            <small>{{ recibo.creado|date:"d-m-Y H:i" }}</small>
-        </h2>
-    </div>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Descripción</th>
-                <th class="text-center">Cantidad</th>
-                <th class="text-right">Precio</th>
-                <th class="text-right">Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% comment %}
-              BUG-005: los montos de Recibo / RecepcionDetalle son
-              Decimal con 2 decimales; sin format quedan "$64990.00".
-              Pasamos por floatformat:0 (sin decimales) + intcomma
-              (separador de miles CLP).
-            {% endcomment %}
-            {% for d in recibo.detalles.all %}
-            <tr>
-                <td>{{ d.descripcion }}</td>
-                <td class="text-center">{{ d.cantidad }}</td>
-                <td class="text-right">${{ d.precio_unitario|floatformat:0|intcomma }}</td>
-                <td class="text-right">${{ d.subtotal|floatformat:0|intcomma }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3" class="text-right">Subtotal</td>
-                <td class="text-right">${{ recibo.subtotal|floatformat:0|intcomma }}</td>
-            </tr>
-            {% if recibo.descuento %}
-            <tr>
-                <td colspan="3" class="text-right">Descuento</td>
-                <td class="text-right">−${{ recibo.descuento|floatformat:0|intcomma }}</td>
-            </tr>
-            {% endif %}
-            <tr>
-                <th colspan="3" class="text-right">TOTAL</th>
-                <th class="text-right"><h3>${{ recibo.total|floatformat:0|intcomma }}</h3></th>
-            </tr>
-        </tfoot>
-    </table>
-
-    {% if recibo.cliente_nombre or recibo.cliente_rut %}
-    <div class="panel panel-default">
-        <div class="panel-heading">Datos de la boleta</div>
-        <div class="panel-body">
-            {% if recibo.cliente_nombre %}<strong>{{ recibo.cliente_nombre }}</strong><br>{% endif %}
-            {% if recibo.cliente_rut %}RUT: {{ recibo.cliente_rut }}<br>{% endif %}
-            {% if recibo.cliente_email %}Email: {{ recibo.cliente_email }}{% endif %}
-        </div>
+    {% if recibo.dte_url_pdf or recibo.dte_folio %}
+    <div class="pedido-card">
+      <div class="pedido-card-head">Boleta electrónica</div>
+      <div class="pedido-card-body">
+        {% if recibo.dte_folio %}
+          <strong>Folio {{ recibo.dte_folio }}</strong>
+          {% if recibo.dte_tipo == 33 %} · Factura{% else %} · Boleta{% endif %}
+        {% else %}
+          <strong>Procesando…</strong>
+          <div class="pedido-card-sub">Te llega por email cuando esté lista.</div>
+        {% endif %}
+        {% if recibo.dte_url_pdf %}
+          <a href="{{ recibo.dte_url_pdf }}" class="pedido-card-link" target="_blank" rel="noopener">
+            Descargar PDF →
+          </a>
+        {% endif %}
+      </div>
     </div>
     {% endif %}
 
-    <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-primary">
-        <span class="glyphicon glyphicon-chevron-left"></span> Seguir comprando
+    {% if recibo.cliente_nombre or recibo.cliente_rut %}
+    <div class="pedido-card">
+      <div class="pedido-card-head">Datos del cliente</div>
+      <div class="pedido-card-body">
+        {% if recibo.cliente_nombre %}<strong>{{ recibo.cliente_nombre }}</strong>{% endif %}
+        {% if recibo.cliente_rut %}<div class="pedido-card-sub">RUT {{ recibo.cliente_rut }}</div>{% endif %}
+        {% if recibo.cliente_email %}<div class="pedido-card-sub">{{ recibo.cliente_email }}</div>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ============== CTAs ============== #}
+  <section class="pedido-ctas">
+    {% if PUBLIC_WHATSAPP %}
+    <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%2C%20consulta%20sobre%20el%20pedido%20%23{{ recibo.pk }}"
+       class="btn-primary" target="_blank" rel="noopener">
+      <svg class="ico ico--16"><use href="#ico-whatsapp"/></svg>
+      Consultar por WhatsApp
     </a>
-</div>
+    {% endif %}
+    <a href="{% url 'ecommerce:catalogo' %}" class="btn-outline">
+      Seguir comprando
+    </a>
+    <button type="button" class="btn-ghost" onclick="window.print()">
+      <svg class="ico ico--16"><use href="#ico-printer"/></svg>
+      Imprimir
+    </button>
+  </section>
+
+  {# ============== AYUDA AL PIE ============== #}
+  <footer class="pedido-help">
+    <p>
+      ¿Algo no está bien? Si el pedido tiene algún problema —
+      talla equivocada, producto distinto al que pediste o cualquier
+      inconveniente — <strong>escribinos por WhatsApp</strong> y lo
+      solucionamos. También tenés <strong>15 días</strong> para cambios
+      (producto sin uso, con boleta).
+    </p>
+    <p class="pedido-help-firma">
+      — Familia Contreras · Ideas Boutique, desde 1987
+    </p>
+  </footer>
+
+</main>
+
+{% include 'ecommerce/_shop_footer.html' %}
+
+<style>
+  /* ============================================================
+     Página pública de pedido — vocabulario boutique
+     ============================================================ */
+  .pedido-page { max-width: 880px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* HERO */
+  .pedido-hero { text-align: center; padding: 32px 16px 36px; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+  .pedido-hero-check {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: rgba(84, 120, 82, 0.08);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+    animation: pedido-check-pop 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes pedido-check-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .pedido-hero h1 { font-family: var(--serif); font-size: clamp(34px, 5vw, 48px); font-weight: 600; margin: 8px 0 14px; letter-spacing: -0.005em; }
+  .pedido-num { color: var(--gold-2); font-style: italic; font-weight: 500; }
+  .pedido-sub { color: var(--ink-60); font-size: 16px; max-width: 56ch; margin: 0 auto; line-height: 1.55; }
+  .pedido-sub strong { color: var(--ink); font-weight: 600; }
+
+  /* TIMELINE */
+  .pedido-timeline ol {
+    list-style: none; padding: 0; margin: 0 0 24px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    position: relative;
+  }
+  .pedido-timeline ol::before {
+    content: ''; position: absolute; top: 9px;
+    left: 12.5%; right: 12.5%; height: 2px; background: var(--line);
+  }
+  .pedido-timeline li { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 4px; position: relative; }
+  .pedido-timeline .dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--cream); border: 2px solid var(--line);
+    margin-bottom: 10px; z-index: 1; position: relative;
+  }
+  .pedido-timeline .step.done .dot { background: var(--low); border-color: var(--low); }
+  .pedido-timeline .step.done .dot::after {
+    content: ''; position: absolute; inset: 4px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M2 6 l3 3 l5 -6'/></svg>");
+    background-size: contain;
+  }
+  .pedido-timeline .step.current .dot {
+    background: var(--gold); border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgba(201,169,110,.25);
+    animation: pedido-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pedido-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(201,169,110,.25); } 50% { box-shadow: 0 0 0 8px rgba(201,169,110,.1); } }
+  .pedido-timeline strong { display: block; font-size: 13px; font-weight: 600; }
+  .pedido-timeline span { font-size: 11px; color: var(--ink-60); display: block; margin-top: 2px; line-height: 1.4; }
+  .pedido-timeline .step.done strong { color: var(--low); }
+  .pedido-timeline .step.current strong { color: var(--ink); }
+  .pedido-timeline .step:not(.done):not(.current) { opacity: 0.5; }
+
+  /* CALLOUT */
+  .pedido-callout {
+    background: rgba(201,169,110,0.12);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin: 0 0 36px;
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+  .pedido-callout strong { font-weight: 600; }
+
+  /* DETALLE */
+  .pedido-detalle { margin-bottom: 36px; }
+  .pedido-detalle h2 { font-size: 22px; font-weight: 600; margin: 0 0 14px; }
+  .pedido-items { list-style: none; padding: 0; margin: 0 0 18px; }
+  .pedido-item {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .pedido-item:last-child { border-bottom: none; }
+  .pedido-item-thumb { width: 80px; height: 80px; border-radius: 8px; overflow: hidden; background: var(--cream-2); }
+  .pedido-item-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pedido-item-fallback {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--ink); color: var(--gold);
+    font-family: var(--serif); font-style: italic; font-size: 32px;
+  }
+  .pedido-item-nombre { font-weight: 500; font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
+  .pedido-item-detalle { font-size: 13px; color: var(--ink-60); }
+  .pedido-item-desc { color: var(--vino); }
+  .pedido-item-sub { font-family: var(--serif); font-size: 18px; font-weight: 600; white-space: nowrap; }
+
+  /* TOTALES */
+  .pedido-totales {
+    margin: 8px 0 0;
+    border-top: 2px solid var(--ink);
+    padding-top: 12px;
+    display: grid;
+    gap: 6px;
+    margin-left: auto;
+    max-width: 360px;
+  }
+  .pedido-totales .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .pedido-totales dt, .pedido-totales dd { margin: 0; font-size: 14px; }
+  .pedido-totales .descuento { color: var(--vino); }
+  .pedido-totales .total { padding-top: 10px; border-top: 1px solid var(--line); margin-top: 6px; }
+  .pedido-totales .total dt { font-weight: 600; font-size: 16px; }
+  .pedido-totales .total dd { font-family: var(--serif); font-size: 28px; font-weight: 600; }
+
+  /* PAGO + BOLETA + CLIENTE */
+  .pedido-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .pedido-card { background: var(--cream); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .pedido-card-head {
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold-2); font-weight: 600; margin-bottom: 8px;
+  }
+  .pedido-card-body strong { font-size: 15px; font-weight: 600; }
+  .pedido-card-sub { font-size: 12.5px; color: var(--ink-60); margin-top: 4px; }
+  .pedido-card-sub code { background: var(--cream-3); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+  .pedido-card-link {
+    display: inline-block; margin-top: 10px; font-size: 13px;
+    color: var(--gold-2); font-weight: 600; text-decoration: none;
+  }
+  .pedido-card-link:hover { color: var(--ink); }
+
+  /* CTAs */
+  .pedido-ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
+  .pedido-ctas .btn-primary,
+  .pedido-ctas .btn-outline,
+  .pedido-ctas .btn-ghost { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* AYUDA */
+  .pedido-help { padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-60); font-size: 13.5px; line-height: 1.6; }
+  .pedido-help strong { color: var(--ink); font-weight: 600; }
+  .pedido-help-firma { font-family: var(--serif); font-style: italic; color: var(--gold-2); margin-top: 10px; }
+
+  /* MOBILE */
+  @media (max-width: 720px) {
+    .pedido-timeline ol { grid-template-columns: 1fr; gap: 0; }
+    .pedido-timeline ol::before { display: none; }
+    .pedido-timeline li {
+      flex-direction: row; text-align: left;
+      padding: 10px 0; border-bottom: 1px solid var(--line);
+    }
+    .pedido-timeline .dot { margin: 0 14px 0 0; flex-shrink: 0; }
+    .pedido-totales { max-width: 100%; }
+    .pedido-item { grid-template-columns: 64px 1fr; gap: 12px; }
+    .pedido-item-thumb { width: 64px; height: 64px; }
+    .pedido-item-sub { grid-column: 2; font-size: 16px; }
+    .pedido-ctas { flex-direction: column; }
+    .pedido-ctas a, .pedido-ctas button { width: 100%; justify-content: center; }
+  }
+
+  /* PRINT */
+  @media print {
+    .shop-header, .shop-footer, .pedido-ctas, .pedido-callout { display: none !important; }
+    body { background: white; }
+    .pedido-page { padding: 0; max-width: 100%; }
+    .pedido-card { break-inside: avoid; }
+  }
+</style>
+
 {% endblock %}

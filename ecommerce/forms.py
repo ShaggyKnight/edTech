@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
+from django.db import models  # para Q en EditarPerfilForm
 
 
 class AgregarForm(forms.Form):
@@ -48,6 +49,68 @@ class CheckoutForm(forms.Form):
             return ''
         from ecommerce.validators import validar_rut_chileno
         return validar_rut_chileno(rut)
+
+
+class EditarPerfilForm(forms.ModelForm):
+    """Form para que el cliente edite sus datos básicos desde
+    `/tienda/cuenta/perfil/`.
+
+    Edita: nombre (first_name), apellido (last_name), email (+ username
+    espejo). No incluye contraseña — para eso se usa el flujo built-in
+    `auth:password_change`. Tampoco incluye RUT/teléfono porque esos
+    los pide el checkout y se guardan en el recibo, no en el User.
+
+    Valida que el email NO esté tomado por otro user del sistema.
+    """
+    nombre = forms.CharField(
+        max_length=150,
+        label='Nombre',
+        widget=forms.TextInput(attrs={'autocomplete': 'given-name'}),
+    )
+    apellido = forms.CharField(
+        max_length=150,
+        label='Apellido',
+        required=False,
+        widget=forms.TextInput(attrs={'autocomplete': 'family-name'}),
+    )
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={'autocomplete': 'email'}),
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'nombre', 'apellido')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Prepopulamos desde first_name/last_name de auth.User
+        if self.instance and self.instance.pk:
+            self.fields['nombre'].initial = self.instance.first_name
+            self.fields['apellido'].initial = self.instance.last_name
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].lower().strip()
+        User = get_user_model()
+        qs = User.objects.filter(
+            models.Q(username__iexact=email) | models.Q(email__iexact=email)
+        ).exclude(pk=self.instance.pk if self.instance else None)
+        if qs.exists():
+            raise forms.ValidationError(
+                'Ese email ya está asociado a otra cuenta.',
+            )
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        # Email = username (mantener espejado con RegistroClienteForm)
+        user.email = self.cleaned_data['email']
+        user.username = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['nombre']
+        user.last_name = self.cleaned_data.get('apellido', '')
+        if commit:
+            user.save()
+        return user
 
 
 class RegistroClienteForm(UserCreationForm):

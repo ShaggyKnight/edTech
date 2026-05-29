@@ -1047,11 +1047,20 @@ def checkout_retorno(request):
 
 def ver_pedido(request, token: str):
     recibo = get_object_or_404(
-        ReciboVenta.objects.prefetch_related('detalles'),
+        ReciboVenta.objects
+            .prefetch_related('detalles__variante__producto')
+            .select_related('tienda'),
         canal=ReciboVenta.CANAL_ONLINE,
         payment_reference=token,
     )
-    return render(request, 'ecommerce/pedido.html', {'recibo': recibo})
+    return render(request, 'ecommerce/pedido.html', {
+        'recibo': recibo,
+        'items_count': Cart(request.session).items_count,
+        # Por ahora todos los pedidos online son "despacho a domicilio"
+        # — cuando integremos Slots de retiro (Sprint 4.5), este flag
+        # vendra del ReciboVenta.reserva_retiro o equivalente.
+        'es_retiro_local': False,
+    })
 
 
 @csrf_exempt

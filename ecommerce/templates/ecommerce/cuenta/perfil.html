@@ -1,0 +1,297 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block titulo %}Mi perfil · Ideas Boutique{% endblock %}
+{% block meta_description %}Editá tus datos de contacto y contraseña en Ideas Boutique.{% endblock %}
+
+{% block extra_head %}
+<style>
+  .perfil-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+  .perfil-head { margin-bottom: 32px; }
+  .perfil-head .breadcrumb {
+    font-size: 13px;
+    color: var(--ink-60);
+    margin-bottom: 8px;
+  }
+  .perfil-head .breadcrumb a {
+    color: var(--gold-2);
+    text-decoration: none;
+  }
+  .perfil-head h1 {
+    font-family: var(--serif);
+    font-size: clamp(34px, 5vw, 44px);
+    font-weight: 600;
+    margin: 0 0 8px;
+    letter-spacing: -0.005em;
+  }
+  .perfil-head p {
+    color: var(--ink-60);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .perfil-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 18px;
+  }
+  .perfil-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+  }
+  .perfil-card-head h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .perfil-card-head .sub {
+    color: var(--ink-60);
+    font-size: 12px;
+  }
+
+  .perfil-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 16px;
+  }
+  .perfil-row .full { grid-column: 1 / -1; }
+
+  .perfil-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .perfil-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-60);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .perfil-field input {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+    background: white;
+    transition: border-color 0.15s;
+  }
+  .perfil-field input:focus {
+    outline: none;
+    border-color: var(--gold-2);
+    box-shadow: 0 0 0 3px rgba(201,169,110,.15);
+  }
+  .perfil-field .help {
+    font-size: 12px;
+    color: var(--ink-60);
+  }
+  .perfil-field .errors {
+    color: var(--vino);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .perfil-field .errors ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  .perfil-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .perfil-actions .btn-primary {
+    background: var(--ink);
+    color: var(--gold);
+    border: none;
+    padding: 12px 28px;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+  .perfil-actions .btn-primary:hover {
+    background: var(--ink-90, #1f1f1f);
+  }
+  .perfil-actions .btn-outline {
+    background: white;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .perfil-msg {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    border-left: 3px solid;
+  }
+  .perfil-msg.success {
+    background: #ECFDF5;
+    color: #065F46;
+    border-color: #10B981;
+  }
+  .perfil-msg.error {
+    background: #FEF2F2;
+    color: #991B1B;
+    border-color: #EF4444;
+  }
+
+  .danger-zone {
+    background: rgba(122, 30, 43, 0.03);
+    border: 1px solid rgba(122, 30, 43, 0.15);
+  }
+  .danger-zone .perfil-card-head h2 { color: var(--vino); }
+  .danger-zone p { color: var(--ink-60); font-size: 13px; line-height: 1.55; margin: 0 0 14px; }
+
+  @media (max-width: 600px) {
+    .perfil-row { grid-template-columns: 1fr; }
+    .perfil-card { padding: 22px 18px; }
+    .perfil-actions { flex-direction: column; }
+    .perfil-actions .btn-primary,
+    .perfil-actions .btn-outline { width: 100%; text-align: center; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
+
+<main class="perfil-wrap" id="main-content" tabindex="-1">
+
+  <div class="perfil-head">
+    <div class="breadcrumb">
+      <a href="{% url 'ecommerce:mis_pedidos' %}">Mis pedidos</a> · Perfil
+    </div>
+    <h1>Mi perfil</h1>
+    <p>
+      Actualiza tu nombre, email y contraseña. Estos datos se usan para
+      identificarte y para enviarte la confirmación de tus pedidos.
+    </p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="perfil-msg {% if 'error' in message.tags %}error{% else %}success{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {# ============== DATOS PERSONALES ============== #}
+  <form method="post" class="perfil-card" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="perfil">
+
+    <div class="perfil-card-head">
+      <h2>Datos personales</h2>
+      <div class="sub">Identifican tu cuenta</div>
+    </div>
+
+    {% if perfil_form.non_field_errors %}
+      <div class="perfil-msg error">{{ perfil_form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="perfil-row">
+      <div class="perfil-field">
+        <label for="{{ perfil_form.nombre.id_for_label }}">Nombre</label>
+        {{ perfil_form.nombre }}
+        {% if perfil_form.nombre.errors %}<div class="errors">{{ perfil_form.nombre.errors }}</div>{% endif %}
+      </div>
+
+      <div class="perfil-field">
+        <label for="{{ perfil_form.apellido.id_for_label }}">Apellido</label>
+        {{ perfil_form.apellido }}
+        {% if perfil_form.apellido.errors %}<div class="errors">{{ perfil_form.apellido.errors }}</div>{% endif %}
+      </div>
+
+      <div class="perfil-field full">
+        <label for="{{ perfil_form.email.id_for_label }}">Email</label>
+        {{ perfil_form.email }}
+        <div class="help">Si cambias el email, vas a usarlo para iniciar sesión la próxima vez.</div>
+        {% if perfil_form.email.errors %}<div class="errors">{{ perfil_form.email.errors }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="perfil-actions">
+      <a href="{% url 'ecommerce:mis_pedidos' %}" class="btn-outline">Cancelar</a>
+      <button type="submit" class="btn-primary">Guardar cambios</button>
+    </div>
+  </form>
+
+  {# ============== CONTRASEÑA ============== #}
+  <form method="post" class="perfil-card" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="password">
+
+    <div class="perfil-card-head">
+      <h2>Cambiar contraseña</h2>
+      <div class="sub">Por seguridad pedimos la actual</div>
+    </div>
+
+    {% if password_form.non_field_errors %}
+      <div class="perfil-msg error">{{ password_form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="perfil-row">
+      <div class="perfil-field full">
+        <label for="{{ password_form.old_password.id_for_label }}">Contraseña actual</label>
+        {{ password_form.old_password }}
+        {% if password_form.old_password.errors %}<div class="errors">{{ password_form.old_password.errors }}</div>{% endif %}
+      </div>
+
+      <div class="perfil-field">
+        <label for="{{ password_form.new_password1.id_for_label }}">Nueva contraseña</label>
+        {{ password_form.new_password1 }}
+        {% if password_form.new_password1.errors %}<div class="errors">{{ password_form.new_password1.errors }}</div>{% endif %}
+        {% if password_form.new_password1.help_text %}
+          <div class="help">{{ password_form.new_password1.help_text|safe }}</div>
+        {% endif %}
+      </div>
+
+      <div class="perfil-field">
+        <label for="{{ password_form.new_password2.id_for_label }}">Repetir nueva</label>
+        {{ password_form.new_password2 }}
+        {% if password_form.new_password2.errors %}<div class="errors">{{ password_form.new_password2.errors }}</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="perfil-actions">
+      <button type="submit" class="btn-primary">Cambiar contraseña</button>
+    </div>
+  </form>
+
+</main>
+
+{% include 'ecommerce/_shop_footer.html' %}
+
+<script>
+  // Reescribimos los inputs con la clase apropiada (los widgets de Django
+  // se renderean sin clase por default).
+  document.querySelectorAll('.perfil-field input').forEach(function(inp) {
+    if (!inp.className) inp.className = 'perfil-input';
+  });
+</script>
+
+{% endblock %}

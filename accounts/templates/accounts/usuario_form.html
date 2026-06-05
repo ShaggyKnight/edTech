@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block titulo %}{% if modo == 'crear' %}Nuevo usuario{% else %}Editar {{ usuario.username }}{% endif %} · Ideas Boutique{% endblock %}
+
+{% block extra_head %}
+<style>
+  .uform-wrap { max-width: 640px; margin: 0 auto; }
+  .uform-field { margin-bottom: 18px; }
+  .uform-field > label {
+    display:block; font-size:12px; font-weight:600; color:var(--bo-muted);
+    letter-spacing:.04em; text-transform:uppercase; margin-bottom:6px;
+  }
+  .uform-field .bo-input,
+  .uform-field input[type=text],
+  .uform-field input[type=email],
+  .uform-field input[type=password],
+  .uform-field select {
+    width:100%; border:1px solid #E5DCC8; border-radius:8px;
+    padding:11px 13px; font-size:15px; font-family:inherit; background:#fff;
+  }
+  .uform-field .bo-input:focus,
+  .uform-field select:focus { outline:none; border-color:#C9A96E; box-shadow:0 0 0 3px rgba(201,169,110,.15); }
+  .uform-field .helptext { font-size:12px; color:var(--bo-muted); margin-top:4px; }
+  .uform-field .errorlist { color:#991b1b; font-size:13px; margin:4px 0 0; padding-left:18px; }
+  .uform-check { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:#FBF7EE; border:1px solid #E5DCC8; border-radius:8px; margin-bottom:14px; }
+  .uform-check input { margin-top:3px; width:18px; height:18px; }
+  .uform-check label { font-weight:600; font-size:14px; }
+  .uform-check .helptext { font-size:12px; color:var(--bo-muted); margin-top:2px; font-weight:400; }
+  .uform-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; flex-wrap:wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="uform-wrap">
+
+  <div style="margin-bottom:20px;">
+    <a href="{% url 'accounts:usuarios_lista' %}" style="color:#7A1E2B; text-decoration:none; font-size:13px;">
+      ← Usuarios y roles
+    </a>
+    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:30px; margin:8px 0 0;">
+      {% if modo == 'crear' %}Nuevo usuario{% else %}Editar {{ usuario.get_full_name|default:usuario.username }}{% endif %}
+    </h1>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px;
+                  background:{% if 'error' in message.tags %}#fee{% else %}#e8f5e9{% endif %};">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {# ============== FORM PRINCIPAL ============== #}
+  <form method="post" class="bo-card" style="padding:24px 28px;" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="editar">
+
+    {% if form.non_field_errors %}
+      <div style="background:#fee; padding:12px 16px; border-radius:8px; margin-bottom:16px;">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    {% for field in form %}
+      {% if field.field.widget.input_type == 'checkbox' %}
+        <div class="uform-check">
+          {{ field }}
+          <div>
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+            {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="uform-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <div class="uform-actions">
+      <a href="{% url 'accounts:usuarios_lista' %}" class="bo-btn">Cancelar</a>
+      <button type="submit" class="bo-btn" style="background:#7A1E2B; color:#fff; border:none;">
+        {% if modo == 'crear' %}Crear usuario{% else %}Guardar cambios{% endif %}
+      </button>
+    </div>
+  </form>
+
+  {# ============== RESET PASSWORD (solo editar) ============== #}
+  {% if modo == 'editar' and reset_form %}
+  <form method="post" class="bo-card" style="padding:24px 28px; margin-top:18px; border-color:rgba(122,30,43,.2);" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="accion" value="reset">
+
+    <h2 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:20px; margin:0 0 4px; color:#7A1E2B;">
+      Resetear contraseña
+    </h2>
+    <p style="color:var(--bo-muted); font-size:13px; margin:0 0 16px;">
+      Asigna una contraseña nueva (ej. cuando el empleado la olvidó). Comunícasela en persona.
+    </p>
+
+    <div class="uform-field">
+      <label for="{{ reset_form.password.id_for_label }}">Nueva contraseña</label>
+      {{ reset_form.password }}
+      {% if reset_form.password.errors %}<ul class="errorlist">{% for e in reset_form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    <div class="uform-actions">
+      <button type="submit" class="bo-btn" style="background:#fff; color:#7A1E2B; border:1px solid #7A1E2B;">
+        Resetear contraseña
+      </button>
+    </div>
+  </form>
+  {% endif %}
+
+</div>
+{% endblock %}

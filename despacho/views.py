@@ -40,7 +40,7 @@ def cola(request):
                 estado=ReciboVenta.ESTADO_PAGADO)
         .select_related('tienda', 'cliente_usuario')
         .prefetch_related('detalles__variante__producto',
-                          'detalles__valores')
+                          'detalles__variante__valores')
     )
 
     if estado_filtro == 'despachados':
@@ -68,7 +68,7 @@ def detalle(request, pk):
         ReciboVenta.objects
             .select_related('tienda', 'cliente_usuario', 'despachado_por')
             .prefetch_related('detalles__variante__producto',
-                              'detalles__valores'),
+                              'detalles__variante__valores__atributo'),
         pk=pk,
         canal=ReciboVenta.CANAL_ONLINE,
     )

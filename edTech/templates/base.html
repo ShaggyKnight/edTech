@@ -1,4 +1,4 @@
-{% load static %}
+{% load static roles_tags %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -78,6 +78,11 @@
             POS
           </a>
         {% endif %}
+        {% if user|has_any_role:'admin,despachador' %}
+          <a href="{% url 'despacho:cola' %}" {% if request.resolver_match.namespace == 'despacho' %}class="active"{% endif %}>
+            Despacho
+          </a>
+        {% endif %}
         {% if perms.bodega.view_stocktienda or user.is_superuser %}
           <a href="{% url 'bodega:stock' %}" {% if request.resolver_match.namespace == 'bodega' %}class="active"{% endif %}>
             Bodega
@@ -135,6 +140,14 @@
                href="{% url 'pos:ventas' %}">
               <svg class="ico"><use href="#ico-check"/></svg>
               Ventas
+            </a>
+          {% endif %}
+
+          {% if user|has_any_role:'admin,despachador' %}
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'despacho' %}active{% endif %}"
+               href="{% url 'despacho:cola' %}">
+              <svg class="ico"><use href="#ico-truck"/></svg>
+              Despacho
             </a>
           {% endif %}
 
@@ -197,6 +210,20 @@
               Etiquetas
             </a>
           {% endif %}
+          {% if user|has_role:'admin' %}
+            <div class="bo-side-section">Administración</div>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'accounts' and 'usuario' in request.resolver_match.url_name %}active{% endif %}"
+               href="{% url 'accounts:usuarios_lista' %}">
+              <svg class="ico"><use href="#ico-shield"/></svg>
+              Usuarios y roles
+            </a>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'emails_index' %}active{% endif %}"
+               href="{% url 'accounts:emails_index' %}">
+              <svg class="ico"><use href="#ico-sparkle"/></svg>
+              Preview de emails
+            </a>
+          {% endif %}
+
           {% if user.is_superuser %}
             <a class="bo-side-link" href="{% url 'admin:index' %}">
               <svg class="ico"><use href="#ico-shield"/></svg>

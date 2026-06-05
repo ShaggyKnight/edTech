@@ -33,7 +33,12 @@ def crear_grupos_y_permisos(apps, schema_editor):
     admin_group.permissions.set(Permission.objects.all())
 
     for rol_name, apps_map in ROLE_PERMISSIONS.items():
-        group = Group.objects.get(name=rol_name)
+        # get_or_create (no get) para ser robusto cuando ROLE_PERMISSIONS
+        # crece con roles nuevos (ej. despachador, agregado despues). En
+        # una DB fresca esta migracion crea TODOS los grupos referenciados;
+        # las migraciones posteriores que recrean el mismo grupo son
+        # idempotentes (get_or_create tambien).
+        group, _ = Group.objects.get_or_create(name=rol_name)
         permisos = []
         for app_label, models_map in apps_map.items():
             for model_name, actions in models_map.items():

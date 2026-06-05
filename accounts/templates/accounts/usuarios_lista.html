@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Usuarios y roles · Ideas Boutique{% endblock %}
+
+{% block content %}
+<div style="max-width:1000px; margin:0 auto;">
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+    <div>
+      <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:32px; margin:0 0 4px;">
+        Usuarios y roles
+      </h1>
+      <p style="color:var(--bo-muted); margin:0; font-size:14px;">
+        Gestiona quién accede al sistema y con qué permisos. No necesitas el panel de Django.
+      </p>
+    </div>
+    <a href="{% url 'accounts:usuario_crear' %}" class="bo-btn"
+       style="background:#7A1E2B; color:#fff; border:none; white-space:nowrap;">
+      + Nuevo usuario
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px;
+                  background:{% if 'error' in message.tags %}#fee{% else %}#e8f5e9{% endif %};">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="bo-card">
+    <table class="bo-table" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#FBF7EE; text-align:left;">
+          <th style="padding:14px 16px;">Usuario</th>
+          <th style="padding:14px 16px;">Rol</th>
+          <th style="padding:14px 16px;">Estado</th>
+          <th style="padding:14px 16px;">Notif.</th>
+          <th style="padding:14px 16px; text-align:right;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in filas %}
+        <tr style="border-bottom:1px solid #E5DCC8; {% if not fila.u.is_active %}opacity:.55;{% endif %}">
+          <td style="padding:14px 16px;">
+            <div style="font-weight:600;">
+              {{ fila.u.get_full_name|default:fila.u.username }}
+            </div>
+            <div style="font-size:12px; color:var(--bo-muted);">
+              <code>{{ fila.u.username }}</code>
+              {% if fila.u.email %} · {{ fila.u.email }}{% endif %}
+            </div>
+          </td>
+          <td style="padding:14px 16px;">
+            <span style="display:inline-block; padding:4px 10px; border-radius:12px;
+                         font-size:12px; font-weight:600;
+                         background:{% if fila.rol == 'admin' %}#ede9fe; color:#5b21b6;
+                                   {% elif fila.rol == 'despachador' %}#dbeafe; color:#1e40af;
+                                   {% elif fila.rol == 'cajero' %}#dcfce7; color:#166534;
+                                   {% elif fila.rol == 'bodeguero' %}#fef9c3; color:#854d0e;
+                                   {% else %}#f3f4f6; color:#6b7280;{% endif %}">
+              {{ fila.rol|default:"sin rol"|capfirst }}
+            </span>
+          </td>
+          <td style="padding:14px 16px;">
+            {% if fila.u.is_active %}
+              <span style="color:#166534; font-weight:600; font-size:13px;">● Activo</span>
+            {% else %}
+              <span style="color:#991b1b; font-weight:600; font-size:13px;">● Inactivo</span>
+            {% endif %}
+          </td>
+          <td style="padding:14px 16px;">
+            {% if fila.es_despachador %}
+              {% if fila.notif %}
+                <span title="Recibe emails de pedidos" style="font-size:16px;">🔔</span>
+              {% else %}
+                <span title="Notificaciones apagadas" style="font-size:16px; opacity:.4;">🔕</span>
+              {% endif %}
+            {% else %}
+              <span style="color:var(--bo-muted);">—</span>
+            {% endif %}
+          </td>
+          <td style="padding:14px 16px; text-align:right;">
+            <a href="{% url 'accounts:usuario_editar' fila.u.pk %}" class="bo-btn">
+              Editar
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" style="padding:40px; text-align:center; color:var(--bo-muted);">
+            No hay usuarios staff todavía. Creá el primero con "+ Nuevo usuario".
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:20px; padding:16px; background:#FBF7EE; border:1px solid #E5DCC8; border-radius:10px; font-size:13px; line-height:1.6;">
+    <strong>Roles disponibles</strong>
+    <ul style="margin:8px 0 0; padding-left:22px;">
+      <li><strong>Administrador</strong> — acceso total, incluida esta pantalla.</li>
+      <li><strong>Cajero</strong> — opera el POS y ve ventas.</li>
+      <li><strong>Bodeguero</strong> — gestiona stock, productos y materiales.</li>
+      <li><strong>Despachador</strong> — prepara y despacha pedidos online; recibe el aviso por email de cada venta.</li>
+    </ul>
+  </div>
+
+</div>
+{% endblock %}

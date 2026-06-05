@@ -1,19 +1,29 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.mail import EmailMultiAlternatives
 from django.http import Http404, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from .email_previews import PREVIEWS, get_preview
-from .roles import ADMIN, BODEGUERO, CAJERO, DESPACHADOR, user_in_role
+from .forms import (
+    ROL_LABELS, ResetPasswordForm, UsuarioCrearForm, UsuarioEditarForm,
+    _rol_actual,
+)
+from .roles import ADMIN, ALL_ROLES, BODEGUERO, CAJERO, DESPACHADOR, user_in_role
 
 
 def _es_staff(user):
     """Solo superusers o usuarios con rol ADMIN ven el preview."""
+    return user.is_active and (user.is_superuser or user_in_role(user, ADMIN))
+
+
+def _es_admin(user):
+    """Gate para la gestión de usuarios — solo admin/superuser."""
     return user.is_active and (user.is_superuser or user_in_role(user, ADMIN))
 
 
@@ -146,3 +156,116 @@ def email_enviar_demo(request, slug):
         messages.error(request, f'Fallo al enviar: {type(exc).__name__}: {exc}')
 
     return redirect('accounts:emails_index')
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Gestión de usuarios y roles — solo ADMIN (reemplaza el Django admin)
+# ─────────────────────────────────────────────────────────────────────
+
+@user_passes_test(_es_admin, login_url='login')
+def usuarios_lista(request):
+    """Lista todos los usuarios staff con su rol + estado."""
+    User = get_user_model()
+    # Solo usuarios staff (con rol). Los clientes de la tienda no se
+    # gestionan acá — esos viven en el flujo de cuenta del ecommerce.
+    usuarios = (
+        User.objects
+        .filter(groups__name__in=ALL_ROLES)
+        .distinct()
+        .select_related('perfil')
+        .prefetch_related('groups')
+        .order_by('-is_active', 'first_name', 'username')
+    )
+
+    filas = []
+    for u in usuarios:
+        rol = _rol_actual(u)
+        try:
+            notif = u.perfil.recibe_notif_ecommerce
+        except Exception:
+            notif = None
+        filas.append({
+            'u': u,
+            'rol': rol,
+            'rol_label': ROL_LABELS.get(rol, rol or '—'),
+            'notif': notif,
+            'es_despachador': rol == DESPACHADOR,
+        })
+
+    return render(request, 'accounts/usuarios_lista.html', {
+        'filas': filas,
+    })
+
+
+@user_passes_test(_es_admin, login_url='login')
+@require_http_methods(['GET', 'POST'])
+def usuario_crear(request):
+    """Crea un usuario staff nuevo con rol."""
+    if request.method == 'POST':
+        form = UsuarioCrearForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(
+                request,
+                f'Usuario "{user.username}" creado con rol '
+                f'{ROL_LABELS.get(form.cleaned_data["rol"], "")}.',
+            )
+            return redirect('accounts:usuarios_lista')
+    else:
+        form = UsuarioCrearForm()
+
+    return render(request, 'accounts/usuario_form.html', {
+        'form': form,
+        'modo': 'crear',
+        'reset_form': None,
+    })
+
+
+@user_passes_test(_es_admin, login_url='login')
+@require_http_methods(['GET', 'POST'])
+def usuario_editar(request, pk):
+    """Edita un usuario staff: rol, estado, notificaciones. La password
+    se resetea con el form aparte (POST con accion=reset)."""
+    User = get_user_model()
+    usuario = get_object_or_404(User, pk=pk)
+
+    form = UsuarioEditarForm(instance=usuario)
+    reset_form = ResetPasswordForm()
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion', 'editar')
+
+        if accion == 'editar':
+            form = UsuarioEditarForm(request.POST, instance=usuario)
+            if form.is_valid():
+                # Salvaguarda: el admin no puede auto-desactivarse ni
+                # auto-quitarse el rol admin (evita lockout).
+                if usuario.pk == request.user.pk:
+                    if not form.cleaned_data.get('is_active', True):
+                        messages.error(request, 'No podés desactivar tu propia cuenta.')
+                        return redirect('accounts:usuario_editar', pk=pk)
+                    if form.cleaned_data.get('rol') != ADMIN:
+                        messages.error(request, 'No podés quitarte tu propio rol de administrador.')
+                        return redirect('accounts:usuario_editar', pk=pk)
+                form.save()
+                messages.success(request, f'Usuario "{usuario.username}" actualizado.')
+                return redirect('accounts:usuarios_lista')
+
+        elif accion == 'reset':
+            reset_form = ResetPasswordForm(request.POST)
+            if reset_form.is_valid():
+                usuario.set_password(reset_form.cleaned_data['password'])
+                usuario.save(update_fields=['password'])
+                messages.success(
+                    request,
+                    f'Contraseña de "{usuario.username}" reseteada. '
+                    f'Comunícasela al empleado.',
+                )
+                return redirect('accounts:usuario_editar', pk=pk)
+
+    return render(request, 'accounts/usuario_form.html', {
+        'form': form,
+        'reset_form': reset_form,
+        'modo': 'editar',
+        'usuario': usuario,
+    })

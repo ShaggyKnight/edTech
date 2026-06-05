@@ -6,7 +6,7 @@
 <div style="max-width:560px; margin:80px auto; padding:0 20px; text-align:center;">
 
   {% if estado == 'cancelado' %}
-    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:36px; margin:0 0 12px;">
+    <h1 style="font-family:var(--serif); font-size:36px; margin:0 0 12px;">
       Listo, cancelado.
     </h1>
     <p style="color:#5a5a5a; font-size:16px; line-height:1.6;">
@@ -19,7 +19,7 @@
     </p>
 
   {% elif estado == 'ya_estaba_cancelado' %}
-    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:36px; margin:0 0 12px;">
+    <h1 style="font-family:var(--serif); font-size:36px; margin:0 0 12px;">
       Ya estaba cancelado.
     </h1>
     <p style="color:#5a5a5a; font-size:16px; line-height:1.6;">
@@ -27,7 +27,7 @@
     </p>
 
   {% else %}
-    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:36px; margin:0 0 12px;">
+    <h1 style="font-family:var(--serif); font-size:36px; margin:0 0 12px;">
       Hmm, no encontramos ese aviso.
     </h1>
     <p style="color:#5a5a5a; font-size:16px; line-height:1.6;">

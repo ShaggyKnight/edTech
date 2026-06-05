@@ -118,7 +118,7 @@
       <h2>Cuatro mundos, una sola tienda.</h2>
     </div>
     <div class="cats-grid">
-      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="--cat-accent:#7A1E2B;">
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="--cat-accent:#7A1E2B; --cat-bg:url('{% static 'img/ideas/mundo-uniformes.jpg' %}');">
         <div class="cat-num">01</div>
         <div class="cat-body">
           <h3>Uniformes Escolares</h3>
@@ -129,7 +129,7 @@
           </div>
         </div>
       </a>
-      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=perfumes" style="--cat-accent:#C9A96E;">
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=perfumes" style="--cat-accent:#C9A96E; --cat-bg:url('{% static 'img/ideas/mundo-perfumes.jpg' %}');">
         <div class="cat-num">02</div>
         <div class="cat-body">
           <h3>Perfumes</h3>
@@ -140,7 +140,7 @@
           </div>
         </div>
       </a>
-      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=moda" style="--cat-accent:#2B3140;">
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=moda" style="--cat-accent:#2B3140; --cat-bg:url('{% static 'img/ideas/mundo-moda.jpg' %}');">
         <div class="cat-num">03</div>
         <div class="cat-body">
           <h3>Moda</h3>
@@ -151,7 +151,7 @@
           </div>
         </div>
       </a>
-      <a class="cat-card" href="{% url 'ecommerce:catalogo' %}?cat=intima" style="--cat-accent:#A03853;">
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=intima" style="--cat-accent:#A03853; --cat-bg:url('{% static 'img/ideas/mundo-intima.jpg' %}');">
         <div class="cat-num">04</div>
         <div class="cat-body">
           <h3>Ropa Íntima</h3>
@@ -355,7 +355,10 @@
       </div>
     </div>
     <div class="visita-img">
-      <img src="{% static 'img/ideas/logo-letrero.png' %}" alt="Letrero Ideas Boutique" loading="lazy">
+      <img src="{% static 'img/ideas/fachada-letrero.jpg' %}"
+           alt="Fachada de Ideas Boutique en Caupolicán 437-B, Los Vilos"
+           loading="lazy" width="1600" height="1200"
+           style="aspect-ratio:4/3;object-fit:cover;box-shadow:0 20px 48px -16px rgba(14,14,14,.35);">
     </div>
   </section>
 

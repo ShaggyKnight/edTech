@@ -136,8 +136,9 @@ Google interpreta 503 como "vuelve más tarde" y **NO desindexa el dominio**.
 | Vos (logueado como staff) | Todo | Todo | Todo |
 | Bots / Google | Todo | Solo `/` y `/info/` | 503 (no desindexa) |
 
-En todos los modos, los paths necesarios para administrar (`/<ADMIN_URL>/`,
-`/cuenta/login/`, `/static/`, `/media/`, `/healthz`) siguen accesibles.
+En todos los modos, los paths necesarios para administrar
+(`/admin-R0z8NiGVcdE/`, `/cuenta/login/`, `/static/`, `/media/`,
+`/healthz`) siguen accesibles.
 
 ---
 
@@ -432,7 +433,7 @@ clona.
 | `https://ideasboutique.cl/` | Home completa | Home completa | "Volvemos pronto" |
 | `https://ideasboutique.cl/tienda/` | Catálogo | Redirige a `/` | "Volvemos pronto" |
 | `https://ideasboutique.cl/info/` | Página info | Página info | "Volvemos pronto" |
-| `https://ideasboutique.cl/<ADMIN_URL>/` | Admin Django | Admin Django | Admin Django |
+| `https://ideasboutique.cl/admin-R0z8NiGVcdE/` | Admin Django | Admin Django | Admin Django |
 | `https://ideasboutique.cl/cuenta/login/` | Login | Login | Login |
 | `https://ideasboutique.cl/healthz` | `ok` | `ok` | `ok` |
 

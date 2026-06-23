@@ -1,0 +1,695 @@
+[
+  {
+    "nombre": "Buzo SFJ Chaqueta",
+    "colegio": "San Francisco Javier",
+    "descripcion": "Buzo escolar oficial SFJ. Tela franela color silvia hecha especialmente para el colegio: semi-elástica para dar libertad de movimiento, no se mancha con agua y es muy duradera — tan durable que las familias suelen heredarlo entre hermanos. Confección con costuras firmes que no se abren. Bordado con insignia oficial. Pieza individual: chaqueta con cierre.",
+    "precio_base": 15900.0,
+    "precio_costo": 8000.0,
+    "imagen_file": "Buzo_SFJ_Chaqueta.jpg",
+    "tiene_variantes": true,
+    "variantes": [
+      {
+        "tallas": [
+          "XXL"
+        ],
+        "precio_override": 25900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "10"
+        ],
+        "precio_override": 16900.0,
+        "stock": 1,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "12"
+        ],
+        "precio_override": 17900.0,
+        "stock": 10,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "14"
+        ],
+        "precio_override": 19900.0,
+        "stock": 10,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "16"
+        ],
+        "precio_override": 21900.0,
+        "stock": 5,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "4"
+        ],
+        "precio_override": 13900.0,
+        "stock": 15,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "6"
+        ],
+        "precio_override": 13900.0,
+        "stock": 5,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "8"
+        ],
+        "precio_override": 15900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "L"
+        ],
+        "precio_override": 24900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "M"
+        ],
+        "precio_override": 22900.0,
+        "stock": 9,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "S"
+        ],
+        "precio_override": 22900.0,
+        "stock": 5,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XL"
+        ],
+        "precio_override": 24900.0,
+        "stock": 4,
+        "activa": true
+      }
+    ]
+  },
+  {
+    "nombre": "Buzo SFJ Completo",
+    "colegio": "San Francisco Javier",
+    "descripcion": "Buzo escolar oficial SFJ. Tela franela color silvia hecha especialmente para el colegio: semi-elástica para dar libertad de movimiento, no se mancha con agua y es muy duradera — tan durable que las familias suelen heredarlo entre hermanos. Confección con costuras firmes que no se abren. Bordado con insignia oficial. Set completo: pantalón + chaqueta.",
+    "precio_base": 28900.0,
+    "precio_costo": 15000.0,
+    "imagen_file": "Buzo_SFJ_Completo.jpg",
+    "tiene_variantes": true,
+    "variantes": [
+      {
+        "tallas": [
+          "XXL"
+        ],
+        "precio_override": 39900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "10"
+        ],
+        "precio_override": 26900.0,
+        "stock": 10,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "12"
+        ],
+        "precio_override": 29900.0,
+        "stock": 7,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "14"
+        ],
+        "precio_override": 31900.0,
+        "stock": 12,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "16"
+        ],
+        "precio_override": 32900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "4"
+        ],
+        "precio_override": 21900.0,
+        "stock": 4,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "6"
+        ],
+        "precio_override": 22900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "8"
+        ],
+        "precio_override": 24900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "L"
+        ],
+        "precio_override": 36900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "M"
+        ],
+        "precio_override": 35900.0,
+        "stock": 10,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "S"
+        ],
+        "precio_override": 34900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XL"
+        ],
+        "precio_override": 38900.0,
+        "stock": 4,
+        "activa": true
+      }
+    ]
+  },
+  {
+    "nombre": "Buzo SFJ Pantalón",
+    "colegio": "San Francisco Javier",
+    "descripcion": "Buzo escolar oficial SFJ. Tela franela color silvia hecha especialmente para el colegio: semi-elástica para dar libertad de movimiento, no se mancha con agua y es muy duradera — tan durable que las familias suelen heredarlo entre hermanos. Confección con costuras firmes que no se abren. Bordado con insignia oficial. Pieza individual: pantalón.",
+    "precio_base": 14900.0,
+    "precio_costo": 7500.0,
+    "imagen_file": "Buzo_SFJ_Pantalón.jpg",
+    "tiene_variantes": true,
+    "variantes": [
+      {
+        "tallas": [
+          "XXL"
+        ],
+        "precio_override": 25900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "10"
+        ],
+        "precio_override": 15900.0,
+        "stock": 9,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "12"
+        ],
+        "precio_override": 16900.0,
+        "stock": 11,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "14"
+        ],
+        "precio_override": 18900.0,
+        "stock": 11,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "16"
+        ],
+        "precio_override": 19900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "4"
+        ],
+        "precio_override": 13900.0,
+        "stock": 4,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "6"
+        ],
+        "precio_override": 13900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "8"
+        ],
+        "precio_override": 14900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "L"
+        ],
+        "precio_override": 23900.0,
+        "stock": 62,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "M"
+        ],
+        "precio_override": 22900.0,
+        "stock": 75,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "S"
+        ],
+        "precio_override": 21900.0,
+        "stock": 3,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XL"
+        ],
+        "precio_override": 24900.0,
+        "stock": 4,
+        "activa": true
+      }
+    ]
+  },
+  {
+    "nombre": "Chaleco SFJ",
+    "colegio": "San Francisco Javier",
+    "descripcion": "Chaleco oficial SFJ — polar negro con bordado de la insignia. Confeccionado a medida con tela duradera que no hace pelotitas ni se deforma con el uso.",
+    "precio_base": 18000.0,
+    "precio_costo": 9000.0,
+    "imagen_file": "Chaleco_SFJ.jpg",
+    "tiene_variantes": true,
+    "variantes": [
+      {
+        "tallas": [
+          "XXL"
+        ],
+        "precio_override": 28400.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "10"
+        ],
+        "precio_override": 20900.0,
+        "stock": 10,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "12"
+        ],
+        "precio_override": 21900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "14"
+        ],
+        "precio_override": 22900.0,
+        "stock": 12,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "16"
+        ],
+        "precio_override": 23900.0,
+        "stock": 7,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "4"
+        ],
+        "precio_override": 16900.0,
+        "stock": 4,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "6"
+        ],
+        "precio_override": 16900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "8"
+        ],
+        "precio_override": 18900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "L"
+        ],
+        "precio_override": 26900.0,
+        "stock": 8,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "M"
+        ],
+        "precio_override": 25900.0,
+        "stock": 10,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "S"
+        ],
+        "precio_override": 24900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XL"
+        ],
+        "precio_override": 27900.0,
+        "stock": 4,
+        "activa": true
+      }
+    ]
+  },
+  {
+    "nombre": "Falda Casimir Garib SFJ",
+    "colegio": "San Francisco Javier",
+    "descripcion": "Falda escolar oficial SFJ en tela Casimir Garib color rojizo con cuadrillé. El Casimir Garib tiende a no arrugarse: mantiene la forma después de cada lavado y no se ve como trapo viejo con el uso. Largo escolar.",
+    "precio_base": 19990.0,
+    "precio_costo": 8000.0,
+    "imagen_file": "",
+    "tiene_variantes": true,
+    "variantes": [
+      {
+        "tallas": [
+          "L"
+        ],
+        "precio_override": null,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "M"
+        ],
+        "precio_override": null,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "S"
+        ],
+        "precio_override": null,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XL"
+        ],
+        "precio_override": null,
+        "stock": 6,
+        "activa": true
+      }
+    ]
+  },
+  {
+    "nombre": "Polera piqué SFJ",
+    "colegio": "San Francisco Javier",
+    "descripcion": "Polera piqué oficial SFJ, gris perla. Tejida en algodón con un pequeño porcentaje de fibra que evita la deformación con el uso. Los cuellos se confeccionan junto con la tela del cuerpo, así que el tono es exactamente el mismo (no esa diferencia que se nota cuando son cuellos comprados aparte). Bordado con insignia SFJ.",
+    "precio_base": 12990.0,
+    "precio_costo": 5000.0,
+    "imagen_file": "Polera_piqué_SFJ.jpg",
+    "tiene_variantes": true,
+    "variantes": [
+      {
+        "tallas": [
+          "10"
+        ],
+        "precio_override": 14900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "12"
+        ],
+        "precio_override": 15900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "14"
+        ],
+        "precio_override": 16900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "16"
+        ],
+        "precio_override": 17900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "4"
+        ],
+        "precio_override": 12900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "6"
+        ],
+        "precio_override": 13900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "8"
+        ],
+        "precio_override": 14900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XXL"
+        ],
+        "precio_override": 21400.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "L"
+        ],
+        "precio_override": 19900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "M"
+        ],
+        "precio_override": 18900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "S"
+        ],
+        "precio_override": 18900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XL"
+        ],
+        "precio_override": 19900.0,
+        "stock": 6,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XS"
+        ],
+        "precio_override": null,
+        "stock": 6,
+        "activa": true
+      }
+    ]
+  },
+  {
+    "nombre": "Sueter SFJ",
+    "colegio": "San Francisco Javier",
+    "descripcion": "Sueter abierto oficial del colegio San Francisco Javier. Misma tela y bordado que el chaleco cerrado, pero con apertura frontal y botones.",
+    "precio_base": 18000.0,
+    "precio_costo": 9000.0,
+    "imagen_file": "",
+    "tiene_variantes": true,
+    "variantes": [
+      {
+        "tallas": [
+          "10"
+        ],
+        "precio_override": 20900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "12"
+        ],
+        "precio_override": 21900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "14"
+        ],
+        "precio_override": 22900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "16"
+        ],
+        "precio_override": 23900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "4"
+        ],
+        "precio_override": 16900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "6"
+        ],
+        "precio_override": 16900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "8"
+        ],
+        "precio_override": 18900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "L"
+        ],
+        "precio_override": 26900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "M"
+        ],
+        "precio_override": 25900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "S"
+        ],
+        "precio_override": 24900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XL"
+        ],
+        "precio_override": 27900.0,
+        "stock": 0,
+        "activa": true
+      },
+      {
+        "tallas": [
+          "XXL"
+        ],
+        "precio_override": 28400.0,
+        "stock": 0,
+        "activa": true
+      }
+    ]
+  }
+]

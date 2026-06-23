@@ -21,7 +21,19 @@
     </div>
   </div>
 
-  <form method="post" enctype="multipart/form-data">
+  {# x-cloak global: evita el parpadeo de la seccion Perfumeria antes de
+     que Alpine inicialice (en editar hay otra copia, pero crear no la tenia). #}
+  <style>[x-cloak] { display: none !important; }</style>
+
+  {% comment %}
+    x-data alimenta la seccion de Perfumeria: `famSel` sigue la familia
+    elegida (la actualiza el @change del <select familia>), y `perfumeFams`
+    es la lista de ids de familias de fragancias (calculada en el form por
+    nombre, no hardcodeada). La seccion aparece solo cuando la familia
+    elegida es de perfumeria — asi el form de uniformes no se ensucia.
+  {% endcomment %}
+  <form method="post" enctype="multipart/form-data"
+        x-data="{ famSel: '{{ form.familia.value|default:'' }}', perfumeFams: {{ form.familias_perfumeria_ids }} }">
     {% csrf_token %}
     <div class="bo-grid cols-2" style="grid-template-columns: 2fr 1fr; align-items: start;">
       {# ── Datos del producto ── #}
@@ -126,6 +138,56 @@
               Opcional. Recomendado 600×600px o más, fondo neutro.
             </small>
           </div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Perfumería: solo visible cuando la familia es de fragancias ── #}
+    <div class="bo-card" style="margin-top:20px;"
+         x-show="perfumeFams.includes(Number(famSel))" x-cloak>
+      <div class="bo-card-head">
+        <h3>Perfumería</h3>
+        <small style="color:var(--bo-muted);font-size:11px;">
+          Estos datos alimentan los filtros del catálogo y el bloque de notas en la página del perfume.
+        </small>
+      </div>
+      <div class="bo-card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;">
+          <div class="bo-field">
+            <label for="{{ form.marca.id_for_label }}">Marca</label>
+            {{ form.marca }}
+            {% if form.marca.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.marca.errors }}</div>{% endif %}
+          </div>
+          <div class="bo-field">
+            <label for="{{ form.concentracion.id_for_label }}">Concentración</label>
+            {{ form.concentracion }}
+          </div>
+          <div class="bo-field">
+            <label for="{{ form.medida_ml.id_for_label }}">Medida (ml)</label>
+            {{ form.medida_ml }}
+            {% if form.medida_ml.help_text %}
+              <small style="color:var(--bo-muted);font-size:11px;">{{ form.medida_ml.help_text }}</small>
+            {% endif %}
+          </div>
+          <div class="bo-field">
+            <label for="{{ form.genero.id_for_label }}">Género</label>
+            {{ form.genero }}
+          </div>
+        </div>
+
+        <div class="bo-field" style="margin-top:12px;">
+          <label for="{{ form.familia_olfativa.id_for_label }}">Familia olfativa</label>
+          {{ form.familia_olfativa }}
+          {% if form.familia_olfativa.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.familia_olfativa.errors }}</div>{% endif %}
+        </div>
+
+        <div class="bo-field" style="margin-top:12px;">
+          <label for="{{ form.notas_clave.id_for_label }}">Notas clave</label>
+          {{ form.notas_clave }}
+          {% if form.notas_clave.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.notas_clave.help_text }}</small>
+          {% endif %}
+          {% if form.notas_clave.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.notas_clave.errors }}</div>{% endif %}
         </div>
       </div>
     </div>

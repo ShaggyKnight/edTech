@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 from bodega.models import Material, Proveedor, Rendimiento
 from catalogo.models import (
@@ -40,10 +41,18 @@ class ProductoForm(forms.ModelForm):
             'tiene_variantes', 'activo',
             'codigo_barras',
             'imagen',
+            # Perfumería (solo aplican a fragancias; opcionales para el resto).
+            'marca', 'concentracion', 'medida_ml', 'genero',
+            'familia_olfativa', 'notas_clave',
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'bo-input'}),
-            'familia': forms.Select(attrs={'class': 'bo-select'}),
+            # @change alimenta el Alpine del template para mostrar/ocultar
+            # la sección de Perfumería según la familia elegida.
+            'familia': forms.Select(attrs={
+                'class': 'bo-select',
+                '@change': 'famSel = $event.target.value',
+            }),
             'colegio': forms.Select(attrs={'class': 'bo-select'}),
             'descripcion': forms.Textarea(attrs={'class': 'bo-textarea', 'rows': 3}),
             'precio_base': forms.NumberInput(attrs={'class': 'bo-input', 'min': 0}),
@@ -58,6 +67,18 @@ class ProductoForm(forms.ModelForm):
                 'inputmode': 'numeric',
             }),
             'imagen': forms.ClearableFileInput(),
+            # ── Perfumería ──
+            'marca': forms.TextInput(attrs={
+                'class': 'bo-input', 'placeholder': 'Ej: Calvin Klein, Lattafa…'}),
+            'concentracion': forms.Select(attrs={'class': 'bo-select'}),
+            'medida_ml': forms.NumberInput(attrs={
+                'class': 'bo-input', 'min': 0, 'placeholder': 'ml'}),
+            'genero': forms.Select(attrs={'class': 'bo-select'}),
+            'familia_olfativa': forms.TextInput(attrs={
+                'class': 'bo-input', 'placeholder': 'Ej: Fougère Aromática'}),
+            'notas_clave': forms.TextInput(attrs={
+                'class': 'bo-input',
+                'placeholder': 'Limón · Cacao · Cedro'}),
         }
         help_texts = {
             'colegio': 'Solo si es uniforme escolar (lleva insignia bordada).',
@@ -67,7 +88,36 @@ class ProductoForm(forms.ModelForm):
             'codigo_barras': 'Solo aplica si NO tiene variantes. Para productos con '
                              'variantes, el código vive en cada variante. Si está '
                              'vacío se genera automáticamente al guardar.',
+            'notas_clave': 'Separá las notas con " · " (punto centrado). Así se '
+                           'muestran como pastillas en la página del perfume.',
+            'medida_ml': 'Mililitros del frasco (ej. 100). Dejalo vacío si vendés '
+                         'por variantes de volumen.',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # IDs de las familias de "perfumería". Las detectamos por nombre
+        # (perfum / fragancia) en vez de hardcodear ids, que difieren entre
+        # dev y prod. El template usa esta lista en Alpine para mostrar la
+        # sección de perfumería solo cuando la familia elegida es de ese tipo.
+        self.familias_perfumeria_ids = list(
+            Familia.objects
+            .filter(Q(nombre__icontains='perfum')
+                    | Q(nombre__icontains='fragancia'))
+            .values_list('pk', flat=True)
+        )
+        # `notas_clave` se guarda con separadores " · ". Si el operador
+        # escribe comas, las normalizamos al guardar (ver clean_notas_clave).
+
+    def clean_notas_clave(self):
+        """Normaliza separadores: acepta coma o ' · ' y deja todo en ' · '."""
+        valor = (self.cleaned_data.get('notas_clave') or '').strip()
+        if not valor:
+            return ''
+        # Partimos por ' · ', '·' o ',' y rearmamos con ' · '.
+        import re
+        partes = [p.strip() for p in re.split(r'·|,', valor) if p.strip()]
+        return ' · '.join(partes)
 
     def save(self, commit=True):
         """Autogenera el codigo si no tiene variantes y quedó vacio."""

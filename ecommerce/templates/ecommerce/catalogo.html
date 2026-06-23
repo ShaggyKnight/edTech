@@ -331,6 +331,11 @@
       .then(function(html) {
         var doc = new DOMParser().parseFromString(html, 'text/html');
         swapInner('shop-grid', doc);
+        // El swap via innerHTML NO procesa el nuevo sentinel de scroll
+        // infinito — hay que pedirle a htmx que lo cablee, si no el
+        // "revealed" del sentinel nuevo nunca dispara y el scroll
+        // infinito queda muerto tras filtrar.
+        if (window.htmx) window.htmx.process(grid);
         swapInner('filter-colegio', doc);
         swapInner('filter-talla', doc);
         swapInner('filter-limpiar', doc);
@@ -471,6 +476,7 @@
       .then(function (html) {
         var doc = new DOMParser().parseFromString(html, 'text/html');
         swapInner('shop-grid', doc);
+        if (window.htmx) window.htmx.process(grid);  // cablear sentinel nuevo
         swapInner('filter-colegio', doc);
         swapInner('filter-talla', doc);
         swapInner('filter-limpiar', doc);
@@ -485,6 +491,39 @@
         grid.classList.remove('is-loading');
       });
   });
+
+  // ============ Scroll infinito robusto: reintento ante fallo ============
+  // El sentinel (.shop-grid-loader) dispara la carga de la pagina
+  // siguiente al entrar al viewport. Si esa peticion falla (red caida,
+  // timeout, 5xx) htmx NO hace swap y el spinner quedaria girando para
+  // siempre. Estos listeners convierten el spinner en un boton de
+  // reintento. El sentinel tiene `click` en su hx-trigger, asi que
+  // tocarlo re-dispara la misma peticion.
+  function loaderFromEvt(e) {
+    var el = e.detail && e.detail.elt;
+    return (el && el.classList && el.classList.contains('shop-grid-loader')) ? el : null;
+  }
+  document.body.addEventListener('htmx:beforeRequest', function (e) {
+    var el = loaderFromEvt(e);
+    if (!el) return;
+    el.classList.remove('is-error');
+    el.innerHTML = '<span class="shop-grid-spinner">Cargando más productos…</span>';
+  });
+  function onLoaderError(e) {
+    var el = loaderFromEvt(e);
+    if (!el) return;
+    el.classList.add('is-error');
+    el.style.cursor = 'pointer';
+    el.innerHTML =
+      '<button type="button" class="shop-grid-retry" ' +
+      'style="background:none;border:1px solid var(--line);border-radius:999px;' +
+      'padding:10px 22px;font:inherit;color:var(--ink);cursor:pointer;">' +
+      '↻ No se pudieron cargar más productos. Tocá para reintentar' +
+      '</button>';
+  }
+  document.body.addEventListener('htmx:responseError', onLoaderError);
+  document.body.addEventListener('htmx:sendError', onLoaderError);
+  document.body.addEventListener('htmx:timeout', onLoaderError);
 
   // Cuando volvemos a la pagina via bfcache, marcamos la URL actual
   // como "la ultima aplicada" para que el popstate inmediato (algunos

@@ -14,11 +14,29 @@
   {% include 'ecommerce/_pcard.html' with producto=producto %}
 {% endfor %}
 {% if next_page_url %}
+  {% comment %}
+    Sentinel de scroll infinito, robusto ante fallos de red.
+
+    - `revealed`: carga automática al entrar al viewport.
+    - `click`: permite reintentar manualmente si la carga falló (el
+      revealed dispara una sola vez; sin el click el spinner quedaría
+      girando para siempre tras un error de red/timeout).
+    - timeout 15s: una petición colgada falla rápido en vez de girar
+      infinito; cae en el estado de reintento (ver script en catalogo.html).
+    - <noscript>: si el JS no carga, queda un link "Ver más" usable.
+  {% endcomment %}
   <div class="shop-grid-loader"
        hx-get="{{ next_page_url }}"
-       hx-trigger="revealed"
+       hx-trigger="revealed, click"
        hx-swap="outerHTML"
+       hx-request='{"timeout": 15000}'
+       data-next-url="{{ next_page_url }}"
        style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--ink-60);">
     <span class="shop-grid-spinner">Cargando más productos…</span>
+    <noscript>
+      <a href="{{ next_page_url }}" style="color: var(--gold-2); font-weight:600; text-decoration:none;">
+        Ver más productos →
+      </a>
+    </noscript>
   </div>
 {% endif %}

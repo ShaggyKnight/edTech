@@ -8,6 +8,17 @@
   Bloque 11: la tabla esta envuelta en un <form> de bulk action que
   permite activar/desactivar varios productos a la vez.
 {% endcomment %}
+{% if request.htmx %}
+  {% comment %}
+    Out-of-band: el contador "N productos en el filtro" vive en el header
+    de la pagina, FUERA de la zona que HTMX reemplaza (#productos-tabla).
+    Sin esto, el numero quedaba congelado al valor de la carga inicial.
+    Lo reemitimos con hx-swap-oob para que HTMX lo actualice aparte en
+    cada filtrado. Solo en requests HTMX: en la carga inicial el header
+    ya trae el contador y duplicar el id seria HTML invalido.
+  {% endcomment %}
+  <div class="sub" id="productos-count" hx-swap-oob="true">{{ productos|length }} producto{{ productos|length|pluralize:"s" }} en el filtro</div>
+{% endif %}
 <div class="bo-card" id="productos-tabla">
   {% if productos %}
     {% if puede_editar_activo %}

@@ -36,7 +36,7 @@
     <div>
       <div class="bo-crumb">Bodega / Productos</div>
       <h1>Catálogo de productos</h1>
-      <div class="sub">{{ productos|length }} producto{{ productos|length|pluralize:"s" }} en el filtro</div>
+      <div class="sub" id="productos-count">{{ productos|length }} producto{{ productos|length|pluralize:"s" }} en el filtro</div>
     </div>
     <div style="display:flex; gap:8px;">
       <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>

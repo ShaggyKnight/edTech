@@ -219,7 +219,7 @@ class Command(BaseCommand):
 
         stats = {'creados': 0, 'actualizados': 0, 'sin_cambios': 0,
                  'stock_set': 0, 'desactivados': 0, 'tallas_zeradas': 0,
-                 'imagenes': 0, 'genero': {}}
+                 'imagenes': 0, 'precio_set': 0, 'genero': {}}
         cores_catastro = set()
         avisos = []
 
@@ -267,6 +267,10 @@ class Command(BaseCommand):
         genero = (entry.get('genero') or '').strip() or _genero(nombre_raw, notas_list)
         stats['genero'][genero] = stats['genero'].get(genero, 0) + 1
         cantidad = int(entry.get('cantidad') or 0)
+        # Precio del catastro (CLP). Null = todavia sin precio -> no se toca
+        # (los nuevos quedan en 0, los existentes mantienen el suyo).
+        precio = entry.get('precio')
+        precio = Decimal(str(precio)) if precio not in (None, '', 0) else None
 
         meta = {
             'familia': familia,
@@ -292,12 +296,19 @@ class Command(BaseCommand):
             producto = Producto.objects.filter(nombre=nombre_final).first()
         if producto is None:
             producto = Producto.objects.create(
-                nombre=nombre_final, precio_base=Decimal('0'), **meta)
+                nombre=nombre_final, precio_base=(precio or Decimal('0')), **meta)
             db_index[core] = producto
             stats['creados'] += 1
+            if precio is not None:
+                stats['precio_set'] += 1
             self.stdout.write(self.style.SUCCESS(f'  + NUEVO  {nombre_final}'))
         else:
             cambios = [k for k, v in meta.items() if getattr(producto, k) != v]
+            # El precio del catastro pisa el del producto solo si viene (no null).
+            if precio is not None and producto.precio_base != precio:
+                cambios.append('precio_base')
+                producto.precio_base = precio
+                stats['precio_set'] += 1
             if cambios:
                 for k, v in meta.items():
                     setattr(producto, k, v)
@@ -412,6 +423,7 @@ class Command(BaseCommand):
             f'  Actualizados:  {stats["actualizados"]}\n'
             f'  Sin cambios:   {stats["sin_cambios"]}\n'
             f'  Stock seteado: {stats["stock_set"]}\n'
+            f'  Precio seteado: {stats["precio_set"]}\n'
             f'  Imagenes silk: {stats["imagenes"]}\n'
             f'  Tallas extra a 0: {stats["tallas_zeradas"]}\n'
             f'  Desactivados:  {stats["desactivados"]}'

@@ -6,6 +6,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Fragancia fresca, limpia y deportiva que evoca la sensación de llevar puesta una camisa polo blanca clásica. Es elegante, minimalista y muy versátil para el día a día.",
     "notas_clave": [
@@ -26,6 +27,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "105 ml / 3.6 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Alizcleña Floreal Amaderada",
     "descripcion": "Un aroma moderno, punzante y metálico con una proyección excelente. Es ampliamente reconocido por su gran similitud con fragancias de nicho de alto costo, ideal para destacar.",
     "notas_clave": [
@@ -47,6 +49,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Un clásico indiscutible de la perfumería masculina. Representa la elegancia varonil tradicional, madura, con un fuerte carácter herbal, especiado y un fondo amaderado limpio.",
     "notas_clave": [
@@ -68,6 +71,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Cítrica Aromática",
     "descripcion": "Aerosol corporal diseñado para el uso diario o posdeporte. Entrega una ráfaga inmediata de energía cítrica refrescante con un fondo ligeramente amaderado para prolongar la limpieza.",
     "notas_clave": [
@@ -86,6 +90,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "~100 ml - 200 ml",
     "cantidad": 2,
+    "precio": 24900,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Una fragancia ligera y marina que captura la brisa del mar Mediterráneo. Es fresca, limpia, con un sutil toque especiado y un fondo boscoso muy masculino.",
     "notas_clave": [
@@ -106,6 +111,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 2,
+    "precio": 37900,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Fragancia joven, urbana y casual orientada a un público dinámico. Destaca por su combinación inusual de cítricos chispeantes combinados con un toque dulce de cacao.",
     "notas_clave": [
@@ -125,6 +131,7 @@
     "concentracion": "Parfum / EdT",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Aromática Amaderada",
     "descripcion": "Una fragancia futurista y audaz creada mediante inteligencia olfativa. Mezcla una lavanda adictiva y cremosa con limón energizante y una base de vainilla muy sensual.",
     "notas_clave": [
@@ -145,6 +152,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "125 ml / 4.2 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Fougère",
     "descripcion": "Un perfume nocturno, misterioso y muy adictivo. Gira en torno a una nota central de café tostado mezclado con whisky y especias, ideal para climas fríos y salidas de noche.",
     "notas_clave": [
@@ -166,6 +174,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Fragancia de la vieja escuela ('powerhouse' de los 80). Con un carácter robusto, ultra masculino, destaca por sus notas intensas de pino, cuero y musgo de roble.",
     "notas_clave": [
@@ -187,6 +196,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Amaderada Acuática",
     "descripcion": "Uno de los reyes indiscutibles para el verano y el calor extremo. Ofrece un aroma afrutado, acuático y cítrico sumamente refrescante, limpio y con un toque elegante.",
     "notas_clave": [
@@ -207,6 +217,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "200 ml / 6.8 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "Fragancia fresca, juvenil y con un empuje aventurero. Combina la limpieza de la manzana y la bergamota con un corazón herbal aromático y un fondo masculino amaderado.",
     "notas_clave": [
@@ -228,6 +239,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Amaderada",
     "descripcion": "Una entrega más elegante y madura de la marca. Presenta acordes densos, levemente dulces y orientales que le otorgan mayor duración y distinción en eventos semiformales.",
     "notas_clave": [
@@ -248,6 +260,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "Un aroma oscuro, gótico y elegante. Sobresale por una combinación muy particular de rosa oscura masculina rodeada de notas de vodka, especias e incienso.",
     "notas_clave": [
@@ -269,6 +282,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 2,
+    "precio": 9500,
     "familia_olfativa": "Ámbar Especiada",
     "descripcion": "Aerosol corporal perfumado con un perfil opulento y oriental. Inspirado en fragancias árabes densas, proyecta notas cálidas y especiadas ideales para el uso diario con personalidad.",
     "notas_clave": [
@@ -288,6 +302,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "90 ml / 3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Aromática Frutal",
     "descripcion": "Celebración de la juventud y la cultura callejera. Es un perfume vibrante que abre con notas frutales dulces e innovadoras de elíxir de pera combinadas con un fondo limpio herbal.",
     "notas_clave": [
@@ -308,6 +323,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "125 ml / 4.2 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "Un ícono de frescura atemporal desde los años 90. Es famoso por su aroma ultra limpio centrado en manzana verde crujiente, agujas de pino y notas forestales refrescantes.",
     "notas_clave": [
@@ -329,6 +345,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Fresco Aromático",
     "descripcion": "Desodorante corporal en spray de alta fijación con notas limpias y marinas. Ideal para refrescar el cuerpo de forma rápida manteniendo un aura pulcra y dinámica.",
     "notas_clave": [
@@ -347,6 +364,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Ámbar Vainilla",
     "descripcion": "Aerosol corporal con un perfil olfativo magnético, dulce y seductor. Su combinación de especias y vainilla lo convierte en una opción informal excelente para salidas de tarde o noche.",
     "notas_clave": [
@@ -365,6 +383,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Aerosol corporal femenino que brinda una sensación alegre, primaveral y dulce. Abre con frutas jugosas y se asienta en un bouquet floral muy femenino.",
     "notas_clave": [
@@ -384,6 +403,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Fragancia femenina elegante inspirada en el oro amarillo. Mezcla de flores sofisticadas con un fondo dulce, cálido, cómodo y ligeramente almendrado.",
     "notas_clave": [
@@ -405,6 +425,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Almizcle Floral Amaderado",
     "descripcion": "Conocido por su icónico frasco de osito de peluche de vidrio. Su aroma es sumamente limpio, luminoso y chispeante, evocando un jabón de lujo fino con manzana y flores.",
     "notas_clave": [
@@ -425,6 +446,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "El perfume del amor juvenil por excelencia. Es una pócima pasional, vibrante, dulce y seductora dominada por frutas cítricas rojas y un fondo de vainilla reconfortante.",
     "notas_clave": [
@@ -446,6 +468,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "90 ml / 3.0 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia femenina dinámica, energética y femenina. Captura la esencia de la juventud independiente con notas cítricas picantes que evolucionan hacia flores suaves y maderas tiernas.",
     "notas_clave": [
@@ -467,6 +490,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Perfume casual, alegre e inspirado en la vida urbana veraniega. Predominan los acordes tropicales y florales frescos, perfectos para el uso diario tras la ducha.",
     "notas_clave": [
@@ -485,6 +509,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "90 ml / 3.0 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral verde",
     "descripcion": "La fragancia fundadora de la línea de perfumería Tous. Destaca por su aroma herbal, fresco, pulcro y puramente floral. Transmite paz, sofisticación sutil y ligereza.",
     "notas_clave": [
@@ -506,6 +531,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Chypre Floral",
     "descripcion": "Una obra de arte compleja de los años 80. Perfume de gran carácter, imponente, elegante e idóneo para mujeres con una fuerte presencia que aprecian los aromas terrosos y musgosos.",
     "notas_clave": [
@@ -527,6 +553,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una fragancia sumamente optimista, chispeante y juguetona. Es un estallido cítrico amargo/dulce combinado con té verde refrescante que levanta el ánimo al instante.",
     "notas_clave": [
@@ -548,6 +575,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Divertido, coqueto y muy colorido. Destaca por notas dulces que recuerdan a caramelos frutales ácidos, ideal para adolescentes o un uso sumamente informal de día.",
     "notas_clave": [
@@ -569,6 +597,7 @@
     "concentracion": "Extrait De Parfum",
     "medida": "105 ml / 3.6 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una variante de alta concentración (Extracto) que ofrece una longevidad excepcional. Destaca por su brillo frutal inicial que madura en maderas almizcladas muy sofisticadas.",
     "notas_clave": [
@@ -590,6 +619,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Tropical",
     "descripcion": "Perfume árabe moderno que resalta por su frescura exótica. Es jugoso, acuático y verde, perfecto para quienes buscan destacar con aromas frutales fuera de lo común.",
     "notas_clave": [
@@ -610,6 +640,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un pilar de la perfumería veraniega femenina. Limón siciliano crujiente fusionado con manzana y bambú, diseñado para transmitir la sensación de un mediodía soleado frente al mar.",
     "notas_clave": [
@@ -630,6 +661,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "Fragancia fresca con un giro oriental suave. Abre con notas cítricas potentes de toronja pero se desenvuelve rápidamente en un fondo de orquídea azucarada muy cómodo.",
     "notas_clave": [
@@ -650,6 +682,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Uno de los perfumes femeninos más vendidos a nivel mundial. Es denso, ultra dulce y opulento, caracterizado por una nota de praliné y vainilla de altísima fijación y estela.",
     "notas_clave": [
@@ -671,6 +704,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "80 ml",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia suave y positiva que busca inspirar la unión y el romance. Mezcla frutas sutiles con un corazón floral terso, excelente para uso diario o de oficina.",
     "notas_clave": [
@@ -692,6 +726,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "50 ml + 75 ml",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "La primera fragancia de la cantante. Es un aroma meloso, exótico y oriental que se siente cálido en la piel gracias al protagonismo del sándalo y del jazmín nocturno.",
     "notas_clave": [
@@ -711,6 +746,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Cítrica Frutal",
     "descripcion": "Fragancia chispeante, refrescante y revitalizante. Dominada por un cóctel de cítricos de salida que recuerdan a un día de campo soleado, muy jovial.",
     "notas_clave": [
@@ -732,6 +768,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Almizcle Floral Amaderado",
     "descripcion": "Un aroma pacífico, tierno y pulcro que transmite paz espiritual. Huele a cremas corporales finas, con un toque sutil pero fascinante de granos de café verde.",
     "notas_clave": [
@@ -753,6 +790,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "80 ml / 2.7 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Acuática",
     "descripcion": "Edición veraniega inspirada en el movimiento de las olas del mar y el baile. Es fresca, tropical, con acordes salados y florales refrescantes.",
     "notas_clave": [
@@ -774,6 +812,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Inspirado en el espíritu de superación personal de la artista. Abre con una nota tropical jugosa de coco y frambuesa y se asienta en macarrones dulces sumamente coquetos.",
     "notas_clave": [
@@ -794,6 +833,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Leñosa Almizclada",
     "descripcion": "La fragancia urbana y sofisticada neoyorquina por excelencia. Huele a frescura floral blanca de vanguardia, limpia, enérgica e ideal para mujeres de negocios contemporáneas.",
     "notas_clave": [
@@ -815,6 +855,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un emblema del estilo 'preppy' americano de los 90. Es refrescante, alegre y natural, con un aroma centrado en flores de manzano, menta silvestre y té verde.",
     "notas_clave": [
@@ -837,6 +878,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Ámbar Gourmand",
     "descripcion": "Aerosol corporal intensamente dulce y avainillado. Envuelve el cuerpo en una calidez reconfortante de repostería fina, perfecto para los climas fríos o usar tras el baño en invierno.",
     "notas_clave": [
@@ -855,6 +897,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia inspirada en el glamour coqueto de la mujer Guess. Es un elixir afrutado de melón y frambuesa refrescado por orquídeas exóticas brasileñas.",
     "notas_clave": [
@@ -875,6 +918,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Acuática",
     "descripcion": "Una fragancia icónica de los 90 con un carácter melancólico, maduro e imponente. Combina melón, manzanilla y notas marinas que llenan las habitaciones por completo.",
     "notas_clave": [
@@ -897,6 +941,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "85 ml / 2.87 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Gourmand",
     "descripcion": "Presentación árabe en lata roja inspirada en perfumes sensuales y nocturnos de alta gama. Destaca por una nota densa de nardos carnales bañados en miel espesa.",
     "notas_clave": [
@@ -917,6 +962,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "125 ml / 4.2 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral",
     "descripcion": "Un ramo floral clásico, distinguido y profundamente sofisticada que evoca el lujo accesible de la famosa avenida neoyorquina. Es limpio, floral y pulcro.",
     "notas_clave": [
@@ -937,6 +983,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Floral Atalcada",
     "descripcion": "Aerosol corporal fino con un aroma sutil a talco de rosas y sándalo. Transmite pulcritud, suavidad y una sensación reconfortante de frescura y cobijo.",
     "notas_clave": [
@@ -956,8 +1003,9 @@
     "concentracion": "Eau de Toilette",
     "medida": "~120 ml",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral",
-    "descripcion": "Fragancia de diseñador español enfocada en la belleza natural y pura de la gardenia. Es un aroma delicado, natural, húmedo y sutilmente primaveral.",
+    "descripcion": "Fragancia de designer español enfocada en la belleza natural y pura de la gardenia. Es un aroma delicado, natural, húmedo y sutilmente primaveral.",
     "notas_clave": [
       "Gardenia blanca",
       "Notas verdes de hojas",
@@ -974,6 +1022,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "80 ml",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ambery Floral Frutal",
     "descripcion": "Presentado en una llamativa botella con forma de ojo. Destaca por su dinamismo moderno, que entrelaza la toronja enérgica con un corazón de cacao dulce y pachulí.",
     "notas_clave": [
@@ -995,6 +1044,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia de uso diario fresca e informal de los 90. Combina la frescura del durazno y la pera con un fondo de magnolia limpia y metálica muy refrescante.",
     "notas_clave": [
@@ -1014,6 +1064,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Chypre Floral",
     "descripcion": "Una fragancia clásica e histórica de los 70 que denota gran carácter y nostalgia. Posee matices fuertes de musgo, geranio y maderas densas.",
     "notas_clave": [
@@ -1034,6 +1085,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "80 ml",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia femenina dulce, jovial y ligera inspirada en el amor propio. Es suave, dominada por frambuesas dulces combinadas con pétalos de rosa y jazmín.",
     "notas_clave": [
@@ -1056,6 +1108,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "30 ml / 1 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Almizcle Floral Amaderado",
     "descripcion": "La versión compacta de 30 ml del clásico de Cacharel. Entrega exactamente el mismo aroma reconfortante a sábanas limpias, almizcle blanco sedoso y granos de café verde.",
     "notas_clave": [
@@ -1075,6 +1128,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Una de las fragancias de celebridad más icónicas y vendidas de la historia. Huele intensamente a chocolate blanco y pastelitos de vainilla ('cupcakes') decorados con kiwi.",
     "notas_clave": [
@@ -1096,6 +1150,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "80 ml / 2.7 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia de la línea de la artista que busca emular la energía electrizante de un escenario musical. Abre cítrica y evoluciona hacia maderas jóvenes y limpias.",
     "notas_clave": [
@@ -1116,6 +1171,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Verde",
     "descripcion": "Un aroma suntuoso, clásico y muy maduro. Destaca por una nota pesada de mimosa y melón maduro con un trasfondo atalcado de clavel e incienso que denota opulencia clásica.",
     "notas_clave": [
@@ -1137,6 +1193,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una interpretación veraniega y moderna del clásico Eternity. Es más chispeante gracias a la adición de pera jugosa y notas cítricas de salida que descansan en sándalo templado.",
     "notas_clave": [
@@ -1156,6 +1213,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Se presenta en una icónica botella con forma de gato rosa perlado. Su aroma es dulce, cremoso y apacible, dominado por vainilla suave, pera y un fondo algodonado de almizcle.",
     "notas_clave": [
@@ -1177,6 +1235,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Floral",
     "descripcion": "Un himno al amor eterno, los valores familiares y la paz. Es un ramo floral blanco nítido, herbal y sumamente pulcro, caracterizado por una fijación sobresaliente.",
     "notas_clave": [
@@ -1198,6 +1257,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Inspirado en la pasión por el baile y el lujo de JLO. Es un cóctel de frutas tropicales jugosas en almíbar, extremadamente radiante, festivo y llamativo.",
     "notas_clave": [
@@ -1219,6 +1279,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Inspirado en las bailarinas de cabaret de París. Posee un aroma frutal muy alegre y dulce, caracterizado por la grosella negra dulce combinada con un toque sofisticado de ámbar.",
     "notas_clave": [
@@ -1239,6 +1300,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "La fragancia debut de la celebridad americana que marcó una era en los 2000. Destaca por una nota hiper-fresca de melón de agua maduro mezclado con un fondo almizclado coqueto.",
     "notas_clave": [
@@ -1261,6 +1323,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "50 ml / 1.7 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Se presenta en su botella con forma de lápiz labial. Es una variante traviesa y picante que gira en torno a frambuesas jugosas mezcladas con leche tibia de jengibre.",
     "notas_clave": [
@@ -1281,6 +1344,7 @@
     "concentracion": "EdP / EdT",
     "medida": "80 ml / 2.7 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Amaderada Aromática / Frutal",
     "descripcion": "Diseñado para celebrar la alegría de sentirse viva en la mujer moderna. Es sumamente reconfortante gracias a una nota muy marcada de manzana asada con canela y maderas finas.",
     "notas_clave": [
@@ -1302,6 +1366,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "105 ml / 3.6 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un aroma sofisticado, maduro y opulento. Es sumamente apreciado por su gran similitud olfativa con grandes clásicos franceses de pachulí, rosa y cítricos elegantes.",
     "notas_clave": [
@@ -1324,6 +1389,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "Fragancia femenina que destila empoderamiento y elegancia. Abre con cítricos audaces y pimienta, dando paso a flores blancas cremosas sobre un lecho reconfortante de sándalo.",
     "notas_clave": [
@@ -1344,6 +1410,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "80 ml / 2.7 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "Inspiración árabe directa de perfumes de alta gama centrados en una diosa del olimpo. Mezcla de manera excepcional la vainilla dulce con un acorde de sal marina muy adictivo.",
     "notas_clave": [
@@ -1363,6 +1430,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Vainilla (Gourmand)",
     "descripcion": "Un fenómeno viral en perfumería árabe. Huele a malteada cremosa de fresa con vainilla, un aroma suave, dulce, atalcado e irresistible que genera muchos halagos.",
     "notas_clave": [
@@ -1383,6 +1451,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Oriental Frutal",
     "descripcion": "Fragancia refinada de oriente que combina la jugosidad de frutas rojas exóticas con un corazón floral denso y pasional, ideal para distinguirse en ocasiones especiales.",
     "notas_clave": [
@@ -1402,6 +1471,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Alternativa árabe inspirada en las versiones intensas europeas. Realza la nota de iris polvoso sumergida en avellanas tostadas y azúcares finos.",
     "notas_clave": [
@@ -1421,6 +1491,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 2,
+    "precio": null,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Fragancia clásica dulce y femenina que emula los perfiles olfativos de felicidad y elegancia francesa, destacando por un fondo azucarado de praliné muy duradero.",
     "notas_clave": [
@@ -1440,6 +1511,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un aroma moderno y romántico concebido para la mujer segura. Desarrolla notas cítricas y frambuesas ácidas que se entrelazan con rosas rojas sobre una base limpia.",
     "notas_clave": [
@@ -1460,6 +1532,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "La icónica amapola imaginada en fragancia. Es el rey de los perfumes atalcados: huele a cosméticos de lujo antiguos, violetas finas, rosas tiernas y vainilla reconfortante.",
     "notas_clave": [
@@ -1475,12 +1548,12 @@
   },
   {
     "id": 74,
-    "solve_name": "Cool Water",
     "nombre": "Cool Water",
     "marca": "Davidoff",
     "concentracion": "Eau de Toilette",
     "medida": "125 ml / 4.2 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Acuática",
     "descripcion": "La contraparte femenina del clásico marino. Ofrece un aroma acuático nítido, cristalino y refrescante, repleto de melón, lirios de agua y brisa pura.",
     "notas_clave": [
@@ -1502,6 +1575,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia etérea, tierna y fresca como gotas de rocío matutino. Destaca por cítricos suaves complementados por lavanda limpia y manzanas verdes crujientes.",
     "notas_clave": [
@@ -1523,6 +1597,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una versión más suave, jugosa y juguetona del Can Can original. Sobresale notablemente la nota de frambuesa silvestre dulce y nectarina sobre flores tiernas.",
     "notas_clave": [
@@ -1543,6 +1618,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Aerosol corporal sofisticado de uso informal. Combina frutas chispeantes con maderas delicadas para otorgar frescura prolongada con un toque distinguido y elegante.",
     "notas_clave": [
@@ -1561,6 +1637,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 5,
+    "precio": 9500,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "El desodorante corporal más presente en el stock. Entrega un aroma hiper-masculino, enérgico, sumamente herbal y mentolado, idóneo para refrescarse con un soplo gélido.",
     "notas_clave": [
@@ -1579,6 +1656,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "50 ml / 1.7 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Un hito absoluto de la perfumería clásica de 1973. Representa el olor a barbería fina tradicional: jabón verde, romero, lavanda de campo y musgo de roble viril.",
     "notas_clave": [
@@ -1600,6 +1678,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Amaderada Floral Almizclada",
     "descripcion": "Inspiración directa de un legendario e imponente perfume masculino francés que huele a hojas de violeta, cuero rudo y una nota muy curiosa y varonil que recuerda al combustible fino.",
     "notas_clave": [
@@ -1620,6 +1699,7 @@
     "concentracion": "Parfum",
     "medida": "~75 ml / 2.5 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Aromática Acuática",
     "descripcion": "Una inmersión profunda en el océano azul. Es marino, mineral, oscuro y sumamente distinguido, elevando la frescura tradicional hacia un plano nocturno y misterioso.",
     "notas_clave": [
@@ -1640,6 +1720,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 3,
+    "precio": 9500,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Aerosol corporal masculino con un carácter sobrio y reconfortante. Balancea cítricos de salida con especias cálidas y maderas secas, pensado para el uso post-gimnasio.",
     "notas_clave": [
@@ -1658,8 +1739,9 @@
     "concentracion": "Cologne",
     "medida": "88.7 ml / 3 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Especiada Aromática",
-    "descripcion": "Un aroma clásico afrodisíaco de los años 70. Cuenta con una carga masiva de especias cálidas, ámbar y almizcle animal que proyecta sensualidad madura y ruda.",
+    "descripcion": "Un aroma clásico afrodisíaco de los años 70. Cuenta con una carga masiva de especias cálidas, ámbar y almizcle animal que prjecta sensualidad madura y ruda.",
     "notas_clave": [
       "Especias orientales",
       "Ámbar ardiente",
@@ -1677,6 +1759,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": 49990,
     "familia_olfativa": "Frutal Especiada",
     "descripcion": "Una fragancia moderna de excelente proyección ('beast mode'). Combina frutas dulces y jugosas con maderas ahumadas, ideal para salidas nocturnas y clubes.",
     "notas_clave": [
@@ -1697,6 +1780,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "105 ml / 3.6 Fl. Oz.",
     "cantidad": 1,
+    "precio": 62900,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Uno de los perfumes masculinos más elogiados y populares de la última década. Abre con un limón potente y evoluciona hacia una piña ahumada muy masculina y magnética.",
     "notas_clave": [
@@ -1718,6 +1802,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.3 Fl. Oz.",
     "cantidad": 1,
+    "precio": 49990,
     "familia_olfativa": "Ámbar Fougère",
     "descripcion": "Una versión apasionada y ardiente de Eternity. Deja atrás el perfil herbal limpio para adentrarse en notas dulces y especiadas de piña madura combinadas con resinas de benjuí.",
     "notas_clave": [
@@ -1737,6 +1822,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": 55900,
     "familia_olfativa": "Ámbar Aromática",
     "descripcion": "Fragancia masculina muy versátil y distinguida. Se caracteriza por un aroma afrutado de naranja amarga combinado con jengibre picante y una nota muy atractiva de campari.",
     "notas_clave": [
@@ -1758,6 +1844,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": null,
     "familia_olfativa": "Amaderada Floral",
     "descripcion": "Inspiración árabe directa de un aclamado perfume francés de diseñador que revolucionó la perfumería con su nota de iris atalcada tipo labial fino rodeada de cacao y lavanda.",
     "notas_clave": [
@@ -1778,6 +1865,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "200 ml / 6.8 Fl. Oz.",
     "cantidad": 1,
+    "precio": 31500,
     "familia_olfativa": "Amaderada Aromática Acuática",
     "descripcion": "Perfume sumamente fresco y dinámico enfocado en el carisma masculino. Combina notas marinas saladas con piña y pomelo crujiente, perfecto para el uso informal diario.",
     "notas_clave": [
@@ -1800,6 +1888,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": 28900,
     "familia_olfativa": "Amaderada Acuática",
     "descripcion": "Un súper clásico de las fragancias de bajo costo más elogiadas. Huele a manzana verde crujiente mojada por agua de mar con sábanas blancas secadas al sol. Pulcritud pura.",
     "notas_clave": [
@@ -1821,6 +1910,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.33 Fl. Oz.",
     "cantidad": 1,
+    "precio": 42900,
     "familia_olfativa": "Ámbar Fougère",
     "descripcion": "Una potencia monumental de los años 80 de duración extrema. Es denso, complejo y rudo, destacando por notas fuertes de miel dulce, tabaco, piña madura e incienso.",
     "notas_clave": [
@@ -1843,6 +1933,7 @@
     "concentracion": "Body Spray",
     "medida": "~200 ml",
     "cantidad": 1,
+    "precio": 9500,
     "familia_olfativa": "Cítrica Especiada",
     "descripcion": "Aerosol corporal enérgico e informal. Combina toques picantes de pimienta con cáscaras de cítricos y maderas, idóneo para refrescarse rápidamente tras actividades físicas.",
     "notas_clave": [
@@ -1861,6 +1952,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "125 ml / 4.2 Fl. Oz.",
     "cantidad": 1,
+    "precio": 17990,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Fragancia clásica italiana presentada en su famosa botella verde con forma de cono de pino. Huele fielmente a un bosque de pinos alpinos fríos, con hierbas aromáticas finas.",
     "notas_clave": [
@@ -1882,6 +1974,7 @@
     "concentracion": "Extrait De Parfum",
     "medida": "~100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": 76000,
     "familia_olfativa": "Ámbar Amaderada",
     "descripcion": "Una pieza de colección de lujo dentro de la casa Armaf. Entrega una textura densa, cremosa, ahumada y especiada con una complejidad olfativa digna de la perfumería de nicho.",
     "notas_clave": [
@@ -1903,6 +1996,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "75 ml / 2.5 Fl. Oz.",
     "cantidad": 1,
+    "precio": 59900,
     "familia_olfativa": "Aromática Acuática",
     "descripcion": "Una ola helada de energía cítrica. Su nota predominante de menta congelada silvestre combinada con té amargo la convierte en una opción inmejorable para días sofocantes.",
     "notas_clave": [
@@ -1922,6 +2016,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": 40900,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Inspirado en el aire puro de las altas cumbres de los Alpes suizos. Es verde, fresco, limpio, con matices de hojas de cedro picantes y bayas silvestres muy refrescantes.",
     "notas_clave": [
@@ -1943,6 +2038,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "~125 ml / 4.2 Fl. Oz.",
     "cantidad": 1,
+    "precio": 59900,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Una entrega moderna en concentración Eau de Parfum. Es oscura, sofisticada y nocturna, balanceando frutas negras ácidas con pimienta y un pachulí terroso muy seductor.",
     "notas_clave": [
@@ -1963,6 +2059,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "75 ml / 2.5 Fl. Oz.",
     "cantidad": 1,
+    "precio": 44900,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Una obra maestra de sutileza, pulcritud y elegancia ejecutiva. Combina cítricos con una nota única de bambú fresco y jengibre sobre sándalo impecable. Huele a pulcritud refinada.",
     "notas_clave": [
@@ -1984,6 +2081,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "30 ml / 1.0 Fl. Oz.",
     "cantidad": 1,
+    "precio": 62900,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Una fragancia apasionada basada en los contrastes. Une la frescura de cítricos amargos italianos con la calidez especiada de la pimienta negra y la dulzura del haba tonka.",
     "notas_clave": [
@@ -2006,6 +2104,7 @@
     "concentracion": "Eau de Toilette",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": 31900,
     "familia_olfativa": "Ámbar Fougère (Acuática)",
     "descripcion": "Uno de los mayores éxitos informales de la marca. Fragancia acuática dulce y extremadamente limpia, gracias al protagonismo del melón jugoso, menta y una nota sutil de capuchino.",
     "notas_clave": [
@@ -2027,6 +2126,7 @@
     "concentracion": "Eau de Parfum",
     "medida": "100 ml / 3.4 Fl. Oz.",
     "cantidad": 1,
+    "precio": 29900,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Inspiración árabe directa de uno de los perfumes masculinos más vendidos del planeta. Destaca por una nota punzante de pimienta de Sichuan combinada con ambroxan ultra limpio.",
     "notas_clave": [

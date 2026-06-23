@@ -7,7 +7,7 @@
 <div style="max-width:1200px; margin:24px auto; padding:0 16px;">
 
   <div style="margin-bottom:24px;">
-    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:32px; margin:0 0 4px;">
+    <h1 style="font-size:32px; margin:0 0 4px;">
       Despacho de pedidos online
     </h1>
     <p style="color:var(--bo-muted); margin:0;">
@@ -86,7 +86,7 @@
               </div>
             {% endwith %}
           </td>
-          <td style="padding:14px 16px; text-align:right; font-family:Georgia,serif; font-weight:600;">
+          <td style="padding:14px 16px; text-align:right; font-weight:600;">
             ${{ pedido.total|floatformat:0|intcomma }}
           </td>
           {% if estado_filtro == 'despachados' %}

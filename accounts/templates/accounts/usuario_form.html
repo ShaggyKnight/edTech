@@ -37,7 +37,7 @@
     <a href="{% url 'accounts:usuarios_lista' %}" style="color:#7A1E2B; text-decoration:none; font-size:13px;">
       ← Usuarios y roles
     </a>
-    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:30px; margin:8px 0 0;">
+    <h1 style="font-size:30px; margin:8px 0 0;">
       {% if modo == 'crear' %}Nuevo usuario{% else %}Editar {{ usuario.get_full_name|default:usuario.username }}{% endif %}
     </h1>
   </div>
@@ -96,7 +96,7 @@
     {% csrf_token %}
     <input type="hidden" name="accion" value="reset">
 
-    <h2 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:20px; margin:0 0 4px; color:#7A1E2B;">
+    <h2 style="font-size:20px; margin:0 0 4px; color:#7A1E2B;">
       Resetear contraseña
     </h2>
     <p style="color:var(--bo-muted); font-size:13px; margin:0 0 16px;">

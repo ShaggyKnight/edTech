@@ -11,7 +11,7 @@
        style="color:#7A1E2B; text-decoration:none; font-size:13px;">
       ← Volver a la cola
     </a>
-    <h1 style="font-family:'Cormorant Garamond',Georgia,serif; font-size:32px; margin:8px 0 0;">
+    <h1 style="font-size:32px; margin:8px 0 0;">
       Pedido #{{ pedido.pk }}
       {% if pedido.despachado_en %}
         <span style="font-size:14px; background:#c8e6c9; color:#2e7d32; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">
@@ -103,7 +103,7 @@
       <tfoot>
         <tr style="background:#FBF7EE;">
           <td colspan="3" style="padding:14px 18px; text-align:right; font-weight:600;">Total</td>
-          <td style="padding:14px 18px; text-align:right; font-family:Georgia,serif; font-size:22px; font-weight:600;">
+          <td style="padding:14px 18px; text-align:right; font-size:22px; font-weight:600;">
             ${{ pedido.total|floatformat:0|intcomma }}
           </td>
         </tr>

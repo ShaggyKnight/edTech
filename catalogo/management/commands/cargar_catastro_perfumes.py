@@ -36,12 +36,15 @@ Uso:
 from __future__ import annotations
 
 import json
+import os
 import re
 import unicodedata
+import urllib.request
 from decimal import Decimal
 from pathlib import Path
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -174,6 +177,11 @@ class Command(BaseCommand):
                  'catastro es el inventario real. Con esta flag se conservan '
                  'con su stock anterior.',
         )
+        parser.add_argument(
+            '--con-imagenes', action='store_true',
+            help='Descarga la imagen de silkperfumes.cl (campo img_silk del '
+                 'JSON) para los productos que no tengan imagen. Requiere red.',
+        )
 
     def handle(self, *args, **opts):
         archivo = Path(opts['archivo'])
@@ -183,6 +191,7 @@ class Command(BaseCommand):
         aplicar = opts['aplicar']
         desactivar = not opts['no_desactivar']
         zerar_extra = not opts['mantener_tallas_extra']
+        con_imagenes = opts['con_imagenes']
 
         with archivo.open(encoding='utf-8') as f:
             catastro = json.load(f)
@@ -210,7 +219,7 @@ class Command(BaseCommand):
 
         stats = {'creados': 0, 'actualizados': 0, 'sin_cambios': 0,
                  'stock_set': 0, 'desactivados': 0, 'tallas_zeradas': 0,
-                 'genero': {}}
+                 'imagenes': 0, 'genero': {}}
         cores_catastro = set()
         avisos = []
 
@@ -219,6 +228,7 @@ class Command(BaseCommand):
                 core = self._procesar(
                     entry, familia, atr_vol, atr_conc, tienda,
                     db_index, stats, avisos, aplicar, zerar_extra,
+                    con_imagenes,
                 )
                 cores_catastro.add(core)
 
@@ -243,7 +253,7 @@ class Command(BaseCommand):
         return Tienda.objects.filter(activa=True).first()
 
     def _procesar(self, entry, familia, atr_vol, atr_conc, tienda,
-                  db_index, stats, avisos, aplicar, zerar_extra):
+                  db_index, stats, avisos, aplicar, zerar_extra, con_imagenes):
         nombre_raw = entry['nombre']
         marca = (entry.get('marca') or '').strip()
         core = _core_name(nombre_raw, marca)
@@ -252,7 +262,9 @@ class Command(BaseCommand):
         notas = ' · '.join(n.strip() for n in notas_list if n.strip())
         volumen_label, es_set = _parse_volumen(entry.get('medida', ''))
         conc_cod = _conc_codigo(entry.get('concentracion', ''), es_set)
-        genero = _genero(nombre_raw, notas_list)
+        # Genero: el del JSON (verificado en internet) tiene prioridad. Solo
+        # si falta, se infiere del nombre como fallback.
+        genero = (entry.get('genero') or '').strip() or _genero(nombre_raw, notas_list)
         stats['genero'][genero] = stats['genero'].get(genero, 0) + 1
         cantidad = int(entry.get('cantidad') or 0)
 
@@ -323,7 +335,32 @@ class Command(BaseCommand):
                      .update(cantidad=0))
                 stats['tallas_zeradas'] += n
 
+        # Imagen desde silkperfumes.cl (solo si el producto no tiene una).
+        if con_imagenes and not producto.imagen and entry.get('img_silk'):
+            if self._descargar_imagen(producto, entry['img_silk']):
+                stats['imagenes'] += 1
+
         return core
+
+    def _descargar_imagen(self, producto, url):
+        """Descarga la imagen de silk y la asigna al producto. Best-effort:
+        un fallo se loggea pero no corta la carga."""
+        try:
+            url = url.split('?')[0]  # silk CDN agrega ?v=... que no hace falta
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                data = resp.read()
+            ext = os.path.splitext(url)[1].lower() or '.jpg'
+            if ext not in ('.jpg', '.jpeg', '.png', '.webp'):
+                ext = '.jpg'
+            fname = f'{producto.pk}-silk{ext}'
+            producto.imagen.save(fname, ContentFile(data), save=True)
+            self.stdout.write(self.style.SUCCESS(f'    img {producto.nombre}'))
+            return True
+        except Exception as exc:  # noqa: BLE001
+            self.stdout.write(self.style.WARNING(
+                f'    img FALLO {producto.nombre}: {type(exc).__name__}'))
+            return False
 
     def _get_or_create_variante(self, producto, atr_vol, atr_conc,
                                 volumen_label, conc_cod):
@@ -375,6 +412,7 @@ class Command(BaseCommand):
             f'  Actualizados:  {stats["actualizados"]}\n'
             f'  Sin cambios:   {stats["sin_cambios"]}\n'
             f'  Stock seteado: {stats["stock_set"]}\n'
+            f'  Imagenes silk: {stats["imagenes"]}\n'
             f'  Tallas extra a 0: {stats["tallas_zeradas"]}\n'
             f'  Desactivados:  {stats["desactivados"]}'
             f'{"" if desactivar else " (--no-desactivar)"}\n'

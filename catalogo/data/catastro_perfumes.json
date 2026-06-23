@@ -8,7 +8,16 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Fragancia fresca, limpia y deportiva que evoca la sensación de llevar puesta una camisa polo blanca clásica. Es elegante, minimalista y muy versátil para el día a día.",
-    "notas_clave": ["Toronja (pomelo)", "Cardamomo", "Romero", "Nardos", "Gamuza", "Cedro"]
+    "notas_clave": [
+      "Toronja (pomelo)",
+      "Cardamomo",
+      "Romero",
+      "Nardos",
+      "Gamuza",
+      "Cedro"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/l-1212-blanc-neon-edt-100ml.jpg?v=1708708116"
   },
   {
     "id": 2,
@@ -19,7 +28,17 @@
     "cantidad": 1,
     "familia_olfativa": "Alizcleña Floreal Amaderada",
     "descripcion": "Un aroma moderno, punzante y metálico con una proyección excelente. Es ampliamente reconocido por su gran similitud con fragancias de nicho de alto costo, ideal para destacar.",
-    "notas_clave": ["Bergamota", "Grosellas negras", "Limón", "Rosa", "Jazmín", "Almizcle", "Sándalo"]
+    "notas_clave": [
+      "Bergamota",
+      "Grosellas negras",
+      "Limón",
+      "Rosa",
+      "Jazmín",
+      "Almizcle",
+      "Sándalo"
+    ],
+    "genero": "unisex",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/ARMAFCLUBDENUITSILLAGEEDP105ML.png?v=1764952128"
   },
   {
     "id": 3,
@@ -30,7 +49,17 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Un clásico indiscutible de la perfumería masculina. Representa la elegancia varonil tradicional, madura, con un fuerte carácter herbal, especiado y un fondo amaderado limpio.",
-    "notas_clave": ["Anís", "Lavanda", "Alcaravea", "Albahaca", "Sándalo", "Cuero", "Musgo de roble"]
+    "notas_clave": [
+      "Anís",
+      "Lavanda",
+      "Alcaravea",
+      "Albahaca",
+      "Sándalo",
+      "Cuero",
+      "Musgo de roble"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/azzaro-pour-homme-edt-30ml-Silk-Perfumes.png?v=1752176766"
   },
   {
     "id": 4,
@@ -41,7 +70,14 @@
     "cantidad": 1,
     "familia_olfativa": "Cítrica Aromática",
     "descripcion": "Aerosol corporal diseñado para el uso diario o posdeporte. Entrega una ráfaga inmediata de energía cítrica refrescante con un fondo ligeramente amaderado para prolongar la limpieza.",
-    "notas_clave": ["Notas cítricas", "Hierbas verdes", "Notas marinas", "Maderas suaves"]
+    "notas_clave": [
+      "Notas cítricas",
+      "Hierbas verdes",
+      "Notas marinas",
+      "Maderas suaves"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 5,
@@ -52,7 +88,16 @@
     "cantidad": 2,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Una fragancia ligera y marina que captura la brisa del mar Mediterráneo. Es fresca, limpia, con un sutil toque especiado y un fondo boscoso muy masculino.",
-    "notas_clave": ["Bergamota", "Jengibre", "Pimienta", "Notas marinas", "Vetiver", "Ámbar"]
+    "notas_clave": [
+      "Bergamota",
+      "Jengibre",
+      "Pimienta",
+      "Notas marinas",
+      "Vetiver",
+      "Ámbar"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/mediterraneo-tester-edt-100ml.jpg?v=1708707349"
   },
   {
     "id": 6,
@@ -63,7 +108,15 @@
     "cantidad": 2,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Fragancia joven, urbana y casual orientada a un público dinámico. Destaca por su combinación inusual de cítricos chispeantes combinados con un toque dulce de cacao.",
-    "notas_clave": ["Limón de la prensa", "Hojas de tomatera", "Vaina de cacao", "Cedro", "Almizcle blanco"]
+    "notas_clave": [
+      "Limón de la prensa",
+      "Hojas de tomatera",
+      "Vaina de cacao",
+      "Cedro",
+      "Almizcle blanco"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 7,
@@ -74,7 +127,16 @@
     "cantidad": 2,
     "familia_olfativa": "Aromática Amaderada",
     "descripcion": "Una fragancia futurista y audaz creada mediante inteligencia olfativa. Mezcla una lavanda adictiva y cremosa con limón energizante y una base de vainilla muy sensual.",
-    "notas_clave": ["Lavanda", "Limonello", "Notas de humo", "Manzana", "Vainilla", "Vetiver"]
+    "notas_clave": [
+      "Lavanda",
+      "Limonello",
+      "Notas de humo",
+      "Manzana",
+      "Vainilla",
+      "Vetiver"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/paco-rabanne-phantom-estuche-edt-100ml-20ml-silk-perfumes.png?v=1762871643"
   },
   {
     "id": 8,
@@ -85,7 +147,17 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Fougère",
     "descripcion": "Un perfume nocturno, misterioso y muy adictivo. Gira en torno a una nota central de café tostado mezclado con whisky y especias, ideal para climas fríos y salidas de noche.",
-    "notas_clave": ["Cardamomo", "Lavanda", "Café", "Whisky", "Cuero", "Haba tonka", "Incienso"]
+    "notas_clave": [
+      "Cardamomo",
+      "Lavanda",
+      "Café",
+      "Whisky",
+      "Cuero",
+      "Haba tonka",
+      "Incienso"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 9,
@@ -96,7 +168,17 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Fragancia de la vieja escuela ('powerhouse' de los 80). Con un carácter robusto, ultra masculino, destaca por sus notas intensas de pino, cuero y musgo de roble.",
-    "notas_clave": ["Artemisia", "Alcaravea", "Pino", "Sándalo", "Cuero", "Musgo de roble", "Tabaco"]
+    "notas_clave": [
+      "Artemisia",
+      "Alcaravea",
+      "Pino",
+      "Sándalo",
+      "Cuero",
+      "Musgo de roble",
+      "Tabaco"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/puig-quorum-estuche-edt-100ml_desodorante-150ml.png?v=1747324876"
   },
   {
     "id": 10,
@@ -107,7 +189,16 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Acuática",
     "descripcion": "Uno de los reyes indiscutibles para el verano y el calor extremo. Ofrece un aroma afrutado, acuático y cítrico sumamente refrescante, limpio y con un toque elegante.",
-    "notas_clave": ["Carambola", "Limón blanco", "Hojas de cedro", "Estragón", "Sicomoro", "Almizcle"]
+    "notas_clave": [
+      "Carambola",
+      "Limón blanco",
+      "Hojas de cedro",
+      "Estragón",
+      "Sicomoro",
+      "Almizcle"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 11,
@@ -118,7 +209,17 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "Fragancia fresca, juvenil y con un empuje aventurero. Combina la limpieza de la manzana y la bergamota con un corazón herbal aromático y un fondo masculino amaderado.",
-    "notas_clave": ["Manzana verde", "Bergamota", "Lavanda", "Salvia", "Musgo", "Tonka", "Cedro"]
+    "notas_clave": [
+      "Manzana verde",
+      "Bergamota",
+      "Lavanda",
+      "Salvia",
+      "Musgo",
+      "Tonka",
+      "Cedro"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/ANBA102.png?v=1722963631"
   },
   {
     "id": 12,
@@ -129,7 +230,16 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Amaderada",
     "descripcion": "Una entrega más elegante y madura de la marca. Presenta acordes densos, levemente dulces y orientales que le otorgan mayor duración y distinción en eventos semiformales.",
-    "notas_clave": ["Pimienta negra", "Toronja", "Lavanda", "Gamuza", "Haba tonka", "Benjuí"]
+    "notas_clave": [
+      "Pimienta negra",
+      "Toronja",
+      "Lavanda",
+      "Gamuza",
+      "Haba tonka",
+      "Benjuí"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/antonio-banderas-the-icon-estuche-edt-50ml-after-shave-balm-75ml-silk-perfumes.png?v=1782138541"
   },
   {
     "id": 13,
@@ -140,7 +250,17 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "Un aroma oscuro, gótico y elegante. Sobresale por una combinación muy particular de rosa oscura masculina rodeada de notas de vodka, especias e incienso.",
-    "notas_clave": ["Vodka", "Lavanda", "Rosa", "Jazmín", "Palo de rosa de Brasil", "Pachulí", "Roble"]
+    "notas_clave": [
+      "Vodka",
+      "Lavanda",
+      "Rosa",
+      "Jazmín",
+      "Palo de rosa de Brasil",
+      "Pachulí",
+      "Roble"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 14,
@@ -151,7 +271,15 @@
     "cantidad": 2,
     "familia_olfativa": "Ámbar Especiada",
     "descripcion": "Aerosol corporal perfumado con un perfil opulento y oriental. Inspirado en fragancias árabes densas, proyecta notas cálidas y especiadas ideales para el uso diario con personalidad.",
-    "notas_clave": ["Especias cálidas", "Canela", "Notas amaderadas", "Ámbar", "Vainilla"]
+    "notas_clave": [
+      "Especias cálidas",
+      "Canela",
+      "Notas amaderadas",
+      "Ámbar",
+      "Vainilla"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 15,
@@ -162,7 +290,16 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Frutal",
     "descripcion": "Celebración de la juventud y la cultura callejera. Es un perfume vibrante que abre con notas frutales dulces e innovadoras de elíxir de pera combinadas con un fondo limpio herbal.",
-    "notas_clave": ["Pera", "Jengibre", "Marihuana (cáñamo)", "Geranio", "Cuero", "Almizcle"]
+    "notas_clave": [
+      "Pera",
+      "Jengibre",
+      "Marihuana (cáñamo)",
+      "Geranio",
+      "Cuero",
+      "Almizcle"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/carolina-herrera-212-men-heroes-forever-young-tester-edt-90-ml-Silk-Perfumes.png?v=1759157499"
   },
   {
     "id": 16,
@@ -173,7 +310,17 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "Un ícono de frescura atemporal desde los años 90. Es famoso por su aroma ultra limpio centrado en manzana verde crujiente, agujas de pino y notas forestales refrescantes.",
-    "notas_clave": ["Manzana verde", "Lavanda", "Menta", "Pino", "Salvia", "Abeto", "Cedro"]
+    "notas_clave": [
+      "Manzana verde",
+      "Lavanda",
+      "Menta",
+      "Pino",
+      "Salvia",
+      "Abeto",
+      "Cedro"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/hugo-man-estuche-edt-75ml-_-desodorante-150ml.png?v=1736370200"
   },
   {
     "id": 17,
@@ -184,7 +331,14 @@
     "cantidad": 2,
     "familia_olfativa": "Fresco Aromático",
     "descripcion": "Desodorante corporal en spray de alta fijación con notas limpias y marinas. Ideal para refrescar el cuerpo de forma rápida manteniendo un aura pulcra y dinámica.",
-    "notas_clave": ["Menta fresca", "Notas marinas", "Cítricos picantes", "Almizcle ligero"]
+    "notas_clave": [
+      "Menta fresca",
+      "Notas marinas",
+      "Cítricos picantes",
+      "Almizcle ligero"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 18,
@@ -195,7 +349,14 @@
     "cantidad": 2,
     "familia_olfativa": "Ámbar Vainilla",
     "descripcion": "Aerosol corporal con un perfil olfativo magnético, dulce y seductor. Su combinación de especias y vainilla lo convierte en una opción informal excelente para salidas de tarde o noche.",
-    "notas_clave": ["Frutos rojos", "Especias orientales", "Vainilla cremosa", "Maderas dulces"]
+    "notas_clave": [
+      "Frutos rojos",
+      "Especias orientales",
+      "Vainilla cremosa",
+      "Maderas dulces"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 19,
@@ -206,7 +367,15 @@
     "cantidad": 2,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Aerosol corporal femenino que brinda una sensación alegre, primaveral y dulce. Abre con frutas jugosas y se asienta en un bouquet floral muy femenino.",
-    "notas_clave": ["Manzana en flor", "Durazno (melocotón)", "Jazmín", "Pétalos de rosa", "Almizcle blanco"]
+    "notas_clave": [
+      "Manzana en flor",
+      "Durazno (melocotón)",
+      "Jazmín",
+      "Pétalos de rosa",
+      "Almizcle blanco"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 20,
@@ -217,7 +386,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Fragancia femenina elegante inspirada en el oro amarillo. Mezcla de flores sofisticadas con un fondo dulce, cálido, cómodo y ligeramente almendrado.",
-    "notas_clave": ["Loto", "Freesia", "Almendras tiaras", "Jazmín", "Vainilla", "Frambuesa", "Miel"]
+    "notas_clave": [
+      "Loto",
+      "Freesia",
+      "Almendras tiaras",
+      "Jazmín",
+      "Vainilla",
+      "Frambuesa",
+      "Miel"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 21,
@@ -228,7 +407,16 @@
     "cantidad": 1,
     "familia_olfativa": "Almizcle Floral Amaderado",
     "descripcion": "Conocido por su icónico frasco de osito de peluche de vidrio. Su aroma es sumamente limpio, luminoso y chispeante, evocando un jabón de lujo fino con manzana y flores.",
-    "notas_clave": ["Manzana verde", "Mandarina", "Magnolia", "Grosella blanca", "Peonía", "Almizcle"]
+    "notas_clave": [
+      "Manzana verde",
+      "Mandarina",
+      "Magnolia",
+      "Grosella blanca",
+      "Peonía",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/moschino-toy-2-tester-edp-100-ml-silk-perfumes-3.png?v=1763667878"
   },
   {
     "id": 22,
@@ -239,7 +427,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "El perfume del amor juvenil por excelencia. Es una pócima pasional, vibrante, dulce y seductora dominada por frutas cítricas rojas y un fondo de vainilla reconfortante.",
-    "notas_clave": ["Grosellas negras", "Naranja", "Mandarina", "Damasco", "Jazmín", "Vainilla", "Ámbar"]
+    "notas_clave": [
+      "Grosellas negras",
+      "Naranja",
+      "Mandarina",
+      "Damasco",
+      "Jazmín",
+      "Vainilla",
+      "Ámbar"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/Disenosintitulo-2026-05-30T114852.958.png?v=1780156168"
   },
   {
     "id": 23,
@@ -250,7 +448,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia femenina dinámica, energética y femenina. Captura la esencia de la juventud independiente con notas cítricas picantes que evolucionan hacia flores suaves y maderas tiernas.",
-    "notas_clave": ["Naranja", "Cardamomo", "Cilantro", "Jazmín", "Hojas de violeta", "Vainilla", "Sándalo"]
+    "notas_clave": [
+      "Naranja",
+      "Cardamomo",
+      "Cilantro",
+      "Jazmín",
+      "Hojas de violeta",
+      "Vainilla",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/Lacoste-Touch-Of-Pink-Tester-EDT-90-ml-silk-perfumes.png?v=1748356876"
   },
   {
     "id": 24,
@@ -261,7 +469,14 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Perfume casual, alegre e inspirado en la vida urbana veraniega. Predominan los acordes tropicales y florales frescos, perfectos para el uso diario tras la ducha.",
-    "notas_clave": ["Notas frutales tropicales", "Melón", "Flores exóticas", "Almizcle suave"]
+    "notas_clave": [
+      "Notas frutales tropicales",
+      "Melón",
+      "Flores exóticas",
+      "Almizcle suave"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 25,
@@ -272,7 +487,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral verde",
     "descripcion": "La fragancia fundadora de la línea de perfumería Tous. Destaca por su aroma herbal, fresco, pulcro y puramente floral. Transmite paz, sofisticación sutil y ligereza.",
-    "notas_clave": ["Hojas de violeta", "Bergamota", "Coriandro", "Peonía", "Rosa", "Iris", "Almizcle blanco"]
+    "notas_clave": [
+      "Hojas de violeta",
+      "Bergamota",
+      "Coriandro",
+      "Peonía",
+      "Rosa",
+      "Iris",
+      "Almizcle blanco"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/Disenosintitulo-2026-05-22T145928.208.png?v=1779476448"
   },
   {
     "id": 26,
@@ -283,7 +508,17 @@
     "cantidad": 1,
     "familia_olfativa": "Chypre Floral",
     "descripcion": "Una obra de arte compleja de los años 80. Perfume de gran carácter, imponente, elegante e idóneo para mujeres con una fuerte presencia que aprecian los aromas terrosos y musgosos.",
-    "notas_clave": ["Clavel", "Coriandro", "Angelica", "Pachulí", "Musgo de roble", "Algaralia", "Ámbar"]
+    "notas_clave": [
+      "Clavel",
+      "Coriandro",
+      "Angelica",
+      "Pachulí",
+      "Musgo de roble",
+      "Algaralia",
+      "Ámbar"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/paloma-picasso-tester-edp-100-ml-silk-perfumes-1.png?v=1779462460"
   },
   {
     "id": 27,
@@ -294,7 +529,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una fragancia sumamente optimista, chispeante y juguetona. Es un estallido cítrico amargo/dulce combinado con té verde refrescante que levanta el ánimo al instante.",
-    "notas_clave": ["Naranja amarga", "Grosella roja", "Pimienta rosa", "Té verde", "Peonía", "Jazmín", "Cedro"]
+    "notas_clave": [
+      "Naranja amarga",
+      "Grosella roja",
+      "Pimienta rosa",
+      "Té verde",
+      "Peonía",
+      "Jazmín",
+      "Cedro"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/moschino_funny_tester_foto.png?v=1779730733"
   },
   {
     "id": 28,
@@ -305,7 +550,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Divertido, coqueto y muy colorido. Destaca por notas dulces que recuerdan a caramelos frutales ácidos, ideal para adolescentes o un uso sumamente informal de día.",
-    "notas_clave": ["Mandarina", "Manzana verde", "Gardenia", "Jazmín", "Caramelo", "Vainilla", "Almizcle"]
+    "notas_clave": [
+      "Mandarina",
+      "Manzana verde",
+      "Gardenia",
+      "Jazmín",
+      "Caramelo",
+      "Vainilla",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/agatha-ruiz-de-la-prada-look-estuche-edt-80ml-de-beso-en-beso-10ml-Silk-Perfumes.png?v=1756145111"
   },
   {
     "id": 29,
@@ -316,7 +571,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una variante de alta concentración (Extracto) que ofrece una longevidad excepcional. Destaca por su brillo frutal inicial que madura en maderas almizcladas muy sofisticadas.",
-    "notas_clave": ["Bergamota", "Naranja", "Durazno", "Rosa", "Jazmín", "Pachulí", "Vainilla"]
+    "notas_clave": [
+      "Bergamota",
+      "Naranja",
+      "Durazno",
+      "Rosa",
+      "Jazmín",
+      "Pachulí",
+      "Vainilla"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/armaf-club-de-nuit-intense-desodorante-200ml-Silk-Perfumes.png?v=1775927039"
   },
   {
     "id": 30,
@@ -327,7 +592,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Tropical",
     "descripcion": "Perfume árabe moderno que resalta por su frescura exótica. Es jugoso, acuático y verde, perfecto para quienes buscan destacar con aromas frutales fuera de lo común.",
-    "notas_clave": ["Lichi", "Agua de coco", "Melón", "Flor de loto", "Orquídea", "Almizcle"]
+    "notas_clave": [
+      "Lichi",
+      "Agua de coco",
+      "Melón",
+      "Flor de loto",
+      "Orquídea",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/lattafa-mayar-estuche-edp-100ml-desodorante-200ml-Silk-Perfumes.png?v=1753897702"
   },
   {
     "id": 31,
@@ -338,7 +612,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un pilar de la perfumería veraniega femenina. Limón siciliano crujiente fusionado con manzana y bambú, diseñado para transmitir la sensación de un mediodía soleado frente al mar.",
-    "notas_clave": ["Limón siciliano", "Manzana Granny Smith", "Bambú", "Jazmín", "Rosa blanca", "Cedro"]
+    "notas_clave": [
+      "Limón siciliano",
+      "Manzana Granny Smith",
+      "Bambú",
+      "Jazmín",
+      "Rosa blanca",
+      "Cedro"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/dolce-gabbana-light-blue-estuche-edt-100ml-edt-50ml-silk-perfumes.png?v=1778016267"
   },
   {
     "id": 32,
@@ -349,7 +632,16 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "Fragancia fresca con un giro oriental suave. Abre con notas cítricas potentes de toronja pero se desenvuelve rápidamente en un fondo de orquídea azucarada muy cómodo.",
-    "notas_clave": ["Toronja rosada", "Bergamota de Sicilia", "Orquídea de azúcar", "Cacto", "Ámbar", "Vainilla"]
+    "notas_clave": [
+      "Toronja rosada",
+      "Bergamota de Sicilia",
+      "Orquídea de azúcar",
+      "Cacto",
+      "Ámbar",
+      "Vainilla"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 33,
@@ -360,7 +652,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Uno de los perfumes femeninos más vendidos a nivel mundial. Es denso, ultra dulce y opulento, caracterizado por una nota de praliné y vainilla de altísima fijación y estela.",
-    "notas_clave": ["Grosellas negras", "Pera", "Iris", "Jazmín", "Praliné", "Vainilla", "Pachulí"]
+    "notas_clave": [
+      "Grosellas negras",
+      "Pera",
+      "Iris",
+      "Jazmín",
+      "Praliné",
+      "Vainilla",
+      "Pachulí"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/lancome-la-vie-est-belle-estuche-edp-100ml-30ml-4ml-silk-perfumes.png?v=1764620855"
   },
   {
     "id": 34,
@@ -371,7 +673,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia suave y positiva que busca inspirar la unión y el romance. Mezcla frutas sutiles con un corazón floral terso, excelente para uso diario o de oficina.",
-    "notas_clave": ["Bergamota", "Grosella gansa", "Durazno", "Magnolia", "Rosa", "Vainilla", "Almizcle"]
+    "notas_clave": [
+      "Bergamota",
+      "Grosella gansa",
+      "Durazno",
+      "Magnolia",
+      "Rosa",
+      "Vainilla",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/benetton-united-dreams-together-for-her-silk-perfumes_130e3cda-8934-4a71-a860-5e46059ffede.png?v=1751987874"
   },
   {
     "id": 35,
@@ -382,7 +694,15 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "La primera fragancia de la cantante. Es un aroma meloso, exótico y oriental que se siente cálido en la piel gracias al protagonismo del sándalo y del jazmín nocturno.",
-    "notas_clave": ["Jazmín", "Sándalo", "Vainilla", "Benjuí", "Ámbar"]
+    "notas_clave": [
+      "Jazmín",
+      "Sándalo",
+      "Vainilla",
+      "Benjuí",
+      "Ámbar"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/rock-by-shakira-estuche-edt-80ml-desodorante-150ml-Silk-Perfumes.png?v=1757340835"
   },
   {
     "id": 36,
@@ -393,7 +713,17 @@
     "cantidad": 1,
     "familia_olfativa": "Cítrica Frutal",
     "descripcion": "Fragancia chispeante, refrescante y revitalizante. Dominada por un cóctel de cítricos de salida que recuerdan a un día de campo soleado, muy jovial.",
-    "notas_clave": ["Bergamota", "Naranja", "Manzana", "Rosa", "Jazmín", "Almizcle", "Cedro"]
+    "notas_clave": [
+      "Bergamota",
+      "Naranja",
+      "Manzana",
+      "Rosa",
+      "Jazmín",
+      "Almizcle",
+      "Cedro"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/ARDP74.png?v=1729353565"
   },
   {
     "id": 37,
@@ -404,7 +734,17 @@
     "cantidad": 2,
     "familia_olfativa": "Almizcle Floral Amaderado",
     "descripcion": "Un aroma pacífico, tierno y pulcro que transmite paz espiritual. Huele a cremas corporales finas, con un toque sutil pero fascinante de granos de café verde.",
-    "notas_clave": ["Almizcle blanco", "Peonía", "Notas verdes", "Azucena", "Café", "Cilantro", "Incienso"]
+    "notas_clave": [
+      "Almizcle blanco",
+      "Peonía",
+      "Notas verdes",
+      "Azucena",
+      "Café",
+      "Cilantro",
+      "Incienso"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/Disenosintitulo_8_f43b345d-0a30-4412-b0cf-128f4d4c5eba.png?v=1734616208"
   },
   {
     "id": 38,
@@ -415,7 +755,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Acuática",
     "descripcion": "Edición veraniega inspirada en el movimiento de las olas del mar y el baile. Es fresca, tropical, con acordes salados y florales refrescantes.",
-    "notas_clave": ["Mandarina", "Bergamota", "Notas marinas", "Pimienta rosa", "Rosa", "Cedro", "Almizcle"]
+    "notas_clave": [
+      "Mandarina",
+      "Bergamota",
+      "Notas marinas",
+      "Pimienta rosa",
+      "Rosa",
+      "Cedro",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/SHAK65.png?v=1737753557"
   },
   {
     "id": 39,
@@ -426,7 +776,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Inspirado en el espíritu de superación personal de la artista. Abre con una nota tropical jugosa de coco y frambuesa y se asienta en macarrones dulces sumamente coquetos.",
-    "notas_clave": ["Frambuesa", "Pera", "Hala de coco", "Rosa rosada", "Macarrones dulces", "Almizcle"]
+    "notas_clave": [
+      "Frambuesa",
+      "Pera",
+      "Hala de coco",
+      "Rosa rosada",
+      "Macarrones dulces",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/ariana-grande-thank-u-next-estuche-edp-10ml-rem-edp-10ml-silk-perfumes.webp?v=1765890877"
   },
   {
     "id": 40,
@@ -437,7 +796,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Leñosa Almizclada",
     "descripcion": "La fragancia urbana y sofisticada neoyorquina por excelencia. Huele a frescura floral blanca de vanguardia, limpia, enérgica e ideal para mujeres de negocios contemporáneas.",
-    "notas_clave": ["Flor de azahar", "Mandarina", "Cactus", "Azucena", "Gardenia", "Almizcle", "Sándalo"]
+    "notas_clave": [
+      "Flor de azahar",
+      "Mandarina",
+      "Cactus",
+      "Azucena",
+      "Gardenia",
+      "Almizcle",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/CAHE7.png?v=1727195510"
   },
   {
     "id": 41,
@@ -448,7 +817,18 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un emblema del estilo 'preppy' americano de los 90. Es refrescante, alegre y natural, con un aroma centrado en flores de manzano, menta silvestre y té verde.",
-    "notas_clave": ["Flor de manzano", "Camelia", "Mandarina", "Madreselva", "Azucena", "Menta", "Té", "Cedro"]
+    "notas_clave": [
+      "Flor de manzano",
+      "Camelia",
+      "Mandarina",
+      "Madreselva",
+      "Azucena",
+      "Menta",
+      "Té",
+      "Cedro"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/TOHI11.png?v=1745679177"
   },
   {
     "id": 42,
@@ -459,7 +839,14 @@
     "cantidad": 2,
     "familia_olfativa": "Ámbar Gourmand",
     "descripcion": "Aerosol corporal intensamente dulce y avainillado. Envuelve el cuerpo en una calidez reconfortante de repostería fina, perfecto para los climas fríos o usar tras el baño en invierno.",
-    "notas_clave": ["Vainilla pura", "Azúcar tostado", "Notas cremosas", "Ámbar suave"]
+    "notas_clave": [
+      "Vainilla pura",
+      "Azúcar tostado",
+      "Notas cremosas",
+      "Ámbar suave"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 43,
@@ -470,7 +857,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia inspirada en el glamour coqueto de la mujer Guess. Es un elixir afrutado de melón y frambuesa refrescado por orquídeas exóticas brasileñas.",
-    "notas_clave": ["Frambuesa", "Melón", "Bergamota", "Orquídea del paraíso", "Lirio", "Vainilla de Madagascar"]
+    "notas_clave": [
+      "Frambuesa",
+      "Melón",
+      "Bergamota",
+      "Orquídea del paraíso",
+      "Lirio",
+      "Vainilla de Madagascar"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/guess-girl-edt-100ml-Silk-Perfumes.png?v=1757519967"
   },
   {
     "id": 44,
@@ -481,7 +877,18 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Acuática",
     "descripcion": "Una fragancia icónica de los 90 con un carácter melancólico, maduro e imponente. Combina melón, manzanilla y notas marinas que llenan las habitaciones por completo.",
-    "notas_clave": ["Melón", "Manzanilla", "Caléndula", "Damasco", "Cariandro", "Rosa", "Sándalo", "Musgo"]
+    "notas_clave": [
+      "Melón",
+      "Manzanilla",
+      "Caléndula",
+      "Damasco",
+      "Cariandro",
+      "Rosa",
+      "Sándalo",
+      "Musgo"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/calvin-klein-escape-mujer-edp-100-ml-Silk-Perfumes.jpg?v=1758898912"
   },
   {
     "id": 45,
@@ -492,7 +899,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Gourmand",
     "descripcion": "Presentación árabe en lata roja inspirada en perfumes sensuales y nocturnos de alta gama. Destaca por una nota densa de nardos carnales bañados en miel espesa.",
-    "notas_clave": ["Flor de azahar", "Nardos", "Jazmín", "Miel", "Leche condensada", "Pachulí"]
+    "notas_clave": [
+      "Flor de azahar",
+      "Nardos",
+      "Jazmín",
+      "Miel",
+      "Leche condensada",
+      "Pachulí"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 46,
@@ -503,7 +919,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral",
     "descripcion": "Un ramo floral clásico, distinguido y profundamente sofisticada que evoca el lujo accesible de la famosa avenida neoyorquina. Es limpio, floral y pulcro.",
-    "notas_clave": ["Flor de tilo", "Lirio de los valles", "Lila", "Magnolia", "Nuez moscada", "Sándalo"]
+    "notas_clave": [
+      "Flor de tilo",
+      "Lirio de los valles",
+      "Lila",
+      "Magnolia",
+      "Nuez moscada",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/5th-avenue-edp-75ml-elizabeth-arden.jpg?v=1707764157"
   },
   {
     "id": 47,
@@ -514,7 +939,15 @@
     "cantidad": 2,
     "familia_olfativa": "Floral Atalcada",
     "descripcion": "Aerosol corporal fino con un aroma sutil a talco de rosas y sándalo. Transmite pulcritud, suavidad y una sensación reconfortante de frescura y cobijo.",
-    "notas_clave": ["Notas atalcadas", "Rosa de mayo", "Iris", "Almizcle", "Vainilla blanda"]
+    "notas_clave": [
+      "Notas atalcadas",
+      "Rosa de mayo",
+      "Iris",
+      "Almizcle",
+      "Vainilla blanda"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 48,
@@ -525,7 +958,14 @@
     "cantidad": 1,
     "familia_olfativa": "Floral",
     "descripcion": "Fragancia de diseñador español enfocada en la belleza natural y pura de la gardenia. Es un aroma delicado, natural, húmedo y sutilmente primaveral.",
-    "notas_clave": ["Gardenia blanca", "Notas verdes de hojas", "Petricor (tierra húmeda)", "Madera de cedro"]
+    "notas_clave": [
+      "Gardenia blanca",
+      "Notas verdes de hojas",
+      "Petricor (tierra húmeda)",
+      "Madera de cedro"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/ADDO18.png?v=1745603062"
   },
   {
     "id": 49,
@@ -536,7 +976,17 @@
     "cantidad": 1,
     "familia_olfativa": "Ambery Floral Frutal",
     "descripcion": "Presentado en una llamativa botella con forma de ojo. Destaca por su dinamismo moderno, que entrelaza la toronja enérgica con un corazón de cacao dulce y pachulí.",
-    "notas_clave": ["Toronja", "Manzana roja", "Pimienta rosa", "Cacao", "Jazmín", "Pachulí", "Ámbar"]
+    "notas_clave": [
+      "Toronja",
+      "Manzana roja",
+      "Pimienta rosa",
+      "Cacao",
+      "Jazmín",
+      "Pachulí",
+      "Ámbar"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/agatha-ruiz-de-la-prada-look-de-agatha-ruiz-edt-80ml-Silk-Perfumes.jpg?v=1756231848"
   },
   {
     "id": 50,
@@ -547,7 +997,15 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia de uso diario fresca e informal de los 90. Combina la frescura del durazno y la pera con un fondo de magnolia limpia y metálica muy refrescante.",
-    "notas_clave": ["Durazno", "Pera", "Magnolia", "Lirio de los valles", "Chispa de lima"]
+    "notas_clave": [
+      "Durazno",
+      "Pera",
+      "Magnolia",
+      "Lirio de los valles",
+      "Chispa de lima"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 51,
@@ -558,7 +1016,16 @@
     "cantidad": 1,
     "familia_olfativa": "Chypre Floral",
     "descripcion": "Una fragancia clásica e histórica de los 70 que denota gran carácter y nostalgia. Posee matices fuertes de musgo, geranio y maderas densas.",
-    "notas_clave": ["Musgo de roble", "Geranio", "Sándalo", "Almizcle", "Rosa", "Jazmín"]
+    "notas_clave": [
+      "Musgo de roble",
+      "Geranio",
+      "Sándalo",
+      "Almizcle",
+      "Rosa",
+      "Jazmín"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 52,
@@ -569,7 +1036,18 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia femenina dulce, jovial y ligera inspirada en el amor propio. Es suave, dominada por frambuesas dulces combinadas con pétalos de rosa y jazmín.",
-    "notas_clave": ["Frambuesa", "Pera", "Bergamota", "Damasco", "Rosa", "Jazmín", "Sándalo", "Ámbar"]
+    "notas_clave": [
+      "Frambuesa",
+      "Pera",
+      "Bergamota",
+      "Damasco",
+      "Rosa",
+      "Jazmín",
+      "Sándalo",
+      "Ámbar"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 53,
@@ -580,7 +1058,15 @@
     "cantidad": 1,
     "familia_olfativa": "Almizcle Floral Amaderado",
     "descripcion": "La versión compacta de 30 ml del clásico de Cacharel. Entrega exactamente el mismo aroma reconfortante a sábanas limpias, almizcle blanco sedoso y granos de café verde.",
-    "notas_clave": ["Almizcle blanco", "Peonía", "Azucena", "Café verde", "Incienso blanco"]
+    "notas_clave": [
+      "Almizcle blanco",
+      "Peonía",
+      "Azucena",
+      "Café verde",
+      "Incienso blanco"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/Disenosintitulo_8_f43b345d-0a30-4412-b0cf-128f4d4c5eba.png?v=1734616208"
   },
   {
     "id": 54,
@@ -591,7 +1077,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Una de las fragancias de celebridad más icónicas y vendidas de la historia. Huele intensamente a chocolate blanco y pastelitos de vainilla ('cupcakes') decorados con kiwi.",
-    "notas_clave": ["Kiwi", "Lichi rojo", "Membrillo", "Chocolate blanco", "Panqué (cupcake)", "Orquídea", "Almizcle"]
+    "notas_clave": [
+      "Kiwi",
+      "Lichi rojo",
+      "Membrillo",
+      "Chocolate blanco",
+      "Panqué (cupcake)",
+      "Orquídea",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/BRSP7.png?v=1736863563"
   },
   {
     "id": 55,
@@ -602,7 +1098,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia de la línea de la artista que busca emular la energía electrizante de un escenario musical. Abre cítrica y evoluciona hacia maderas jóvenes y limpias.",
-    "notas_clave": ["Mandarina verde", "Bergamota", "Fruta de la pasión (maracuyá)", "Flor de azahar", "Cedro", "Ámbar"]
+    "notas_clave": [
+      "Mandarina verde",
+      "Bergamota",
+      "Fruta de la pasión (maracuyá)",
+      "Flor de azahar",
+      "Cedro",
+      "Ámbar"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/rock-by-shakira-estuche-edt-80ml-desodorante-150ml-Silk-Perfumes.png?v=1757340835"
   },
   {
     "id": 56,
@@ -613,7 +1118,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Verde",
     "descripcion": "Un aroma suntuoso, clásico y muy maduro. Destaca por una nota pesada de mimosa y melón maduro con un trasfondo atalcado de clavel e incienso que denota opulencia clásica.",
-    "notas_clave": ["Mimosa", "Melón", "Sandía", "Heliotropo", "Clavel", "Incienso", "Sándalo"]
+    "notas_clave": [
+      "Mimosa",
+      "Melón",
+      "Sandía",
+      "Heliotropo",
+      "Clavel",
+      "Incienso",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 57,
@@ -624,7 +1139,15 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una interpretación veraniega y moderna del clásico Eternity. Es más chispeante gracias a la adición de pera jugosa y notas cítricas de salida que descansan en sándalo templado.",
-    "notas_clave": ["Pera", "Naranja sanguínea", "Jazmín", "Sándalo", "Almizcle"]
+    "notas_clave": [
+      "Pera",
+      "Naranja sanguínea",
+      "Jazmín",
+      "Sándalo",
+      "Almizcle"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 58,
@@ -635,7 +1158,17 @@
     "cantidad": 2,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Se presenta en una icónica botella con forma de gato rosa perlado. Su aroma es dulce, cremoso y apacible, dominado por vainilla suave, pera y un fondo algodonado de almizcle.",
-    "notas_clave": ["Pera", "Tangerina", "Gardenia", "Vainilla", "Almizcle", "Ámbar", "Sándalo"]
+    "notas_clave": [
+      "Pera",
+      "Tangerina",
+      "Gardenia",
+      "Vainilla",
+      "Almizcle",
+      "Ámbar",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 59,
@@ -646,7 +1179,17 @@
     "cantidad": 2,
     "familia_olfativa": "Floral",
     "descripcion": "Un himno al amor eterno, los valores familiares y la paz. Es un ramo floral blanco nítido, herbal y sumamente pulcro, caracterizado por una fijación sobresaliente.",
-    "notas_clave": ["Clavel", "Lirio verde", "Freesia", "Salvia", "Narciso", "Flor de caléndula", "Sándalo"]
+    "notas_clave": [
+      "Clavel",
+      "Lirio verde",
+      "Freesia",
+      "Salvia",
+      "Narciso",
+      "Flor de caléndula",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 60,
@@ -657,7 +1200,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Inspirado en la pasión por el baile y el lujo de JLO. Es un cóctel de frutas tropicales jugosas en almíbar, extremadamente radiante, festivo y llamativo.",
-    "notas_clave": ["Melón", "Durazno", "Pera", "Piña", "Grosella roja", "Sándalo", "Ámbar blando"]
+    "notas_clave": [
+      "Melón",
+      "Durazno",
+      "Pera",
+      "Piña",
+      "Grosella roja",
+      "Sándalo",
+      "Ámbar blando"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/jennifer-lopez-live-luxe-edp-100ml-silk-perfumes-1.png?v=1762887712"
   },
   {
     "id": 61,
@@ -668,7 +1221,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Inspirado en las bailarinas de cabaret de París. Posee un aroma frutal muy alegre y dulce, caracterizado por la grosella negra dulce combinada con un toque sofisticado de ámbar.",
-    "notas_clave": ["Clementina", "Grosellas negras", "Nectarina", "Orquídea silvestre", "Ámbar", "Notas amaderadas"]
+    "notas_clave": [
+      "Clementina",
+      "Grosellas negras",
+      "Nectarina",
+      "Orquídea silvestre",
+      "Ámbar",
+      "Notas amaderadas"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/Hugo_Boss_Energize_Tester_EDT_75_ml_1.png?v=1754502824"
   },
   {
     "id": 62,
@@ -679,7 +1241,18 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "La fragancia debut de la celebridad americana que marcó una era en los 2000. Destaca por una nota hiper-fresca de melón de agua maduro mezclado con un fondo almizclado coqueto.",
-    "notas_clave": ["Melón", "Durazno", "Manzana", "Freesia", "Mimosa", "Jazmín", "Sándalo", "Ylang-Ylang"]
+    "notas_clave": [
+      "Melón",
+      "Durazno",
+      "Manzana",
+      "Freesia",
+      "Mimosa",
+      "Jazmín",
+      "Sándalo",
+      "Ylang-Ylang"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 63,
@@ -690,7 +1263,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Se presenta en su botella con forma de lápiz labial. Es una variante traviesa y picante que gira en torno a frambuesas jugosas mezcladas con leche tibia de jengibre.",
-    "notas_clave": ["Frambuesa", "Pera", "Flor de jengibre", "Jazmín", "Leche de sándalo", "Cardamomo"]
+    "notas_clave": [
+      "Frambuesa",
+      "Pera",
+      "Flor de jengibre",
+      "Jazmín",
+      "Leche de sándalo",
+      "Cardamomo"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 64,
@@ -701,7 +1283,17 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Aromática / Frutal",
     "descripcion": "Diseñado para celebrar la alegría de sentirse viva en la mujer moderna. Es sumamente reconfortante gracias a una nota muy marcada de manzana asada con canela y maderas finas.",
-    "notas_clave": ["Manzana", "Canela", "Ciruela", "Grosellas negras", "Vainilla de Madagascar", "Cedro", "Sándalo"]
+    "notas_clave": [
+      "Manzana",
+      "Canela",
+      "Ciruela",
+      "Grosellas negras",
+      "Vainilla de Madagascar",
+      "Cedro",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/hugo-boss-alive-edp-80-ml-Silk-Perfumes.png?v=1758748084"
   },
   {
     "id": 65,
@@ -712,7 +1304,18 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un aroma sofisticado, maduro y opulento. Es sumamente apreciado por su gran similitud olfativa con grandes clásicos franceses de pachulí, rosa y cítricos elegantes.",
-    "notas_clave": ["Bergamota", "Toronja", "Durazno", "Rosa de Damasco", "Jazmín", "Pachulí", "Vainilla", "Vetiver"]
+    "notas_clave": [
+      "Bergamota",
+      "Toronja",
+      "Durazno",
+      "Rosa de Damasco",
+      "Jazmín",
+      "Pachulí",
+      "Vainilla",
+      "Vetiver"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/club-de-nuit-intense-woman-edp-105ml.jpg?v=1708707654"
   },
   {
     "id": 66,
@@ -723,7 +1326,16 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "Fragancia femenina que destila empoderamiento y elegancia. Abre con cítricos audaces y pimienta, dando paso a flores blancas cremosas sobre un lecho reconfortante de sándalo.",
-    "notas_clave": ["Bergamota", "Pimienta negra", "Flor de azahar", "Jazmín", "Vainilla", "Sándalo"]
+    "notas_clave": [
+      "Bergamota",
+      "Pimienta negra",
+      "Flor de azahar",
+      "Jazmín",
+      "Vainilla",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 67,
@@ -734,7 +1346,15 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "Inspiración árabe directa de perfumes de alta gama centrados en una diosa del olimpo. Mezcla de manera excepcional la vainilla dulce con un acorde de sal marina muy adictivo.",
-    "notas_clave": ["Mandarina verde", "Jazmín acuático", "Vainilla salada", "Ámbar gris", "Madera de cachemira"]
+    "notas_clave": [
+      "Mandarina verde",
+      "Jazmín acuático",
+      "Vainilla salada",
+      "Ámbar gris",
+      "Madera de cachemira"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 68,
@@ -745,7 +1365,16 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Vainilla (Gourmand)",
     "descripcion": "Un fenómeno viral en perfumería árabe. Huele a malteada cremosa de fresa con vainilla, un aroma suave, dulce, atalcado e irresistible que genera muchos halagos.",
-    "notas_clave": ["Heliotropo", "Orquídea", "Mandarina", "Acorde goloso (crema batida)", "Vainilla", "Sándalo"]
+    "notas_clave": [
+      "Heliotropo",
+      "Orquídea",
+      "Mandarina",
+      "Acorde goloso (crema batida)",
+      "Vainilla",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/LattafaYaraEstucheEDP100ml-Desodorante200ml-Silk-Perfumes.png?v=1753812875"
   },
   {
     "id": 69,
@@ -756,7 +1385,15 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Oriental Frutal",
     "descripcion": "Fragancia refinada de oriente que combina la jugosidad de frutas rojas exóticas con un corazón floral denso y pasional, ideal para distinguirse en ocasiones especiales.",
-    "notas_clave": ["Frutos exóticos", "Maracuyá", "Rosa silvestre", "Ámbar negro", "Almizcle rico"]
+    "notas_clave": [
+      "Frutos exóticos",
+      "Maracuyá",
+      "Rosa silvestre",
+      "Ámbar negro",
+      "Almizcle rico"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/adyan-norah-passion-edp-100ml-Silk-Perfumes.png?v=1748279170"
   },
   {
     "id": 70,
@@ -767,7 +1404,15 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Alternativa árabe inspirada en las versiones intensas europeas. Realza la nota de iris polvoso sumergida en avellanas tostadas y azúcares finos.",
-    "notas_clave": ["Iris", "Pera picante", "Grosellas", "Avellana con chocolate", "Pachulí noble"]
+    "notas_clave": [
+      "Iris",
+      "Pera picante",
+      "Grosellas",
+      "Avellana con chocolate",
+      "Pachulí noble"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 71,
@@ -778,7 +1423,15 @@
     "cantidad": 2,
     "familia_olfativa": "Floral Frutal Gourmand",
     "descripcion": "Fragancia clásica dulce y femenina que emula los perfiles olfativos de felicidad y elegancia francesa, destacando por un fondo azucarado de praliné muy duradero.",
-    "notas_clave": ["Pera", "Iris de Florencia", "Jazmín de Arabia", "Praliné", "Pachulí suave"]
+    "notas_clave": [
+      "Pera",
+      "Iris de Florencia",
+      "Jazmín de Arabia",
+      "Praliné",
+      "Pachulí suave"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/maison-alhambra-la-vita-bella-edp-100ml-Silk-Perfumes.png?v=1747495117"
   },
   {
     "id": 72,
@@ -789,7 +1442,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Un aroma moderno y romántico concebido para la mujer segura. Desarrolla notas cítricas y frambuesas ácidas que se entrelazan con rosas rojas sobre una base limpia.",
-    "notas_clave": ["Frambuesa", "Limón amargo", "Rosa absoluta", "Vainilla", "Almizcle blanco", "Amberwood"]
+    "notas_clave": [
+      "Frambuesa",
+      "Limón amargo",
+      "Rosa absoluta",
+      "Vainilla",
+      "Almizcle blanco",
+      "Amberwood"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 73,
@@ -800,7 +1462,16 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Floral",
     "descripcion": "La icónica amapola imaginada en fragancia. Es el rey de los perfumes atalcados: huele a cosméticos de lujo antiguos, violetas finas, rosas tiernas y vainilla reconfortante.",
-    "notas_clave": ["Rosa de Bulgaria", "Flor de espino", "Violeta de Parma", "Opopónaco", "Almizcle blanco", "Vainilla"]
+    "notas_clave": [
+      "Rosa de Bulgaria",
+      "Flor de espino",
+      "Violeta de Parma",
+      "Opopónaco",
+      "Almizcle blanco",
+      "Vainilla"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 74,
@@ -812,7 +1483,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Acuática",
     "descripcion": "La contraparte femenina del clásico marino. Ofrece un aroma acuático nítido, cristalino y refrescante, repleto de melón, lirios de agua y brisa pura.",
-    "notas_clave": ["Melón de agua", "Loto", "Lirio de los valles", "Piña", "Limón", "Jazmín", "Sándalo"]
+    "notas_clave": [
+      "Melón de agua",
+      "Loto",
+      "Lirio de los valles",
+      "Piña",
+      "Limón",
+      "Jazmín",
+      "Sándalo"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/davidoff-cool-water-edt-30ml-silk-perfumes.png?v=1779129615"
   },
   {
     "id": 75,
@@ -823,7 +1504,17 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Fragancia etérea, tierna y fresca como gotas de rocío matutino. Destaca por cítricos suaves complementados por lavanda limpia y manzanas verdes crujientes.",
-    "notas_clave": ["Cítricos", "Manzana verde", "Lavanda", "Violeta", "Flores blancas", "Almizcle", "Especias finas"]
+    "notas_clave": [
+      "Cítricos",
+      "Manzana verde",
+      "Lavanda",
+      "Violeta",
+      "Flores blancas",
+      "Almizcle",
+      "Especias finas"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 76,
@@ -834,7 +1525,16 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Una versión más suave, jugosa y juguetona del Can Can original. Sobresale notablemente la nota de frambuesa silvestre dulce y nectarina sobre flores tiernas.",
-    "notas_clave": ["Clementina", "Frambuesa", "Nectarina", "Orquídea silvestre", "Almizcle blando", "Maderas claras"]
+    "notas_clave": [
+      "Clementina",
+      "Frambuesa",
+      "Nectarina",
+      "Orquídea silvestre",
+      "Almizcle blando",
+      "Maderas claras"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/Hugo_Boss_Energize_Tester_EDT_75_ml_1.png?v=1754502824"
   },
   {
     "id": 77,
@@ -845,7 +1545,14 @@
     "cantidad": 1,
     "familia_olfativa": "Floral Frutal",
     "descripcion": "Aerosol corporal sofisticado de uso informal. Combina frutas chispeantes con maderas delicadas para otorgar frescura prolongada con un toque distinguido y elegante.",
-    "notas_clave": ["Mandarina", "Grosellas rojas", "Jazmín de jardín", "Maderas preciosas"]
+    "notas_clave": [
+      "Mandarina",
+      "Grosellas rojas",
+      "Jazmín de jardín",
+      "Maderas preciosas"
+    ],
+    "genero": "mujer",
+    "img_silk": ""
   },
   {
     "id": 78,
@@ -856,7 +1563,14 @@
     "cantidad": 5,
     "familia_olfativa": "Aromática Verde",
     "descripcion": "El desodorante corporal más presente en el stock. Entrega un aroma hiper-masculino, enérgico, sumamente herbal y mentolado, idóneo para refrescarse con un soplo gélido.",
-    "notas_clave": ["Menta verde", "Hojas de pino", "Eucalipto refrescante", "Maderas de bosque"]
+    "notas_clave": [
+      "Menta verde",
+      "Hojas de pino",
+      "Eucalipto refrescante",
+      "Maderas de bosque"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 79,
@@ -867,7 +1581,17 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Un hito absoluto de la perfumería clásica de 1973. Representa el olor a barbería fina tradicional: jabón verde, romero, lavanda de campo y musgo de roble viril.",
-    "notas_clave": ["Romero", "Salvia clary", "Lavanda", "Geranio", "Musgo de roble", "Miel", "Cuero"]
+    "notas_clave": [
+      "Romero",
+      "Salvia clary",
+      "Lavanda",
+      "Geranio",
+      "Musgo de roble",
+      "Miel",
+      "Cuero"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/paco-rabanne-pour-homme-edt-100ml-Silk-Perfumes.jpg?v=1758917306"
   },
   {
     "id": 80,
@@ -878,7 +1602,16 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Floral Almizclada",
     "descripcion": "Inspiración directa de un legendario e imponente perfume masculino francés que huele a hojas de violeta, cuero rudo y una nota muy curiosa y varonil que recuerda al combustible fino.",
-    "notas_clave": ["Hojas de violeta", "Mandarina", "Nuez moscada", "Cuero negro", "Madera de cedro", "Vetiver"]
+    "notas_clave": [
+      "Hojas de violeta",
+      "Mandarina",
+      "Nuez moscada",
+      "Cuero negro",
+      "Madera de cedro",
+      "Vetiver"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 81,
@@ -889,7 +1622,16 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Acuática",
     "descripcion": "Una inmersión profunda en el océano azul. Es marino, mineral, oscuro y sumamente distinguido, elevando la frescura tradicional hacia un plano nocturno y misterioso.",
-    "notas_clave": ["Notas marinas", "Aquozone", "Mandarina verde", "Romero", "Pachulí de Indonesia", "Incienso mineral"]
+    "notas_clave": [
+      "Notas marinas",
+      "Aquozone",
+      "Mandarina verde",
+      "Romero",
+      "Pachulí de Indonesia",
+      "Incienso mineral"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/armani-acqua-di-gio-profondo-edt-50ml-silk-perfumes.png?v=1777324972"
   },
   {
     "id": 82,
@@ -900,7 +1642,14 @@
     "cantidad": 3,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Aerosol corporal masculino con un carácter sobrio y reconfortante. Balancea cítricos de salida con especias cálidas y maderas secas, pensado para el uso post-gimnasio.",
-    "notas_clave": ["Bergamota", "Pimienta gris", "Cedro del atlas", "Sándalo sutil"]
+    "notas_clave": [
+      "Bergamota",
+      "Pimienta gris",
+      "Cedro del atlas",
+      "Sándalo sutil"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 83,
@@ -911,7 +1660,15 @@
     "cantidad": 1,
     "familia_olfativa": "Especiada Aromática",
     "descripcion": "Un aroma clásico afrodisíaco de los años 70. Cuenta con una carga masiva de especias cálidas, ámbar y almizcle animal que proyecta sensualidad madura y ruda.",
-    "notas_clave": ["Especias orientales", "Ámbar ardiente", "Almizcle", "Pachulí rústico", "Sándalo"]
+    "notas_clave": [
+      "Especias orientales",
+      "Ámbar ardiente",
+      "Almizcle",
+      "Pachulí rústico",
+      "Sándalo"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 84,
@@ -922,7 +1679,16 @@
     "cantidad": 1,
     "familia_olfativa": "Frutal Especiada",
     "descripcion": "Una fragancia moderna de excelente proyección ('beast mode'). Combina frutas dulces y jugosas con maderas ahumadas, ideal para salidas nocturnas y clubes.",
-    "notas_clave": ["Manzana", "Bergamota", "Especias finas", "Notas ahumadas", "Ámbar", "Almizcle"]
+    "notas_clave": [
+      "Manzana",
+      "Bergamota",
+      "Especias finas",
+      "Notas ahumadas",
+      "Ámbar",
+      "Almizcle"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/dumont-nitro-red-pour-homme-100ml-Silk-Perfumes.png?v=1757692438"
   },
   {
     "id": 85,
@@ -933,7 +1699,17 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Uno de los perfumes masculinos más elogiados y populares de la última década. Abre con un limón potente y evoluciona hacia una piña ahumada muy masculina y magnética.",
-    "notas_clave": ["Limón", "Piña", "Grosellas negras", "Abedul ahumado", "Jazmín", "Pachulí", "Almizcle"]
+    "notas_clave": [
+      "Limón",
+      "Piña",
+      "Grosellas negras",
+      "Abedul ahumado",
+      "Jazmín",
+      "Pachulí",
+      "Almizcle"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/armaf-club-de-nuit-intense-man-edt-105ml-Silk-Perfumes1.jpg?v=1773349402"
   },
   {
     "id": 86,
@@ -944,7 +1720,15 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Fougère",
     "descripcion": "Una versión apasionada y ardiente de Eternity. Deja atrás el perfil herbal limpio para adentrarse en notas dulces y especiadas de piña madura combinadas con resinas de benjuí.",
-    "notas_clave": ["Piña", "Romero", "Labdanum", "Benjuí oriental", "Cuero suave"]
+    "notas_clave": [
+      "Piña",
+      "Romero",
+      "Labdanum",
+      "Benjuí oriental",
+      "Cuero suave"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 87,
@@ -955,7 +1739,17 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Aromática",
     "descripcion": "Fragancia masculina muy versátil y distinguida. Se caracteriza por un aroma afrutado de naranja amarga combinado con jengibre picante y una nota muy atractiva de campari.",
-    "notas_clave": ["Naranja amarga", "Campari", "Jengibre", "Manzana", "Haba tonka", "Sándalo", "Almizcle"]
+    "notas_clave": [
+      "Naranja amarga",
+      "Campari",
+      "Jengibre",
+      "Manzana",
+      "Haba tonka",
+      "Sándalo",
+      "Almizcle"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/TousManSpritzTesterEDT100ml.png?v=1754331813"
   },
   {
     "id": 88,
@@ -966,7 +1760,16 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Floral",
     "descripcion": "Inspiración árabe directa de un aclamado perfume francés de diseñador que revolucionó la perfumería con su nota de iris atalcada tipo labial fino rodeada de cacao y lavanda.",
-    "notas_clave": ["Iris de Toscana", "Lavanda", "Cacao", "Ámbar", "Maderas de cedro", "Cuero"]
+    "notas_clave": [
+      "Iris de Toscana",
+      "Lavanda",
+      "Cacao",
+      "Ámbar",
+      "Maderas de cedro",
+      "Cuero"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/PRCR5.png?v=1737138140"
   },
   {
     "id": 89,
@@ -977,7 +1780,18 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Aromática Acuática",
     "descripcion": "Perfume sumamente fresco y dinámico enfocado en el carisma masculino. Combina notas marinas saladas con piña y pomelo crujiente, perfecto para el uso informal diario.",
-    "notas_clave": ["Piña", "Melón", "Toronja (pomelo)", "Bergamota", "Notas marinas", "Jazmín", "Cedro", "Gamuza"]
+    "notas_clave": [
+      "Piña",
+      "Melón",
+      "Toronja (pomelo)",
+      "Bergamota",
+      "Notas marinas",
+      "Jazmín",
+      "Cedro",
+      "Gamuza"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/ANBA191.png?v=1713901878"
   },
   {
     "id": 90,
@@ -988,7 +1802,17 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Acuática",
     "descripcion": "Un súper clásico de las fragancias de bajo costo más elogiadas. Huele a manzana verde crujiente mojada por agua de mar con sábanas blancas secadas al sol. Pulcritud pura.",
-    "notas_clave": ["Manzana verde", "Hojas verdes", "Flor de loto", "Mimosa marina", "Almizcle", "Cedro", "Ámbar"]
+    "notas_clave": [
+      "Manzana verde",
+      "Hojas verdes",
+      "Flor de loto",
+      "Mimosa marina",
+      "Almizcle",
+      "Cedro",
+      "Ámbar"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/nautica-voyage-edt-200ml-Silk-Perfumes.png?v=1753824660"
   },
   {
     "id": 91,
@@ -999,7 +1823,18 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Fougère",
     "descripcion": "Una potencia monumental de los años 80 de duración extrema. Es denso, complejo y rudo, destacando por notas fuertes de miel dulce, tabaco, piña madura e incienso.",
-    "notas_clave": ["Piña", "Lavanda", "Miel", "Incienso", "Tabaco", "Musgo de roble", "Sándalo", "Cuero"]
+    "notas_clave": [
+      "Piña",
+      "Lavanda",
+      "Miel",
+      "Incienso",
+      "Tabaco",
+      "Musgo de roble",
+      "Sándalo",
+      "Cuero"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 92,
@@ -1010,7 +1845,14 @@
     "cantidad": 1,
     "familia_olfativa": "Cítrica Especiada",
     "descripcion": "Aerosol corporal enérgico e informal. Combina toques picantes de pimienta con cáscaras de cítricos y maderas, idóneo para refrescarse rápidamente tras actividades físicas.",
-    "notas_clave": ["Cáscara de mandarina", "Pimienta negra", "Madera de vetiver", "Almizcle gris"]
+    "notas_clave": [
+      "Cáscara de mandarina",
+      "Pimienta negra",
+      "Madera de vetiver",
+      "Almizcle gris"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 93,
@@ -1021,7 +1863,17 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Fragancia clásica italiana presentada en su famosa botella verde con forma de cono de pino. Huele fielmente a un bosque de pinos alpinos fríos, con hierbas aromáticas finas.",
-    "notas_clave": ["Bayas de enebro", "Lavanda", "Agujas de pino", "Salvia", "Alcaravea", "Musgo de roble", "Cedro"]
+    "notas_clave": [
+      "Bayas de enebro",
+      "Lavanda",
+      "Agujas de pino",
+      "Salvia",
+      "Alcaravea",
+      "Musgo de roble",
+      "Cedro"
+    ],
+    "genero": "unisex",
+    "img_silk": ""
   },
   {
     "id": 94,
@@ -1032,7 +1884,17 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Amaderada",
     "descripcion": "Una pieza de colección de lujo dentro de la casa Armaf. Entrega una textura densa, cremosa, ahumada y especiada con una complejidad olfativa digna de la perfumería de nicho.",
-    "notas_clave": ["Piña", "Pimienta rosa", "Caramelo", "Maderas nobles", "Cuero", "Ámbar", "Musgo de roble"]
+    "notas_clave": [
+      "Piña",
+      "Pimienta rosa",
+      "Caramelo",
+      "Maderas nobles",
+      "Cuero",
+      "Ámbar",
+      "Musgo de roble"
+    ],
+    "genero": "mujer",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/armaf-club-de-nuit-precieux-iv-extrait-de-parfum-55ml-silk-perfumes.png?v=1777130557"
   },
   {
     "id": 95,
@@ -1043,7 +1905,15 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Acuática",
     "descripcion": "Una ola helada de energía cítrica. Su nota predominante de menta congelada silvestre combinada con té amargo la convierte en una opción inmejorable para días sofocantes.",
-    "notas_clave": ["Menta helada", "Té verde", "Mandarina amarga", "Vetiver de la India", "Notas amaderadas"]
+    "notas_clave": [
+      "Menta helada",
+      "Té verde",
+      "Mandarina amarga",
+      "Vetiver de la India",
+      "Notas amaderadas"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 96,
@@ -1054,7 +1924,17 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Aromática",
     "descripcion": "Inspirado en el aire puro de las altas cumbres de los Alpes suizos. Es verde, fresco, limpio, con matices de hojas de cedro picantes y bayas silvestres muy refrescantes.",
-    "notas_clave": ["Bayas de enebro", "Cilantro", "Hojas de cedro", "Salvia", "Gálbano", "Pino", "Madera de la cordillera"]
+    "notas_clave": [
+      "Bayas de enebro",
+      "Cilantro",
+      "Hojas de cedro",
+      "Salvia",
+      "Gálbano",
+      "Pino",
+      "Madera de la cordillera"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/products/swiss-army-altitude-edt-100ml-Silk-Perfumes.jpg?v=1758917677"
   },
   {
     "id": 97,
@@ -1065,7 +1945,16 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Una entrega moderna en concentración Eau de Parfum. Es oscura, sofisticada y nocturna, balanceando frutas negras ácidas con pimienta y un pachulí terroso muy seductor.",
-    "notas_clave": ["Pimienta negra", "Lavanda", "Flor de cactus", "Frutas oscuras", "Pachulí", "Cuero oriental"]
+    "notas_clave": [
+      "Pimienta negra",
+      "Lavanda",
+      "Flor de cactus",
+      "Frutas oscuras",
+      "Pachulí",
+      "Cuero oriental"
+    ],
+    "genero": "hombre",
+    "img_silk": ""
   },
   {
     "id": 98,
@@ -1076,7 +1965,17 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Una obra maestra de sutileza, pulcritud y elegancia ejecutiva. Combina cítricos con una nota única de bambú fresco y jengibre sobre sándalo impecable. Huele a pulcritud refinada.",
-    "notas_clave": ["Bambú", "Bergamota", "Mandarina", "Sándalo", "Almizcle blanco", "Jengibre", "Resina de abeto"]
+    "notas_clave": [
+      "Bambú",
+      "Bergamota",
+      "Mandarina",
+      "Sándalo",
+      "Almizcle blanco",
+      "Jengibre",
+      "Resina de abeto"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/montblanc-starwalker-edt-75-ml-silk-perfumes.png?v=1764012634"
   },
   {
     "id": 99,
@@ -1087,7 +1986,18 @@
     "cantidad": 1,
     "familia_olfativa": "Amaderada Especiada",
     "descripcion": "Una fragancia apasionada basada en los contrastes. Une la frescura de cítricos amargos italianos con la calidez especiada de la pimienta negra y la dulzura del haba tonka.",
-    "notas_clave": ["Mandarina chinotto", "Limón de Sicilia", "Pimienta negra", "Romero", "Geranio", "Haba tonka", "Vainilla", "Sándalo"]
+    "notas_clave": [
+      "Mandarina chinotto",
+      "Limón de Sicilia",
+      "Pimienta negra",
+      "Romero",
+      "Geranio",
+      "Haba tonka",
+      "Vainilla",
+      "Sándalo"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/versace-eros-flame-edp-100ml-Silk-Perfumes-1.png?v=1763648866"
   },
   {
     "id": 100,
@@ -1098,7 +2008,17 @@
     "cantidad": 1,
     "familia_olfativa": "Ámbar Fougère (Acuática)",
     "descripcion": "Uno de los mayores éxitos informales de la marca. Fragancia acuática dulce y extremadamente limpia, gracias al protagonismo del melón jugoso, menta y una nota sutil de capuchino.",
-    "notas_clave": ["Melón", "Menta fresca", "Toronja", "Grosellas negras", "Agua de mar", "Acorde de capuchino", "Maderas"]
+    "notas_clave": [
+      "Melón",
+      "Menta fresca",
+      "Toronja",
+      "Grosellas negras",
+      "Agua de mar",
+      "Acorde de capuchino",
+      "Maderas"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/antonio-banderas-blue-seduction-estuche-edt-100-ml-desodorante-150-ml-silk-perfumes.png?v=1752597999"
   },
   {
     "id": 101,
@@ -1109,6 +2029,15 @@
     "cantidad": 1,
     "familia_olfativa": "Aromática Fougère",
     "descripcion": "Inspiración árabe directa de uno de los perfumes masculinos más vendidos del planeta. Destaca por una nota punzante de pimienta de Sichuan combinada con ambroxan ultra limpio.",
-    "notas_clave": ["Pimienta de Sichuan", "Bergamota de Calabria", "Lavanda", "Ambroxan masivo", "Cedro", "Pachulí"]
+    "notas_clave": [
+      "Pimienta de Sichuan",
+      "Bergamota de Calabria",
+      "Lavanda",
+      "Ambroxan masivo",
+      "Cedro",
+      "Pachulí"
+    ],
+    "genero": "hombre",
+    "img_silk": "https://cdn.shopify.com/s/files/1/0674/9614/9209/files/maison-alhambra-salvo-edp-30ml-Silk-Perfumes.png?v=1756762261"
   }
 ]

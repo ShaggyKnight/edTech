@@ -97,6 +97,9 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
                 'variante__producto__colegio',
                 'producto', 'producto__familia', 'producto__colegio',
             )
+            # Valores de la variante (talla/volumen/concentracion) para
+            # mostrarlos en la columna "Variante" sin N+1.
+            .prefetch_related('variante__valores__atributo')
             .order_by('tienda__nombre_organizacion', 'producto__nombre',
                       'variante__producto__nombre', 'variante__sku')
         )

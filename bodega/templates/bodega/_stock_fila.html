@@ -16,17 +16,20 @@
     {% elif s.producto %}{{ s.producto.familia.nombre }}{% endif %}
   </td>
   <td>
-    {% if s.variante and s.variante.producto.colegio %}
-      <span class="bo-badge bo-badge-info">{{ s.variante.producto.colegio.nombre }}</span>
-    {% elif s.producto and s.producto.colegio %}
-      <span class="bo-badge bo-badge-info">{{ s.producto.colegio.nombre }}</span>
+    {% if s.variante %}
+      {# Valores (talla / volumen / concentracion) destacados para
+         reconocer la variante de un vistazo; SKU como referencia chica. #}
+      <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:3px;">
+        {% for val in s.variante.valores.all %}
+          <span class="bo-badge bo-badge-muted" style="font-weight:600;">{{ val.valor }}</span>
+        {% empty %}
+          <span style="color:var(--bo-muted);">sin atributos</span>
+        {% endfor %}
+      </div>
+      <code style="font-size:11px; color:var(--bo-muted);">{{ s.variante.sku }}</code>
     {% else %}
-      <span style="color:var(--bo-muted);">—</span>
+      <em style="color:var(--bo-muted);">sin variantes</em>
     {% endif %}
-  </td>
-  <td>
-    {% if s.variante %}<code>{{ s.variante.sku }}</code>
-    {% else %}<em style="color:var(--bo-muted);">sin variantes</em>{% endif %}
   </td>
   <td class="num">
     {% if puede_reponer %}

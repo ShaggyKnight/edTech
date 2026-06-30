@@ -21,8 +21,10 @@
     </div>
   </div>
 
-  {# x-cloak global: evita el parpadeo de la seccion Perfumeria antes de
-     que Alpine inicialice (en editar hay otra copia, pero crear no la tenia). #}
+  {% comment %}
+    x-cloak global: evita el parpadeo de la seccion Perfumeria antes de
+    que Alpine inicialice (en editar hay otra copia, pero crear no la tenia).
+  {% endcomment %}
   <style>[x-cloak] { display: none !important; }</style>
 
   {% comment %}

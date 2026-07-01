@@ -159,30 +159,6 @@
             </a>
           {% endif %}
 
-          {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
-            <div class="bo-side-section">Reportes</div>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'caja' %}active{% endif %}"
-               href="{% url 'reportes:caja' %}">
-              <svg class="ico"><use href="#ico-shield"/></svg>
-              Caja
-            </a>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'eerr' %}active{% endif %}"
-               href="{% url 'reportes:eerr' %}">
-              <svg class="ico"><use href="#ico-sparkle"/></svg>
-              Estado de Resultados
-            </a>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'balance' %}active{% endif %}"
-               href="{% url 'reportes:balance' %}">
-              <svg class="ico"><use href="#ico-check"/></svg>
-              Balance General
-            </a>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'produccion' %}active{% endif %}"
-               href="{% url 'reportes:produccion' %}">
-              <svg class="ico"><use href="#ico-scissors"/></svg>
-              Producción
-            </a>
-          {% endif %}
-
           <div class="bo-side-section">Catálogo</div>
           {% if perms.catalogo.change_producto or user.is_superuser %}
             <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_productos' %}active{% endif %}"
@@ -208,6 +184,30 @@
                href="{% url 'bodega:etiquetas_seleccionar' %}">
               <svg class="ico"><use href="#ico-pin"/></svg>
               Etiquetas
+            </a>
+          {% endif %}
+
+          {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
+            <div class="bo-side-section">Reportes</div>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'caja' %}active{% endif %}"
+               href="{% url 'reportes:caja' %}">
+              <svg class="ico"><use href="#ico-shield"/></svg>
+              Caja
+            </a>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'eerr' %}active{% endif %}"
+               href="{% url 'reportes:eerr' %}">
+              <svg class="ico"><use href="#ico-sparkle"/></svg>
+              Estado de Resultados
+            </a>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'balance' %}active{% endif %}"
+               href="{% url 'reportes:balance' %}">
+              <svg class="ico"><use href="#ico-check"/></svg>
+              Balance General
+            </a>
+            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'produccion' %}active{% endif %}"
+               href="{% url 'reportes:produccion' %}">
+              <svg class="ico"><use href="#ico-scissors"/></svg>
+              Producción
             </a>
           {% endif %}
           {% if user|has_role:'admin' %}

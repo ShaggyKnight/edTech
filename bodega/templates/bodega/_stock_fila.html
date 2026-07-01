@@ -8,12 +8,12 @@
 <tr id="row-stock-{{ s.pk }}">
   <td>{{ s.tienda.nombre_organizacion }}</td>
   <td>
-    {% if s.variante %}{{ s.variante.producto.nombre }}
-    {% else %}{{ s.producto.nombre }}{% endif %}
-  </td>
-  <td>
     {% if s.variante %}{{ s.variante.producto.familia.nombre }}
     {% elif s.producto %}{{ s.producto.familia.nombre }}{% endif %}
+  </td>
+  <td>
+    {% if s.variante %}{{ s.variante.producto.nombre }}
+    {% else %}{{ s.producto.nombre }}{% endif %}
   </td>
   <td>
     {% if s.variante %}

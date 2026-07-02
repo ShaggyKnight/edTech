@@ -48,6 +48,7 @@ def robots_txt(request):
         'Disallow: /bodega/',
         'Disallow: /pos/',
         'Disallow: /reportes/',
+        'Disallow: /despacho/',
         # Cuenta de staff.
         'Disallow: /cuenta/',
         # Areas transaccionales / privadas del cliente — no aportan en SEO

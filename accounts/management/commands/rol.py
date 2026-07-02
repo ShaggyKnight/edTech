@@ -7,7 +7,7 @@ Uso:
     python manage.py rol <username> --add=cajero  # AGREGA rol sin sacar los otros
     python manage.py rol <username> --del=cajero  # solo saca ese rol
 
-Roles validos: admin, cajero, bodeguero.
+Roles validos: admin, cajero, bodeguero, despachador.
 
 Nota: si el user es `is_superuser`, ya tiene TODOS los permisos sin
 necesidad de estar en ningun grupo. Asignarle "admin" igual no hace
@@ -21,7 +21,7 @@ from accounts.roles import ALL_ROLES
 
 
 class Command(BaseCommand):
-    help = 'Verifica o asigna roles (admin/cajero/bodeguero) a usuarios.'
+    help = 'Verifica o asigna roles (admin/cajero/bodeguero/despachador) a usuarios.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -131,6 +131,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('    [OK] /reportes/  (Dashboard, EERR, Balance, Caja, Produccion)'))
             self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (stock + CRUD productos / variantes / etc)'))
             self.stdout.write(self.style.SUCCESS('    [OK] /pos/       (POS presencial + ventas + recibos)'))
+            self.stdout.write(self.style.SUCCESS('    [OK] /despacho/  (cola de pedidos online)'))
             self.stdout.write(self.style.SUCCESS('    [OK] /admin/     (Django admin completo)'))
         else:
             if 'cajero' in roles_relevantes:
@@ -138,6 +139,10 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (solo VER stock, sin editar)'))
             elif 'bodeguero' in roles_relevantes:
                 self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (CRUD productos / variantes / materiales)'))
+                self.stdout.write(self.style.NOTICE('    [--] /pos/       (NO)'))
+            elif 'despachador' in roles_relevantes:
+                self.stdout.write(self.style.SUCCESS('    [OK] /despacho/  (cola de pedidos online: preparar y despachar)'))
+                self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (solo VER stock, sin editar)'))
                 self.stdout.write(self.style.NOTICE('    [--] /pos/       (NO)'))
             else:
                 self.stdout.write(self.style.WARNING('    Sin rol staff. Cliente normal → solo /tienda/cuenta/'))

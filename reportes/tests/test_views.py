@@ -52,8 +52,10 @@ class DashboardContenidoTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'Dashboard')
         # BUG-005: el monto va formateado en CLP (con separador de miles).
-        self.assertContains(resp, '$10.000')  # total de ventas / promedio
-        self.assertContains(resp, 'Central')  # tienda en el selector
+        # py3.9/dj4.2 local usa NBSP como separador → normalizar.
+        body = resp.content.decode().replace('\xa0', '.')
+        self.assertIn('$10.000', body)  # total de ventas / promedio
+        self.assertIn('Central', body)  # tienda en el selector
 
     def test_request_normal_devuelve_pagina_completa(self):
         """GET sin HX-Request: pagina completa con <html>, head, form, etc."""
@@ -594,12 +596,14 @@ class ProduccionViewTests(TestCase):
         self.client.force_login(self.admin)
         resp = self.client.get(reverse('reportes:produccion'))
         self.assertEqual(resp.status_code, 200)
+        # py3.9/dj4.2 local usa NBSP como separador de miles → normalizar.
+        body = resp.content.decode().replace('\xa0', '.')
         # 4 rollos × 50 u/rollo = 200 unidades
-        self.assertContains(resp, '200')
+        self.assertIn('200', body)
         # Valor potencial = 200 × $30.000 = $6.000.000 → '6.000.000' con intcomma
-        self.assertContains(resp, '6.000.000')
+        self.assertIn('6.000.000', body)
         # Costo materiales = 4 × $40.000 = $160.000
-        self.assertContains(resp, '160.000')
+        self.assertIn('160.000', body)
 
     def test_no_admin_rebota(self):
         User.objects.create_user('cli', password='x')

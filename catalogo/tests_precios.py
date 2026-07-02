@@ -267,7 +267,8 @@ class RenderPreciosCatalogoTests(TestCase):
 
     def test_card_muestra_precio_con_descuento_y_tachado(self):
         resp = self.client.get(reverse('ecommerce:catalogo'))
-        body = resp.content.decode()
+        # NBSP como separador de miles en py3.9/dj4.2 local → normalizar.
+        body = resp.content.decode().replace('\xa0', '.')
         # Precio nuevo (20000 con descuento) en vino + el original tachado
         # (25000). Sin badge.
         self.assertIn('20.000', body)        # precio con descuento (locale)

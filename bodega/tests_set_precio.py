@@ -76,7 +76,9 @@ class SetPrecioTests(TestCase):
             HTTP_HX_REQUEST='true',
         )
         self.assertEqual(resp.status_code, 200)
-        body = resp.content.decode()
+        # py3.9/dj4.2 local separa miles con NBSP (\xa0); dj5.x usa punto.
+        # Normalizamos para que el assert cubra ambos entornos.
+        body = resp.content.decode().replace('\xa0', '.')
         # Devuelve solo el <td>, no la pagina entera.
         self.assertNotIn('<html', body.lower())
         # Contiene el id de la celda y el nuevo precio.

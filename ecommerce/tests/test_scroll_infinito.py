@@ -36,12 +36,15 @@ class ScrollInfinitoTests(TestCase):
     def tearDown(self):
         self.settings_override.disable()
 
+    # Nota: se asserta sobre `class="shop-grid-loader"` (el ELEMENTO
+    # sentinel) y no sobre el string suelto, porque el JS de reintento
+    # del catalogo menciona la clase y matchearia siempre.
     def test_pagina_uno_incluye_sentinel(self):
         """Si hay mas productos despues del PAGE_SIZE, la pagina 1
         renderiza el sentinel para que HTMX cargue la siguiente."""
         resp = self.client.get(reverse('ecommerce:catalogo'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'shop-grid-loader')
+        self.assertContains(resp, 'class="shop-grid-loader"')
         self.assertContains(resp, 'page=2')
 
     def test_pagina_uno_sin_paginacion_si_pocos_productos(self):
@@ -50,14 +53,14 @@ class ScrollInfinitoTests(TestCase):
         # tener que tocar la DB compartida del setUpTestData.
         resp = self.client.get(reverse('ecommerce:catalogo') + '?q=Producto+00')
         self.assertEqual(resp.status_code, 200)
-        self.assertNotContains(resp, 'shop-grid-loader')
+        self.assertNotContains(resp, 'class="shop-grid-loader"')
 
     def test_pagina_dos_no_tiene_sentinel_si_es_ultima(self):
         resp = self.client.get(reverse('ecommerce:catalogo') + '?page=2')
         self.assertEqual(resp.status_code, 200)
         # La pagina 2 con 15 productos y PAGE_SIZE=12 trae los 3 ultimos
         # y no necesita sentinel.
-        self.assertNotContains(resp, 'shop-grid-loader')
+        self.assertNotContains(resp, 'class="shop-grid-loader"')
 
     def test_htmx_pagina_dos_devuelve_fragment_sin_layout(self):
         """Si el header HX-Request esta presente y page > 1, devolver

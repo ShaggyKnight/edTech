@@ -60,7 +60,8 @@ class QuickViewTests(TestCase):
 
     def test_contiene_datos_basicos_del_producto(self):
         resp = self.client.get(reverse('ecommerce:producto_quick', args=[self.producto.pk]))
-        body = resp.content.decode()
+        # NBSP como separador de miles en py3.9/dj4.2 local → normalizar.
+        body = resp.content.decode().replace('\xa0', '.')
         self.assertIn('Perfume Quick', body)
         self.assertIn('Notas frescas', body)
         self.assertIn('Perfumes', body)  # familia

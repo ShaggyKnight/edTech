@@ -144,8 +144,9 @@ class EnviarResenaViewTests(TestCase):
         r = self.client.get(reverse('ecommerce:producto', args=[self.producto.pk]))
         self.assertContains(r, 'Aprobada visible')
         self.assertNotContains(r, 'Pendiente oculta')
-        # Promedio 5.0 con una sola aprobada.
-        self.assertContains(r, '5.0')
+        # Promedio 5.0 con una sola aprobada. floatformat localiza el
+        # decimal (es-CL renderiza "5,0") — aceptar coma o punto.
+        self.assertRegex(r.content.decode(), r'5[.,]0')
 
     def test_pdp_sin_resenas_invita_a_ser_el_primero(self):
         r = self.client.get(reverse('ecommerce:producto', args=[self.producto.pk]))

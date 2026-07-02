@@ -56,14 +56,17 @@ Cualquier cosa me avisas. ¡Gracias por confiar!
 
 ---
 
-## 4. Ajuste de uniforme listo
+## 4. Encargo / producto reservado listo
+
+> Nota: Ideas NO ofrece servicio de ajustes — no prometerlo en ningún
+> mensaje (se quitó también de la boleta por email).
 
 ```
 ¡{nombre}! 👗
-El ajuste del uniforme de {nombre_hijo} ya está listo.
-Pasá cuando puedas — está sin costo, no te preocupes 🙌
+El encargo de {nombre_hijo} ya está listo para retiro.
+Pasá cuando puedas por Caupolicán 437-B 🙌
 
-— Ideas Boutique · Caupolicán 437-B
+— Ideas Boutique
 ```
 
 ---
@@ -174,6 +177,6 @@ Sin compromiso, eh — gracias por la paciencia 🙏
 - **Firmar como "Blanca"** o "— Blanca, Ideas Boutique". Trato 1:1, no corporativo.
 - **Hora civil 9 a 19hs**, no "09:00 - 19:00".
 - **"Caupolicán 437-B"** siempre completo cuando se menciona ubicación.
-- **"15 días"** para cambios, **"hasta marzo"** para ajustes de uniforme.
+- **"15 días"** para cambios. **No ofrecer "ajustes"** — Ideas no presta ese servicio.
 - **Nada de "estimado/a cliente"** — siempre por nombre o "¡Hola!".
 - **Nada de "su pedido"** — "tu pedido", segunda persona.

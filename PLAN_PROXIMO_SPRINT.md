@@ -1,5 +1,11 @@
 # Plan próximo sprint · Ideas Boutique
 
+> ✅ **EJECUTADO (mayo–junio 2026) — documento histórico.** Los bloques
+> B (branded docs/emails), C (seed → luego catastro definitivo de 101),
+> D (DTE channel-aware) y el grueso de A entraron a master. Ver estado
+> real en `README.md` (sección Roadmap) y `OPERACIONES.md`. Se conserva
+> por las decisiones de negocio documentadas (§7 y §8).
+
 Trabajo pendiente identificado a partir de:
 
 1. `sprint_pos_plus_handoff/` (Ideas 11) — 11 fixes para el POS.

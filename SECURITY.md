@@ -45,14 +45,14 @@ AXES_PROXY_COUNT=1                         # nginx delante: 1
 SECURE_SSL_REDIRECT=False                  # nginx redirige primero
 SECURE_HSTS_SECONDS=31536000               # 1 año
 
-# Email (errores 500 + boletas)
+# Email (errores 500 + boletas) — Zoho Mail, ver docs/email.md
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=smtp.gmail.com                  # o el que uses
+EMAIL_HOST=smtp.zoho.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_HOST_USER=ventas@ideasboutique.cl
-EMAIL_HOST_PASSWORD=<app password>
-DEFAULT_FROM_EMAIL=ventas@ideasboutique.cl
+EMAIL_HOST_PASSWORD=<app password de Zoho, NO la de login>
+DEFAULT_FROM_EMAIL=Ideas Boutique <ventas@ideasboutique.cl>
 ```
 
 ---
@@ -70,18 +70,16 @@ python manage.py createsuperuser
 # password: <generado con un gestor, no reutilizar>
 ```
 
-Para admins adicionales (Blanca, futuro personal):
+Para admins adicionales (Blanca, futuro personal) hay dos caminos
+mejores que el shell:
 
 ```bash
-python manage.py shell
->>> from django.contrib.auth import get_user_model
->>> User = get_user_model()
->>> u = User.objects.create_user('blanca', email='blanca@...', password='...')
->>> u.is_staff = True
->>> u.save()
->>> # Asignar al grupo 'admin' para los permisos del backoffice:
->>> from django.contrib.auth.models import Group
->>> u.groups.add(Group.objects.get(name='admin'))
+# 1. Web (recomendado): como admin ir a /cuenta/usuarios/ y crear el
+#    usuario con su rol (admin/cajero/bodeguero/despachador) desde ahí.
+
+# 2. CLI:
+python manage.py rol                      # listar usuarios y roles
+python manage.py rol blanca --set=admin   # asignar rol
 ```
 
 ### Login bloqueado por axes (alguien me lockeó)
@@ -112,7 +110,8 @@ Si sospechás compromiso:
    print(get_random_secret_key())
    ```
 2. Reemplazar `SECRET_KEY` en `.env` del servidor.
-3. Reiniciar gunicorn: `sudo systemctl restart ideas`.
+3. Reiniciar gunicorn: `sudo systemctl restart gunicorn-ideas.service`
+   (o el alias `restart-app` del user `ideas`).
 4. **Consecuencia:** todas las sesiones activas quedan invalidadas (los clientes vuelven a `/cuenta/login/`). Esto es deseable post-incidente.
 
 ---
@@ -159,11 +158,14 @@ Crítico para el negocio. Sin backup, un attacker con acceso a DB puede borrar t
 - Encriptación at-rest con `gpg --symmetric` antes del upload
 - Restore probado mensualmente (cron job que loguea el resultado)
 
-**Test de restore** (cada 30 días):
+**Test de restore** (cada 30 días — el cron ya lo corre el día 1):
 ```bash
-ssh ideas@vps "/srv/ideas/scripts/restore-test.sh"
-# Debe terminar con: "RESTORE OK — 234 productos, 89 ventas"
+ssh ideas@vps "/srv/ideas/app/deploy/restore-test.sh"
+# Resultado también en /srv/ideas/logs/restore-test.log
 ```
+
+> ⚠️ El backup cubre solo la DB — `/srv/ideas/media/` (fotos subidas a
+> mano) queda fuera. Pendiente agregarlo a `backup.sh`.
 
 Si el script falla > 1 vez, **abrir incidente**.
 
@@ -227,4 +229,4 @@ Debe pasar sin warnings. Si hay alguno, **NO desplegar** hasta resolverlo.
 
 ---
 
-_Última revisión: 2026-05-16. Próxima auditoría: 2026-08-16 (trimestral)._
+_Última revisión: 2026-07-01. Próxima auditoría: 2026-10-01 (trimestral)._

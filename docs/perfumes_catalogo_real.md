@@ -1,8 +1,14 @@
 # Catálogo real de perfumes · Ideas Boutique (mayo 2026)
 
-Datos provistos por la dueña en chat. Este archivo es la **fuente de
-verdad para el seed** — si hay que corregir algo (precios, género,
-familia olfativa), corregir acá y re-correr el comando.
+> ⚠️ **HISTÓRICO — superseded (junio 2026).** La fuente de verdad ahora
+> es `catalogo/data/catastro_perfumes.json` (catastro definitivo de
+> **101 perfumes** con género verificado, precios e imágenes) cargado con
+> `python manage.py cargar_catastro_perfumes --aplicar --con-imagenes`.
+> Este archivo queda como referencia del levantamiento original de 72 SKUs.
+
+Datos provistos por la dueña en chat. Este archivo **fue** la fuente de
+verdad para el seed inicial — hoy cualquier corrección va en el JSON del
+catastro, no acá.
 
 Total: **72 SKUs**. Distribución estimada:
 

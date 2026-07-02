@@ -89,7 +89,7 @@ Ya cargados en `~/.bashrc` del user `ideas`. Si no funcionan, hacé `source ~/.b
 | `modo mantenimiento` | "Volvemos pronto" (HTTP 503) en todo |
 | `rol` | Listar usuarios y sus roles |
 | `rol <username>` | Detalle de un usuario |
-| `rol <user> --add=admin` | Agregar rol (admin/cajero/bodeguero) |
+| `rol <user> --add=admin` | Agregar rol (admin/cajero/bodeguero/despachador) |
 | `rol <user> --del=cajero` | Sacar rol |
 | `djmanage <comando>` | Cualquier `manage.py` (migrate, shell, createsuperuser, etc.) |
 | `logs-app` | Logs de gunicorn/Django en vivo (Ctrl+C para salir) |
@@ -188,7 +188,12 @@ rol mariana --set=cajero
 rol mariana --del=cajero
 ```
 
-Roles disponibles: `admin`, `cajero`, `bodeguero`.
+Roles disponibles: `admin`, `cajero`, `bodeguero`, `despachador`.
+
+> **También se puede desde el navegador**: como admin, entrá a
+> `https://ideasboutique.cl/cuenta/usuarios/` — crear usuarios, asignar
+> roles y resetear claves sin tocar la terminal. Es lo recomendado para
+> el día a día; el comando `rol` queda para scripts/emergencias.
 
 ### Crear un super usuario nuevo
 
@@ -196,6 +201,30 @@ Roles disponibles: `admin`, `cajero`, `bodeguero`.
 djmanage createsuperuser
 # Sigue las preguntas (username, email, password)
 ```
+
+### Cargar / actualizar el catálogo (perfumes y uniformes)
+
+Los datos del negocio viven versionados en el repo
+(`catalogo/data/catastro_perfumes.json` y `uniformes_sfj.json`).
+Los comandos son **idempotentes** (se pueden correr N veces) y por
+default hacen dry-run — nada cambia sin `--aplicar`:
+
+```bash
+# Perfumes: crea/actualiza los 101 del catastro, desactiva los no listados,
+# baja imágenes faltantes desde los retail configurados
+djmanage cargar_catastro_perfumes                      # dry-run (ver qué haría)
+djmanage cargar_catastro_perfumes --aplicar --con-imagenes
+
+# Uniformes SFJ (productos + variantes por talla + precios + fotos)
+djmanage cargar_uniformes --aplicar
+```
+
+### Ver los pedidos online entrantes (despacho)
+
+- Pantalla: `https://ideasboutique.cl/despacho/` (rol `despachador` o `admin`).
+- Cuando un pedido online queda pagado, llega un email a los
+  despachadores activos.
+- Preview de todos los emails del sistema: `https://ideasboutique.cl/cuenta/emails/`.
 
 ### Conectarse al Django shell (debugging avanzado)
 
@@ -292,6 +321,12 @@ sudo fail2ban-client status sshd
 - **Test de restore**: corre el primer día de cada mes a las 4:00 AM para
   verificar que los backups son recuperables. Resultado en
   `/srv/ideas/logs/restore-test.log`.
+
+> ⚠️ **El backup automático cubre SOLO la base de datos.** Las fotos de
+> productos subidas a mano (`/srv/ideas/media/`) NO se respaldan todavía.
+> Las bajadas por comando (`cargar_catastro_perfumes --con-imagenes`) se
+> pueden regenerar, pero las subidas manualmente por el admin se perderían
+> si muere el disco. Pendiente: agregar `media/` a `backup.sh`.
 
 ### Hacer un backup manual ahora
 
@@ -415,7 +450,9 @@ clona.
 ### Pagos y boleta (cuando se activen)
 
 - **TUU** (POS presencial): tuu.cl → API key en `.env`
-- **Webpay/Transbank** (online): transbank.cl
+- **KLAP** (online, tarjetas ~2,75%): klap.cl → `KLAP_*` en `.env`
+- **Khipu** (online, transferencia ~0,79%): khipu.com → `KHIPU_*` en `.env`
+- Hoy ambos gateways online corren en `mock` (`ECOMMERCE_GATEWAYS_ACTIVOS=mock`)
 - **OpenFactura** (boleta SII): openfactura.cl
 
 ### Para emergencias graves

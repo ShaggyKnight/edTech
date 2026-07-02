@@ -6,10 +6,13 @@ escolares (San Francisco Javier, Divina Providencia, Nicolás Federico
 Lohse, Diego de Almagro) y moda casual.
 
 El sistema cubre el negocio entero en un solo Django:
-- **Tienda online** pública con catálogo, carrito, pasarela Webpay.
+- **Tienda online** pública con catálogo, carrito y pago multi-gateway
+  (KLAP tarjetas + Khipu transferencia; mock hasta tener credenciales).
 - **POS presencial** con cobro físico TUU, modo pantalla completa
   diseñado para tablet en mostrador.
-- **Backoffice** completo: catálogo, bodega, materiales, ofertas, stock.
+- **Backoffice** completo: catálogo, bodega, materiales, ofertas, stock,
+  usuarios y roles, preview de emails.
+- **Despacho**: cola de pedidos online pagados para preparar y despachar.
 - **Reportes** financieros (Dashboard, EERR, Balance, Caja, Producción)
   con filtros HTMX en vivo y comparativa vs período anterior.
 - **Hardening** pre-deploy y **receta concreta de deploy en Hetzner**.
@@ -20,8 +23,8 @@ El sistema cubre el negocio entero en un solo Django:
 
 | Capa | Tecnología |
 |---|---|
-| Lenguaje | Python 3.10+ |
-| Framework | **Django 5.2** |
+| Lenguaje | Python 3.10+ (prod) — dev local corre 3.9 + Django 4.2, ver `AGENTS.md` |
+| Framework | **Django 5.2** (requirements) |
 | Interactividad | **HTMX 2.0.4** + Alpine.js 3.14 (sin React/Vue) |
 | API helper | Django REST Framework (endpoints puntuales) |
 | DB dev | SQLite |
@@ -30,20 +33,21 @@ El sistema cubre el negocio entero en un solo Django:
 | Imágenes | Pillow |
 | Frontend | Templates Django + CSS custom + vanilla JS |
 | Iconos | Sprite SVG propio |
-| Fuentes | Cormorant Garamond + Inter (Google Fonts) |
+| Fuentes | EB Garamond + Inter (tienda pública) · Inter (backoffice) · Cormorant (docs impresos) |
 | HTTP cliente | `requests` (gateways de pago) |
 | Codes de barra | `python-barcode` (SVG inline) |
 | WSGI prod | `gunicorn` (Unix socket + systemd) |
 | Reverse proxy | `nginx` con rate limiting + Let's Encrypt |
 | Static prod | `whitenoise` (Compressed Manifest + brotli) |
-| Pasarela online | Webpay Plus REST (Transbank) |
+| Pasarela online | Multi-gateway: KLAP (tarjetas) + Khipu (transferencia) — adapters en `ecommerce/gateways/`, mock hasta certificar credenciales |
 | Pasarela POS | TUU / Haulmer Pago Remoto |
-| DTE / SII | OpenFactura (Haulmer) — campos listos en `ReciboVenta` |
+| DTE / SII | OpenFactura (Haulmer) — campos listos en `ReciboVenta`, canal-aware (`DTE_CANALES_HABILITADOS`) |
 | Charts | Chart.js 4.4 (lazy-load defer) |
 | Anti-fuerza-bruta | **django-axes 7** |
-| Email transaccional | SMTP (Gmail app password) |
+| Email transaccional | SMTP Zoho Mail (`ventas@ideasboutique.cl`, app password) |
+| Analytics | Plausible self-host (privacy-first) + Microsoft Clarity (heatmaps/replays) — ambos opt-in por env |
 | Backups | `pg_dump` + `gpg` AES256 + Backblaze B2 (S3-compat) |
-| Tests | `django.test.TestCase` con `self.client` (**600+ tests**) |
+| Tests | `django.test.TestCase` con `self.client` (**650+ tests**) |
 
 ---
 
@@ -52,8 +56,10 @@ El sistema cubre el negocio entero en un solo Django:
 ```
 edTech/         settings + landing publica + robots.txt + sitemaps
                 + página /info/ (envíos, cambios, tallas, contacto)
-accounts/       login + dashboard del staff (cajero/bodeguero/admin/cliente)
-                + django-axes lockout tests + comandos seed
+accounts/       login + dashboard del staff (cajero/bodeguero/despachador/
+                admin/cliente) + CRUD de usuarios y roles (/cuenta/usuarios/)
+                + preview de emails transaccionales (/cuenta/emails/)
+                + django-axes lockout tests + comandos seed y `rol`
 catalogo/       Familia, Colegio, Atributo, ValorAtributo,
                 Producto, ProductoVariante, ProductoImagen,
                 Oferta (con canal: presencial / online / ambos)
@@ -66,9 +72,11 @@ pos/            Carrito presencial, ReciboVenta, ReciboVentaDetalle,
                 payments (TUU/mock), DTE,
                 búsqueda con alias de colegios locales (liceo, fraga,
                 parro, publica), modo pantalla completa para tablet
-ecommerce/      Tienda publica, carrito online, payments
-                (Webpay/mock), emails (boleta), cuenta del cliente,
-                página de pedido público
+ecommerce/      Tienda publica, carrito online, gateways/ (mock, KLAP,
+                Khipu), emails transaccionales, "avísame cuando vuelva",
+                cuenta del cliente, página de pedido público
+despacho/       Cola de pedidos online pagados (rol DESPACHADOR):
+                preparar, marcar despachado / reabrir, con auditoría
 contabilidad/   MovimientoCaja con categorias para EERR
                 + desglose por familia para el EERR
 reportes/       Dashboard, Caja, EERR, Balance, Producción
@@ -98,8 +106,11 @@ reportes/       Dashboard, Caja, EERR, Balance, Producción
     (recalculada por variante, no descontada de precio_base).
   - Cuota inicial respeta el precio con descuento.
 - Carrito en sesión, checkout con datos del cliente.
-- Pasarela: `WebpayGateway` (Transbank Webpay Plus REST) en prod,
-  `MockOnlineGateway` con simulador en `/tienda/mock-pago/` en dev.
+- Pago multi-gateway (`ecommerce/gateways/`): el cliente elige método
+  si hay más de uno activo (`ECOMMERCE_GATEWAYS_ACTIVOS=klap,khipu`).
+  KLAP (tarjetas ~2,75%) y Khipu (transferencia ~0,79%) son adapters
+  con el shape real del proveedor pero operan en mock hasta cargar
+  credenciales; `MockOnlineGateway` con simulador en `/tienda/mock-pago/`.
 - Confirmación atómica con `select_for_update`, idempotente.
 - Boleta por email al quedar pagado (console backend en dev, SMTP prod).
 - Cuenta del cliente: login / logout / registro / historial de pedidos
@@ -109,7 +120,11 @@ reportes/       Dashboard, Caja, EERR, Balance, Producción
 - Link a WhatsApp configurable via `PUBLIC_WHATSAPP` env var.
 - SEO: sitemap.xml, robots.txt, JSON-LD Product en PDP, JSON-LD
   ClothingStore en landing.
-- Plausible Analytics opt-in vía `ANALYTICS_DOMAIN`.
+- Analytics: Plausible opt-in vía `ANALYTICS_DOMAIN` + Microsoft
+  Clarity (heatmaps/session replays) opt-in vía `CLARITY_PROJECT_ID`.
+- "Avísame cuando vuelva la talla": suscripción por email en la PDP.
+  Envía **UN solo correo** por suscripción cuando reponen stock
+  (`FEATURE_EMAIL_STOCK_DISPONIBLE`), con link de cancelación.
 
 ### POS presencial — `/pos/`
 - **Carrito sticky con "Cobrar" siempre visible** — diseñado para
@@ -152,9 +167,25 @@ reportes/       Dashboard, Caja, EERR, Balance, Producción
   en listbox visible (size=8) — evita el bug de `option.hidden` en
   selects cerrados.
 - Panel inline de ofertas en la edición de cada producto.
+- **Campos de perfumería** en el form de producto (marca, concentración,
+  género, familia olfativa, notas clave) — la sección aparece solo si la
+  familia es perfumería.
 - Carga masiva de stock inicial.
 - Galería de imágenes con drag-drop para reordenar.
 - Drag-drop también para variantes de talla.
+- **Usuarios y roles** (`/cuenta/usuarios/`): crear usuarios, asignar
+  roles y resetear claves sin pasar por el Django admin (solo ADMIN).
+- **Preview de emails** (`/cuenta/emails/`): ver todos los emails
+  transaccionales renderizados con datos demo + envío de prueba.
+
+### Despacho — `/despacho/`
+- Cola de pedidos online **pagados**: "nuevos" (a preparar) y
+  "despachados" (histórico), con contadores.
+- Detalle por pedido pensado para empacar: variantes con talla/volumen
+  legibles, datos del cliente y dirección.
+- Marcar despachado / reabrir (timestamp + usuario, auditado).
+- Notificación por email a los despachadores activos cuando entra un
+  pedido pagado. Rol dedicado `despachador` (Blanca/admin ven todo igual).
 
 ### Reportes — `/reportes/`
 
@@ -212,8 +243,10 @@ reportes/       Dashboard, Caja, EERR, Balance, Producción
 - Asiento idempotente al pagar un recibo.
 
 ### Auth y roles
-- Tres grupos de staff: `cajero` (12 perms), `bodeguero` (41), `admin`
-  (80) + superusuarios.
+- Cuatro grupos de staff: `cajero`, `bodeguero`, `despachador` y
+  `admin` (todos los permisos) + superusuarios. Fuente de verdad en
+  `accounts/roles.py`; asignación por CLI (`manage.py rol`) o web
+  (`/cuenta/usuarios/`).
 - **Cliente sin rol staff** → al entrar a `/cuenta/dashboard/` redirige
   a `/tienda/cuenta/pedidos/` (antes daba 403).
 - Login del staff y login del cliente boutique separados.
@@ -339,10 +372,14 @@ pip install -r requirements.txt
 cp .env.example .env
 # editar .env con SECRET_KEY, DATABASE_URL, etc.
 
-# 4. Migrar y poblar datos demo
+# 4. Migrar y poblar datos
 python manage.py migrate
-python manage.py seed_demo
-python manage.py seed_perfumes_real   # 43 perfumes + 111 variantes
+
+# Datos REALES del negocio (catastro versionado en catalogo/data/):
+python manage.py cargar_catastro_perfumes --aplicar --con-imagenes  # 101 perfumes
+python manage.py cargar_uniformes --aplicar                         # uniformes SFJ
+
+# (Alternativa demo si no quieres datos reales: seed_demo + seed_perfumes_real)
 
 # 5. Crear superusuario
 python manage.py createsuperuser
@@ -379,11 +416,29 @@ El comando custom `runlan`:
 ### Otros comandos útiles
 
 ```bash
-python manage.py test                              # toda la suite (600+ tests)
+python manage.py test                              # toda la suite (650+ tests)
 python manage.py test pos                          # solo una app
 python manage.py test reportes.tests.test_views   # un test class
-python manage.py seed_demo                         # repobla con datos demo
-python manage.py seed_perfumes_real                # 43 perfumes reales
+
+# Datos del negocio (idempotentes, dry-run por default → --aplicar)
+python manage.py cargar_catastro_perfumes --aplicar --con-imagenes
+python manage.py cargar_uniformes --aplicar        # uniformes SFJ + fotos
+python manage.py cargar_fotos_perfumes             # fotos faltantes desde retail
+python manage.py actualizar_precios_uniformes      # precios uniformes
+
+# Usuarios y roles
+python manage.py rol                               # listar users + roles
+python manage.py rol blanca --set=admin            # asignar rol
+python manage.py crear_despachador                 # seed rol despachador
+
+# Modo del sitio (normal / landing / mantenimiento)
+python manage.py modo                              # ver modo actual
+python manage.py modo landing
+
+# Demo/legacy
+python manage.py seed_demo                         # datos demo
+python manage.py seed_perfumes_real                # 43 perfumes (superseded por catastro)
+
 python manage.py collectstatic                     # /staticfiles (prod)
 python manage.py check --deploy                    # warnings de prod
 
@@ -404,10 +459,14 @@ python scripts/check_django_comments.py            # detecta {# %#} multi-line
 python manage.py test
 ```
 
-**Estado: 600+ tests verdes** (al 2026-05-17).
+**Estado: 634 tests verdes** (al 2026-07-01, local Python 3.9 + Django 4.2).
+
+> Los asserts de montos normalizan el NBSP (`\xa0`) que usa py3.9/dj4.2
+> como separador de miles, así la suite pasa igual en local y en prod
+> (Django 5.x usa punto).
 
 Tests por app:
-- `accounts/` — auth, roles, dashboard router, axes lockout
+- `accounts/` — auth, roles, dashboard router, axes lockout, CRUD usuarios
 - `bodega/` — CRUD productos/variantes/materiales, ofertas, reponer, AJAX
 - `catalogo/` — modelos, precios con oferta (ProductoConVariantesPreciosTests),
   performance admin
@@ -435,6 +494,11 @@ BUGS.md                             # registro de 16 bugs P0-P3 cerrados
 SECURITY.md                         # runbook de seguridad
 README.md                           # este archivo
 
+docs/
+  perfumes_catalogo_real.md         # catastro histórico mayo (superseded)
+  whatsapp_templates.md             # copies para WhatsApp de Blanca
+  email.md                          # setup Zoho Mail + DNS + flags
+
 edTech/
   settings.py                       # config con env vars + axes + ADMIN_URL
   urls.py                           # admin URL dinámica
@@ -456,11 +520,30 @@ edTech/
 accounts/
   management/commands/
     seed_demo.py                    # productos demo
-    seed_perfumes_real.py           # 43 perfumes con variantes
+    seed_perfumes_real.py           # perfumes desde JSON (superseded por catastro)
+    rol.py                          # listar/asignar roles por CLI
+    modo.py                         # normal / landing / mantenimiento
+    crear_despachador.py            # seed del rol despachador
     runlan.py                       # dev server + IPs LAN
 
-catalogo/, bodega/, pos/, ecommerce/, contabilidad/, reportes/
+catalogo/
+  data/
+    catastro_perfumes.json          # catastro REAL (101 perfumes) — fuente de verdad
+    uniformes_sfj.json              # uniformes SFJ con variantes y precios
+    uniformes_img/                  # fotos de uniformes versionadas
+  management/commands/
+    cargar_catastro_perfumes.py     # loader idempotente del catastro
+    cargar_uniformes.py             # loader uniformes SFJ
+    cargar_fotos_perfumes.py        # fotos faltantes desde retail
+    actualizar_precios_uniformes.py
+    optimizar_imagenes.py
+
+catalogo/, bodega/, pos/, ecommerce/, despacho/, contabilidad/, reportes/
   models.py + views.py + forms.py + tests*.py + templates/
+
+ecommerce/
+  gateways/                         # base + mock + klap + khipu (multi-gateway)
+  emails.py                         # boleta, aviso dueño, stock disponible, etc.
 
 reportes/
   services.py                       # resumen_negocio, variacion_pct, etc.
@@ -498,12 +581,20 @@ Fases completadas: **A** (datos), **B** (POS), **C** (tienda online),
 stepper, búsqueda con alias), **Reportes Live** (HTMX auto-submit,
 drill-down, comparativa, desglose por familia), **Hardening**
 (django-axes, ADMIN_URL, ADMINS, SECURITY.md), **Deploy Hetzner**
-(receta completa con backups).
+(receta completa con backups), **Emails transaccionales** (Zoho SMTP +
+preview + flags), **Despacho** (rol + cola + notificaciones),
+**Catastro real** (101 perfumes con género/precio/imagen verificados +
+uniformes SFJ), **Multi-gateway** (KLAP/Khipu adapters), **Analytics**
+(Clarity + Plausible self-host preparado).
 
 Pendiente:
+- **Pasarela de pago real**: contratar KLAP y/o Khipu, cargar
+  credenciales y certificar (el código adapter ya está).
 - **E**: Facturación electrónica real al SII (OpenFactura) — los
-  campos DTE en `ReciboVenta` ya están listos.
-- Webhooks de TUU/Webpay (hoy es polling).
+  campos DTE en `ReciboVenta` ya están listos, canal-aware.
+- Infra Plausible: subdominio + nginx + Let's Encrypt (docker-compose listo).
+- Webhooks de TUU (hoy es polling).
+- Backup de `/srv/ideas/media/` (hoy solo se respalda la DB).
 - Sentry para error tracking.
 - CDN Cloudflare delante.
 - Sistema de fidelización / programa "Familias Ideas".

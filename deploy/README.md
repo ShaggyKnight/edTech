@@ -123,45 +123,18 @@ Lo que hace:
 sudo -u ideas nano /srv/ideas/app/.env
 ```
 
-Variables OBLIGATORIAS (ver `SECURITY.md` para detalle):
+Las variables y sus valores esperados están **documentados dentro de la
+plantilla** `deploy/ideas.env.production.template` (que `05-app-install.sh`
+ya copió a `/srv/ideas/app/.env`) — esa plantilla es la fuente de verdad:
+Zoho Mail (SMTP), multi-gateway (KLAP/Khipu/mock), Clarity/Plausible,
+modos del sitio, backups B2, feature flags. Ver también `SECURITY.md`
+para las obligatorias de hardening.
 
-```env
-DEBUG=False
-SECRET_KEY=<generar con python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())">
-ALLOWED_HOSTS=ideasboutique.cl,www.ideasboutique.cl
-DATABASE_URL=postgresql://ideas:<password>@localhost:5432/ideas
-CSRF_TRUSTED_ORIGINS=https://ideasboutique.cl,https://www.ideasboutique.cl
-
-ADMIN_URL=<algo-no-obvio>/                  # ej: blanca-x7k2/
-ADMIN_EMAIL=shaggyxreload@gmail.com
-AXES_PROXY_COUNT=1                          # nginx delante
-SECURE_HSTS_SECONDS=0                       # en 0 primero; subir a 31536000 después de confirmar HTTPS estable
-
-# Email transaccional (boletas + alertas 500)
-EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=ventas@ideasboutique.cl
-EMAIL_HOST_PASSWORD=<app password de Google, no la pass normal>
-DEFAULT_FROM_EMAIL=ventas@ideasboutique.cl
-OWNER_NOTIFICATION_EMAIL=shaggyxreload@gmail.com
-
-# Backups en Backblaze B2
-B2_ACCOUNT_ID=<application key ID>
-B2_APPLICATION_KEY=<application key>
-B2_BUCKET=ideas-backups-2026
-BACKUP_GPG_PASSPHRASE=<passphrase fuerte, GUARDALA EN UN SAFE>
-
-# Plausible (opcional)
-ANALYTICS_DOMAIN=ideasboutique.cl
-PUBLIC_WHATSAPP=569XXXXXXXX
-
-# Por ahora dejá pagos en mock — activá Webpay/TUU cuando tengas las creds
-PAYMENT_GATEWAY=mock
-ECOMMERCE_PAYMENT_GATEWAY=mock
-DTE_EMISSOR=mock
-```
+Reglas rápidas:
+- `DEBUG=False` SIEMPRE; `SECRET_KEY` de 50+ chars.
+- `ADMIN_URL` no-obvio (los bots scanean `/admin/`).
+- Email = Zoho **app password** (no la clave del webmail), ver `docs/email.md`.
+- Pagos parten en `mock` — KLAP/Khipu se activan al tener credenciales.
 
 Luego migrar + collectstatic + crear superuser:
 
@@ -173,6 +146,13 @@ sudo -u ideas /srv/ideas/venv/bin/python manage.py createsuperuser
 # username: eduardo
 # email: shaggyxreload@gmail.com
 # password: <generado con un gestor>
+```
+
+Cargar el catálogo real (idempotente, dry-run sin `--aplicar`):
+
+```bash
+sudo -u ideas /srv/ideas/venv/bin/python manage.py cargar_catastro_perfumes --aplicar --con-imagenes
+sudo -u ideas /srv/ideas/venv/bin/python manage.py cargar_uniformes --aplicar
 ```
 
 Arrancar la app:

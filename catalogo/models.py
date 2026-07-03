@@ -12,6 +12,16 @@ class Familia(models.Model):
     nombre = models.CharField(max_length=60, unique=True)
     nombre_buscable = models.CharField(max_length=60, db_index=True, blank=True)
     descripcion = models.TextField(blank=True)
+    # Umbral de alerta "stock bajo" para ESTA familia. Vacio = usa el
+    # general (5). 0 = alertar solo agotado — el caso de perfumeria,
+    # donde el modelo del negocio es tener 1-2 unidades por perfume y
+    # marcar eso como "bajo" seria puro ruido.
+    umbral_stock_bajo = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        verbose_name='umbral de stock bajo',
+        help_text='Alertar "bajo" cuando el stock sea ≤ a este número. '
+                  'Vacío = umbral general (5). 0 = solo alertar agotados.',
+    )
     creado = models.DateTimeField(auto_now_add=True)
     modificado = models.DateTimeField(auto_now=True)
 

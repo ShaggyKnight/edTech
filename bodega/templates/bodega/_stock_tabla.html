@@ -3,7 +3,7 @@
   Partial de la tabla de stock — extraido para que el filtro AJAX
   refresque solo esta zona sin recargar la pagina.
 
-  Contexto: `stock`, `umbral_bajo`, `puede_reponer`.
+  Contexto: `stock` (filas con `umbral_efectivo` anotado), `puede_reponer`.
 {% endcomment %}
 <div class="bo-card" id="stock-tabla">
   <div class="bo-card-head">
@@ -24,7 +24,7 @@
       </thead>
       <tbody>
         {% for s in stock %}
-          {% include 'bodega/_stock_fila.html' with s=s umbral_bajo=umbral_bajo puede_reponer=puede_reponer %}
+          {% include 'bodega/_stock_fila.html' with s=s puede_reponer=puede_reponer %}
         {% endfor %}
       </tbody>
     </table>

@@ -124,7 +124,10 @@ class ProductoAdmin(admin.ModelAdmin):
 
 @admin.register(Familia)
 class FamiliaAdmin(admin.ModelAdmin):
-    list_display = ['nombre']
+    # umbral_stock_bajo editable en la lista: vacio = general (5),
+    # 0 = solo alertar agotados (perfumeria: 1-2 unidades es lo normal).
+    list_display = ['nombre', 'umbral_stock_bajo']
+    list_editable = ['umbral_stock_bajo']
     search_fields = ['nombre']
 
 

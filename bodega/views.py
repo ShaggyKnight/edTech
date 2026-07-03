@@ -38,7 +38,34 @@ from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante
 
 # Umbrales de alerta de stock.
 STOCK_AGOTADO = 0
-STOCK_BAJO = 5
+STOCK_BAJO = 5  # umbral GENERAL — cada Familia puede definir el suyo
+
+
+def _umbral_expr():
+    """Expresion anotable: umbral de "bajo" efectivo de cada fila de stock.
+
+    Toma el umbral de la familia del item (via variante o producto —
+    XOR, uno de los dos es NULL) y cae al general si la familia no
+    define uno. Asi perfumeria (1-2 unidades = normal) puede alertar
+    solo agotados mientras uniformes mantiene el 5.
+    """
+    from django.db.models import IntegerField
+    return Coalesce(
+        F('variante__producto__familia__umbral_stock_bajo'),
+        F('producto__familia__umbral_stock_bajo'),
+        Value(STOCK_BAJO),
+        output_field=IntegerField(),
+    )
+
+
+def _con_umbral(fila):
+    """Setea `umbral_efectivo` en una instancia suelta de StockTienda
+    (para re-renders de una sola fila, donde no hay annotate)."""
+    producto = fila.variante.producto if fila.variante_id else fila.producto
+    familia = producto.familia if producto else None
+    umbral = getattr(familia, 'umbral_stock_bajo', None)
+    fila.umbral_efectivo = STOCK_BAJO if umbral is None else umbral
+    return fila
 
 
 def _puede_reponer(user) -> bool:
@@ -117,6 +144,7 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
             # Valores de la variante (talla/volumen/concentracion) para
             # mostrarlos en la columna "Variante" sin N+1.
             .prefetch_related('variante__valores__atributo')
+            .annotate(umbral_efectivo=_umbral_expr())
             .order_by('tienda__nombre_organizacion', 'producto__nombre',
                       'variante__producto__nombre', 'variante__sku')
         )
@@ -145,7 +173,7 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
         if solo == 'cero':
             qs = qs.filter(cantidad=STOCK_AGOTADO)
         elif solo == 'bajo':
-            qs = qs.filter(cantidad__lte=STOCK_BAJO, cantidad__gt=0)
+            qs = qs.filter(cantidad__lte=F('umbral_efectivo'), cantidad__gt=0)
         elif solo == 'todos':
             # No aplica filtro de cantidad — muestra TODO.
             pass
@@ -165,12 +193,12 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
 
         # KPIs sobre el set completo (no solo el filtrado), para que reflejen
         # el estado real del negocio sin importar qué filtro hay puesto.
-        global_qs = StockTienda.objects.all()
+        global_qs = StockTienda.objects.annotate(umbral_efectivo=_umbral_expr())
         if tienda_id.isdigit():
             global_qs = global_qs.filter(tienda_id=int(tienda_id))
         n_total_global = global_qs.count()
         n_agotado = global_qs.filter(cantidad=STOCK_AGOTADO).count()
-        n_bajo = global_qs.filter(cantidad__lte=STOCK_BAJO, cantidad__gt=0).count()
+        n_bajo = global_qs.filter(cantidad__lte=F('umbral_efectivo'), cantidad__gt=0).count()
         n_ok = n_total_global - n_agotado - n_bajo
         unidades_totales = (
             global_qs.aggregate(s=Sum('cantidad'))['s'] or 0
@@ -196,7 +224,7 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
                 'solo': solo, 'q': q,
             },
             'mostrar_todos': mostrar_todos,
-            'umbral_bajo': STOCK_BAJO,
+            'umbral_default': STOCK_BAJO,
             'puede_reponer': _puede_reponer(request.user),
             # Carga masiva: solo admin. Mucho poder en una sola operacion.
             'puede_bulk_stock': _puede_gestionar_ofertas(request.user),
@@ -221,7 +249,9 @@ def set_stock(request, pk):
         return redirect('bodega:stock')
 
     fila = get_object_or_404(
-        StockTienda.objects.select_related('tienda', 'producto', 'variante__producto'),
+        StockTienda.objects.select_related(
+            'tienda', 'producto__familia', 'variante__producto__familia',
+        ),
         pk=pk,
     )
 
@@ -258,8 +288,7 @@ def set_stock(request, pk):
 
     if request.htmx:
         return render(request, 'bodega/_stock_fila.html', {
-            's': fila,
-            'umbral_bajo': STOCK_BAJO,
+            's': _con_umbral(fila),
             'puede_reponer': True,
         })
     return redirect('bodega:stock')

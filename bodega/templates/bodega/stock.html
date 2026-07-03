@@ -61,12 +61,12 @@
     <div class="bo-card bo-kpi is-success">
       <div class="label">Stock OK</div>
       <div class="value">{{ kpi.n_ok }}</div>
-      <div class="sub">Items con &gt;{{ umbral_bajo }} unidades</div>
+      <div class="sub">Sobre el umbral de su familia</div>
     </div>
     <div class="bo-card bo-kpi is-warning">
       <div class="label">Stock bajo</div>
       <div class="value">{{ kpi.n_bajo }}</div>
-      <div class="sub">≤{{ umbral_bajo }} unidades · alertar reposición</div>
+      <div class="sub">Umbral por familia (general: ≤{{ umbral_default }})</div>
     </div>
     <div class="bo-card bo-kpi is-danger">
       <div class="label">Agotados</div>
@@ -132,7 +132,7 @@
             <label>Mostrar</label>
             <select name="solo" class="bo-select">
               <option value="">Solo con stock (default)</option>
-              <option value="bajo" {% if filtros.solo == "bajo" %}selected{% endif %}>Solo stock bajo (≤{{ umbral_bajo }})</option>
+              <option value="bajo" {% if filtros.solo == "bajo" %}selected{% endif %}>Solo stock bajo (según su familia)</option>
               <option value="cero" {% if filtros.solo == "cero" %}selected{% endif %}>Solo agotados</option>
               <option value="todos" {% if filtros.solo == "todos" %}selected{% endif %}>Todos (con y sin stock)</option>
             </select>

@@ -81,6 +81,29 @@ class RolOperadorAccesoTests(TestCase):
         resp = self.client.get(reverse('despacho:cola'))
         self.assertEqual(resp.status_code, 200)
 
+    # Acceso REAL a las pantallas (no solo el sidebar): este fue el bug
+    # del estreno — el sidebar mostraba Productos pero la vista tenia
+    # roles hardcodeados y rebotaba al login pidiendo clave de nuevo.
+    def test_puede_entrar_a_productos(self):
+        resp = self.client.get(reverse('bodega:lista_productos'))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_puede_entrar_a_ofertas(self):
+        resp = self.client.get(reverse('bodega:lista_ofertas'))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_puede_ver_stock(self):
+        resp = self.client.get(reverse('bodega:stock'))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_materiales_le_rebota(self):
+        resp = self.client.get(reverse('bodega:lista_materiales'))
+        self.assertNotEqual(resp.status_code, 200)
+
+    def test_etiquetas_le_rebota(self):
+        resp = self.client.get(reverse('bodega:etiquetas_seleccionar'))
+        self.assertNotEqual(resp.status_code, 200)
+
     def test_reportes_le_rebota(self):
         resp = self.client.get(reverse('reportes:dashboard'))
         # Sin permiso de contabilidad: redirect al login o 403, nunca 200.

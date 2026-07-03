@@ -42,26 +42,43 @@ STOCK_BAJO = 5
 
 
 def _puede_reponer(user) -> bool:
-    """Bodeguero, admin (grupo) o superuser pueden reponer stock.
+    """Bodeguero, admin, operador (grupos) o superuser: stock y catálogo.
 
-    Cajeros NO — el cajero solo opera ventas. La idea es que el
-    bodeguero use exclusivamente la pantalla de bodega para reponer.
+    Cajeros NO — el cajero solo opera ventas. El operador (vista
+    simplificada de la dueña) gestiona stock y productos, pero NO el
+    taller (materiales/etiquetas — ver `_puede_taller`).
     """
     if not user.is_authenticated:
         return False
     if user.is_superuser:
         return True
-    return user.groups.filter(name__in=['admin', 'bodeguero']).exists()
+    from accounts.roles import ADMIN, BODEGUERO, OPERADOR
+    return user.groups.filter(name__in=[ADMIN, BODEGUERO, OPERADOR]).exists()
 
 
-def _puede_gestionar_ofertas(user) -> bool:
-    """Solo admin (grupo) o superuser. El bodeguero no decide ofertas —
-    es una decisión comercial, no de stock."""
+def _puede_taller(user) -> bool:
+    """Materiales, rendimientos y etiquetas — solo bodeguero/admin.
+
+    Deliberadamente SIN operador: la vista simplificada de la dueña
+    no incluye el taller de confección.
+    """
     if not user.is_authenticated:
         return False
     if user.is_superuser:
         return True
-    return user.groups.filter(name='admin').exists()
+    from accounts.roles import ADMIN, BODEGUERO
+    return user.groups.filter(name__in=[ADMIN, BODEGUERO]).exists()
+
+
+def _puede_gestionar_ofertas(user) -> bool:
+    """Admin u operador (o superuser). Es decisión comercial — la dueña
+    (operador) la toma; el bodeguero no."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    from accounts.roles import ADMIN, OPERADOR
+    return user.groups.filter(name__in=[ADMIN, OPERADOR]).exists()
 
 
 class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateView):
@@ -659,6 +676,7 @@ def _label_variante(v):
 # ============================================================================
 
 reponer_required = user_passes_test(_puede_reponer, login_url='login')
+taller_required = user_passes_test(_puede_taller, login_url='login')
 
 
 @login_required
@@ -1110,7 +1128,7 @@ def variante_borrar(request, pk, var_pk):
 # ============================================================================
 
 @login_required
-@reponer_required
+@taller_required
 def lista_materiales(request):
     """Listado de materiales con stock total, costo y rendimientos."""
     qs = (
@@ -1148,7 +1166,7 @@ def lista_materiales(request):
 
 
 @login_required
-@reponer_required
+@taller_required
 @require_POST
 def materiales_bulk_action(request):
     """Bulk action para materiales: activar/desactivar varios a la vez.
@@ -1183,7 +1201,7 @@ def materiales_bulk_action(request):
 
 
 @login_required
-@reponer_required
+@taller_required
 def material_nuevo(request):
     if request.method == 'POST':
         form = MaterialForm(request.POST)
@@ -1200,7 +1218,7 @@ def material_nuevo(request):
 
 
 @login_required
-@reponer_required
+@taller_required
 def material_editar(request, pk):
     m = get_object_or_404(Material, pk=pk)
     if request.method == 'POST':
@@ -1218,7 +1236,7 @@ def material_editar(request, pk):
 
 
 @login_required
-@reponer_required
+@taller_required
 def rendimientos_lista(request, pk):
     """Lista los rendimientos de un material (qué variantes y cuántas u/rollo)."""
     m = get_object_or_404(Material, pk=pk)
@@ -1235,7 +1253,7 @@ def rendimientos_lista(request, pk):
 
 
 @login_required
-@reponer_required
+@taller_required
 def rendimiento_nuevo(request, pk):
     m = get_object_or_404(Material, pk=pk)
     if request.method == 'POST':
@@ -1253,7 +1271,7 @@ def rendimiento_nuevo(request, pk):
 
 
 @login_required
-@reponer_required
+@taller_required
 def rendimiento_editar(request, pk, rend_pk):
     m = get_object_or_404(Material, pk=pk)
     r = get_object_or_404(Rendimiento, pk=rend_pk, material=m)
@@ -1469,7 +1487,7 @@ def oferta_toggle(request, pk):
 # ============================================================================
 
 @login_required
-@reponer_required
+@taller_required
 def etiquetas_seleccionar(request):
     """Pantalla con filtros + checkboxes para elegir qué items y cuántas
     etiquetas imprimir.
@@ -1518,7 +1536,7 @@ def etiquetas_seleccionar(request):
 
 
 @login_required
-@reponer_required
+@taller_required
 @require_POST
 def etiquetas_imprimir(request):
     """Renderiza la vista imprimible con los códigos seleccionados.

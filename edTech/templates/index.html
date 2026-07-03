@@ -74,7 +74,11 @@
   <section class="strip">
     <div class="strip-item">
       <svg class="ico ico--22"><use href="#ico-truck"/></svg>
-      <div><strong>Envíos a todo Chile</strong><span>24–72 h hábiles</span></div>
+      {% if FEATURE_ENVIOS %}
+        <div><strong>Envíos a todo Chile</strong><span>24–72 h hábiles</span></div>
+      {% else %}
+        <div><strong>Compra online, retira en tienda</strong><span>Caupolicán 437-B · Los Vilos</span></div>
+      {% endif %}
     </div>
     <div class="strip-item">
       <svg class="ico ico--22"><use href="#ico-shield"/></svg>
@@ -380,7 +384,7 @@
         <div>
           <h5>Ayuda</h5>
           {# BUG-008: anchors reales en /info/. #}
-          <a href="{% url 'info' %}#envios">Envíos</a>
+          <a href="{% url 'info' %}#envios">{% if FEATURE_ENVIOS %}Envíos{% else %}Retiro en tienda{% endif %}</a>
           <a href="{% url 'info' %}#cambios">Cambios</a>
           <a href="{% url 'info' %}#tallas">Tallas</a>
           <a href="{% url 'info' %}#contacto">Contacto</a>

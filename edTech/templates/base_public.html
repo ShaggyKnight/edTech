@@ -199,6 +199,45 @@
 
     {% block body %}{% endblock %}
 
+    {% if CLARITY_PROJECT_ID %}
+    {% comment %}
+      Aviso de cookies (Ley 19.628): solo aplica cuando Clarity esta
+      activo (unico tracking con cookies — Plausible no usa). Banner
+      informativo con dismiss persistente en localStorage; no bloquea
+      la navegacion.
+    {% endcomment %}
+    <div id="cookie-notice" hidden
+         style="position:fixed; bottom:16px; left:16px; right:16px; z-index:9000;
+                max-width:520px; margin:0 auto; background:var(--ink,#1F1F1F); color:#fff;
+                border-radius:12px; padding:14px 18px; display:flex; gap:14px;
+                align-items:center; box-shadow:0 8px 30px rgba(0,0,0,.25); font-size:13px;">
+      <span style="flex:1; line-height:1.5;">
+        🍪 Usamos cookies para entender cómo se usa la tienda y mejorarla.
+        Nada de publicidad ni venta de datos.
+      </span>
+      <button type="button" id="cookie-notice-ok"
+              style="background:var(--gold,#C9A96E); color:#1F1F1F; border:none;
+                     font-weight:600; font-size:13px; padding:8px 18px;
+                     border-radius:8px; cursor:pointer; white-space:nowrap;">
+        Entendido
+      </button>
+    </div>
+    <script>
+      (function () {
+        var KEY = 'ideas_cookies_ok';
+        var el = document.getElementById('cookie-notice');
+        if (!el) return;
+        try {
+          if (!localStorage.getItem(KEY)) el.hidden = false;
+        } catch (e) { /* storage bloqueado: no insistir */ }
+        document.getElementById('cookie-notice-ok').addEventListener('click', function () {
+          try { localStorage.setItem(KEY, '1'); } catch (e) {}
+          el.hidden = true;
+        });
+      })();
+    </script>
+    {% endif %}
+
     {% block extra_scripts %}{% endblock %}
   </body>
 </html>

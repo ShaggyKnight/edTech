@@ -128,13 +128,25 @@
             <span>-${{ descuento_total|floatformat:0|intcomma }}</span>
           </div>
         {% endif %}
-        <div class="sum-row">
-          <span>Envío</span>
-          <span>{% if total_neto >= 50000 %}Gratis{% else %}$3.990{% endif %}</span>
-        </div>
-        {% if total_neto < 50000 %}
-          <div class="ship-hint">
-            Envío gratis en compras sobre $50.000.
+        {% if FEATURE_ENVIOS %}
+          {% comment %}
+            TODO al activar envios: definir el costo REAL y sumarlo al
+            total — este bloque historico mostraba $3.990 que despues
+            no se cobraba en el checkout.
+          {% endcomment %}
+          <div class="sum-row">
+            <span>Envío</span>
+            <span>{% if total_neto >= 50000 %}Gratis{% else %}$3.990{% endif %}</span>
+          </div>
+          {% if total_neto < 50000 %}
+            <div class="ship-hint">
+              Envío gratis en compras sobre $50.000.
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="sum-row">
+            <span>Entrega — retiro en tienda</span>
+            <span>Gratis</span>
           </div>
         {% endif %}
         <div class="sum-total">
@@ -146,7 +158,11 @@
         </a>
         <div class="cart-perks">
           <div><svg class="ico ico--14"><use href="#ico-shield"/></svg> Pago seguro</div>
-          <div><svg class="ico ico--14"><use href="#ico-truck"/></svg> Envío garantizado</div>
+          {% if FEATURE_ENVIOS %}
+            <div><svg class="ico ico--14"><use href="#ico-truck"/></svg> Envío garantizado</div>
+          {% else %}
+            <div><svg class="ico ico--14"><use href="#ico-pin"/></svg> Retiro en tienda</div>
+          {% endif %}
         </div>
       </aside>
     </div>

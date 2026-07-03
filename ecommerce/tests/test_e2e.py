@@ -58,9 +58,7 @@ class EcommerceFlujoCompletoTests(TestCase):
             resp = self.client.post(reverse('ecommerce:checkout_iniciar'), {
                 'cliente_nombre': 'Juana Pérez',
                 'cliente_email': 'juana@example.cl',
-                'cliente_rut': '',
-                'cliente_telefono': '',
-                'cliente_direccion': 'Av X 123',
+                'cliente_telefono': '+56 9 5544 3322',
             })
             self.assertEqual(resp.status_code, 302)
             self.assertIn('mock-pago', resp['Location'])
@@ -106,7 +104,7 @@ class EcommerceFlujoCompletoTests(TestCase):
             })
             resp = self.client.post(reverse('ecommerce:checkout_iniciar'), {
                 'cliente_nombre': 'X', 'cliente_email': 'x@x.cl',
-                'cliente_rut': '', 'cliente_telefono': '', 'cliente_direccion': '',
+                'cliente_telefono': '955443322',
             })
             from urllib.parse import parse_qs, urlparse
             params = parse_qs(urlparse(resp['Location']).query)

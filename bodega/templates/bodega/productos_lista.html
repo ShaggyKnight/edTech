@@ -103,6 +103,36 @@
           <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Limpiar</a>
         </div>
       </form>
+
+      {% comment %}
+        Chips de "incompletos" — la lista de trabajo: productos activos
+        sin foto (se ven con placeholder en la tienda) o sin precio
+        (no se pueden vender). Solo aparecen si hay pendientes.
+      {% endcomment %}
+      {% if n_sin_foto or n_sin_precio %}
+        <div style="display:flex; gap:8px; margin-top:12px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:12px; color:var(--bo-muted);">Pendientes:</span>
+          {% if n_sin_foto %}
+            <a href="?incompleto=sin_foto&estado=activos"
+               class="bo-badge {% if filtros.incompleto == 'sin_foto' %}bo-badge-warning{% else %}bo-badge-muted{% endif %}"
+               style="text-decoration:none;">
+              📷 Sin foto ({{ n_sin_foto }})
+            </a>
+          {% endif %}
+          {% if n_sin_precio %}
+            <a href="?incompleto=sin_precio&estado=activos"
+               class="bo-badge {% if filtros.incompleto == 'sin_precio' %}bo-badge-warning{% else %}bo-badge-muted{% endif %}"
+               style="text-decoration:none;">
+              💲 Sin precio ({{ n_sin_precio }})
+            </a>
+          {% endif %}
+          {% if filtros.incompleto %}
+            <a href="{% url 'bodega:lista_productos' %}" style="font-size:12px; color:var(--bo-primary-2);">
+              × quitar filtro
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
   </div>
 

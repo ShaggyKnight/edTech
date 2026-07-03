@@ -19,7 +19,7 @@
           BUG-008: los 4 links ahora apuntan a /info/ con anchors reales,
           no a #visitanos del landing que no tenía el contenido prometido.
         {% endcomment %}
-        <a href="{% url 'info' %}#envios">Envíos</a>
+        <a href="{% url 'info' %}#envios">{% if FEATURE_ENVIOS %}Envíos{% else %}Retiro en tienda{% endif %}</a>
         <a href="{% url 'info' %}#cambios">Cambios</a>
         <a href="{% url 'info' %}#tallas">Tallas</a>
         <a href="{% url 'info' %}#contacto">Contacto</a>

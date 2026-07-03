@@ -24,6 +24,18 @@
     {% endfor %}
   {% endif %}
 
+  {% comment %}
+    Auto-refresh cada 60s: quien deja la pantalla abierta ve entrar los
+    pedidos nuevos sin recargar. hx-select re-usa esta misma vista y
+    swapea solo esta zona (tabs + tabla) — los messages de arriba no se
+    repiten en cada tick.
+  {% endcomment %}
+  <div id="despacho-live"
+       hx-get="{% url 'despacho:cola' %}?estado={{ estado_filtro }}"
+       hx-trigger="every 60s"
+       hx-select="#despacho-live"
+       hx-swap="outerHTML">
+
   {# Tabs: nuevos vs despachados #}
   <div style="display:flex; gap:8px; margin-bottom:18px;">
     <a href="?estado=nuevos"
@@ -76,6 +88,7 @@
             <div style="font-weight:600;">{{ pedido.cliente_nombre|default:"—" }}</div>
             <div style="font-size:12px; color:var(--bo-muted);">
               {{ pedido.cliente_email|default:"sin email" }}
+              {% if pedido.cliente_telefono %} · 📞 {{ pedido.cliente_telefono }}{% endif %}
             </div>
           </td>
           <td style="padding:14px 16px; font-size:13px;">
@@ -129,6 +142,8 @@
       </div>
     {% endif %}
   </div>
+
+  </div>{# /despacho-live #}
 
 </div>
 {% endblock %}

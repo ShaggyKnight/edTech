@@ -84,7 +84,11 @@
   </div>
   <div class="shop-promo">
     <svg class="ico ico--14"><use href="#ico-truck"/></svg>
-    Envío gratis en compras sobre $50.000 · Cambios sin costo dentro de 15 días
+    {% if FEATURE_ENVIOS %}
+      Envío gratis en compras sobre $50.000 · Cambios sin costo dentro de 15 días
+    {% else %}
+      Compra online y retira gratis en tienda · Cambios sin costo dentro de 15 días
+    {% endif %}
   </div>
 </header>
 

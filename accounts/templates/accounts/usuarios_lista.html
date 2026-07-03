@@ -36,6 +36,7 @@
           <th style="padding:14px 16px;">Usuario</th>
           <th style="padding:14px 16px;">Rol</th>
           <th style="padding:14px 16px;">Estado</th>
+          <th style="padding:14px 16px;">Último acceso</th>
           <th style="padding:14px 16px;">Notif.</th>
           <th style="padding:14px 16px; text-align:right;">Acciones</th>
         </tr>
@@ -70,6 +71,13 @@
               <span style="color:#991b1b; font-weight:600; font-size:13px;">● Inactivo</span>
             {% endif %}
           </td>
+          <td style="padding:14px 16px; font-size:13px; color:var(--bo-muted); white-space:nowrap;">
+            {% if fila.u.last_login %}
+              {{ fila.u.last_login|date:"d-m-Y H:i" }}
+            {% else %}
+              <em>nunca entró</em>
+            {% endif %}
+          </td>
           <td style="padding:14px 16px;">
             {% if fila.es_despachador %}
               {% if fila.notif %}
@@ -89,7 +97,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="5" style="padding:40px; text-align:center; color:var(--bo-muted);">
+          <td colspan="6" style="padding:40px; text-align:center; color:var(--bo-muted);">
             No hay usuarios staff todavía. Creá el primero con "+ Nuevo usuario".
           </td>
         </tr>
@@ -105,6 +113,7 @@
       <li><strong>Cajero</strong> — opera el POS y ve ventas.</li>
       <li><strong>Bodeguero</strong> — gestiona stock, productos y materiales.</li>
       <li><strong>Despachador</strong> — prepara y despacha pedidos online; recibe el aviso por email de cada venta.</li>
+      <li><strong>Operador</strong> — la tienda día a día en un solo rol: POS, despacho, stock, productos y ofertas. Sin reportes, materiales ni configuración.</li>
     </ul>
   </div>
 

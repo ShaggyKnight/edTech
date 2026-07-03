@@ -691,12 +691,27 @@ def lista_productos(request):
     elif estado == 'inactivos':
         qs = qs.filter(activo=False)
 
+    # Filtro "incompletos": la lista de trabajo post-catastro. Un
+    # producto activo sin foto o sin precio se ve mal (o directamente
+    # no se puede vender) en la tienda — estos chips dan la lista.
+    incompleto = (request.GET.get('incompleto') or '').strip()
+    if incompleto == 'sin_foto':
+        qs = qs.filter(imagen='')
+    elif incompleto == 'sin_precio':
+        qs = qs.filter(Q(precio_base__isnull=True) | Q(precio_base=0))
+
+    base_incompletos = Producto.objects.filter(activo=True)
     contexto = {
         'productos': qs.order_by('familia__nombre', 'nombre'),
         'familias': Familia.objects.order_by('nombre'),
         'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
+        'n_sin_foto': base_incompletos.filter(imagen='').count(),
+        'n_sin_precio': base_incompletos.filter(
+            Q(precio_base__isnull=True) | Q(precio_base=0)
+        ).count(),
         'filtros': {
-            'q': q, 'familia': familia_id, 'colegio': colegio_id, 'estado': estado,
+            'q': q, 'familia': familia_id, 'colegio': colegio_id,
+            'estado': estado, 'incompleto': incompleto,
         },
         # La edicion inline de precio + toggle de `activo` son solo
         # para admin / superuser. El bodeguero ve pero no modifica

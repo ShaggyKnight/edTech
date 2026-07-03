@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block titulo %}Ayuda · Ideas Boutique{% endblock %}
-{% block meta_description %}Envíos, cambios, guía de tallas y contacto de Ideas Boutique. Caupolicán 437-B, Los Vilos. Tres generaciones, desde 1987.{% endblock %}
+{% block meta_description %}{% if FEATURE_ENVIOS %}Envíos, cambios{% else %}Retiro en tienda, cambios{% endif %}, guía de tallas y contacto de Ideas Boutique. Caupolicán 437-B, Los Vilos. Tres generaciones, desde 1987.{% endblock %}
 
 {% block body %}
 <main id="main-content" tabindex="-1" style="max-width:960px;margin:0 auto;padding:48px 24px 80px;">
@@ -13,7 +13,8 @@
       Todo lo que necesitas saber.
     </h1>
     <p style="font-size:18px;color:var(--ink-60);max-width:600px;">
-      Envíos a todo Chile, política de cambios clara, guía de tallas
+      {% if FEATURE_ENVIOS %}Envíos a todo Chile{% else %}Compra online con retiro en tienda{% endif %},
+      política de cambios clara, guía de tallas
       por colegio y nuestros datos de contacto.
     </p>
   </header>
@@ -23,13 +24,14 @@
        style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:48px;
               padding:16px;background:var(--cream-2,#FBF7EE);
               border-radius:12px;">
-    <a href="#envios"   style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Envíos</a>
+    <a href="#envios"   style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">{% if FEATURE_ENVIOS %}Envíos{% else %}Retiro en tienda{% endif %}</a>
     <a href="#cambios"  style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Cambios</a>
     <a href="#tallas"   style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Tallas</a>
     <a href="#contacto" style="padding:8px 16px;background:white;border-radius:20px;text-decoration:none;color:var(--ink);font-weight:500;">Contacto</a>
   </nav>
 
-  {# ========== ENVÍOS ========== #}
+  {# ========== ENVÍOS / RETIRO EN TIENDA ========== #}
+  {% if FEATURE_ENVIOS %}
   <section id="envios" style="margin-bottom:64px;scroll-margin-top:80px;">
     <div class="eyebrow" style="color:var(--gold);">01</div>
     <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Envíos a todo Chile.</h2>
@@ -49,6 +51,28 @@
       contáctanos por WhatsApp antes de comprar y vemos la mejor opción.
     </p>
   </section>
+  {% else %}
+  <section id="envios" style="margin-bottom:64px;scroll-margin-top:80px;">
+    <div class="eyebrow" style="color:var(--gold);">01</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Compra online, retira en tienda.</h2>
+    <p style="color:var(--ink-80);line-height:1.7;">
+      Por ahora entregamos todos los pedidos online en nuestra tienda de
+      Los Vilos — sin costo. Compras tranquila desde la casa y pasas a
+      buscar cuando te avisemos que está listo.
+    </p>
+    <ul style="margin-top:16px;line-height:1.9;color:var(--ink-80);">
+      <li><strong>Dónde:</strong> Caupolicán 437-B, Los Vilos.</li>
+      <li><strong>Horario de retiro:</strong> lunes a sábado, de 9 a 19 hrs.</li>
+      <li><strong>Cuándo:</strong> te avisamos por WhatsApp y correo apenas esté listo — generalmente el mismo día del pago.</li>
+      <li><strong>Qué llevar:</strong> tu número de pedido (va en el correo de la boleta).</li>
+      <li><strong>Costo:</strong> gratis, siempre.</li>
+    </ul>
+    <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
+      ¿Necesitas que se lo entreguemos a otra persona? Mándanos su nombre
+      por WhatsApp y lo dejamos anotado.
+    </p>
+  </section>
+  {% endif %}
 
   {# ========== CAMBIOS ========== #}
   <section id="cambios" style="margin-bottom:64px;scroll-margin-top:80px;">
@@ -56,8 +80,8 @@
     <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Cambios y devoluciones.</h2>
     <p style="color:var(--ink-80);line-height:1.7;">
       Tenes <strong>30 días corridos</strong> desde la fecha de compra
-      para cambiar cualquier producto que no te convenza, en la tienda
-      o a través de un envío.
+      para cambiar cualquier producto que no te convenza, en la tienda{% if FEATURE_ENVIOS %}
+      o a través de un envío{% endif %}.
     </p>
     <ul style="margin-top:16px;line-height:1.9;color:var(--ink-80);">
       <li>El producto debe estar <strong>sin uso</strong>, con todas las etiquetas originales.</li>
@@ -65,10 +89,12 @@
       <li>Los <strong>perfumes</strong> solo se cambian si el sello / celofán está intacto (Ley del Consumidor).</li>
       <li>Para uniformes con bordados a pedido, los cambios son por talla del mismo modelo.</li>
     </ul>
+    {% if FEATURE_ENVIOS %}
     <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
       Si compraste por web y el cambio requiere envío, podemos coordinar
       el retiro y el reenvío por WhatsApp.
     </p>
+    {% endif %}
   </section>
 
   {# ========== TALLAS ========== #}

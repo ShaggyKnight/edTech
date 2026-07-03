@@ -35,20 +35,47 @@ class ResenaForm(forms.Form):
 
 
 class CheckoutForm(forms.Form):
+    """Datos del cliente en el checkout.
+
+    El TELEFONO es el identificador de contacto principal (requerido):
+    por ahi van los avisos de WhatsApp del pedido. El RUT se elimino del
+    checkout — no emitimos factura y la boleta al consumidor no lo
+    necesita. La direccion solo existe si FEATURE_ENVIOS esta activa;
+    con la flag apagada la tienda opera solo con retiro en local.
+    """
     cliente_nombre = forms.CharField(max_length=200)
     cliente_email = forms.EmailField()
-    cliente_rut = forms.CharField(max_length=20, required=False)
-    cliente_telefono = forms.CharField(max_length=20, required=False)
+    cliente_telefono = forms.CharField(max_length=20)
     cliente_direccion = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
 
-    def clean_cliente_rut(self):
-        """Valida el RUT con módulo 11. Si el cliente no lo ingresó
-        (es opcional para boleta) no se valida."""
-        rut = self.cleaned_data.get('cliente_rut', '').strip()
-        if not rut:
-            return ''
-        from ecommerce.validators import validar_rut_chileno
-        return validar_rut_chileno(rut)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.conf import settings
+        if not getattr(settings, 'FEATURE_ENVIOS', False):
+            # Sin envios no hay direccion que pedir NI aceptar — sacar el
+            # campo evita que un POST manual meta una direccion que el
+            # despacho interpretaria como "hay que enviar".
+            self.fields.pop('cliente_direccion', None)
+
+    def clean_cliente_telefono(self):
+        """Normaliza a formato canonico +569XXXXXXXX.
+
+        Acepta lo tipico: '+56 9 5544 3322', '9 5544 3322', '955443322',
+        '56955443322'. Rechaza lo que no parezca celular chileno — es el
+        canal de aviso del pedido (WhatsApp), tiene que servir.
+        """
+        import re
+        crudo = self.cleaned_data.get('cliente_telefono', '')
+        digitos = re.sub(r'\D', '', crudo)
+        if digitos.startswith('56'):
+            digitos = digitos[2:]
+        if len(digitos) == 8:          # celular viejo sin el 9
+            digitos = '9' + digitos
+        if len(digitos) != 9 or not digitos.startswith('9'):
+            raise forms.ValidationError(
+                'Ingresa un celular chileno válido (ej: +56 9 5544 3322).'
+            )
+        return f'+56{digitos}'
 
 
 class EditarPerfilForm(forms.ModelForm):

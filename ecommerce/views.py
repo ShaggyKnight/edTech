@@ -304,7 +304,22 @@ def catalogo(request):
     # cliente llega al final de la grilla.
     from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
     PAGE_SIZE = 12  # 3 columnas x 4 filas en desktop, equilibrado movil
-    productos_ordenados = productos_qs.order_by(*SORT_OPTIONS[sort]).distinct()
+    orden = SORT_OPTIONS[sort]
+    if sort == 'relevant':
+        # Los productos sin foto van al FINAL del orden por defecto: una
+        # card con placeholder al inicio del grid baja la percepcion de
+        # todo el catalogo. Si el cliente ordena por precio/nuevos se
+        # respeta su criterio tal cual.
+        from django.db.models import Case, IntegerField, Value, When
+        productos_qs = productos_qs.annotate(
+            _sin_foto=Case(
+                When(imagen='', then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            ),
+        )
+        orden = ('_sin_foto',) + orden
+    productos_ordenados = productos_qs.order_by(*orden).distinct()
     paginator = Paginator(productos_ordenados, PAGE_SIZE)
     page_num = (request.GET.get('page') or '1').strip()
     try:
@@ -1056,10 +1071,10 @@ def ver_pedido(request, token: str):
     return render(request, 'ecommerce/pedido.html', {
         'recibo': recibo,
         'items_count': Cart(request.session).items_count,
-        # Por ahora todos los pedidos online son "despacho a domicilio"
-        # — cuando integremos Slots de retiro (Sprint 4.5), este flag
-        # vendra del ReciboVenta.reserva_retiro o equivalente.
-        'es_retiro_local': False,
+        # Retiro en local = pedido sin direccion de envio. Con
+        # FEATURE_ENVIOS apagada el checkout no pide direccion, asi que
+        # TODOS los pedidos son retiro.
+        'es_retiro_local': not (recibo.cliente_direccion or '').strip(),
     })
 
 

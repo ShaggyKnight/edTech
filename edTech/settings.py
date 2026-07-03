@@ -92,6 +92,11 @@ env = environ.Env(
     # que la duena tenga banda para moderar las resenas. La data
     # (model + admin + tests) se mantiene — solo se oculta el UI.
     FEATURE_RESENAS=(bool, False),
+    # Envios a domicilio. OFF = la tienda opera SOLO con retiro en local:
+    # el checkout no pide direccion y se oculta toda referencia a envios
+    # (footer, /info/, copy). Se prendera cuando se explore envio local
+    # y despues courier.
+    FEATURE_ENVIOS=(bool, False),
     # Feature flags de emails transaccionales. Todos arrancan apagados
     # hasta que la duena haya validado los templates con envios manuales
     # y se monten los cron/celery para los programados. Activar uno a
@@ -206,6 +211,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'edTech.context_processors.public_settings',
+                # Badges del sidebar backoffice (lazy — solo evalua en base.html).
+                'edTech.context_processors.backoffice_badges',
             ],
         },
     },
@@ -405,6 +412,7 @@ PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del 
 # se oculta en la UI publica hasta que la duena tenga ancho de banda
 # para moderar. Se prende cambiando FEATURE_RESENAS=True en .env.
 FEATURE_RESENAS = env('FEATURE_RESENAS')
+FEATURE_ENVIOS = env('FEATURE_ENVIOS')
 # Emails transaccionales — apagados por default.
 FEATURE_EMAIL_BIENVENIDA = env('FEATURE_EMAIL_BIENVENIDA')
 FEATURE_EMAIL_RESET_PASSWORD = env('FEATURE_EMAIL_RESET_PASSWORD')

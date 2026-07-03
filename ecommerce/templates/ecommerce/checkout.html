@@ -47,6 +47,10 @@
   <div class="checkout-form">
     <div class="eyebrow">Paso final</div>
     <h2>Finalizar compra</h2>
+    <a href="{% url 'ecommerce:carrito' %}"
+       style="display:inline-block; margin:-12px 0 20px; font-size:13px; color:var(--ink-60); text-decoration:none;">
+      ← Volver al carrito
+    </a>
 
     {% if messages %}
       {% for message in messages %}
@@ -76,33 +80,33 @@
         {% if form.cliente_email.errors %}<div class="err">{{ form.cliente_email.errors|join:", " }}</div>{% endif %}
       </div>
 
-      <div class="row-2">
-        <div class="field">
-          <label>RUT</label>
-          <input type="text" name="cliente_rut" id="id_cliente_rut"
-                 value="{{ form.cliente_rut.value|default:'' }}"
-                 maxlength="20"
-                 placeholder="12.345.678-9"
-                 autocomplete="off"
-                 hx-post="{% url 'ecommerce:validar_rut_inline' %}"
-                 hx-trigger="change delay:300ms, blur"
-                 hx-target="#rut-msg"
-                 hx-swap="innerHTML"
-                 hx-include="this">
-          <div class="hint">Obligatorio para factura.</div>
-          {% if form.cliente_rut.errors %}<div class="err">{{ form.cliente_rut.errors|join:", " }}</div>{% endif %}
-          <div id="rut-msg" aria-live="polite"></div>
-        </div>
-        <div class="field">
-          <label>Teléfono</label>
-          {{ form.cliente_telefono }}
-        </div>
+      <div class="field">
+        <label>Celular (WhatsApp) *</label>
+        {{ form.cliente_telefono }}
+        <div class="hint">Te avisamos por WhatsApp cuando tu pedido esté listo. 📱</div>
+        {% if form.cliente_telefono.errors %}<div class="err">{{ form.cliente_telefono.errors|join:", " }}</div>{% endif %}
       </div>
 
-      <div class="field">
-        <label>Dirección de envío</label>
-        {{ form.cliente_direccion }}
-      </div>
+      {% if FEATURE_ENVIOS %}
+        <div class="field">
+          <label>Dirección de envío</label>
+          {{ form.cliente_direccion }}
+          <div class="hint">Déjala vacía si prefieres retirar en tienda.</div>
+        </div>
+      {% else %}
+        {% comment %}
+          Sin envios activos la entrega es SIEMPRE retiro en tienda —
+          se informa claro en vez de pedir una direccion que no usamos.
+        {% endcomment %}
+        <div class="field"
+             style="background:var(--cream); border:1px solid var(--line); border-radius:10px; padding:14px 16px;">
+          <div style="font-weight:600; font-size:14px; margin-bottom:4px;">🏬 Retiro en tienda — gratis</div>
+          <div style="font-size:13px; color:var(--ink-60); line-height:1.5;">
+            Caupolicán 437-B, Los Vilos · lunes a sábado de 9 a 19 hrs.<br>
+            Te avisamos por WhatsApp y correo apenas esté listo.
+          </div>
+        </div>
+      {% endif %}
 
       {% if gateways|length > 1 %}
         {# Selector de metodo de pago — solo se muestra si hay >1 activo. #}
@@ -138,6 +142,18 @@
         <svg class="ico ico--16"><use href="#ico-shield"/></svg>
         Pagar ${{ total_neto|floatformat:0|intcomma }}
       </button>
+
+      {% comment %}
+        Bloque de confianza: para una boutique chica que recien parte
+        online, decir QUIEN esta detras y COMO se procesa el pago es lo
+        que mas convierte.
+      {% endcomment %}
+      <div style="margin-top:14px; font-size:12px; color:var(--ink-60); line-height:1.6; text-align:center;">
+        🔒 Pago seguro procesado por
+        {% for g in gateways %}{{ g.nombre_publico }}{% if not forloop.last %} / {% endif %}{% endfor %}
+        — no vemos ni guardamos tus datos bancarios.<br>
+        Ideas Boutique · Caupolicán 437-B, Los Vilos · Desde 1987 ✦
+      </div>
     </form>
 
     <style>
@@ -170,6 +186,12 @@
       <span>Subtotal</span>
       <span>${{ subtotal_bruto|floatformat:0|intcomma }}</span>
     </div>
+    {% if not FEATURE_ENVIOS %}
+      <div class="sum-row" style="padding:6px 0;display:flex;justify-content:space-between;color:var(--ink-60);">
+        <span>Entrega — retiro en tienda</span>
+        <span>Gratis</span>
+      </div>
+    {% endif %}
     {% if descuento_total %}
       <div class="sum-row" style="padding:6px 0;display:flex;justify-content:space-between;color:var(--vino);">
         <span>Descuentos</span>
@@ -183,12 +205,4 @@
   </aside>
 </main>
 
-<script>
-  // Estiliza los inputs del formulario de Django con clase CSS genérica.
-  document.querySelectorAll('.checkout-form input, .checkout-form textarea').forEach(function(el){
-    if (el.type !== 'hidden' && el.type !== 'submit') {
-      // ya está estilizado por la regla .checkout-form input, no hace falta clase extra
-    }
-  });
-</script>
 {% endblock %}

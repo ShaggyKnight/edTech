@@ -201,9 +201,7 @@ class CheckoutLogueadoTests(TestCase):
             resp = self.client.post(reverse('ecommerce:checkout_iniciar'), {
                 'cliente_nombre': 'Pedro Soto',
                 'cliente_email': 'pedro@cliente.cl',
-                'cliente_rut': '',
-                'cliente_telefono': '',
-                'cliente_direccion': 'Av Z 456',
+                'cliente_telefono': '+56955443322',
             })
             self.assertEqual(resp.status_code, 302)
             recibo = ReciboVenta.objects.get()
@@ -218,9 +216,7 @@ class CheckoutLogueadoTests(TestCase):
             resp = self.client.post(reverse('ecommerce:checkout_iniciar'), {
                 'cliente_nombre': 'Invitado',
                 'cliente_email': 'inv@x.cl',
-                'cliente_rut': '',
-                'cliente_telefono': '',
-                'cliente_direccion': '',
+                'cliente_telefono': '9 5544 3322',
             })
             self.assertEqual(resp.status_code, 302)
             recibo = ReciboVenta.objects.get()

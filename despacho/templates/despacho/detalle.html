@@ -4,13 +4,22 @@
 {% block titulo %}Pedido #{{ pedido.pk }} · Despacho{% endblock %}
 
 {% block content %}
+<style media="print">
+  /* Lista de empaque imprimible: solo el contenido del pedido. */
+  .bo-bar, .bo-side, .no-print { display: none !important; }
+  .bo-shell, .bo-main, .bo-content { margin: 0 !important; padding: 0 !important; }
+</style>
 <div style="max-width:900px; margin:24px auto; padding:0 16px;">
 
   <div style="margin-bottom:18px;">
-    <a href="{% url 'despacho:cola' %}"
+    <a href="{% url 'despacho:cola' %}" class="no-print"
        style="color:#7A1E2B; text-decoration:none; font-size:13px;">
       ← Volver a la cola
     </a>
+    <button type="button" class="bo-btn no-print" onclick="window.print()"
+            style="float:right;" title="Imprime solo los datos del pedido">
+      🖨 Imprimir lista de empaque
+    </button>
     <h1 style="font-size:32px; margin:8px 0 0;">
       Pedido #{{ pedido.pk }}
       {% if pedido.despachado_en %}
@@ -53,7 +62,7 @@
             Abre WhatsApp con el aviso ya escrito (según estado del
             pedido) — Blanca solo revisa el texto y aprieta enviar.
           {% endcomment %}
-          <a href="{{ wa_url }}" target="_blank" rel="noopener"
+          <a href="{{ wa_url }}" target="_blank" rel="noopener" class="no-print"
              style="display:inline-flex; align-items:center; gap:8px; margin-top:12px;
                     background:#25D366; color:#fff; font-weight:600; font-size:14px;
                     padding:10px 18px; border-radius:8px; text-decoration:none;">
@@ -137,7 +146,7 @@
       </div>
     </div>
 
-    <div style="text-align:right;">
+    <div style="text-align:right;" class="no-print">
       <form method="post" action="{% url 'despacho:desmarcar_despachado' pedido.pk %}"
             onsubmit="return confirm('¿Reabrir el pedido y volverlo a la cola?');">
         {% csrf_token %}
@@ -147,7 +156,7 @@
       </form>
     </div>
   {% else %}
-    <div style="text-align:right;">
+    <div style="text-align:right;" class="no-print">
       <form method="post" action="{% url 'despacho:marcar_despachado' pedido.pk %}"
             onsubmit="return confirm('¿Confirmar despacho del pedido #{{ pedido.pk }}? Esto registra la fecha y tu usuario como responsable.');">
         {% csrf_token %}

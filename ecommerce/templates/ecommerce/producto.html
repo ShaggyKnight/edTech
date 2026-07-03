@@ -2,10 +2,10 @@
 {% load static humanize catalogo_extras %}
 
 {% block titulo %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
-{% block meta_description %}{{ producto.nombre }} en Ideas Boutique, Los Vilos. {% if producto.colegio %}Uniforme oficial {{ producto.colegio.nombre }}. {% endif %}Stock real, envío a todo Chile. Desde 1987.{% endblock %}
+{% block meta_description %}{{ producto.nombre }} en Ideas Boutique, Los Vilos. {% if producto.colegio %}Uniforme oficial {{ producto.colegio.nombre }}. {% endif %}Stock real{% if FEATURE_ENVIOS %}, envío a todo Chile{% else %}, compra online y retira en tienda{% endif %}. Desde 1987.{% endblock %}
 {% block og_type %}product{% endblock %}
 {% block og_title %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
-{% block og_description %}{{ producto.nombre }}{% if producto.colegio %} · Uniforme oficial {{ producto.colegio.nombre }}{% endif %}. Caupolicán 437-B, Los Vilos. Envío a todo Chile.{% endblock %}
+{% block og_description %}{{ producto.nombre }}{% if producto.colegio %} · Uniforme oficial {{ producto.colegio.nombre }}{% endif %}. Caupolicán 437-B, Los Vilos.{% if FEATURE_ENVIOS %} Envío a todo Chile.{% endif %}{% endblock %}
 {% block og_image %}{% if producto.imagen and producto.imagen.name %}{{ producto.imagen.url }}{% else %}{% static 'img/ideas/logo-letrero.png' %}{% endif %}{% endblock %}
 
 {# Schema.org Product — SEO de producto para Google Shopping y rich snippets. #}
@@ -503,7 +503,11 @@
       <div class="pdp-perks">
         <div>
           <svg class="ico ico--18"><use href="#ico-truck"/></svg>
-          <div><strong>Envío en 24–72 h</strong><span>Gratis sobre $50.000</span></div>
+          {% if FEATURE_ENVIOS %}
+            <div><strong>Envío en 24–72 h</strong><span>Gratis sobre $50.000</span></div>
+          {% else %}
+            <div><strong>Retiro gratis en tienda</strong><span>Caupolicán 437-B, Los Vilos</span></div>
+          {% endif %}
         </div>
         <div>
           <svg class="ico ico--18"><use href="#ico-shield"/></svg>

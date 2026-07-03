@@ -366,6 +366,26 @@ sudo systemctl start gunicorn-ideas.service
 
 ---
 
+## 7½. Monitoreo de uptime (saber si el sitio se cayó ANTES que los clientes)
+
+El sitio expone `https://ideasboutique.cl/healthz` — responde `ok` (HTTP 200)
+siempre, incluso en modo mantenimiento. Un monitor externo gratis avisa
+por email si deja de responder:
+
+1. Crear cuenta en [uptimerobot.com](https://uptimerobot.com) (plan free = 50 monitores).
+2. **Add New Monitor** → tipo `HTTP(s)`:
+   - URL: `https://ideasboutique.cl/healthz`
+   - Interval: 5 minutos
+   - Alert contacts: tu email (y el de Blanca si quiere).
+3. Opcional: segundo monitor tipo `Keyword` a `https://ideasboutique.cl/`
+   buscando la palabra `Ideas` — detecta el caso "responde pero muestra
+   una página rota".
+
+Si llega la alerta: `estado` por SSH → `restart-app` → si persiste,
+sección 6 (Diagnóstico).
+
+---
+
 ## 8. Pausar el servidor (Hetzner billing)
 
 **Importante**: Hetzner cobra lo mismo encendido o apagado. Si querés ahorrar

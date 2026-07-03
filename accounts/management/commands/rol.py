@@ -7,7 +7,7 @@ Uso:
     python manage.py rol <username> --add=cajero  # AGREGA rol sin sacar los otros
     python manage.py rol <username> --del=cajero  # solo saca ese rol
 
-Roles validos: admin, cajero, bodeguero, despachador.
+Roles validos: admin, cajero, bodeguero, despachador, operador.
 
 Nota: si el user es `is_superuser`, ya tiene TODOS los permisos sin
 necesidad de estar en ningun grupo. Asignarle "admin" igual no hace
@@ -21,7 +21,7 @@ from accounts.roles import ALL_ROLES
 
 
 class Command(BaseCommand):
-    help = 'Verifica o asigna roles (admin/cajero/bodeguero/despachador) a usuarios.'
+    help = 'Verifica o asigna roles (admin/cajero/bodeguero/despachador/operador) a usuarios.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -134,7 +134,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('    [OK] /despacho/  (cola de pedidos online)'))
             self.stdout.write(self.style.SUCCESS('    [OK] /admin/     (Django admin completo)'))
         else:
-            if 'cajero' in roles_relevantes:
+            if 'operador' in roles_relevantes:
+                self.stdout.write(self.style.SUCCESS('    [OK] /pos/       (POS + ventas + recibos)'))
+                self.stdout.write(self.style.SUCCESS('    [OK] /despacho/  (cola de pedidos online)'))
+                self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (stock + productos + ofertas — SIN materiales/etiquetas)'))
+            elif 'cajero' in roles_relevantes:
                 self.stdout.write(self.style.SUCCESS('    [OK] /pos/       (POS + sus ventas + recibos)'))
                 self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (solo VER stock, sin editar)'))
             elif 'bodeguero' in roles_relevantes:

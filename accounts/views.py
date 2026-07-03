@@ -14,7 +14,9 @@ from .forms import (
     ROL_LABELS, ResetPasswordForm, UsuarioCrearForm, UsuarioEditarForm,
     _rol_actual,
 )
-from .roles import ADMIN, ALL_ROLES, BODEGUERO, CAJERO, DESPACHADOR, user_in_role
+from .roles import (
+    ADMIN, ALL_ROLES, BODEGUERO, CAJERO, DESPACHADOR, OPERADOR, user_in_role,
+)
 
 
 def _es_staff(user):
@@ -41,6 +43,9 @@ def dashboard(request):
 
     if user.is_superuser or user_in_role(user, ADMIN):
         return redirect(reverse('reportes:dashboard'))
+    # Operador (operación completa simplificada): su día parte en el POS.
+    if user_in_role(user, OPERADOR):
+        return redirect(reverse('pos:home'))
     if user_in_role(user, CAJERO):
         return redirect(reverse('pos:home'))
     if user_in_role(user, BODEGUERO):

@@ -8,8 +8,9 @@ ADMIN = 'admin'
 CAJERO = 'cajero'
 BODEGUERO = 'bodeguero'
 DESPACHADOR = 'despachador'
+OPERADOR = 'operador'
 
-ALL_ROLES = (ADMIN, CAJERO, BODEGUERO, DESPACHADOR)
+ALL_ROLES = (ADMIN, CAJERO, BODEGUERO, DESPACHADOR, OPERADOR)
 
 
 ROLE_PERMISSIONS = {
@@ -65,6 +66,31 @@ ROLE_PERMISSIONS = {
         'pos': {
             'reciboventa': ['view', 'change'],   # change = marcar despachado
             'reciboventadetalle': ['view'],
+        },
+    },
+    # Operador: la operación COMPLETA de la tienda en un solo rol
+    # simplificado (pensado para la dueña): vender en el POS, despachar
+    # pedidos online, manejar stock, productos y ofertas. Deliberadamente
+    # SIN: materiales/telas, etiquetas, reportes financieros, admin
+    # Django ni gestión de usuarios — menos pantallas, menos ruido.
+    OPERADOR: {
+        'catalogo': {
+            'producto': ['add', 'change', 'view'],
+            'productovariante': ['add', 'change', 'view'],
+            'familia': ['view'],
+            'colegio': ['view'],
+            'atributo': ['view'],
+            'valoratributo': ['add', 'change', 'view'],
+            'oferta': ['add', 'change', 'view'],
+        },
+        'bodega': {
+            'tienda': ['view'],
+            'stocktienda': ['add', 'change', 'view'],
+            'movimientostock': ['add', 'view'],
+        },
+        'pos': {
+            'reciboventa': ['add', 'change', 'view'],
+            'reciboventadetalle': ['add', 'change', 'view'],
         },
     },
     # admin recibe todos los permisos dinámicamente en la migración

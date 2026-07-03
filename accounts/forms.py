@@ -23,6 +23,8 @@ ROL_LABELS = {
     'cajero': 'Cajero — POS y ventas',
     'bodeguero': 'Bodeguero — stock y catálogo',
     'despachador': 'Despachador — prepara y despacha pedidos online',
+    'operador': 'Operador — tienda día a día: POS, despacho, stock, '
+                'productos y ofertas (sin reportes ni materiales)',
 }
 
 ROL_CHOICES = [(r, ROL_LABELS.get(r, r.title())) for r in ALL_ROLES]

@@ -89,7 +89,7 @@ Ya cargados en `~/.bashrc` del user `ideas`. Si no funcionan, hacé `source ~/.b
 | `modo mantenimiento` | "Volvemos pronto" (HTTP 503) en todo |
 | `rol` | Listar usuarios y sus roles |
 | `rol <username>` | Detalle de un usuario |
-| `rol <user> --add=admin` | Agregar rol (admin/cajero/bodeguero/despachador) |
+| `rol <user> --add=admin` | Agregar rol (admin/cajero/bodeguero/despachador/operador) |
 | `rol <user> --del=cajero` | Sacar rol |
 | `djmanage <comando>` | Cualquier `manage.py` (migrate, shell, createsuperuser, etc.) |
 | `logs-app` | Logs de gunicorn/Django en vivo (Ctrl+C para salir) |
@@ -188,7 +188,12 @@ rol mariana --set=cajero
 rol mariana --del=cajero
 ```
 
-Roles disponibles: `admin`, `cajero`, `bodeguero`, `despachador`.
+Roles disponibles: `admin`, `cajero`, `bodeguero`, `despachador`, `operador`.
+
+> **`operador` = la vista simplificada para la dueña**: POS, ventas,
+> despacho, stock, productos y ofertas — sin materiales, sin etiquetas,
+> sin reportes financieros y sin admin Django. Para Blanca:
+> `rol blanca --set=operador` (o desde `/cuenta/usuarios/`).
 
 > **También se puede desde el navegador**: como admin, entrá a
 > `https://ideasboutique.cl/cuenta/usuarios/` — crear usuarios, asignar

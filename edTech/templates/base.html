@@ -78,7 +78,7 @@
             POS
           </a>
         {% endif %}
-        {% if user|has_any_role:'admin,despachador' %}
+        {% if user|has_any_role:'admin,despachador,operador' %}
           <a href="{% url 'despacho:cola' %}" {% if request.resolver_match.namespace == 'despacho' %}class="active"{% endif %}>
             Despacho
           </a>
@@ -143,7 +143,7 @@
             </a>
           {% endif %}
 
-          {% if user|has_any_role:'admin,despachador' %}
+          {% if user|has_any_role:'admin,despachador,operador' %}
             <a class="bo-side-link {% if request.resolver_match.namespace == 'despacho' %}active{% endif %}"
                href="{% url 'despacho:cola' %}">
               <svg class="ico"><use href="#ico-truck"/></svg>
@@ -166,6 +166,12 @@
               <svg class="ico"><use href="#ico-sparkle"/></svg>
               Productos
             </a>
+          {% endif %}
+          {% comment %}
+            Materiales/telas son del taller — el rol operador (dueña,
+            vista simplificada) no los ve; bodeguero y admin sí.
+          {% endcomment %}
+          {% if perms.bodega.change_material or user.is_superuser %}
             <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_materiales' %}active{% endif %}"
                href="{% url 'bodega:lista_materiales' %}">
               <svg class="ico"><use href="#ico-pin"/></svg>
@@ -179,7 +185,7 @@
               Ofertas
             </a>
           {% endif %}
-          {% if perms.catalogo.change_producto or user.is_superuser %}
+          {% if user|has_any_role:'admin,bodeguero' %}
             <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'etiquetas_seleccionar' %}active{% endif %}"
                href="{% url 'bodega:etiquetas_seleccionar' %}">
               <svg class="ico"><use href="#ico-pin"/></svg>

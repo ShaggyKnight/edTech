@@ -11,17 +11,21 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from accounts.roles import ADMIN, DESPACHADOR, user_in_role
+from accounts.roles import ADMIN, DESPACHADOR, OPERADOR, user_in_role
 from pos.models import ReciboVenta
 
 
 def _puede_despachar(user):
-    """ADMIN y DESPACHADOR ven el panel. Superuser entra siempre."""
+    """ADMIN, DESPACHADOR y OPERADOR ven el panel. Superuser siempre."""
     if not user.is_authenticated:
         return False
     if user.is_superuser:
         return True
-    return user_in_role(user, ADMIN) or user_in_role(user, DESPACHADOR)
+    return (
+        user_in_role(user, ADMIN)
+        or user_in_role(user, DESPACHADOR)
+        or user_in_role(user, OPERADOR)
+    )
 
 
 @login_required

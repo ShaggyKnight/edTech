@@ -243,10 +243,12 @@ reportes/       Dashboard, Caja, EERR, Balance, Producción
 - Asiento idempotente al pagar un recibo.
 
 ### Auth y roles
-- Cuatro grupos de staff: `cajero`, `bodeguero`, `despachador` y
-  `admin` (todos los permisos) + superusuarios. Fuente de verdad en
-  `accounts/roles.py`; asignación por CLI (`manage.py rol`) o web
-  (`/cuenta/usuarios/`).
+- Cinco grupos de staff: `cajero`, `bodeguero`, `despachador`,
+  `operador` (operación completa simplificada: POS + despacho + stock +
+  productos + ofertas, sin materiales/reportes/admin — pensado para la
+  dueña) y `admin` (todos los permisos) + superusuarios. Fuente de
+  verdad en `accounts/roles.py`; asignación por CLI (`manage.py rol`)
+  o web (`/cuenta/usuarios/`).
 - **Cliente sin rol staff** → al entrar a `/cuenta/dashboard/` redirige
   a `/tienda/cuenta/pedidos/` (antes daba 403).
 - Login del staff y login del cliente boutique separados.

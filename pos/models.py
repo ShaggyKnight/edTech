@@ -40,6 +40,17 @@ class ReciboVenta(models.Model):
     cliente_nombre = models.CharField(max_length=200, blank=True)
     cliente_email = models.EmailField(blank=True, help_text='Para envío de boleta por correo')
     cliente_rut = models.CharField(max_length=20, blank=True)
+    # Contacto y entrega del pedido online. El checkout SIEMPRE los pidió,
+    # pero se descartaban al crear el recibo — el despacho mostraba
+    # "sin teléfono" y "retira en local" para todos los pedidos.
+    cliente_telefono = models.CharField(
+        max_length=20, blank=True,
+        help_text='Para coordinar entrega / avisos por WhatsApp',
+    )
+    cliente_direccion = models.TextField(
+        blank=True,
+        help_text='Dirección de envío. Vacía = retiro en local',
+    )
     cliente_usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

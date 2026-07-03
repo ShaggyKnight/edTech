@@ -44,11 +44,16 @@ def _absolute_url(path: str) -> str:
 
 
 def _enviar_multipart(subject: str, to: str, contexto: dict,
-                      template_html: str, template_txt: str | None = None) -> bool:
+                      template_html: str, template_txt: str | None = None,
+                      unsub_url: str = '') -> bool:
     """Renderiza HTML (+ txt opcional) y envia un email multipart.
 
     Devuelve True si el envio se programo OK. Errores se loggean y devuelven
     False — el caller decide si esto rompe algo o no (normalmente no).
+
+    `unsub_url`: si viene, se agrega el header `List-Unsubscribe` — Gmail
+    y Outlook lo ponderan fuerte para NO mandar a spam los emails de tipo
+    suscripcion (stock disponible, carrito, resena, recordatorio).
     """
     # Variables globales para todos los templates (footer del _base.html).
     contexto = {
@@ -62,9 +67,17 @@ def _enviar_multipart(subject: str, to: str, contexto: dict,
         if not text:
             # Si no hay txt, usamos un fallback minimo desde el subject.
             text = f'{subject}\n\nVer este email en HTML para los detalles.'
+        headers = {}
+        if unsub_url and unsub_url != '#':
+            headers['List-Unsubscribe'] = f'<{unsub_url}>'
+            # Gmail exige este segundo header para el "unsubscribe" de un
+            # click en su UI (RFC 8058). Nuestro endpoint de cancelar
+            # acepta GET, asi que declararlo es correcto.
+            headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
         msg = EmailMultiAlternatives(
             subject=subject, body=text,
             from_email=_remitente(), to=[to],
+            headers=headers or None,
         )
         msg.attach_alternative(html, 'text/html')
         msg.send(fail_silently=False)
@@ -248,6 +261,7 @@ def enviar_stock_disponible(variante, suscriptor_email: str,
             'unsub_url': unsub_url or '#',
         },
         template_html='emails/stock_disponible.html',
+        unsub_url=unsub_url,
     )
 
 

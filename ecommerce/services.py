@@ -129,6 +129,8 @@ def iniciar_pedido(
         cliente_nombre=cliente_nombre,
         cliente_email=cliente_email,
         cliente_rut=cliente_rut,
+        cliente_telefono=cliente_telefono,
+        cliente_direccion=cliente_direccion,
         cliente_usuario=cliente_usuario,
         subtotal=subtotal_bruto,
         descuento=descuento_total,

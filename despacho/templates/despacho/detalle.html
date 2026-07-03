@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize despacho_tags %}
 
 {% block titulo %}Pedido #{{ pedido.pk }} · Despacho{% endblock %}
 
@@ -47,6 +47,19 @@
           📞 {{ pedido.cliente_telefono|default:"sin teléfono" }}<br>
           🆔 {{ pedido.cliente_rut|default:"sin RUT" }}
         </div>
+        {% wa_aviso_pedido pedido as wa_url %}
+        {% if wa_url %}
+          {% comment %}
+            Abre WhatsApp con el aviso ya escrito (según estado del
+            pedido) — Blanca solo revisa el texto y aprieta enviar.
+          {% endcomment %}
+          <a href="{{ wa_url }}" target="_blank" rel="noopener"
+             style="display:inline-flex; align-items:center; gap:8px; margin-top:12px;
+                    background:#25D366; color:#fff; font-weight:600; font-size:14px;
+                    padding:10px 18px; border-radius:8px; text-decoration:none;">
+            💬 Avisar por WhatsApp
+          </a>
+        {% endif %}
       </div>
     </div>
 

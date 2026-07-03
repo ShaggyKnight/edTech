@@ -112,7 +112,14 @@ def email_preview(request, slug):
         )
 
     if request.GET.get('raw'):
-        return HttpResponse(html)
+        resp = HttpResponse(html)
+        # El preview embebe esta respuesta en un <iframe> de la misma
+        # pagina. X_FRAME_OPTIONS global es DENY (default de Django, y
+        # explicito en prod) — sin este header el browser bloquea el
+        # iframe y el preview se ve vacio. SAMEORIGIN solo permite
+        # framearlo desde ideasboutique.cl, no desde sitios terceros.
+        resp['X-Frame-Options'] = 'SAMEORIGIN'
+        return resp
 
     return render(request, 'accounts/email_preview.html', {
         'entry': entry,

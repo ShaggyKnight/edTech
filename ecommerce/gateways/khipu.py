@@ -209,6 +209,10 @@ class KhipuGateway(OnlinePaymentGateway):
             # muestra como pago no completado (puede reintentar).
             'cancel_url': return_url,
             'notify_url': self._notify_url(return_url),
+            # El default del panel es la API de notificacion 1.3 (form
+            # legacy SIN firma x-khipu-signature — nuestro webhook la
+            # rechazaria). Pedimos explicitamente el formato 3.0.
+            'notify_api_version': '3.0',
         }
         if recibo.cliente_email:
             payload['payer_email'] = recibo.cliente_email

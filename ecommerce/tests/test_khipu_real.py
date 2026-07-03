@@ -72,6 +72,9 @@ class KhipuIniciarPagoTests(TestCase):
         self.assertEqual(payload['currency'], 'CLP')
         self.assertEqual(payload['transaction_id'], f'IBR-{recibo.pk:08d}')
         self.assertEqual(payload['return_url'], RETURN_URL)
+        # El default del panel es la notificacion 1.3 (legacy, sin firma)
+        # — exigimos la 3.0 explicitamente o el webhook rechazaria todo.
+        self.assertEqual(payload['notify_api_version'], '3.0')
         # notify_url apunta a la ruta REAL del webhook (no un replace
         # fragil sobre el path del retorno).
         self.assertEqual(

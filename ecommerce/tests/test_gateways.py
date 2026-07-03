@@ -152,13 +152,17 @@ class KhipuWebhookTests(TestCase):
 
     @override_settings(KHIPU_RECEIVER_ID='r1', KHIPU_SECRET='topsecret')
     def test_webhook_firma_valida(self):
+        import time as _time
         gw = KhipuGateway()
         body = json.dumps({
             'payment_id': 'pay_abc',
             'transaction_id': f'IBR-{self.recibo.pk:08d}',
             'status': 'done',
         }).encode('utf-8')
-        timestamp = '1729550000'
+        # Khipu manda el timestamp en epoch MILISEGUNDOS; tiene que ser
+        # reciente (anti-replay). Firma en hex — ejercita el fallback
+        # (el formato oficial base64 se cubre en test_khipu_real).
+        timestamp = str(int(_time.time() * 1000))
         firma_obj = hmac.new(
             b'topsecret', f'{timestamp}.'.encode('utf-8') + body,
             hashlib.sha256,

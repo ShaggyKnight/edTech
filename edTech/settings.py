@@ -43,6 +43,9 @@ env = environ.Env(
     KLAP_WEBHOOK_SECRET=(str, ''),
     KLAP_BASE_URL=(str, 'https://sandbox.klap.cl'),
     # Khipu (transferencia bancaria) — comision mas baja.
+    # API v3: KHIPU_API_KEY va en el header `x-api-key` de cada llamada;
+    # KHIPU_SECRET es la "llave de cobrador" (firma HMAC de webhooks).
+    KHIPU_API_KEY=(str, ''),
     KHIPU_RECEIVER_ID=(str, ''),
     KHIPU_SECRET=(str, ''),
     KHIPU_BASE_URL=(str, 'https://payment-api.khipu.com'),
@@ -357,9 +360,10 @@ KLAP_API_KEY = env('KLAP_API_KEY')
 KLAP_WEBHOOK_SECRET = env('KLAP_WEBHOOK_SECRET')
 KLAP_BASE_URL = env('KLAP_BASE_URL')
 
-# Khipu — transferencia bancaria
-KHIPU_RECEIVER_ID = env('KHIPU_RECEIVER_ID')
-KHIPU_SECRET = env('KHIPU_SECRET')
+# Khipu — transferencia bancaria (API v3)
+KHIPU_API_KEY = env('KHIPU_API_KEY')          # x-api-key (llamadas API)
+KHIPU_RECEIVER_ID = env('KHIPU_RECEIVER_ID')  # id de cobrador (informativo)
+KHIPU_SECRET = env('KHIPU_SECRET')            # llave de cobrador (firma webhooks)
 KHIPU_BASE_URL = env('KHIPU_BASE_URL')
 # pk de bodega.Tienda que surte el canal online (0 = sin configurar)
 ECOMMERCE_TIENDA_ID = env('ECOMMERCE_TIENDA_ID') or None

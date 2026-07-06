@@ -6,6 +6,7 @@ app_name = 'bodega'
 
 urlpatterns = [
     path('', views.StockView.as_view(), name='stock'),
+    path('stock/exportar/', views.exportar_stock, name='exportar_stock'),
     path('reponer/', views.reponer_stock, name='reponer'),
     path('stock/<int:pk>/set/', views.set_stock, name='set_stock'),
     path('stock/agregar/', views.stock_agregar, name='stock_agregar'),
@@ -13,6 +14,7 @@ urlpatterns = [
 
     # Catálogo (CRUD desde el backoffice — Fase Ñ).
     path('productos/', views.lista_productos, name='lista_productos'),
+    path('productos/exportar/', views.exportar_productos, name='exportar_productos'),
     path('productos/nuevo/', views.producto_nuevo, name='producto_nuevo'),
     path('productos/<int:pk>/editar/', views.producto_editar, name='producto_editar'),
     path('productos/<int:pk>/set-precio/', views.set_precio, name='set_precio'),

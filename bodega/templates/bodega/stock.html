@@ -52,6 +52,11 @@
         <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn">+ Nuevo producto</a>
         <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Catálogo</a>
       {% endif %}
+      {% comment %}Exportar respeta los filtros activos (request.GET).{% endcomment %}
+      <a href="{% url 'bodega:exportar_stock' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+         class="bo-btn" title="Descarga el stock del filtro actual en Excel/CSV">
+        ⬇ Exportar
+      </a>
       <a href="{% url 'admin:bodega_movimientostock_changelist' %}" class="bo-btn">Movimientos</a>
     </div>
   </div>

@@ -10,7 +10,9 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import (
+    login_required, permission_required, user_passes_test,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db import transaction
 from django.db.models import Count, F, Q, Sum, Value
@@ -21,6 +23,7 @@ from django.urls import reverse
 from django.views import generic
 from django.views.decorators.http import require_POST
 
+from bodega.export import csv_response
 from bodega.forms import (
     MaterialForm, OfertaForm, ProductoForm, ProductoVarianteForm,
     RendimientoForm, StockInicialForm,
@@ -108,6 +111,76 @@ def _puede_gestionar_ofertas(user) -> bool:
     return user.groups.filter(name__in=[ADMIN, OPERADOR]).exists()
 
 
+def _stock_filtrado(request):
+    """Aplica los filtros de la pantalla de stock.
+
+    Devuelve (qs, filtros, mostrar_todos). Compartido por StockView y la
+    exportacion CSV para que el export respete EXACTAMENTE los mismos
+    filtros que se ven en pantalla.
+    """
+    qs = (
+        StockTienda.objects
+        .select_related(
+            'tienda',
+            'variante__producto', 'variante__producto__familia',
+            'variante__producto__colegio',
+            'producto', 'producto__familia', 'producto__colegio',
+        )
+        # Valores de la variante (talla/volumen/concentracion) para
+        # mostrarlos en la columna "Variante" sin N+1.
+        .prefetch_related('variante__valores__atributo')
+        .annotate(umbral_efectivo=_umbral_expr())
+        .order_by('tienda__nombre_organizacion', 'producto__nombre',
+                  'variante__producto__nombre', 'variante__sku')
+    )
+
+    tienda_id = (request.GET.get('tienda') or '').strip()
+    familia_id = (request.GET.get('familia') or '').strip()
+    colegio_id = (request.GET.get('colegio') or '').strip()
+    # Filtro unificado de visibilidad de stock. Antes habian dos
+    # selectores ("Mostrar" y "Stock") que se pisaban — `solo` ahora
+    # tiene 4 opciones que cubren todos los casos. Retrocompat: el
+    # viejo `stock=todos` se sigue aceptando.
+    solo = (request.GET.get('solo') or '').strip()
+    if request.GET.get('stock') == 'todos' and not solo:
+        solo = 'todos'  # retrocompat con URLs viejas
+    mostrar_todos = (solo == 'todos')
+    q = (request.GET.get('q') or '').strip()
+
+    if tienda_id.isdigit():
+        qs = qs.filter(tienda_id=int(tienda_id))
+    if familia_id.isdigit():
+        f = int(familia_id)
+        qs = qs.filter(Q(producto__familia_id=f) | Q(variante__producto__familia_id=f))
+    if colegio_id.isdigit():
+        c = int(colegio_id)
+        qs = qs.filter(Q(producto__colegio_id=c) | Q(variante__producto__colegio_id=c))
+    if solo == 'cero':
+        qs = qs.filter(cantidad=STOCK_AGOTADO)
+    elif solo == 'bajo':
+        qs = qs.filter(cantidad__lte=F('umbral_efectivo'), cantidad__gt=0)
+    elif solo == 'todos':
+        # No aplica filtro de cantidad — muestra TODO.
+        pass
+    else:
+        # Default: oculta agotados.
+        qs = qs.filter(cantidad__gt=0)
+    if q:
+        from edTech.search import normalize_text
+        q_norm = normalize_text(q)
+        qs = qs.filter(
+            Q(producto__nombre_buscable__contains=q_norm)
+            | Q(variante__producto__nombre_buscable__contains=q_norm)
+            | Q(variante__sku__icontains=q)
+        )
+
+    filtros = {
+        'tienda': tienda_id, 'familia': familia_id, 'colegio': colegio_id,
+        'solo': solo, 'q': q,
+    }
+    return qs, filtros, mostrar_todos
+
+
 class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateView):
     """Stock de productos por tienda con filtros y carga de reposición.
 
@@ -133,62 +206,8 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
         ctx = super().get_context_data(**kwargs)
         request = self.request
 
-        qs = (
-            StockTienda.objects
-            .select_related(
-                'tienda',
-                'variante__producto', 'variante__producto__familia',
-                'variante__producto__colegio',
-                'producto', 'producto__familia', 'producto__colegio',
-            )
-            # Valores de la variante (talla/volumen/concentracion) para
-            # mostrarlos en la columna "Variante" sin N+1.
-            .prefetch_related('variante__valores__atributo')
-            .annotate(umbral_efectivo=_umbral_expr())
-            .order_by('tienda__nombre_organizacion', 'producto__nombre',
-                      'variante__producto__nombre', 'variante__sku')
-        )
-
-        tienda_id = (request.GET.get('tienda') or '').strip()
-        familia_id = (request.GET.get('familia') or '').strip()
-        colegio_id = (request.GET.get('colegio') or '').strip()
-        # Filtro unificado de visibilidad de stock. Antes habian dos
-        # selectores ("Mostrar" y "Stock") que se pisaban — `solo` ahora
-        # tiene 4 opciones que cubren todos los casos. Retrocompat: el
-        # viejo `stock=todos` se sigue aceptando.
-        solo = (request.GET.get('solo') or '').strip()
-        if request.GET.get('stock') == 'todos' and not solo:
-            solo = 'todos'  # retrocompat con URLs viejas
-        mostrar_todos = (solo == 'todos')
-        q = (request.GET.get('q') or '').strip()
-
-        if tienda_id.isdigit():
-            qs = qs.filter(tienda_id=int(tienda_id))
-        if familia_id.isdigit():
-            f = int(familia_id)
-            qs = qs.filter(Q(producto__familia_id=f) | Q(variante__producto__familia_id=f))
-        if colegio_id.isdigit():
-            c = int(colegio_id)
-            qs = qs.filter(Q(producto__colegio_id=c) | Q(variante__producto__colegio_id=c))
-        if solo == 'cero':
-            qs = qs.filter(cantidad=STOCK_AGOTADO)
-        elif solo == 'bajo':
-            qs = qs.filter(cantidad__lte=F('umbral_efectivo'), cantidad__gt=0)
-        elif solo == 'todos':
-            # No aplica filtro de cantidad — muestra TODO.
-            pass
-        else:
-            # Default: oculta agotados.
-            qs = qs.filter(cantidad__gt=0)
-        if q:
-            from edTech.search import normalize_text
-            q_norm = normalize_text(q)
-            qs = qs.filter(
-                Q(producto__nombre_buscable__contains=q_norm)
-                | Q(variante__producto__nombre_buscable__contains=q_norm)
-                | Q(variante__sku__icontains=q)
-            )
-
+        qs, filtros, mostrar_todos = _stock_filtrado(request)
+        tienda_id = filtros['tienda']
         items = list(qs)
 
         # KPIs sobre el set completo (no solo el filtrado), para que reflejen
@@ -219,10 +238,7 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
             'tiendas': Tienda.objects.filter(activa=True).order_by('nombre_organizacion'),
             'familias': Familia.objects.order_by('nombre'),
             'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
-            'filtros': {
-                'tienda': tienda_id, 'familia': familia_id, 'colegio': colegio_id,
-                'solo': solo, 'q': q,
-            },
+            'filtros': filtros,
             'mostrar_todos': mostrar_todos,
             'umbral_default': STOCK_BAJO,
             'puede_reponer': _puede_reponer(request.user),
@@ -230,6 +246,45 @@ class StockView(LoginRequiredMixin, PermissionRequiredMixin, generic.TemplateVie
             'puede_bulk_stock': _puede_gestionar_ofertas(request.user),
         })
         return ctx
+
+
+@login_required
+@permission_required('bodega.view_stocktienda', login_url='login')
+def exportar_stock(request):
+    """Exporta el stock a CSV, con los filtros aplicados en pantalla."""
+    qs, _filtros, _mostrar = _stock_filtrado(request)
+
+    def estado(s):
+        if s.cantidad == 0:
+            return 'Agotado'
+        if s.cantidad <= s.umbral_efectivo:
+            return 'Bajo'
+        return 'OK'
+
+    columnas = [
+        'Tienda', 'Familia', 'Producto', 'Variante', 'SKU',
+        'Cantidad', 'Estado',
+    ]
+
+    def filas():
+        for s in qs:
+            producto = s.variante.producto if s.variante_id else s.producto
+            familia = producto.familia.nombre if producto and producto.familia_id else ''
+            variante_txt = (
+                ' · '.join(v.valor for v in s.variante.valores.all())
+                if s.variante_id else ''
+            )
+            yield [
+                s.tienda.nombre_organizacion,
+                familia,
+                producto.nombre if producto else '',
+                variante_txt,
+                s.variante.sku if s.variante_id else '',
+                s.cantidad,
+                estado(s),
+            ]
+
+    return csv_response('stock', columnas, filas())
 
 
 @login_required
@@ -708,10 +763,12 @@ reponer_required = user_passes_test(_puede_reponer, login_url='login')
 taller_required = user_passes_test(_puede_taller, login_url='login')
 
 
-@login_required
-@reponer_required
-def lista_productos(request):
-    """Listado de productos con filtros para gestión rápida."""
+def _filtrar_productos(request):
+    """Aplica los filtros del listado de productos y devuelve (qs, filtros).
+
+    Compartido por la vista de listado y la exportacion CSV para que el
+    export respete EXACTAMENTE los mismos filtros que se ven en pantalla.
+    """
     qs = (
         Producto.objects.all()
         .select_related('familia', 'colegio')
@@ -747,19 +804,29 @@ def lista_productos(request):
     elif incompleto == 'sin_precio':
         qs = qs.filter(Q(precio_base__isnull=True) | Q(precio_base=0))
 
+    filtros = {
+        'q': q, 'familia': familia_id, 'colegio': colegio_id,
+        'estado': estado, 'incompleto': incompleto,
+    }
+    return qs.order_by('familia__nombre', 'nombre'), filtros
+
+
+@login_required
+@reponer_required
+def lista_productos(request):
+    """Listado de productos con filtros para gestión rápida."""
+    qs, filtros = _filtrar_productos(request)
+
     base_incompletos = Producto.objects.filter(activo=True)
     contexto = {
-        'productos': qs.order_by('familia__nombre', 'nombre'),
+        'productos': qs,
         'familias': Familia.objects.order_by('nombre'),
         'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
         'n_sin_foto': base_incompletos.filter(imagen='').count(),
         'n_sin_precio': base_incompletos.filter(
             Q(precio_base__isnull=True) | Q(precio_base=0)
         ).count(),
-        'filtros': {
-            'q': q, 'familia': familia_id, 'colegio': colegio_id,
-            'estado': estado, 'incompleto': incompleto,
-        },
+        'filtros': filtros,
         # La edicion inline de precio + toggle de `activo` son solo
         # para admin / superuser. El bodeguero ve pero no modifica
         # (es decision comercial, no de stock).
@@ -770,6 +837,53 @@ def lista_productos(request):
     if request.htmx:
         return render(request, 'bodega/_productos_lista_tabla.html', contexto)
     return render(request, 'bodega/productos_lista.html', contexto)
+
+
+@login_required
+@reponer_required
+def exportar_productos(request):
+    """Exporta el listado de productos a CSV, con los filtros aplicados.
+
+    Usa el mismo `_filtrar_productos` que la pantalla, asi el archivo
+    contiene exactamente las filas que el usuario ve. La columna de
+    costo/margen solo aparece para quien puede gestionar precios
+    (admin/operador) — el CSV no expone mas de lo que ya ve en la UI.
+    """
+    qs, _filtros = _filtrar_productos(request)
+    ve_costo = _puede_gestionar_ofertas(request.user)
+
+    columnas = [
+        'Nombre', 'Familia', 'Colegio', 'Activo', 'Precio',
+        'Variantes', 'Con imagen', 'Codigo de barras',
+        'Marca', 'Genero', 'Concentracion', 'Medida (ml)',
+        'Familia olfativa', 'Notas clave',
+    ]
+    if ve_costo:
+        columnas.insert(5, 'Precio costo')  # justo despues de "Precio"
+
+    def filas():
+        for p in qs:
+            fila = [
+                p.nombre,
+                p.familia.nombre if p.familia_id else '',
+                p.colegio.nombre if p.colegio_id else '',
+                p.activo,
+                int(p.precio_base or 0),
+                p.n_variantes,
+                bool(p.imagen),
+                p.codigo_barras or '',
+                p.marca,
+                p.get_genero_display() if p.genero else '',
+                p.get_concentracion_display() if p.concentracion else '',
+                p.medida_ml or '',
+                p.familia_olfativa,
+                p.notas_clave,
+            ]
+            if ve_costo:
+                fila.insert(5, int(p.precio_costo or 0))
+            yield fila
+
+    return csv_response('productos', columnas, filas())
 
 
 @login_required

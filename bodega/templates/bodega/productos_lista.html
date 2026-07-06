@@ -40,6 +40,15 @@
     </div>
     <div style="display:flex; gap:8px;">
       <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>
+      {% comment %}
+        Exportar respeta los filtros activos: se re-envian via
+        request.GET.urlencode para que el CSV traiga las mismas filas
+        que la tabla de abajo.
+      {% endcomment %}
+      <a href="{% url 'bodega:exportar_productos' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+         class="bo-btn" title="Descarga los productos del filtro actual en Excel/CSV">
+        ⬇ Exportar
+      </a>
       <a href="{% url 'bodega:stock' %}" class="bo-btn">Ver stock</a>
     </div>
   </div>

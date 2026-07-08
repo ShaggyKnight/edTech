@@ -73,15 +73,21 @@
         {% if form.cliente_nombre.errors %}<div class="err">{{ form.cliente_nombre.errors|join:", " }}</div>{% endif %}
       </div>
 
+      <div style="background:var(--cream-3,#faf6ef); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:18px; font-size:13px; color:var(--ink-60);">
+        📬 Déjanos <strong>al menos uno</strong>: tu email o tu celular.
+        Con el email te enviamos la boleta; con el celular te avisamos por
+        WhatsApp cuando tu pedido esté listo.
+      </div>
+
       <div class="field">
-        <label>Email *</label>
+        <label>Email</label>
         {{ form.cliente_email }}
-        <div class="hint">Recibirás la boleta en este correo.</div>
+        <div class="hint">Para enviarte la boleta de tu compra.</div>
         {% if form.cliente_email.errors %}<div class="err">{{ form.cliente_email.errors|join:", " }}</div>{% endif %}
       </div>
 
       <div class="field">
-        <label>Celular (WhatsApp) *</label>
+        <label>Celular (WhatsApp)</label>
         {{ form.cliente_telefono }}
         <div class="hint">Te avisamos por WhatsApp cuando tu pedido esté listo. 📱</div>
         {% if form.cliente_telefono.errors %}<div class="err">{{ form.cliente_telefono.errors|join:", " }}</div>{% endif %}

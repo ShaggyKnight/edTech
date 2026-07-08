@@ -56,7 +56,7 @@ class _BaseCheckout(TestCase):
         return self.client.post(reverse('ecommerce:checkout_iniciar'), data)
 
 
-class TelefonoRequeridoTests(_BaseCheckout):
+class ContactoEmailOTelefonoTests(_BaseCheckout):
 
     def test_telefono_se_guarda_normalizado(self):
         resp = self._post_checkout()
@@ -64,10 +64,27 @@ class TelefonoRequeridoTests(_BaseCheckout):
         recibo = ReciboVenta.objects.latest('pk')
         self.assertEqual(recibo.cliente_telefono, '+56955443322')
 
-    def test_sin_telefono_rechaza(self):
+    def test_solo_email_es_valido(self):
+        """El cliente puede dar SOLO email (sin telefono)."""
         resp = self._post_checkout(cliente_telefono='')
-        # Vuelve al form con error, no crea recibo.
+        self.assertEqual(resp.status_code, 302)
+        recibo = ReciboVenta.objects.latest('pk')
+        self.assertEqual(recibo.cliente_email, 'maria@example.com')
+        self.assertEqual(recibo.cliente_telefono, '')
+
+    def test_solo_telefono_es_valido(self):
+        """El cliente puede dar SOLO telefono (sin email)."""
+        resp = self._post_checkout(cliente_email='')
+        self.assertEqual(resp.status_code, 302)
+        recibo = ReciboVenta.objects.latest('pk')
+        self.assertEqual(recibo.cliente_telefono, '+56955443322')
+        self.assertEqual(recibo.cliente_email, '')
+
+    def test_sin_email_ni_telefono_rechaza(self):
+        resp = self._post_checkout(cliente_email='', cliente_telefono='')
+        # Vuelve al form con error (HTTP 400), no crea recibo.
         self.assertEqual(ReciboVenta.objects.count(), 0)
+        self.assertContains(resp, 'al menos un dato de contacto', status_code=400)
 
     def test_telefono_invalido_rechaza(self):
         resp = self._post_checkout(cliente_telefono='12345')

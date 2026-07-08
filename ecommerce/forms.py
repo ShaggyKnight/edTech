@@ -37,15 +37,16 @@ class ResenaForm(forms.Form):
 class CheckoutForm(forms.Form):
     """Datos del cliente en el checkout.
 
-    El TELEFONO es el identificador de contacto principal (requerido):
-    por ahi van los avisos de WhatsApp del pedido. El RUT se elimino del
-    checkout — no emitimos factura y la boleta al consumidor no lo
-    necesita. La direccion solo existe si FEATURE_ENVIOS esta activa;
-    con la flag apagada la tienda opera solo con retiro en local.
+    El cliente decide como quiere que lo contactemos: EMAIL o TELEFONO
+    (al menos uno, no los dos obligatorios). Con email le llega la boleta
+    por correo; con telefono lo avisamos por WhatsApp. El RUT se elimino
+    del checkout — no emitimos factura y la boleta al consumidor no lo
+    necesita. La direccion solo existe si FEATURE_ENVIOS esta activa; con
+    la flag apagada la tienda opera solo con retiro en local.
     """
     cliente_nombre = forms.CharField(max_length=200)
-    cliente_email = forms.EmailField()
-    cliente_telefono = forms.CharField(max_length=20)
+    cliente_email = forms.EmailField(required=False)
+    cliente_telefono = forms.CharField(max_length=20, required=False)
     cliente_direccion = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
 
     def __init__(self, *args, **kwargs):
@@ -58,14 +59,16 @@ class CheckoutForm(forms.Form):
             self.fields.pop('cliente_direccion', None)
 
     def clean_cliente_telefono(self):
-        """Normaliza a formato canonico +569XXXXXXXX.
+        """Normaliza a formato canonico +569XXXXXXXX si viene algo.
 
         Acepta lo tipico: '+56 9 5544 3322', '9 5544 3322', '955443322',
-        '56955443322'. Rechaza lo que no parezca celular chileno — es el
-        canal de aviso del pedido (WhatsApp), tiene que servir.
+        '56955443322'. Vacio es valido (el cliente puede dar solo email);
+        la exigencia de "al menos uno" se valida en clean().
         """
         import re
-        crudo = self.cleaned_data.get('cliente_telefono', '')
+        crudo = (self.cleaned_data.get('cliente_telefono') or '').strip()
+        if not crudo:
+            return ''
         digitos = re.sub(r'\D', '', crudo)
         if digitos.startswith('56'):
             digitos = digitos[2:]
@@ -76,6 +79,19 @@ class CheckoutForm(forms.Form):
                 'Ingresa un celular chileno válido (ej: +56 9 5544 3322).'
             )
         return f'+56{digitos}'
+
+    def clean(self):
+        """Exige AL MENOS un canal de contacto (email o telefono)."""
+        cleaned = super().clean()
+        email = cleaned.get('cliente_email')
+        telefono = cleaned.get('cliente_telefono')
+        if not email and not telefono:
+            raise forms.ValidationError(
+                'Déjanos al menos un dato de contacto: tu email o tu celular. '
+                'Con el email te enviamos la boleta; con el celular te '
+                'avisamos por WhatsApp cuando esté listo.'
+            )
+        return cleaned
 
 
 class EditarPerfilForm(forms.ModelForm):

@@ -51,21 +51,18 @@ ROLE_PERMISSIONS = {
             'movimientostock': ['add', 'view'],
         },
     },
-    # Despachador prepara y despacha pedidos online. Ve solo lo necesario
-    # para identificar productos a empacar (sin precios costo, sin proveedores)
-    # y para marcar el pedido como despachado.
+    # Despachador: SOLO la pantalla de despacho (/despacho/). Esa pantalla
+    # esta gateada por ROL (user_passes_test), no por permisos de modelo,
+    # asi que el despachador no necesita permisos de catalogo/bodega/pos
+    # para trabajar. Deliberadamente NO se le dan view_stocktienda ni
+    # view_reciboventa porque esos permisos harian aparecer las secciones
+    # "Stock" y "Ventas" en el sidebar — y la dueña lo quiere puro despacho.
+    # Ver los productos del pedido para empacar no requiere permiso (los
+    # templates los muestran via ORM). Se deja change_reciboventa como
+    # registro honesto de que marca pedidos como despachados.
     DESPACHADOR: {
-        'catalogo': {
-            'producto': ['view'],
-            'productovariante': ['view'],
-        },
-        'bodega': {
-            'tienda': ['view'],
-            'stocktienda': ['view'],
-        },
         'pos': {
-            'reciboventa': ['view', 'change'],   # change = marcar despachado
-            'reciboventadetalle': ['view'],
+            'reciboventa': ['change'],   # marcar despachado (igual es role-gated)
         },
     },
     # Operador: la operación COMPLETA de la tienda en un solo rol

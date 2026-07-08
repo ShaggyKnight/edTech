@@ -171,6 +171,13 @@
             </a>
           {% endif %}
 
+          {% comment %}
+            Toda la seccion Catalogo se muestra solo a quien gestiona
+            catalogo (admin/operador/bodeguero). Antes el header salia
+            siempre — un despachador o cajero (que solo tienen VIEW)
+            veian un encabezado "Catalogo" sin links debajo.
+          {% endcomment %}
+          {% if user|has_any_role:'admin,operador,bodeguero' %}
           <div class="bo-side-section">Catálogo</div>
           {% if perms.catalogo.change_producto or user.is_superuser %}
             <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_productos' %}active{% endif %}"
@@ -204,6 +211,7 @@
               Etiquetas
             </a>
           {% endif %}
+          {% endif %}{# /seccion Catalogo #}
 
           {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
             <div class="bo-side-section">Reportes</div>

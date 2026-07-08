@@ -145,9 +145,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (CRUD productos / variantes / materiales)'))
                 self.stdout.write(self.style.NOTICE('    [--] /pos/       (NO)'))
             elif 'despachador' in roles_relevantes:
-                self.stdout.write(self.style.SUCCESS('    [OK] /despacho/  (cola de pedidos online: preparar y despachar)'))
-                self.stdout.write(self.style.SUCCESS('    [OK] /bodega/    (solo VER stock, sin editar)'))
-                self.stdout.write(self.style.NOTICE('    [--] /pos/       (NO)'))
+                self.stdout.write(self.style.SUCCESS('    [OK] /despacho/  (SOLO la cola de pedidos online: preparar y despachar)'))
+                self.stdout.write(self.style.NOTICE('    [--] /pos/  /bodega/  (NO — despachador es puro despacho)'))
             else:
                 self.stdout.write(self.style.WARNING('    Sin rol staff. Cliente normal → solo /tienda/cuenta/'))
             self.stdout.write(self.style.NOTICE('    [--] /reportes/  (NO — requiere rol admin)'))

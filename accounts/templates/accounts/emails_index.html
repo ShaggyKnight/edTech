@@ -93,8 +93,8 @@
     <ul style="margin:8px 0 0; padding-left:22px;">
       <li><strong>HTML</strong> renderea el template con mock data en una nueva ventana — útil para iterar diseño, ver responsive, copy.</li>
       <li><strong>Enviar a mí</strong> manda el email real vía SMTP de Zoho a <code>{{ request.user.email|default:"tu email" }}</code>. Útil para ver cómo se ve en Gmail/Outlook/Apple Mail (renderers reales).</li>
-      <li>Los <strong>feature flags</strong> en rojo (OFF) significan que el email <strong>no se manda automáticamente</strong> en producción. Encendelos en <code>.env</code> con <code>FEATURE_EMAIL_*=True</code> cuando estés conforme con el diseño.</li>
-      <li>Si encontrás un bug en algún template (variable que no existe, link roto), abrí <code>accounts/email_previews.py</code> y comparalo con <code>ecommerce/emails.py</code> — varios pasan contextos desalineados.</li>
+      <li>Los <strong>feature flags</strong> en rojo (OFF) significan que el email <strong>no se manda automáticamente</strong> en producción. Enciéndelos en <code>.env</code> con <code>FEATURE_EMAIL_*=True</code> cuando estés conforme con el diseño.</li>
+      <li>Si encuentras un bug en algún template (variable que no existe, link roto), abre <code>accounts/email_previews.py</code> y compáralo con <code>ecommerce/emails.py</code> — varios pasan contextos desalineados.</li>
     </ul>
   </div>
 

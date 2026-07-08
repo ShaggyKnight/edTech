@@ -4,7 +4,8 @@ WhatsApp Business permite plantillas pre-aprobadas pero la mayoría del tráfico
 real de Blanca es chat directo. Acá van **copies listos para copy-paste**
 manteniendo el tono familiar de la marca.
 
-Voseo neutro chileno (tuteo + "po" ocasional), mayúsculas solo al inicio.
+**Español chileno** (tuteo cercano: "quieres", "ven", "pasa" — nunca voseo
+argentino tipo "querés/vení"), mayúsculas solo al inicio.
 Los `{variable}` van entre llaves para que Blanca los reemplace al pegar.
 
 ---
@@ -14,9 +15,9 @@ Los `{variable}` van entre llaves para que Blanca los reemplace al pegar.
 ```
 ¡Hola {nombre}! ✨
 Soy Blanca de Ideas Boutique. Acabo de recibir tu pedido #{numero}
-por ${total}. Te aviso cuando esté listo para retiro o despacho 🙌
+por ${total}. Te aviso cuando esté listo para retiro 🙌
 
-Si querés hacer algún cambio en este pedido, escribime
+Si quieres hacer algún cambio en este pedido, escríbeme
 en las próximas 2 horas.
 
 — Blanca, Ideas Boutique
@@ -31,10 +32,10 @@ Caupolicán 437-B · Los Vilos
 {nombre}, tu pedido #{numero} ya está listo para retiro 📦
 
 Te espero en Caupolicán 437-B, Los Vilos.
-Horario: lunes a sábado de 9 a 19hs.
+Horario: lunes a sábado de 9 a 19 hrs.
 
-Acordate de traer la boleta (digital o impresa).
-Si necesitas que te lo lleve alguien, mandame su nombre y RUT.
+Recuerda traer la boleta (digital o impresa).
+Si necesitas que lo retire otra persona, mándame su nombre y RUT.
 
 ¡Hasta pronto!
 ```
@@ -64,7 +65,7 @@ Cualquier cosa me avisas. ¡Gracias por confiar!
 ```
 ¡{nombre}! 👗
 El encargo de {nombre_hijo} ya está listo para retiro.
-Pasá cuando puedas por Caupolicán 437-B 🙌
+Pasa cuando puedas por Caupolicán 437-B 🙌
 
 — Ideas Boutique
 ```
@@ -76,8 +77,8 @@ Pasá cuando puedas por Caupolicán 437-B 🙌
 ```
 ¡{nombre}! Volvió la talla {talla} de {producto} que esperabas 🎉
 
-Te aviso primero a vos porque dejaste tu correo en la web.
-Si la querés, reservala respondiendo este mensaje.
+Te aviso primero a ti porque dejaste tu correo en la web.
+Si la quieres, resérvala respondiendo este mensaje.
 El stock se va rápido en esta época.
 
 — Blanca
@@ -90,11 +91,11 @@ El stock se va rápido en esta época.
 ```
 ¡Hola {nombre}! ¿Cómo están?
 
-Llegó febrero y arrancamos con los uniformes para marzo.
+Llegó febrero y partimos con los uniformes para marzo.
 El año pasado le compraste a {hijos} — si {pronombre} subió
-un talle, dejame saber para tenerle todo listo.
+de talla, avísame para tenerle todo listo.
 
-Estoy abriendo de 9 a 19hs todos los días.
+Estoy abriendo de 9 a 19 hrs todos los días.
 También te lo puedo dejar listo para que pases sin esperar.
 
 Un abrazo,
@@ -109,11 +110,11 @@ Blanca · Ideas Boutique
 ¡Hola! Claro que se puede cambiar.
 
 Para que sea más rápido:
-1. Veni con la boleta (o pasame el #{numero})
+1. Ven con la boleta (o mándame el #{numero})
 2. La prenda tiene que estar sin uso y con etiqueta
 3. Tenemos hasta 15 días para hacer el cambio
 
-¿Cuándo te queda mejor pasar? 🙏
+¿Cuándo te acomoda pasar? 🙏
 ```
 
 ---
@@ -125,12 +126,12 @@ Para que sea más rápido:
 
 Sí, tengo {producto} en talla {talla} 🙌
 Precio: ${precio}
-Tenés 3 opciones:
-  - Pasás al local (Caupolicán 437-B)
-  - Te lo despacho a tu casa
-  - Lo comprás online en ideasboutique.cl
+Tienes 3 opciones:
+  - Pasas al local (Caupolicán 437-B)
+  - Lo dejamos reservado a tu nombre
+  - Lo compras online en ideasboutique.cl
 
-Avisame qué te queda mejor 💛
+Avísame qué te acomoda más 💛
 — Blanca
 ```
 
@@ -142,9 +143,9 @@ Avisame qué te queda mejor 💛
 ¡Hola! 🌙 Estoy fuera de horario ahora.
 
 Te leo y respondo apenas pueda — mi horario es:
-Lunes a sábado, de 9 a 19hs.
+Lunes a sábado, de 9 a 19 hrs.
 
-Mientras tanto, podés ver el catálogo en ideasboutique.cl
+Mientras tanto, puedes ver el catálogo en ideasboutique.cl
 
 Gracias por escribirme,
 — Blanca, Ideas Boutique
@@ -159,12 +160,12 @@ Gracias por escribirme,
 
 Hace dos semanas te llevaste {producto}. ¿Qué tal te resultó?
 
-Si tenés un minuto, me ayuda muchísimo si dejás una reseña corta
+Si tienes un minuto, me ayuda muchísimo que dejes una reseña corta
 en ideasboutique.cl — las opiniones de las familias del barrio
 son lo que más confianza da a otras mamás que recién están
 empezando con el colegio.
 
-Sin compromiso, eh — gracias por la paciencia 🙏
+Sin compromiso — ¡gracias por la paciencia! 🙏
 — Blanca
 ```
 
@@ -172,10 +173,12 @@ Sin compromiso, eh — gracias por la paciencia 🙏
 
 ## Tips de tono
 
-- **Voseo neutro chileno**: "te aviso", "vení", "pasá". Nada de "tú vienes" formal.
+- **Español chileno, tuteo cercano**: "te aviso", "ven", "pasa",
+  "¿te acomoda?", "al tiro". NUNCA voseo argentino ("querés", "vení",
+  "pasá") ni tuteo acartonado ("usted").
 - **Emojis al final** de oraciones, máximo 1-2 por mensaje. Nunca al principio.
 - **Firmar como "Blanca"** o "— Blanca, Ideas Boutique". Trato 1:1, no corporativo.
-- **Hora civil 9 a 19hs**, no "09:00 - 19:00".
+- **Horario "9 a 19 hrs"**, no "09:00 - 19:00" ni el argentino "19hs".
 - **"Caupolicán 437-B"** siempre completo cuando se menciona ubicación.
 - **"15 días"** para cambios. **No ofrecer "ajustes"** — Ideas no presta ese servicio.
 - **Nada de "estimado/a cliente"** — siempre por nombre o "¡Hola!".

@@ -23,39 +23,47 @@
   {% if productos %}
     {% if puede_editar_activo %}
       {% comment %}
-        Bloque 11: form de bulk que envuelve la tabla. Los checkboxes
-        viajan como ids, los botones del bulk-bar como accion.
-      {% endcomment %}
-      <form id="bulk-productos-form"
-            method="post"
-            action="{% url 'bodega:productos_bulk_action' %}"
-            hx-post="{% url 'bodega:productos_bulk_action' %}"
-            hx-target="#productos-tabla"
-            hx-swap="outerHTML">
-        {% csrf_token %}
-        {# Filtros vigentes para que la tabla se re-renderice con ellos. #}
-        <input type="hidden" name="q" value="{{ filtros.q }}">
-        <input type="hidden" name="familia" value="{{ filtros.familia }}">
-        <input type="hidden" name="colegio" value="{{ filtros.colegio }}">
-        <input type="hidden" name="estado" value="{{ filtros.estado }}">
+        Bloque 11: barra de acciones masivas SIN <form>.
 
-        {# Barra de bulk: oculta hasta que haya >=1 checkbox marcado. #}
-        <div class="bulk-bar" id="bulk-bar" hidden>
-          <strong><span id="bulk-count">0</span> seleccionado(s)</strong>
-          <div class="bulk-bar-actions">
-            <button type="submit" name="accion" value="activar"
-                    class="bo-btn bo-btn-sm bo-btn-primary">
-              Activar
-            </button>
-            <button type="submit" name="accion" value="desactivar"
-                    class="bo-btn bo-btn-sm">
-              Desactivar
-            </button>
-            <button type="button" id="bulk-clear" class="bo-btn bo-btn-sm bo-btn-ghost">
-              Limpiar selección
-            </button>
-          </div>
+        Por que sin <form>: las celdas de precio/estado tienen sus propios
+        controles HTMX; si la tabla fuera un <form>, esos controles quedan
+        anidados (el navegador borra los <form> internos) o arrastran los
+        174 inputs `precio_base` del form al postear una sola celda (Django
+        se queda con el ultimo → editaba el producto equivocado). Sin form,
+        cada celda postea solo su valor. El bulk gatilla via HTMX incluyendo
+        los checkboxes marcados + los filtros. CSRF por header X-CSRFToken.
+      {% endcomment %}
+      {# Filtros vigentes para re-render (los incluye el bulk via hx-include). #}
+      <input type="hidden" name="q" value="{{ filtros.q }}" class="bulk-filtro">
+      <input type="hidden" name="familia" value="{{ filtros.familia }}" class="bulk-filtro">
+      <input type="hidden" name="colegio" value="{{ filtros.colegio }}" class="bulk-filtro">
+      <input type="hidden" name="estado" value="{{ filtros.estado }}" class="bulk-filtro">
+
+      {# Barra de bulk: oculta hasta que haya >=1 checkbox marcado. #}
+      <div class="bulk-bar" id="bulk-bar" hidden>
+        <strong><span id="bulk-count">0</span> seleccionado(s)</strong>
+        <div class="bulk-bar-actions">
+          <button type="button"
+                  class="bo-btn bo-btn-sm bo-btn-primary"
+                  hx-post="{% url 'bodega:productos_bulk_action' %}"
+                  hx-include=".bulk-checkbox:checked, .bulk-filtro"
+                  hx-vals='{"accion":"activar"}'
+                  hx-target="#productos-tabla" hx-swap="outerHTML">
+            Activar
+          </button>
+          <button type="button"
+                  class="bo-btn bo-btn-sm"
+                  hx-post="{% url 'bodega:productos_bulk_action' %}"
+                  hx-include=".bulk-checkbox:checked, .bulk-filtro"
+                  hx-vals='{"accion":"desactivar"}'
+                  hx-target="#productos-tabla" hx-swap="outerHTML">
+            Desactivar
+          </button>
+          <button type="button" id="bulk-clear" class="bo-btn bo-btn-sm bo-btn-ghost">
+            Limpiar selección
+          </button>
         </div>
+      </div>
     {% endif %}
 
     <table class="bo-table">
@@ -133,20 +141,20 @@
     </table>
 
     {% if puede_editar_activo %}
-      </form>
-
       <script>
         (function () {
           // Bloque 11: vanilla JS para enable/disable de la bulk-bar
           // segun cuantos checkboxes esten marcados. Se ejecuta tras
           // cada swap HTMX (el script se re-incluye en el partial).
-          var form = document.getElementById('bulk-productos-form');
-          if (!form) return;
+          // Ya no hay <form> de bulk (ver comentario arriba): scope a
+          // la tabla.
+          var tabla = document.getElementById('productos-tabla');
+          if (!tabla) return;
           var bar = document.getElementById('bulk-bar');
           var count = document.getElementById('bulk-count');
           var selectAll = document.getElementById('bulk-select-all');
           var clearBtn = document.getElementById('bulk-clear');
-          var checks = form.querySelectorAll('.bulk-checkbox');
+          var checks = tabla.querySelectorAll('.bulk-checkbox');
 
           function refresh() {
             var n = 0;

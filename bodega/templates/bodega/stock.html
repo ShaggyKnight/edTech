@@ -52,8 +52,15 @@
         <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn">+ Nuevo producto</a>
         <a href="{% url 'bodega:lista_productos' %}" class="bo-btn">Catálogo</a>
       {% endif %}
-      {% comment %}Exportar respeta los filtros activos (request.GET).{% endcomment %}
+      {% comment %}
+        Exportar respeta los filtros activos. El form filtra via HTMX con
+        hx-push-url=true, asi que window.location.search tiene los filtros
+        vigentes; el onclick reconstruye el href al momento del click (el
+        href del render inicial se queda sin los filtros que se aplican
+        despues). El href server-side queda como fallback sin-JS.
+      {% endcomment %}
       <a href="{% url 'bodega:exportar_stock' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+         onclick="this.href='{% url 'bodega:exportar_stock' %}' + window.location.search"
          class="bo-btn" title="Descarga el stock del filtro actual en Excel/CSV">
         ⬇ Exportar
       </a>

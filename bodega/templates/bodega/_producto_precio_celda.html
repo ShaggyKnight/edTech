@@ -11,6 +11,13 @@
 {% endcomment %}
 <td class="num precio-celda" id="precio-celda-{{ p.pk }}">
   {% if puede_editar_precio %}
+    {% comment %}
+      Edicion inline SIN <form>: la tabla va dentro del form de bulk y un
+      <form> aca quedaria anidado (el navegador lo borra). hx-post directo
+      en el input (Enter) y en el boton ✓ (hx-include del input). CSRF por
+      header X-CSRFToken (base.html). @keydown.enter.prevent evita que
+      Enter submitee el form de bulk que envuelve la tabla.
+    {% endcomment %}
     <span x-data="{editing: false}"
           x-init="$watch('editing', v => v && $nextTick(() => $refs.input.select()))">
       <strong x-show="!editing"
@@ -19,25 +26,31 @@
               title="Click para editar precio">
         ${{ p.precio_base|floatformat:0|intcomma }}
       </strong>
-      <form x-show="editing"
+      <span x-show="editing"
             x-cloak
-            hx-post="{% url 'bodega:set_precio' p.pk %}"
-            hx-target="#precio-celda-{{ p.pk }}"
-            hx-swap="outerHTML"
-            @submit="editing = false"
-            style="display: inline-flex; gap: 4px; align-items: center; margin: 0;">
-        {% csrf_token %}
-        <input x-ref="input"
+            style="display: inline-flex; gap: 4px; align-items: center;">
+        <input x-ref="input" id="precio-input-{{ p.pk }}"
                type="number" name="precio_base" value="{{ p.precio_base|floatformat:0 }}"
                min="0" max="99999999" step="1"
+               hx-post="{% url 'bodega:set_precio' p.pk %}"
+               hx-target="#precio-celda-{{ p.pk }}"
+               hx-swap="outerHTML"
+               hx-trigger="keyup[key=='Enter']"
+               hx-params="precio_base"
+               @keydown.enter.prevent
                @keydown.escape="editing = false"
                style="width: 90px; padding: 2px 6px; border: 1px solid var(--bo-primary); border-radius: 4px; font: inherit; text-align: right;">
-        <button type="submit" class="bo-btn bo-btn-sm" title="Guardar (Enter)"
+        <button type="button" class="bo-btn bo-btn-sm" title="Guardar (Enter)"
+                hx-post="{% url 'bodega:set_precio' p.pk %}"
+                hx-include="#precio-input-{{ p.pk }}"
+                hx-target="#precio-celda-{{ p.pk }}"
+                hx-swap="outerHTML"
+                hx-params="precio_base"
                 style="padding: 2px 8px;">✓</button>
         <button type="button" class="bo-btn bo-btn-sm" title="Cancelar (Esc)"
                 @click="editing = false"
                 style="padding: 2px 8px;">×</button>
-      </form>
+      </span>
     </span>
   {% else %}
     ${{ p.precio_base|floatformat:0|intcomma }}

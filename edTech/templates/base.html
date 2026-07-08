@@ -5,6 +5,8 @@
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# Token CSRF para requests HTMX sin <form> (ver script al final del body). #}
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block titulo %}Panel privado — Ideas Boutique{% endblock %}</title>
 
   {# Favicon Ideas Boutique · variante "Clásico" (ver base_public.html). #}
@@ -281,6 +283,20 @@
       </main>
     </div>
   </div>
+
+  {% comment %}
+    CSRF global para requests HTMX que NO salen de un <form> (ej. la
+    edicion inline de precio/estado en la lista de productos, que no
+    puede usar <form> porque quedaria anidado dentro del form de bulk
+    y el navegador lo elimina). El token viaja en el header X-CSRFToken
+    que Django acepta igual que el campo csrfmiddlewaretoken.
+  {% endcomment %}
+  <script>
+    document.body.addEventListener('htmx:configRequest', function (evt) {
+      var m = document.querySelector('meta[name="csrf-token"]');
+      if (m) evt.detail.headers['X-CSRFToken'] = m.getAttribute('content');
+    });
+  </script>
 
   {% block extra_scripts %}{% endblock %}
 </body>

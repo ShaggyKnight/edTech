@@ -2,35 +2,29 @@
   Bloque 10: celda de estado (activo/inactivo) con toggle inline.
 
   Recibe en contexto: `p` (Producto). Si `puede_editar_activo`, el
-  badge es un boton HTMX que postea a toggle-activo. Si no, se ve
-  como badge plano.
+  badge es un BOTON HTMX (sin <form>) que postea a toggle-activo.
+
+  Por que sin <form>: la tabla entera va envuelta en el <form> de bulk;
+  un <form> aca adentro quedaria anidado y el navegador lo elimina
+  (HTML invalido), rompiendo el toggle. hx-post en el boton evita el
+  anidamiento. CSRF viaja por header X-CSRFToken (ver base.html).
+  type="button" para que NO submitee el form de bulk que lo envuelve.
 
   La celda completa se swappa por la respuesta del endpoint
   (`outerHTML`) tras el POST.
 {% endcomment %}
 <td id="activo-celda-{{ p.pk }}">
   {% if puede_editar_activo %}
-    <form hx-post="{% url 'bodega:producto_toggle_activo' p.pk %}"
-          hx-target="#activo-celda-{{ p.pk }}"
-          hx-swap="outerHTML"
-          style="display:inline;margin:0;"
-          method="post"
-          action="{% url 'bodega:producto_toggle_activo' p.pk %}">
-      {% csrf_token %}
-      {% if p.activo %}
-        <button type="submit" class="bo-badge bo-badge-success"
-                title="Click para desactivar"
-                style="border:none;cursor:pointer;font:inherit;">
-          Activo
-        </button>
-      {% else %}
-        <button type="submit" class="bo-badge bo-badge-muted"
-                title="Click para activar"
-                style="border:none;cursor:pointer;font:inherit;">
-          Inactivo
-        </button>
-      {% endif %}
-    </form>
+    <button type="button"
+            hx-post="{% url 'bodega:producto_toggle_activo' p.pk %}"
+            hx-target="#activo-celda-{{ p.pk }}"
+            hx-swap="outerHTML"
+            hx-params="none"
+            class="bo-badge {% if p.activo %}bo-badge-success{% else %}bo-badge-muted{% endif %}"
+            title="Click para {% if p.activo %}desactivar{% else %}activar{% endif %}"
+            style="border:none;cursor:pointer;font:inherit;">
+      {% if p.activo %}Activo{% else %}Inactivo{% endif %}
+    </button>
   {% else %}
     {% if p.activo %}
       <span class="bo-badge bo-badge-success">Activo</span>

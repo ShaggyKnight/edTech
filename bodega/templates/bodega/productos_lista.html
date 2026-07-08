@@ -41,11 +41,13 @@
     <div style="display:flex; gap:8px;">
       <a href="{% url 'bodega:producto_nuevo' %}" class="bo-btn bo-btn-primary">+ Nuevo producto</a>
       {% comment %}
-        Exportar respeta los filtros activos: se re-envian via
-        request.GET.urlencode para que el CSV traiga las mismas filas
-        que la tabla de abajo.
+        Exportar respeta los filtros activos. El filtro corre via HTMX con
+        hx-push-url=true → window.location.search tiene los filtros vigentes;
+        el onclick reconstruye el href al click (el del render inicial no
+        incluye filtros aplicados despues). href server-side = fallback sin-JS.
       {% endcomment %}
       <a href="{% url 'bodega:exportar_productos' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+         onclick="this.href='{% url 'bodega:exportar_productos' %}' + window.location.search"
          class="bo-btn" title="Descarga los productos del filtro actual en Excel/CSV">
         ⬇ Exportar
       </a>

@@ -5,33 +5,17 @@ plantillas aprobadas): abrimos un chat `wa.me` con el texto listo para
 que Blanca solo apriete Enviar. Cero costo, cero setup, y el mensaje es
 editable antes de mandarlo — que es como ella trabaja hoy.
 """
-import re
 from urllib.parse import quote
 
 from django import template
 
+from edTech.telefonos import normalizar_fono_cl
+
 register = template.Library()
 
-
-def _normalizar_fono_cl(telefono: str) -> str:
-    """Deja el telefono en formato wa.me: solo digitos con codigo pais.
-
-    Acepta lo que el cliente haya tipeado en el checkout: '+56 9 5544
-    3322', '9 5544 3322', '56955443322', etc. Devuelve '' si no hay
-    nada rescatable.
-    """
-    digitos = re.sub(r'\D', '', telefono or '')
-    if not digitos:
-        return ''
-    if digitos.startswith('56'):
-        return digitos
-    # Celular chileno tipeado sin codigo pais (9XXXXXXXX).
-    if len(digitos) == 9 and digitos.startswith('9'):
-        return '56' + digitos
-    # 8 digitos: celular viejo sin el 9 inicial.
-    if len(digitos) == 8:
-        return '569' + digitos
-    return digitos
+# Alias historico: los tests y este modulo usaban el nombre privado
+# antes de que la normalizacion se moviera al util compartido.
+_normalizar_fono_cl = normalizar_fono_cl
 
 
 @register.simple_tag

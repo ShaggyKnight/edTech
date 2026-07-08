@@ -64,6 +64,6 @@ def validar_rut_chileno(rut: str) -> str:
         raise ValidationError('Dígito verificador inválido.')
 
     if calcular_dv(int(cuerpo)) != dv:
-        raise ValidationError('RUT inválido. Revisá el número o el dígito verificador.')
+        raise ValidationError('RUT inválido. Revisa el número o el dígito verificador.')
 
     return f'{cuerpo}-{dv}'

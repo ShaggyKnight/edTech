@@ -14,7 +14,7 @@
       <em>{{ aviso.variante }}</em>.
     </p>
     <p style="color:#8B7A5A; font-size:14px; margin-top:30px;">
-      Si más adelante querés que te avisemos, podés volver al producto y
+      Si más adelante quieres que te avisemos, puedes volver al producto y
       marcar la opción otra vez.
     </p>
 
@@ -32,7 +32,8 @@
     </h1>
     <p style="color:#5a5a5a; font-size:16px; line-height:1.6;">
       El link puede estar mal copiado o el aviso ya no existe.
-      Si seguís recibiendo emails que no querés, escribinos por WhatsApp
+      Si sigues recibiendo correos que no quieres,
+      {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" style="color:#7A1E2B; font-weight:600;">escríbenos por WhatsApp</a>{% else %}escríbenos por WhatsApp{% endif %}
       y lo solucionamos.
     </p>
   {% endif %}

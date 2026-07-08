@@ -48,7 +48,7 @@
     </ul>
     <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
       Si necesitas el pedido urgente o tienes una dirección complicada,
-      contáctanos por WhatsApp antes de comprar y vemos la mejor opción.
+      {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" style="color:var(--vino);font-weight:600;">contáctanos por WhatsApp</a>{% else %}contáctanos por WhatsApp{% endif %} antes de comprar y vemos la mejor opción.
     </p>
   </section>
   {% else %}
@@ -68,8 +68,8 @@
       <li><strong>Costo:</strong> gratis, siempre.</li>
     </ul>
     <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
-      ¿Necesitas que se lo entreguemos a otra persona? Mándanos su nombre
-      por WhatsApp y lo dejamos anotado.
+      ¿Necesitas que se lo entreguemos a otra persona?
+      {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%2C%20quiero%20que%20otra%20persona%20retire%20mi%20pedido" style="color:var(--vino);font-weight:600;">Mándanos su nombre por WhatsApp</a>{% else %}Mándanos su nombre por WhatsApp{% endif %} y lo dejamos anotado.
     </p>
   </section>
   {% endif %}
@@ -79,7 +79,7 @@
     <div class="eyebrow" style="color:var(--gold);">02</div>
     <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;margin:4px 0 16px;">Cambios y devoluciones.</h2>
     <p style="color:var(--ink-80);line-height:1.7;">
-      Tenes <strong>30 días corridos</strong> desde la fecha de compra
+      Tienes <strong>30 días corridos</strong> desde la fecha de compra
       para cambiar cualquier producto que no te convenza, en la tienda{% if FEATURE_ENVIOS %}
       o a través de un envío{% endif %}.
     </p>
@@ -122,8 +122,9 @@
       </a>
     </div>
     <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
-      ¿Dudas con la talla? Mandanos una foto del cuerpo del/a usuari@
-      por WhatsApp y te recomendamos la talla correcta.
+      ¿Dudas con la talla?
+      {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%2C%20necesito%20ayuda%20con%20la%20talla" style="color:var(--vino);font-weight:600;">Mándanos una foto del cuerpo del/a usuari@ por WhatsApp</a>{% else %}Mándanos una foto del cuerpo del/a usuari@ por WhatsApp{% endif %}
+      y te recomendamos la talla correcta.
     </p>
   </section>
 
@@ -158,7 +159,7 @@
           <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}"
              target="_blank" rel="noopener"
              style="color:var(--gold);font-weight:500;">
-            Escribinos directo →
+            Escríbenos directo →
           </a>
         {% else %}
           <span style="color:var(--ink-60);">Pedidos y reservas</span>

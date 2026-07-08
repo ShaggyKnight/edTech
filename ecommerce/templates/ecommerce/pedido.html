@@ -249,8 +249,9 @@
     <p>
       ¿Algo no está bien? Si el pedido tiene algún problema —
       talla equivocada, producto distinto al que pediste o cualquier
-      inconveniente — <strong>escribinos por WhatsApp</strong> y lo
-      solucionamos. También tenés <strong>15 días</strong> para cambios
+      inconveniente —
+      {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%2C%20tengo%20un%20problema%20con%20el%20pedido%20%23{{ recibo.pk }}" style="color:var(--vino);"><strong>escríbenos por WhatsApp</strong></a>{% else %}<strong>escríbenos por WhatsApp</strong>{% endif %} y lo
+      solucionamos. También tienes <strong>15 días</strong> para cambios
       (producto sin uso, con boleta).
     </p>
     <p class="pedido-help-firma">

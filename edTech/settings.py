@@ -101,6 +101,11 @@ env = environ.Env(
     # hasta que la duena haya validado los templates con envios manuales
     # y se monten los cron/celery para los programados. Activar uno a
     # uno conforme se prueben.
+    # Notificaciones automaticas por WhatsApp (Meta Cloud API). Apagadas
+    # hasta completar el setup en Meta — ver docs/whatsapp_api.md.
+    FEATURE_WHATSAPP_AUTO=(bool, False),
+    WHATSAPP_API_TOKEN=(str, ''),
+    WHATSAPP_PHONE_NUMBER_ID=(str, ''),
     FEATURE_EMAIL_BIENVENIDA=(bool, False),
     FEATURE_EMAIL_RESET_PASSWORD=(bool, False),
     FEATURE_EMAIL_STOCK_DISPONIBLE=(bool, False),
@@ -414,6 +419,10 @@ PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del 
 FEATURE_RESENAS = env('FEATURE_RESENAS')
 FEATURE_ENVIOS = env('FEATURE_ENVIOS')
 # Emails transaccionales — apagados por default.
+# WhatsApp automatico (Meta Cloud API) — funcionalidad activable.
+FEATURE_WHATSAPP_AUTO = env('FEATURE_WHATSAPP_AUTO')
+WHATSAPP_API_TOKEN = env('WHATSAPP_API_TOKEN')
+WHATSAPP_PHONE_NUMBER_ID = env('WHATSAPP_PHONE_NUMBER_ID')
 FEATURE_EMAIL_BIENVENIDA = env('FEATURE_EMAIL_BIENVENIDA')
 FEATURE_EMAIL_RESET_PASSWORD = env('FEATURE_EMAIL_RESET_PASSWORD')
 FEATURE_EMAIL_STOCK_DISPONIBLE = env('FEATURE_EMAIL_STOCK_DISPONIBLE')

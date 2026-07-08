@@ -1,17 +1,17 @@
 {% extends 'emails/_base.html' %}
 
 {% block titulo %}Bienvenida a Ideas Boutique{% endblock %}
-{% block preheader %}Tu cuenta quedó lista. Ya podés guardar tu carrito y ver tus pedidos.{% endblock %}
+{% block preheader %}Tu cuenta quedó lista. Ya puedes guardar tu carrito y ver tus pedidos.{% endblock %}
 
 {% block heading %}Bienvenida, <em style="color:#8B7A5A;font-style:italic;">{{ user.first_name|default:"vecina" }}</em>.{% endblock %}
 
 {% block body %}
-<p style="margin:0 0 14px;">Tu cuenta en Ideas Boutique quedó lista. Desde acá podés:</p>
+<p style="margin:0 0 14px;">Tu cuenta en Ideas Boutique quedó lista. Desde acá puedes:</p>
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:18px 0;">
   <tr><td style="padding:12px 0;border-bottom:1px solid #E5DCC8;">
     <strong style="font-family:Georgia,serif;font-size:17px;color:#0E0E0E;">Guardar tu carrito</strong><br>
-    <span style="color:#6a6a6a;font-size:13.5px;">Lo retomás desde cualquier dispositivo cuando quieras.</span>
+    <span style="color:#6a6a6a;font-size:13.5px;">Lo retomas desde cualquier dispositivo cuando quieras.</span>
   </td></tr>
   <tr><td style="padding:12px 0;border-bottom:1px solid #E5DCC8;">
     <strong style="font-family:Georgia,serif;font-size:17px;color:#0E0E0E;">Ver tus pedidos</strong><br>
@@ -19,11 +19,11 @@
   </td></tr>
   <tr><td style="padding:12px 0;">
     <strong style="font-family:Georgia,serif;font-size:17px;color:#0E0E0E;">Alertas de stock</strong><br>
-    <span style="color:#6a6a6a;font-size:13.5px;">Te avisamos cuando vuelve la talla que querés.</span>
+    <span style="color:#6a6a6a;font-size:13.5px;">Te avisamos cuando vuelve la talla que quieres.</span>
   </td></tr>
 </table>
 
-<p style="font-size:14px;color:#6a6a6a;">Si nunca creaste esta cuenta, escribinos por WhatsApp y la borramos al toque.</p>
+<p style="font-size:14px;color:#6a6a6a;">Si nunca creaste esta cuenta, {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" style="color:#8B7A5A;">escríbenos por WhatsApp</a>{% else %}escríbenos por WhatsApp{% endif %} y la borramos al toque.</p>
 {% endblock %}
 
 {% block cta %}

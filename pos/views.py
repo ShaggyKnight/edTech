@@ -243,7 +243,7 @@ def escanear(request):
 
     tienda = get_active_tienda(request)
     if tienda is None:
-        messages.error(request, 'Seleccioná una tienda antes de escanear.')
+        messages.error(request, 'Selecciona una tienda antes de escanear.')
         return _respuesta_scan(request)
 
     cart = Cart(request.session)

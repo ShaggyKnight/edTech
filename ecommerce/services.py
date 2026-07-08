@@ -280,6 +280,12 @@ def aplicar_resultado_pago(recibo: ReciboVenta, result: PaymentResult) -> Recibo
     from pos.dte import emitir_si_corresponde
     emitir_si_corresponde(recibo)
 
+    # WhatsApp automatico al cliente (funcionalidad activable — no-op
+    # mientras FEATURE_WHATSAPP_AUTO este apagada). Va aca porque este
+    # es EL punto de transicion a pagado: cubre retorno Y webhook.
+    from ecommerce.whatsapp import notificar_pedido_confirmado
+    notificar_pedido_confirmado(recibo)
+
     return recibo
 
 

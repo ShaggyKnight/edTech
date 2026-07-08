@@ -162,7 +162,7 @@ def email_enviar_demo(request, slug):
         messages.success(
             request,
             f'Email "{entry.nombre}" enviado a {destinatario}. '
-            f'Revisá la bandeja (puede tardar 10-30s).',
+            f'Revisa la bandeja (puede tardar 10-30s).',
         )
     except Exception as exc:  # noqa: BLE001
         messages.error(request, f'Fallo al enviar: {type(exc).__name__}: {exc}')

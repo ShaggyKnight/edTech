@@ -92,6 +92,11 @@ def marcar_despachado(request, pk):
         pedido.despachado_en = timezone.now()
         pedido.despachado_por = request.user
         pedido.save(update_fields=['despachado_en', 'despachado_por'])
+        # WhatsApp automatico "listo para retiro" / "va en camino".
+        # No-op mientras FEATURE_WHATSAPP_AUTO este apagada; el boton
+        # manual de WhatsApp del detalle sigue disponible igual.
+        from ecommerce.whatsapp import notificar_pedido_listo
+        notificar_pedido_listo(pedido)
         messages.success(
             request,
             f'Pedido #{pedido.pk} marcado como despachado.',

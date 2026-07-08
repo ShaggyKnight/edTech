@@ -1750,7 +1750,7 @@ def etiquetas_imprimir(request):
                 items.append(etiqueta)
 
     if not items:
-        messages.error(request, 'Seleccioná al menos un item con cantidad > 0.')
+        messages.error(request, 'Selecciona al menos un ítem con cantidad > 0.')
         return redirect('bodega:etiquetas_seleccionar')
 
     # Agrupamos las etiquetas en hojas de 30 (3 cols × 10 filas) para que

@@ -68,7 +68,8 @@
       </table>
     </div>
     <p class="guia-talles-disclaimer">
-      💬 ¿Tenés dudas con la talla? <strong>Escribinos por WhatsApp</strong>
+      💬 ¿Tienes dudas con la talla?
+      {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%2C%20necesito%20ayuda%20con%20la%20talla" style="color:var(--vino);"><strong>Escríbenos por WhatsApp</strong></a>{% else %}<strong>Escríbenos por WhatsApp</strong>{% endif %}
       antes de comprar y te ayudamos a elegir.
     </p>
   </section>
@@ -76,7 +77,7 @@
   {# ============ Tab 2: Calculadora ============ #}
   <section x-show="tab === 'calc'" x-cloak role="tabpanel">
     <p class="guia-talles-help">
-      Ingresá <strong>al menos uno</strong> de estos datos y te recomendamos
+      Ingresa <strong>al menos uno</strong> de estos datos y te recomendamos
       una talla. La altura es la medida más confiable.
     </p>
     <form id="guia-calc-form" class="guia-calc-form" onsubmit="return false;">

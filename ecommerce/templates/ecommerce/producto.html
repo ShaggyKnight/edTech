@@ -513,10 +513,23 @@
           <svg class="ico ico--18"><use href="#ico-shield"/></svg>
           <div><strong>Cambios sin costo</strong><span>15 días si está sin uso</span></div>
         </div>
-        <div>
-          <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
-          <div><strong>Consúltanos por WhatsApp</strong><span>Te respondemos al tiro</span></div>
-        </div>
+        {% if PUBLIC_WHATSAPP %}
+          {% comment %}
+            El perk de WhatsApp es un LINK que abre el chat con la
+            consulta del producto ya escrita — no un texto decorativo.
+          {% endcomment %}
+          <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%21%20Tengo%20una%20consulta%20sobre%20{{ producto.nombre|urlencode }}"
+             target="_blank" rel="noopener"
+             style="display:flex; text-decoration:none; color:inherit;">
+            <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
+            <div><strong>Consúltanos por WhatsApp</strong><span>Te respondemos al tiro</span></div>
+          </a>
+        {% else %}
+          <div>
+            <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
+            <div><strong>Consúltanos por WhatsApp</strong><span>Te respondemos al tiro</span></div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>

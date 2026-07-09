@@ -340,7 +340,7 @@ class OfertaForm(forms.ModelForm):
 
         if not producto and not variante:
             raise ValidationError(
-                'Tenés que elegir un producto o una variante específica.'
+                'Tienes que elegir un producto o una variante específica.'
             )
         if producto and variante and variante.producto_id != producto.pk:
             raise ValidationError(

@@ -20,9 +20,9 @@ Ver el pedido online:
 {% endif %}
 
 ¿Algo no está bien?
-Si recibís el pedido y algo falla — talla equivocada,
+Si recibes el pedido y algo falla — talla equivocada,
 producto distinto al pedido, o cualquier inconveniente —
-escribinos por WhatsApp y lo solucionamos.
+escríbenos por WhatsApp y lo solucionamos.
 
 ─────────────────────────────────────────
 Familia Contreras

@@ -92,7 +92,7 @@ class ProductoAdmin(admin.ModelAdmin):
                 request,
                 format_html(
                     'Marcaste "tiene variantes" pero todavia no agregaste '
-                    'ninguna. Configurá las combinaciones en la seccion '
+                    'ninguna. Configura las combinaciones en la seccion '
                     '<b>Variantes de producto</b> al final de esta pagina, '
                     'o <a href="{}?producto={}">crear una variante por separado</a>.',
                     reverse('admin:catalogo_productovariante_add'),

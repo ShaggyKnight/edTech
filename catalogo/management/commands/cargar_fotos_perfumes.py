@@ -8,7 +8,7 @@ afectados se marcan en la descripción para re-fotografiar.
 
 Idempotente:
   - Por defecto NO pisa una imagen ya cargada (para no tapar una foto
-    real con el placeholder). Usá --force para sobreescribir.
+    real con el placeholder). Usa --force para sobreescribir.
   - Re-correrlo sin --force solo carga las que faltan.
 
 Uso:
@@ -81,7 +81,7 @@ class Command(BaseCommand):
 
             if producto.imagen and not force:
                 self.stdout.write(
-                    f'  = {nombre}: ya tiene imagen, saltado (usá --force)')
+                    f'  = {nombre}: ya tiene imagen, saltado (usa --force)')
                 stats['saltadas'] += 1
                 continue
 

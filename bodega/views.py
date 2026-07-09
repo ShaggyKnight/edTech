@@ -500,7 +500,7 @@ def stock_agregar(request):
 
         messages.success(
             request,
-            f'+{cantidad} unidades cargadas. Seguí agregando o volvé al stock.',
+            f'+{cantidad} unidades cargadas. Sigue agregando o vuelve al stock.',
         )
         # Volvemos a la misma pantalla con el form limpio para cargar
         # el siguiente producto sin tener que navegar.

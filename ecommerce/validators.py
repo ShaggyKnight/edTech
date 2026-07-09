@@ -51,7 +51,7 @@ def validar_rut_chileno(rut: str) -> str:
     - El DV no coincide con el módulo 11.
     """
     if not rut:
-        raise ValidationError('Ingresá tu RUT.')
+        raise ValidationError('Ingresa tu RUT.')
 
     limpio = normalizar_rut(rut)
     if len(limpio) < 2:

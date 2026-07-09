@@ -37,7 +37,7 @@
 
     const productoId = getProductoId();
     if (!productoId) {
-      alert('Primero elegí un producto.');
+      alert('Primero elige un producto.');
       return;
     }
 

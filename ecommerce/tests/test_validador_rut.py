@@ -58,7 +58,7 @@ class ValidarRutChilenoTests(SimpleTestCase):
         self.assertEqual(validar_rut_chileno('10000013-k'), '10000013-K')
 
     def test_rut_vacio_levanta(self):
-        with self.assertRaisesMessage(ValidationError, 'Ingresá tu RUT'):
+        with self.assertRaisesMessage(ValidationError, 'Ingresa tu RUT'):
             validar_rut_chileno('')
 
     def test_rut_corto_levanta(self):

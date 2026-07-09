@@ -254,10 +254,10 @@ def usuario_editar(request, pk):
                 # auto-quitarse el rol admin (evita lockout).
                 if usuario.pk == request.user.pk:
                     if not form.cleaned_data.get('is_active', True):
-                        messages.error(request, 'No podés desactivar tu propia cuenta.')
+                        messages.error(request, 'No puedes desactivar tu propia cuenta.')
                         return redirect('accounts:usuario_editar', pk=pk)
                     if form.cleaned_data.get('rol') != ADMIN:
-                        messages.error(request, 'No podés quitarte tu propio rol de administrador.')
+                        messages.error(request, 'No puedes quitarte tu propio rol de administrador.')
                         return redirect('accounts:usuario_editar', pk=pk)
                 form.save()
                 messages.success(request, f'Usuario "{usuario.username}" actualizado.')

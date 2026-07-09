@@ -182,6 +182,30 @@ def _ctx_aviso_dueno():
     }
 
 
+def _ctx_aviso_transferencia():
+    recibo = _recibo_fake(con_dte=False)
+    return {
+        'recibo': recibo,
+        'cola_url': 'https://ideasboutique.cl/despacho/?estado=transferencias',
+    }
+
+
+def _ctx_instrucciones_transferencia():
+    recibo = _recibo_fake(con_dte=False)
+    return {
+        'recibo': recibo,
+        'cuenta': {
+            'nombre': 'Blanca Contreras',
+            'rut': '7.152.915-0',
+            'banco': 'BancoEstado',
+            'tipo_cuenta': 'CuentaRUT',
+            'cuenta': '7152915',
+            'email': 'ventas@ideasboutique.cl',
+        },
+        'pedido_url': f'https://ideasboutique.cl/tienda/pedido/{recibo.pk}/',
+    }
+
+
 def _ctx_bienvenida():
     u = _user_fake()
     return {
@@ -250,11 +274,29 @@ PREVIEWS: list[PreviewEntry] = [
     PreviewEntry(
         slug='aviso-dueno',
         nombre='Aviso a Blanca · nueva venta',
-        descripcion='Notificación interna a la dueña cuando entra un pedido online. Va al `OWNER_NOTIFICATION_EMAIL` configurado.',
+        descripcion='Notificación interna a la dueña cuando entra un pedido online pagado. Va a los correos de `OWNER_NOTIFICATION_EMAIL` (acepta varios, separados por coma) + despachadores activos.',
         template='emails/aviso_dueno_orden.html',
         subject_template='Nueva venta online #10247 · $87.700',
         para_quien='Blanca (dueña)',
         contexto_fn=_ctx_aviso_dueno,
+    ),
+    PreviewEntry(
+        slug='aviso-transferencia',
+        nombre='Aviso interno · pedido esperando transferencia',
+        descripcion='Cuando un cliente elige transferencia directa: avisa al dueño que hay un abono por vigilar en la cartola. Solo a `OWNER_NOTIFICATION_EMAIL` (los despachadores aún no tienen nada que empacar).',
+        template='emails/aviso_dueno_transferencia.html',
+        subject_template='Pedido #10247 esperando transferencia · $92.600',
+        para_quien='Blanca + Eduardo (dueños)',
+        contexto_fn=_ctx_aviso_transferencia,
+    ),
+    PreviewEntry(
+        slug='instrucciones-transferencia',
+        nombre='Instrucciones de transferencia · cliente',
+        descripcion='Datos de la cuenta + monto + referencia para el cliente que eligió transferencia directa. Se envía al iniciar el pedido.',
+        template='emails/transferencia_instrucciones.html',
+        subject_template='Datos para transferir · Pedido #10247',
+        para_quien='Cliente',
+        contexto_fn=_ctx_instrucciones_transferencia,
     ),
     PreviewEntry(
         slug='bienvenida',

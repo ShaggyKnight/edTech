@@ -110,11 +110,23 @@ def enviar_boleta(recibo: ReciboVenta) -> bool:
     )
 
 
+def _emails_dueno() -> list[str]:
+    """OWNER_NOTIFICATION_EMAIL como lista.
+
+    Acepta varios correos separados por coma (ej. el de Blanca + el de
+    Eduardo para corroborar): `a@x.cl,b@y.cl`. Retrocompatible con el
+    valor único de siempre.
+    """
+    crudo = getattr(settings, 'OWNER_NOTIFICATION_EMAIL', '') or ''
+    return [e.strip().lower() for e in crudo.split(',') if e.strip()]
+
+
 def _destinatarios_notif_pedidos() -> list[str]:
     """Lista de emails que reciben aviso de cada venta online.
 
     Combina:
-      1. OWNER_NOTIFICATION_EMAIL del .env (Blanca, backup siempre).
+      1. OWNER_NOTIFICATION_EMAIL del .env (uno o varios, separados
+         por coma — Blanca + Eduardo).
       2. Todos los users con rol DESPACHADOR activo + flag
          recibe_notif_ecommerce=True.
 
@@ -123,10 +135,7 @@ def _destinatarios_notif_pedidos() -> list[str]:
     from django.contrib.auth import get_user_model
     from accounts.roles import DESPACHADOR
 
-    destinos = set()
-    owner = getattr(settings, 'OWNER_NOTIFICATION_EMAIL', '') or ''
-    if owner:
-        destinos.add(owner.strip().lower())
+    destinos = set(_emails_dueno())
 
     User = get_user_model()
     despachadores = (
@@ -234,6 +243,47 @@ def enviar_reset_password(usuario, reset_url: str, *, force: bool = False) -> bo
         },
         template_html='emails/recuperar_password.html',
     )
+
+
+def notificar_dueno_transferencia_pendiente(recibo: ReciboVenta) -> bool:
+    """Aviso interno: entró un pedido que va a pagar por transferencia.
+
+    Va SOLO a los correos del dueño (OWNER_NOTIFICATION_EMAIL, uno o
+    varios) — los despachadores no, porque todavía no hay nada que
+    empacar: primero hay que ver el abono en la cartola y confirmarlo
+    en Despacho → "Por confirmar".
+    """
+    destinatarios = _emails_dueno()
+    if not destinatarios:
+        return False
+
+    total_fmt = f'{int(recibo.total):,}'.replace(',', '.')
+    contexto = {
+        'recibo': recibo,
+        'cola_url': _absolute_url(
+            reverse('despacho:cola') + '?estado=transferencias'
+        ),
+        'PUBLIC_WHATSAPP': getattr(settings, 'PUBLIC_WHATSAPP', ''),
+        'SITE_URL': getattr(settings, 'SITE_URL', 'https://ideasboutique.cl'),
+    }
+    try:
+        html = render_to_string(
+            'emails/aviso_dueno_transferencia.html', contexto)
+        msg = EmailMultiAlternatives(
+            subject=f'Pedido #{recibo.pk} esperando transferencia · ${total_fmt}',
+            body=(f'Pedido #{recibo.pk} por ${total_fmt} eligió pagar por '
+                  f'transferencia. Cuando el abono aparezca en la cuenta, '
+                  f'confírmalo en Despacho → Por confirmar.'),
+            from_email=_remitente(),
+            to=destinatarios,
+        )
+        msg.attach_alternative(html, 'text/html')
+        msg.send(fail_silently=False)
+        return True
+    except Exception:  # noqa: BLE001
+        log.exception('Fallo aviso de transferencia pendiente #%s a %s',
+                      recibo.pk, destinatarios)
+        return False
 
 
 def enviar_instrucciones_transferencia(recibo: ReciboVenta) -> bool:

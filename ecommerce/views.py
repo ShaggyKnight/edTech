@@ -34,7 +34,7 @@ from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante
 from ecommerce.cart import CANAL, Cart
 from ecommerce.emails import (
     enviar_boleta, enviar_instrucciones_transferencia,
-    notificar_dueno_nueva_orden,
+    notificar_dueno_nueva_orden, notificar_dueno_transferencia_pendiente,
 )
 from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm, ResenaForm
 from ecommerce.gateways import (
@@ -1027,14 +1027,20 @@ def checkout_iniciar(request):
     request.session['ecommerce_token_pendiente'] = init.token
     request.session.modified = True
 
-    # Transferencia directa: mandamos las instrucciones tambien por
-    # correo (el cliente puede cerrar la pestaña; los datos le quedan
-    # en la bandeja). Best-effort — el flujo no se rompe por un email.
+    # Transferencia directa: instrucciones al cliente (puede cerrar la
+    # pestaña; los datos le quedan en la bandeja) + aviso interno al
+    # dueño para que sepa que hay un abono por vigilar. Best-effort —
+    # el flujo no se rompe por un email.
     if init.provider == 'transferencia':
         try:
             enviar_instrucciones_transferencia(recibo)
         except Exception:  # noqa: BLE001
             log.exception('Error enviando instrucciones de transferencia '
+                          'recibo %s', recibo.pk)
+        try:
+            notificar_dueno_transferencia_pendiente(recibo)
+        except Exception:  # noqa: BLE001
+            log.exception('Error avisando transferencia pendiente '
                           'recibo %s', recibo.pk)
 
     return HttpResponseRedirect(init.redirect_url)

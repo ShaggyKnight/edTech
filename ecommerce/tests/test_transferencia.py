@@ -112,10 +112,29 @@ class CheckoutTransferenciaTests(_BaseTransferencia):
 
     def test_envia_email_con_instrucciones(self):
         self._comprar()
+        # Sin OWNER_NOTIFICATION_EMAIL configurado: solo el correo del
+        # cliente con las instrucciones.
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('Datos para transferir', mail.outbox[0].subject)
         html = mail.outbox[0].alternatives[0][0]
         self.assertIn('12345678', html)
+
+    def test_avisa_al_dueno_cuando_entra_el_pedido(self):
+        """Con OWNER_NOTIFICATION_EMAIL (lista con coma): el dueño se
+        entera del pedido pendiente sin esperar el WhatsApp."""
+        with self.settings(OWNER_NOTIFICATION_EMAIL=(
+                'ideasdeblanca@gmail.com,eduardo.tapia.contreras@gmail.com')):
+            self._comprar()
+        avisos = [m for m in mail.outbox
+                  if 'esperando transferencia' in m.subject]
+        self.assertEqual(len(avisos), 1)
+        self.assertIn('ideasdeblanca@gmail.com', avisos[0].to)
+        self.assertIn('eduardo.tapia.contreras@gmail.com', avisos[0].to)
+        recibo = ReciboVenta.objects.latest('pk')
+        self.assertIn(f'#{recibo.pk}', avisos[0].subject)
+        # Y el cliente igual recibe sus instrucciones.
+        self.assertTrue(any('Datos para transferir' in m.subject
+                            for m in mail.outbox))
 
     def test_instrucciones_de_pedido_pagado_redirige_al_pedido(self):
         self._comprar()
@@ -153,17 +172,22 @@ class ConfirmacionDespachoTests(_BaseTransferencia):
 
     def test_confirmar_descuenta_stock_y_envia_boleta(self):
         self.client.force_login(self.operadora)
-        resp = self.client.post(reverse(
-            'despacho:confirmar_transferencia', args=[self.recibo.pk]))
+        with self.settings(OWNER_NOTIFICATION_EMAIL=(
+                'ideasdeblanca@gmail.com,eduardo.tapia.contreras@gmail.com')):
+            resp = self.client.post(reverse(
+                'despacho:confirmar_transferencia', args=[self.recibo.pk]))
         self.assertEqual(resp.status_code, 302)
 
         self.recibo.refresh_from_db()
         self.assertEqual(self.recibo.estado, ReciboVenta.ESTADO_PAGADO)
         self.stock.refresh_from_db()
         self.assertEqual(self.stock.cantidad, 2)   # recien ahora
-        # Boleta enviada al confirmar.
+        # Boleta al cliente + aviso "Nueva venta" a AMBOS dueños.
         asuntos = ' '.join(m.subject for m in mail.outbox)
-        self.assertIn(f'#{self.recibo.pk}', asuntos)
+        self.assertIn(f'Boleta #{self.recibo.pk}', asuntos)
+        nueva_venta = [m for m in mail.outbox if 'Nueva venta' in m.subject]
+        self.assertEqual(len(nueva_venta), 1)
+        self.assertIn('eduardo.tapia.contreras@gmail.com', nueva_venta[0].to)
         # Aparece en la cola de nuevos para despachar.
         cola = self.client.get(reverse('despacho:cola'))
         self.assertContains(cola, f'#{self.recibo.pk}')

@@ -530,7 +530,59 @@
             <div><strong>Consúltanos por WhatsApp</strong><span>Te respondemos al tiro</span></div>
           </div>
         {% endif %}
+        {% comment %}
+          Compartir el producto: en celular abre el menu nativo del
+          telefono (WhatsApp, Instagram, etc); en escritorio copia el
+          link al portapapeles. El link compartido ya se ve con foto y
+          titulo (Open Graph en base_public).
+        {% endcomment %}
+        <button type="button" id="pdp-compartir"
+                style="display:flex; background:none; border:none; padding:0;
+                       cursor:pointer; font:inherit; color:inherit; text-align:left;">
+          <svg class="ico ico--18"><use href="#ico-share"/></svg>
+          <div><strong id="pdp-compartir-label">Compartir</strong><span>Envíaselo a quien quieras</span></div>
+        </button>
       </div>
+
+      <script>
+        (function () {
+          var btn = document.getElementById('pdp-compartir');
+          if (!btn) return;
+          var label = document.getElementById('pdp-compartir-label');
+          var datos = {
+            title: '{{ producto.nombre|escapejs }} · Ideas Boutique',
+            text: 'Mira {{ producto.nombre|escapejs }} en Ideas Boutique',
+            url: window.location.href,
+          };
+          btn.addEventListener('click', function () {
+            // Metrica de cuanto se comparte (si el tag esta activo).
+            if (typeof gtag === 'function') {
+              gtag('event', 'share', { item_id: '{{ producto.pk }}' });
+            }
+            if (navigator.share) {
+              navigator.share(datos).catch(function () { /* usuario cancelo */ });
+              return;
+            }
+            // Escritorio sin Web Share API: copiar el link.
+            var confirmar = function () {
+              var original = label.textContent;
+              label.textContent = '✓ Link copiado';
+              setTimeout(function () { label.textContent = original; }, 2000);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(datos.url).then(confirmar);
+            } else {
+              // Fallback viejo (http o browsers antiguos).
+              var tmp = document.createElement('input');
+              tmp.value = datos.url;
+              document.body.appendChild(tmp);
+              tmp.select();
+              try { document.execCommand('copy'); confirmar(); } catch (e) {}
+              document.body.removeChild(tmp);
+            }
+          });
+        })();
+      </script>
     </div>
   </div>
 

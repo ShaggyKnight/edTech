@@ -33,7 +33,7 @@ En el panel de Hetzner Cloud:
 6. **Cloud config (opcional):** dejar vacío, los scripts lo configuran después.
 7. **Name:** `ideas-prod`.
 
-Cuando termine, anotá la **IP pública IPv4** del server (ej. `49.13.X.X`).
+Cuando termine, anota la **IP pública IPv4** del server (ej. `49.13.X.X`).
 
 ---
 
@@ -91,12 +91,12 @@ Ejecutar en orden:
 ```
 
 Al finalizar `02-ssh-hardening.sh` el SSH root queda **deshabilitado**.
-A partir de acá te conectás como el user `ideas`:
+A partir de acá te conectas como el user `ideas`:
 
 ```bash
 # Desde tu máquina:
 ssh-copy-id ideas@49.13.X.X        # copiar tu pubkey al user ideas
-ssh ideas@49.13.X.X                # ahora entrás como `ideas`
+ssh ideas@49.13.X.X                # ahora entras como `ideas`
 ```
 
 ---
@@ -117,7 +117,7 @@ Lo que hace:
 - Instala los `.service` / `.socket` de systemd
 - **No arranca todavía** (falta llenar `.env` y migrar DB)
 
-**Ahora editá el `.env` con los secretos reales:**
+**Ahora edita el `.env` con los secretos reales:**
 
 ```bash
 sudo -u ideas nano /srv/ideas/app/.env
@@ -180,7 +180,7 @@ sudo /tmp/ideas-bootstrap/deploy/06-tls-setup.sh
 ```
 
 Certbot:
-- Pide tu email (usá `shaggyxreload@gmail.com`)
+- Pide tu email (usa `shaggyxreload@gmail.com`)
 - Acepta TOS
 - Pregunta si redirige http→https → **Sí, redirect**
 - Renovación automática queda activa via `systemctl status certbot.timer`
@@ -189,7 +189,7 @@ Certbot:
 
 ## 7 · Activar HSTS (después de confirmar HTTPS estable)
 
-Una vez que confirmás que el sitio carga bien en HTTPS por al menos
+Una vez que confirmas que el sitio carga bien en HTTPS por al menos
 48 horas y todo funciona:
 
 ```bash
@@ -198,14 +198,14 @@ sudo systemctl restart gunicorn-ideas.service
 ```
 
 Esto activa HSTS por 1 año. **Cuidado:** los browsers cachean HSTS y
-no se puede revertir sin tocar cada cliente. Por eso esperá a estar
+no se puede revertir sin tocar cada cliente. Por eso espera a estar
 seguro.
 
 ---
 
 ## 8 · Backups automáticos
 
-Ya quedó programado el cron por `05-app-install.sh`. Verificá:
+Ya quedó programado el cron por `05-app-install.sh`. Verifica:
 
 ```bash
 sudo crontab -u ideas -l

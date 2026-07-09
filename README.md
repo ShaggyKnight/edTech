@@ -411,8 +411,8 @@ El comando custom `runlan`:
 5. Arranca `runserver 0.0.0.0:8000`.
 
 **Antes de usar `runlan` por primera vez:**
-- Agregá tu IP LAN a `ALLOWED_HOSTS` en `.env`.
-- En Windows, abrí el puerto con
+- Agrega tu IP LAN a `ALLOWED_HOSTS` en `.env`.
+- En Windows, abre el puerto con
   `scripts/firewall_open_8000.bat` como Administrador.
 
 ### Otros comandos útiles

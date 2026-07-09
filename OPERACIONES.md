@@ -14,11 +14,11 @@ recuperación ante problemas.
 ssh ideas@<IP-del-VPS>
 ```
 
-- Reemplazá `<IP-del-VPS>` por la IP real del servidor (Hetzner Cloud → tu server).
+- Reemplaza `<IP-del-VPS>` por la IP real del servidor (Hetzner Cloud → tu server).
 - El usuario es `ideas` (NUNCA `root` — está bloqueado por seguridad).
 - Usa tu clave SSH privada (`~/.ssh/id_ed25519` o la que hayas generado).
 
-Si tu clave no es la default, especificala:
+Si tu clave no es la default, especifícala:
 
 ```bash
 ssh -i ~/.ssh/mi-clave ideas@<IP-del-VPS>
@@ -26,10 +26,10 @@ ssh -i ~/.ssh/mi-clave ideas@<IP-del-VPS>
 
 ### Si SSH no funciona (emergencia)
 
-1. Andá a [console.hetzner.cloud](https://console.hetzner.cloud).
-2. Seleccioná tu server → botón **`>_`** (Console web del navegador).
+1. Anda a [console.hetzner.cloud](https://console.hetzner.cloud).
+2. Selecciona tu server → botón **`>_`** (Console web del navegador).
 3. Loguéate como `root` con la password de Hetzner.
-4. Desde ahí podés diagnosticar/desbanear sin necesidad de SSH.
+4. Desde ahí puedes diagnosticar/desbanear sin necesidad de SSH.
 
 Causas típicas de no poder entrar:
 
@@ -77,9 +77,9 @@ Causas típicas de no poder entrar:
 
 ---
 
-## 3. Aliases configurados (lo que tipeás día a día)
+## 3. Aliases configurados (lo que tipeas día a día)
 
-Ya cargados en `~/.bashrc` del user `ideas`. Si no funcionan, hacé `source ~/.bashrc`.
+Ya cargados en `~/.bashrc` del user `ideas`. Si no funcionan, haz `source ~/.bashrc`.
 
 | Alias | Hace |
 |---|---|
@@ -120,8 +120,8 @@ Tienda, catálogo, productos, carrito. Estado de operación habitual.
 ### `modo landing` — soft-launch
 
 Solo se ven `/` (la home con la historia de la boutique) y `/info/`. Cualquier
-otra URL pública redirige (HTTP 302) a `/`. Útil cuando todavía no querés que
-los clientes vean productos o precios pero ya querés tener el dominio activo.
+otra URL pública redirige (HTTP 302) a `/`. Útil cuando todavía no quieres que
+los clientes vean productos o precios pero ya quieres tener el dominio activo.
 
 ### `modo mantenimiento` — corte planificado
 
@@ -133,7 +133,7 @@ Google interpreta 503 como "vuelve más tarde" y **NO desindexa el dominio**.
 | Visitante | Normal | Landing | Mantenimiento |
 |---|---|---|---|
 | Público anónimo | Todo | Solo `/` y `/info/` | "Volvemos pronto" |
-| Vos (logueado como staff) | Todo | Todo | Todo |
+| Tú (logueado como staff) | Todo | Todo | Todo |
 | Bots / Google | Todo | Solo `/` y `/info/` | 503 (no desindexa) |
 
 En todos los modos, los paths necesarios para administrar
@@ -195,7 +195,7 @@ Roles disponibles: `admin`, `cajero`, `bodeguero`, `despachador`, `operador`.
 > sin reportes financieros y sin admin Django. Para Blanca:
 > `rol blanca --set=operador` (o desde `/cuenta/usuarios/`).
 
-> **También se puede desde el navegador**: como admin, entrá a
+> **También se puede desde el navegador**: como admin, entra a
 > `https://ideasboutique.cl/cuenta/usuarios/` — crear usuarios, asignar
 > roles y resetear claves sin tocar la terminal. Es lo recomendado para
 > el día a día; el comando `rol` queda para scripts/emergencias.
@@ -388,7 +388,7 @@ sección 6 (Diagnóstico).
 
 ## 8. Pausar el servidor (Hetzner billing)
 
-**Importante**: Hetzner cobra lo mismo encendido o apagado. Si querés ahorrar
+**Importante**: Hetzner cobra lo mismo encendido o apagado. Si quieres ahorrar
 realmente, hay que tomar snapshot y borrar el server.
 
 ### Procedimiento de pausa larga (>1 mes)
@@ -400,9 +400,9 @@ realmente, hay que tomar snapshot y borrar el server.
    ```
 3. **En Hetzner Cloud Console** (web):
    - Tu server → **Snapshots** → "Take snapshot"
-   - Esperá 3-5 min hasta que diga `Available`
+   - Espera 3-5 min hasta que diga `Available`
    - Nombre sugerido: `ideas-pause-YYYY-MM-DD`
-4. **Anotá** la IP actual y guardá tu `.env` afuera del server.
+4. **Anota** la IP actual y guarda tu `.env` afuera del server.
 5. **Delete server** en Hetzner Console (el snapshot QUEDA).
 
 Costo durante la pausa: ~€0.36/mes (solo el snapshot) vs ~€4.51/mes (server vivo).
@@ -410,10 +410,10 @@ Costo durante la pausa: ~€0.36/mes (solo el snapshot) vs ~€4.51/mes (server 
 ### Reanudar después de la pausa
 
 1. **Hetzner Console** → **Snapshots** → "Create server from snapshot"
-2. Anotá la IP nueva (cambia respecto a la original).
-3. **Actualizá DNS**: A record de `ideasboutique.cl` → IP nueva.
-4. Esperá 5-15 min que propague.
-5. SSH al server nuevo y re-emití el cert TLS (LetsEncrypt valida por IP):
+2. Anota la IP nueva (cambia respecto a la original).
+3. **Actualiza DNS**: A record de `ideasboutique.cl` → IP nueva.
+4. Espera 5-15 min que propague.
+5. SSH al server nuevo y re-emite el cert TLS (LetsEncrypt valida por IP):
    ```bash
    sudo certbot renew --force-renewal
    ```
@@ -424,9 +424,9 @@ Costo durante la pausa: ~€0.36/mes (solo el snapshot) vs ~€4.51/mes (server 
 
 ### Antes de tocar producción
 
-1. Probá en local primero (`runserver`).
+1. Prueba en local primero (`runserver`).
 2. Si es código → push a master en GitHub → `deploy-quick` en el server.
-3. Si es config → editá `.env`, hacé backup del valor anterior:
+3. Si es config → edita `.env`, haz backup del valor anterior:
    ```bash
    sudo cp /srv/ideas/app/.env /srv/ideas/app/.env.bak.$(date +%Y%m%d)
    edit-env
@@ -451,7 +451,7 @@ restart-app
 
 ## 10. Setup al clonar el repo en una máquina nueva
 
-Después de `git clone`, activá el hook que valida los mensajes de commit:
+Después de `git clone`, activa el hook que valida los mensajes de commit:
 
 ```bash
 git config core.hooksPath .githooks

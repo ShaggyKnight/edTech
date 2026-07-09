@@ -102,7 +102,7 @@ python manage.py axes_list_attempts
 
 ### Rotar `SECRET_KEY`
 
-Si sospechás compromiso:
+Si sospechas compromiso:
 
 1. Generar key nueva:
    ```python
@@ -116,7 +116,7 @@ Si sospechás compromiso:
 
 ---
 
-## Cuando sospechás un ataque
+## Cuando sospechas un ataque
 
 Síntomas:
 - Picos de tráfico anormales en logs de nginx

@@ -123,7 +123,7 @@ branded_docs/recibos/recibo_pos_a4.html       → pos/templates/pos/
   - `enviar_pedir_resena(recibo)` — +14 días post-compra
   - `enviar_recordatorio_familia(cliente)` — anual febrero (uniformes)
 - Tareas Celery / cron para los emails programados (carrito,
-  reseña, recordatorio familia). Si no querés Celery todavía, usar
+  reseña, recordatorio familia). Si no quieres Celery todavía, usar
   un management command corrido por cron diario.
 
 **B.3 — Recibos POS** (~1 h)
@@ -314,7 +314,7 @@ El seed es **idempotente** — se puede correr varias veces sin duplicar.
 ### Decisiones a tomar
 
 - **Schema**: ¿Opción 1, 2 o 3?
-- **Precios iniciales**: ¿confirmás los rangos de arriba o pasás vos
+- **Precios iniciales**: ¿confirmas los rangos de arriba o pasas tú
   los precios reales en otro mensaje?
 - **Género**: ¿la dueña los confirma uno por uno, o aceptamos mi
   inferencia con review post-carga?

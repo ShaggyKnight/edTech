@@ -117,7 +117,7 @@ Usuario probado: admin (autenticado en backoffice y tienda)
 - EERR "Mayo 2026": Ingresos $314.392
 - No es bug de cálculo (ventanas distintas) pero el copy debería aclararlo.
 - Fix: el subheader del Dashboard ahora dice "Últimos N días corridos:
-  DD-MM-YYYY — DD-MM-YYYY · para análisis por mes o año usá Estado de
+  DD-MM-YYYY — DD-MM-YYYY · para análisis por mes o año usa Estado de
   Resultados" con link directo a /reportes/eerr/. Hace explícito que la
   ventana es móvil y guía al usuario al EERR cuando necesita el corte
   contable.
@@ -298,7 +298,7 @@ Usuario probado: admin (autenticado en backoffice y tienda)
 
 ## Notas para mantenimiento
 - No hay tests automatizados conocidos; verificación es manual en el navegador.
-- El admin login es `admin` (ya estoy logueado en cookies; si trabajás en otro
+- El admin login es `admin` (ya estoy logueado en cookies; si trabajas en otro
   entorno, pediremos credenciales aparte — no las pegues en el repo).
-- Antes de cerrar un bug, dejá un comentario en este archivo con "✅ Resuelto
+- Antes de cerrar un bug, deja un comentario en este archivo con "✅ Resuelto
   en commit <hash>" debajo del bug correspondiente.

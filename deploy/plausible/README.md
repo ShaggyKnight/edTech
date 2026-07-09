@@ -125,7 +125,7 @@ Despues del signup, Plausible te pide crear el primer sitio:
 - Domain: `ideasboutique.cl`
 - Timezone: `America/Santiago`
 
-Listo. Te muestra el snippet de tracking — vos no lo vas a pegar a
+Listo. Te muestra el snippet de tracking — tú no lo vas a pegar a
 mano, ya lo tenemos en `edTech/templates/base_public.html` apuntando
 al subdomain self-host (ver paso 8).
 

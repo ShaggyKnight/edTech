@@ -1009,7 +1009,15 @@ def checkout_iniciar(request):
         messages.error(request, 'La tienda online no está configurada todavía.')
         return redirect('ecommerce:carrito')
     except PaymentGatewayError as exc:
-        messages.error(request, f'No pudimos iniciar el pago: {exc}')
+        # El detalle tecnico (JSON del gateway, codigos HTTP) va al log
+        # para el admin — al cliente JAMAS se le muestra crudo.
+        log.error('Fallo iniciando pago online: %s', exc)
+        messages.error(
+            request,
+            'No pudimos iniciar el pago en este momento. Intenta de nuevo '
+            'en unos minutos, o escríbenos por WhatsApp y te ayudamos a '
+            'completar la compra.',
+        )
         return redirect('ecommerce:carrito')
 
     # Guardamos el token en sesión para poder retomarlo si el cliente vuelve sin query string.

@@ -36,14 +36,22 @@
        hx-select="#despacho-live"
        hx-swap="outerHTML">
 
-  {# Tabs: nuevos vs despachados #}
-  <div style="display:flex; gap:8px; margin-bottom:18px;">
+  {# Tabs: nuevos / por confirmar (transferencias) / despachados #}
+  <div style="display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;">
     <a href="?estado=nuevos"
        style="padding:10px 18px; border-radius:8px; text-decoration:none;
-              {% if estado_filtro != 'despachados' %}background:#7A1E2B; color:#fff;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
+              {% if estado_filtro != 'despachados' and estado_filtro != 'transferencias' %}background:#7A1E2B; color:#fff;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
       🆕 Nuevos
       <span style="background:rgba(255,255,255,.2); padding:2px 8px; border-radius:10px; margin-left:6px; font-size:12px;">
         {{ contadores.nuevos }}
+      </span>
+    </a>
+    <a href="?estado=transferencias"
+       style="padding:10px 18px; border-radius:8px; text-decoration:none;
+              {% if estado_filtro == 'transferencias' %}background:#e65100; color:#fff;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
+      💸 Por confirmar
+      <span style="background:rgba(255,255,255,.2); padding:2px 8px; border-radius:10px; margin-left:6px; font-size:12px;">
+        {{ contadores.transferencias }}
       </span>
     </a>
     <a href="?estado=despachados"
@@ -55,6 +63,14 @@
       </span>
     </a>
   </div>
+
+  {% if estado_filtro == 'transferencias' %}
+    <div style="padding:10px 16px; margin-bottom:14px; border-radius:8px; background:#fff3e0; font-size:13px;">
+      Pedidos pagando por <strong>transferencia directa</strong>: revisa la
+      cartola del banco y confirma solo los abonos que ya llegaron.
+      Confirmar descuenta el stock, envía la boleta y pasa el pedido a "Nuevos".
+    </div>
+  {% endif %}
 
   <div class="bo-card">
     {% if pedidos %}
@@ -115,7 +131,30 @@
                style="text-decoration:none;">
               Ver
             </a>
-            {% if not pedido.despachado_en %}
+            {% if estado_filtro == 'transferencias' %}
+              {% if puede_confirmar_pago %}
+                <form method="post" action="{% url 'despacho:confirmar_transferencia' pedido.pk %}"
+                      style="display:inline; margin-left:4px;"
+                      onsubmit="return confirm('¿Confirmas que la transferencia del pedido #{{ pedido.pk }} por ${{ pedido.total|floatformat:0|intcomma }} YA está en la cuenta del banco?');">
+                  {% csrf_token %}
+                  <button type="submit" class="bo-btn" style="background:#2e7d32; color:#fff; border:none;">
+                    ✓ Confirmar pago
+                  </button>
+                </form>
+                <form method="post" action="{% url 'despacho:anular_transferencia' pedido.pk %}"
+                      style="display:inline; margin-left:4px;"
+                      onsubmit="return confirm('¿Anular el pedido #{{ pedido.pk }}? Úsalo solo si la transferencia nunca llegó.');">
+                  {% csrf_token %}
+                  <button type="submit" class="bo-btn" style="color:#991b1b;">
+                    ✗ Anular
+                  </button>
+                </form>
+              {% else %}
+                <span style="font-size:12px; color:var(--bo-muted);">
+                  La confirma admin/operador
+                </span>
+              {% endif %}
+            {% elif not pedido.despachado_en %}
             <form method="post" action="{% url 'despacho:marcar_despachado' pedido.pk %}"
                   style="display:inline; margin-left:4px;"
                   onsubmit="return confirm('¿Marcar pedido #{{ pedido.pk }} como despachado?');">

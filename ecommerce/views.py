@@ -32,7 +32,10 @@ from django.views.decorators.http import require_GET, require_POST
 from bodega.models import StockTienda
 from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, Resena, ValorAtributo
 from ecommerce.cart import CANAL, Cart
-from ecommerce.emails import enviar_boleta, notificar_dueno_nueva_orden
+from ecommerce.emails import (
+    enviar_boleta, enviar_instrucciones_transferencia,
+    notificar_dueno_nueva_orden,
+)
 from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm, ResenaForm
 from ecommerce.gateways import (
     get_gateway, get_gateways_activos, get_gateway_default,
@@ -1024,6 +1027,16 @@ def checkout_iniciar(request):
     request.session['ecommerce_token_pendiente'] = init.token
     request.session.modified = True
 
+    # Transferencia directa: mandamos las instrucciones tambien por
+    # correo (el cliente puede cerrar la pestaña; los datos le quedan
+    # en la bandeja). Best-effort — el flujo no se rompe por un email.
+    if init.provider == 'transferencia':
+        try:
+            enviar_instrucciones_transferencia(recibo)
+        except Exception:  # noqa: BLE001
+            log.exception('Error enviando instrucciones de transferencia '
+                          'recibo %s', recibo.pk)
+
     return HttpResponseRedirect(init.redirect_url)
 
 
@@ -1069,6 +1082,38 @@ def checkout_retorno(request):
     return render(request, 'ecommerce/retorno.html', {
         'recibo': recibo,
         'error': None,
+    })
+
+
+def transferencia_instrucciones(request, token: str):
+    """Instrucciones de pago para la transferencia directa.
+
+    Muestra los datos de la cuenta, el monto exacto y el numero de
+    pedido como referencia. El comprobante va por WhatsApp; la dueña
+    confirma el abono en Despacho y recien ahi el pedido queda pagado.
+    """
+    from ecommerce.gateways.transferencia import datos_cuenta
+
+    recibo = get_object_or_404(
+        ReciboVenta.objects.prefetch_related('detalles'),
+        canal=ReciboVenta.CANAL_ONLINE,
+        payment_reference=token,
+        payment_provider='transferencia',
+    )
+
+    # Si la dueña ya confirmo el abono, esta pagina ya no aplica.
+    if recibo.estado == ReciboVenta.ESTADO_PAGADO:
+        return redirect('ecommerce:pedido', token=recibo.payment_reference)
+
+    # El pedido ya quedo tomado: limpiar el carrito para que el cliente
+    # no "compre de nuevo" lo mismo (idempotente en revisitas).
+    Cart(request.session).clear()
+    request.session.pop('ecommerce_token_pendiente', None)
+
+    return render(request, 'ecommerce/transferencia.html', {
+        'recibo': recibo,
+        'cuenta': datos_cuenta(),
+        'items_count': 0,
     })
 
 

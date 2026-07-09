@@ -48,6 +48,9 @@ _REGISTRY = {
     'mock':  'ecommerce.gateways.mock.MockOnlineGateway',
     'klap':  'ecommerce.gateways.klap.KlapGateway',
     'khipu': 'ecommerce.gateways.khipu.KhipuGateway',
+    # Transferencia directa con confirmacion manual — respaldo sin
+    # pasarela. Requiere TRANSFERENCIA_* en el .env para activarse.
+    'transferencia': 'ecommerce.gateways.transferencia.TransferenciaGateway',
 }
 
 

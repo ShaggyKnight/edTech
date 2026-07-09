@@ -236,6 +236,29 @@ def enviar_reset_password(usuario, reset_url: str, *, force: bool = False) -> bo
     )
 
 
+def enviar_instrucciones_transferencia(recibo: ReciboVenta) -> bool:
+    """Datos bancarios para la transferencia directa (pago manual).
+
+    Se manda al iniciar el pedido con ese medio, para que los datos le
+    queden al cliente en la bandeja aunque cierre la pestaña.
+    """
+    if not recibo.cliente_email:
+        return False
+    from ecommerce.gateways.transferencia import datos_cuenta
+    return _enviar_multipart(
+        subject=f'Datos para transferir · Pedido #{recibo.pk}',
+        to=recibo.cliente_email,
+        contexto={
+            'recibo': recibo,
+            'cuenta': datos_cuenta(),
+            'pedido_url': _absolute_url(
+                reverse('ecommerce:pedido', args=[recibo.payment_reference])
+            ),
+        },
+        template_html='emails/transferencia_instrucciones.html',
+    )
+
+
 def enviar_stock_disponible(variante, suscriptor_email: str,
                             *, unsub_url: str = '',
                             force: bool = False) -> bool:

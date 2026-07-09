@@ -1,0 +1,106 @@
+{% extends 'base_public.html' %}
+{% load humanize %}
+
+{% block titulo %}Datos para transferir · Pedido #{{ recibo.pk }} · Ideas Boutique{% endblock %}
+
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
+
+<main id="main-content" tabindex="-1"
+      style="max-width:640px; margin:0 auto; padding:40px 24px 80px;">
+
+  <div style="text-align:center; margin-bottom:28px;">
+    <div class="eyebrow" style="color:var(--gold);">Pedido #{{ recibo.pk }} · reservado</div>
+    <h1 style="font-family:var(--serif); font-size:clamp(30px,5vw,42px); margin:8px 0 10px;">
+      Ya casi — falta tu transferencia.
+    </h1>
+    <p style="color:var(--ink-60); font-size:15px; line-height:1.6;">
+      Transfiere el monto exacto a esta cuenta y mándanos el comprobante
+      por WhatsApp. Apenas lo veamos, confirmamos tu pedido y te avisamos.
+    </p>
+  </div>
+
+  {# ── Monto ── #}
+  <div style="text-align:center; background:var(--cream); border:1px solid var(--line);
+              border-radius:14px; padding:22px; margin-bottom:18px;">
+    <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-60);">Monto a transferir</div>
+    <div style="font-family:var(--serif); font-size:44px; font-weight:600;">${{ recibo.total|floatformat:0|intcomma }}</div>
+    <div style="font-size:13px; color:var(--ink-60);">
+      Referencia / comentario: <strong>Pedido #{{ recibo.pk }}</strong>
+    </div>
+  </div>
+
+  {# ── Datos de la cuenta ── #}
+  <div id="datos-cuenta" style="background:#fff; border:1px solid var(--line); border-radius:14px;
+              padding:22px 24px; margin-bottom:18px;">
+    <div style="font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-60); margin-bottom:12px;">Cuenta para transferir</div>
+    <table style="width:100%; font-size:15px; line-height:2;">
+      <tr><td style="color:var(--ink-60); width:130px;">Nombre</td><td><strong>{{ cuenta.nombre }}</strong></td></tr>
+      <tr><td style="color:var(--ink-60);">RUT</td><td><strong>{{ cuenta.rut }}</strong></td></tr>
+      <tr><td style="color:var(--ink-60);">Banco</td><td><strong>{{ cuenta.banco }}</strong></td></tr>
+      <tr><td style="color:var(--ink-60);">Tipo de cuenta</td><td><strong>{{ cuenta.tipo_cuenta }}</strong></td></tr>
+      <tr><td style="color:var(--ink-60);">N° de cuenta</td><td><strong>{{ cuenta.cuenta }}</strong></td></tr>
+      {% if cuenta.email %}<tr><td style="color:var(--ink-60);">Correo</td><td><strong>{{ cuenta.email }}</strong></td></tr>{% endif %}
+    </table>
+    <button type="button" id="btn-copiar-datos" class="btn-outline"
+            style="margin-top:12px; width:100%;">
+      Copiar datos de la cuenta
+    </button>
+  </div>
+
+  {# ── Enviar comprobante ── #}
+  {% if PUBLIC_WHATSAPP %}
+  <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%21%20Hice%20la%20transferencia%20del%20pedido%20%23{{ recibo.pk }}%20por%20%24{{ recibo.total|floatformat:0 }}.%20Te%20adjunto%20el%20comprobante."
+     target="_blank" rel="noopener" class="btn-primary lg full"
+     style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
+    <svg class="ico ico--18"><use href="#ico-whatsapp"/></svg>
+    Enviar comprobante por WhatsApp
+  </a>
+  {% endif %}
+
+  <a href="{% url 'ecommerce:pedido' recibo.payment_reference %}" class="btn-outline full"
+     style="display:block; text-align:center;">
+    Ver el estado de mi pedido
+  </a>
+
+  <p style="margin-top:22px; font-size:13px; color:var(--ink-60); line-height:1.7; text-align:center;">
+    Te enviamos estos datos también a tu correo. Confirmamos las
+    transferencias dentro del horario de atención (lunes a sábado,
+    9 a 19 hrs) — te avisamos por WhatsApp y correo apenas esté lista.
+  </p>
+</main>
+
+<script>
+  (function () {
+    var btn = document.getElementById('btn-copiar-datos');
+    if (!btn) return;
+    var texto = [
+      '{{ cuenta.nombre|escapejs }}',
+      'RUT {{ cuenta.rut|escapejs }}',
+      '{{ cuenta.banco|escapejs }} · {{ cuenta.tipo_cuenta|escapejs }}',
+      'Cuenta {{ cuenta.cuenta|escapejs }}',
+      {% if cuenta.email %}'{{ cuenta.email|escapejs }}',{% endif %}
+      'Monto: ${{ recibo.total|floatformat:0 }} · Ref: Pedido #{{ recibo.pk }}'
+    ].join('\n');
+    btn.addEventListener('click', function () {
+      var ok = function () {
+        var t = btn.textContent;
+        btn.textContent = '✓ Datos copiados';
+        setTimeout(function () { btn.textContent = t; }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(ok);
+      } else {
+        var tmp = document.createElement('textarea');
+        tmp.value = texto;
+        document.body.appendChild(tmp);
+        tmp.select();
+        try { document.execCommand('copy'); ok(); } catch (e) {}
+        document.body.removeChild(tmp);
+      }
+    });
+  })();
+</script>
+
+{% include 'ecommerce/_shop_footer.html' %}
+{% endblock %}

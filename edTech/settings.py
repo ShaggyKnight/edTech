@@ -49,6 +49,17 @@ env = environ.Env(
     KHIPU_RECEIVER_ID=(str, ''),
     KHIPU_SECRET=(str, ''),
     KHIPU_BASE_URL=(str, 'https://payment-api.khipu.com'),
+    # Transferencia bancaria DIRECTA (sin pasarela): el cliente ve los
+    # datos de la cuenta y la dueña confirma el abono a mano en
+    # Despacho. Respaldo activable cuando la pasarela falla o mientras
+    # se valida. Se activa agregando `transferencia` a
+    # ECOMMERCE_GATEWAYS_ACTIVOS + estos datos de la cuenta:
+    TRANSFERENCIA_NOMBRE=(str, ''),        # titular de la cuenta
+    TRANSFERENCIA_RUT=(str, ''),           # RUT del titular
+    TRANSFERENCIA_BANCO=(str, ''),         # ej: BancoEstado
+    TRANSFERENCIA_TIPO_CUENTA=(str, ''),   # ej: CuentaRUT / Cta. Vista
+    TRANSFERENCIA_CUENTA=(str, ''),        # numero de cuenta
+    TRANSFERENCIA_EMAIL=(str, ''),         # correo para notificar (opcional)
     DEFAULT_FROM_EMAIL=(str, 'ventas@ideas.local'),
     EMAIL_BACKEND=(str, 'django.core.mail.backends.console.EmailBackend'),
     # SMTP — solo necesarios si EMAIL_BACKEND apunta a smtp.EmailBackend.
@@ -381,6 +392,14 @@ KHIPU_API_KEY = env('KHIPU_API_KEY')          # x-api-key (llamadas API)
 KHIPU_RECEIVER_ID = env('KHIPU_RECEIVER_ID')  # id de cobrador (informativo)
 KHIPU_SECRET = env('KHIPU_SECRET')            # llave de cobrador (firma webhooks)
 KHIPU_BASE_URL = env('KHIPU_BASE_URL')
+
+# Transferencia directa (confirmacion manual) — respaldo de pasarelas.
+TRANSFERENCIA_NOMBRE = env('TRANSFERENCIA_NOMBRE')
+TRANSFERENCIA_RUT = env('TRANSFERENCIA_RUT')
+TRANSFERENCIA_BANCO = env('TRANSFERENCIA_BANCO')
+TRANSFERENCIA_TIPO_CUENTA = env('TRANSFERENCIA_TIPO_CUENTA')
+TRANSFERENCIA_CUENTA = env('TRANSFERENCIA_CUENTA')
+TRANSFERENCIA_EMAIL = env('TRANSFERENCIA_EMAIL')
 # pk de bodega.Tienda que surte el canal online (0 = sin configurar)
 ECOMMERCE_TIENDA_ID = env('ECOMMERCE_TIENDA_ID') or None
 # Webpay (Transbank) — removido del codigo en commit 2026-05-21. Si en

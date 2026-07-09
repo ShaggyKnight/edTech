@@ -11,4 +11,9 @@ urlpatterns = [
          name='marcar_despachado'),
     path('pedido/<int:pk>/desmarcar/', views.desmarcar_despachado,
          name='desmarcar_despachado'),
+    # Transferencia directa: confirmar el abono / anular si nunca llegó.
+    path('pedido/<int:pk>/confirmar-transferencia/',
+         views.confirmar_transferencia, name='confirmar_transferencia'),
+    path('pedido/<int:pk>/anular-transferencia/',
+         views.anular_transferencia, name='anular_transferencia'),
 ]

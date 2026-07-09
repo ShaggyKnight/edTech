@@ -20,6 +20,9 @@ urlpatterns = [
     path('checkout/retorno/', views.checkout_retorno, name='checkout_retorno'),
     path('checkout/validar-rut/', views.validar_rut_inline, name='validar_rut_inline'),
     path('pedido/<str:token>/', views.ver_pedido, name='pedido'),
+    # Instrucciones de la transferencia directa (pago manual).
+    path('transferencia/<str:token>/', views.transferencia_instrucciones,
+         name='transferencia_instrucciones'),
     path('mock-pago/', views.mock_pago, name='mock_pago'),
 
     # Webhooks server-to-server de cada gateway. Validan firma HMAC

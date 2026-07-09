@@ -231,6 +231,34 @@ djmanage cargar_uniformes --aplicar
   despachadores activos.
 - Preview de todos los emails del sistema: `https://ideasboutique.cl/cuenta/emails/`.
 
+### Transferencia bancaria directa (respaldo de la pasarela)
+
+Método de pago SIN pasarela: el cliente ve los datos de la cuenta,
+transfiere y manda el comprobante por WhatsApp. **La plata hay que
+verificarla a mano** contra la cartola del banco.
+
+**Activar** (o desactivar sacando `transferencia` de la lista):
+
+```bash
+edit-env
+#   ECOMMERCE_GATEWAYS_ACTIVOS=khipu,transferencia
+#   TRANSFERENCIA_NOMBRE=Blanca Contreras ...
+#   TRANSFERENCIA_RUT=12.345.678-9
+#   TRANSFERENCIA_BANCO=BancoEstado
+#   TRANSFERENCIA_TIPO_CUENTA=CuentaRUT
+#   TRANSFERENCIA_CUENTA=12345678
+restart-app
+```
+
+**Operar** (Blanca, cada día): Despacho → pestaña **"💸 Por confirmar"**.
+Revisar la cartola del banco y:
+- **✓ Confirmar pago** solo si el abono YA está: descuenta stock, envía
+  la boleta y el pedido pasa a "Nuevos" para empacar.
+- **✗ Anular** si nunca transfirieron (limpia la cola; no toca stock).
+
+Solo `admin` y `operador` pueden confirmar/anular (es plata); el
+despachador puro solo ve la lista.
+
 ### Conectarse al Django shell (debugging avanzado)
 
 ```bash

@@ -28,6 +28,17 @@ def _puede_despachar(user):
     )
 
 
+def _puede_confirmar_pago(user):
+    """Confirmar/anular una transferencia es decision de PLATA — la toma
+    quien ve la cartola del banco: admin u operador (dueña). El
+    despachador puro empaca, no valida abonos."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user_in_role(user, ADMIN) or user_in_role(user, OPERADOR)
+
+
 @login_required
 @user_passes_test(_puede_despachar, login_url='login')
 def cola(request):
@@ -47,8 +58,22 @@ def cola(request):
                           'detalles__variante__valores')
     )
 
+    # Transferencias directas esperando que la dueña confirme el abono
+    # contra la cartola. Viven en su propia pestaña.
+    transferencias_qs = (
+        ReciboVenta.objects
+        .filter(canal=ReciboVenta.CANAL_ONLINE,
+                estado=ReciboVenta.ESTADO_PENDIENTE,
+                payment_provider='transferencia')
+        .select_related('tienda', 'cliente_usuario')
+        .prefetch_related('detalles__variante__producto',
+                          'detalles__variante__valores')
+    )
+
     if estado_filtro == 'despachados':
         pedidos = base_qs.filter(despachado_en__isnull=False).order_by('-despachado_en')[:100]
+    elif estado_filtro == 'transferencias':
+        pedidos = transferencias_qs.order_by('-creado')
     else:
         pedidos = base_qs.filter(despachado_en__isnull=True).order_by('-creado')
 
@@ -56,11 +81,13 @@ def cola(request):
         nuevos=Count('pk', filter=Q(despachado_en__isnull=True)),
         despachados=Count('pk', filter=Q(despachado_en__isnull=False)),
     )
+    contadores['transferencias'] = transferencias_qs.count()
 
     return render(request, 'despacho/cola.html', {
         'pedidos': pedidos,
         'estado_filtro': estado_filtro,
         'contadores': contadores,
+        'puede_confirmar_pago': _puede_confirmar_pago(request.user),
     })
 
 
@@ -106,6 +133,84 @@ def marcar_despachado(request, pk):
             request,
             f'Pedido #{pedido.pk} ya estaba despachado.',
         )
+    return redirect('despacho:cola')
+
+
+@login_required
+@user_passes_test(_puede_confirmar_pago, login_url='login')
+@require_POST
+def confirmar_transferencia(request, pk):
+    """La dueña vio el abono en su banco → el pedido queda PAGADO.
+
+    Reusa `aplicar_resultado_pago`: el mismo camino que un webhook de
+    pasarela — descuenta stock con lock, asiento contable, DTE y
+    WhatsApp automatico. Si el stock se evaporo mientras esperaba la
+    transferencia, queda FALLIDO y hay que devolver la plata.
+    """
+    from ecommerce.emails import enviar_boleta, notificar_dueno_nueva_orden
+    from ecommerce.services import aplicar_resultado_pago
+    from pos.payments import ESTADO_PAGADO, PaymentResult
+
+    pedido = get_object_or_404(
+        ReciboVenta, pk=pk,
+        canal=ReciboVenta.CANAL_ONLINE,
+        payment_provider='transferencia',
+    )
+    if pedido.estado != ReciboVenta.ESTADO_PENDIENTE:
+        messages.info(request, f'Pedido #{pedido.pk} ya no está pendiente.')
+        return redirect('despacho:cola')
+
+    resultado = aplicar_resultado_pago(pedido, PaymentResult(
+        estado=ESTADO_PAGADO,
+        provider='transferencia',
+        reference=f'manual:{request.user.username}',
+        detalle=f'Transferencia confirmada por {request.user.username}',
+    ))
+
+    if resultado.estado == ReciboVenta.ESTADO_PAGADO:
+        # Mismo post-pago que las pasarelas: boleta + aviso interno.
+        try:
+            enviar_boleta(resultado)
+            notificar_dueno_nueva_orden(resultado)
+        except Exception:  # noqa: BLE001 — el pago ya quedo firme.
+            pass
+        messages.success(
+            request,
+            f'Transferencia del pedido #{pedido.pk} confirmada — '
+            f'pasó a la cola de despacho y se envió la boleta.',
+        )
+        return redirect('despacho:cola')
+
+    messages.error(
+        request,
+        f'No se pudo confirmar el pedido #{pedido.pk}: el stock ya no '
+        f'alcanza (quedó FALLIDO). Hay que devolver la transferencia '
+        f'al cliente.',
+    )
+    return redirect('despacho:cola')
+
+
+@login_required
+@user_passes_test(_puede_confirmar_pago, login_url='login')
+@require_POST
+def anular_transferencia(request, pk):
+    """El cliente nunca transfirió (o se arrepintió) → CANCELADO.
+
+    No toca stock (nunca se descontó). El pedido sale de la pestaña
+    "Por confirmar".
+    """
+    pedido = get_object_or_404(
+        ReciboVenta, pk=pk,
+        canal=ReciboVenta.CANAL_ONLINE,
+        payment_provider='transferencia',
+        estado=ReciboVenta.ESTADO_PENDIENTE,
+    )
+    pedido.estado = ReciboVenta.ESTADO_CANCELADO
+    pedido.save(update_fields=['estado', 'modificado'])
+    messages.success(
+        request,
+        f'Pedido #{pedido.pk} anulado (transferencia no recibida).',
+    )
     return redirect('despacho:cola')
 
 

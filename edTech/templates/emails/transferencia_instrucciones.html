@@ -1,0 +1,36 @@
+{% extends 'emails/_base.html' %}
+{% load humanize %}
+
+{% block titulo %}Datos para transferir · Pedido #{{ recibo.pk }}{% endblock %}
+{% block preheader %}Transfiere ${{ recibo.total|floatformat:0|intcomma }} y mándanos el comprobante — confirmamos al tiro.{% endblock %}
+
+{% block heading %}Tu pedido <em style="color:#8B7A5A;font-style:italic;">#{{ recibo.pk }}</em> espera tu transferencia.{% endblock %}
+
+{% block body %}
+<p style="margin:0 0 18px;">Hola {{ recibo.cliente_nombre|default:"vecina/o" }}, recibimos tu pedido. Para confirmarlo, transfiere el monto exacto a esta cuenta:</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:8px 0 16px;">
+  <tr><td style="padding:16px 22px;text-align:center;border-bottom:1px solid #E5DCC8;">
+    <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;">Monto a transferir</div>
+    <div style="font-family:Georgia,serif;font-size:32px;font-weight:600;">${{ recibo.total|floatformat:0|intcomma }}</div>
+    <div style="font-size:12px;color:#6a6a6a;">Referencia: <strong>Pedido #{{ recibo.pk }}</strong></div>
+  </td></tr>
+  <tr><td style="padding:14px 22px;font-size:14px;line-height:2;">
+    <strong>{{ cuenta.nombre }}</strong><br>
+    RUT {{ cuenta.rut }}<br>
+    {{ cuenta.banco }} · {{ cuenta.tipo_cuenta }}<br>
+    Cuenta N° <strong>{{ cuenta.cuenta }}</strong>{% if cuenta.email %}<br>{{ cuenta.email }}{% endif %}
+  </td></tr>
+</table>
+
+<p style="font-size:14px;color:#6a6a6a;">Cuando transfieras, {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%21%20Hice%20la%20transferencia%20del%20pedido%20%23{{ recibo.pk }}" style="color:#8B7A5A;">mándanos el comprobante por WhatsApp</a>{% else %}mándanos el comprobante por WhatsApp{% endif %}. Confirmamos dentro del horario de atención (lunes a sábado, 9 a 19 hrs) y te avisamos al tiro.</p>
+{% endblock %}
+
+{% block cta %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+<td style="background:#0E0E0E;border-radius:999px;">
+  <a href="{{ pedido_url }}" style="display:inline-block;color:#C9A96E;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 32px;letter-spacing:0.02em;">
+    Ver mi pedido
+  </a>
+</td></tr></table>
+{% endblock %}

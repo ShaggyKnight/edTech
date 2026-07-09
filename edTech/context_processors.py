@@ -40,11 +40,15 @@ def backoffice_badges(request):
     def _despacho_nuevos():
         if not request.user.is_authenticated:
             return 0
+        from django.db.models import Q
         from pos.models import ReciboVenta
+        # Todo lo que espera accion en Despacho: pedidos pagados sin
+        # despachar + transferencias directas por confirmar.
         return ReciboVenta.objects.filter(
+            Q(estado=ReciboVenta.ESTADO_PAGADO, despachado_en__isnull=True)
+            | Q(estado=ReciboVenta.ESTADO_PENDIENTE,
+                payment_provider='transferencia'),
             canal=ReciboVenta.CANAL_ONLINE,
-            estado=ReciboVenta.ESTADO_PAGADO,
-            despachado_en__isnull=True,
         ).count()
 
     def _stock_agotados():

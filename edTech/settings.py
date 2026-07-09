@@ -84,6 +84,10 @@ env = environ.Env(
     # Microsoft Clarity project ID — heatmaps + session replays.
     # Vacio en dev/local = sin tracking. En prod se setea en .env.
     CLARITY_PROJECT_ID=(str, ''),
+    # Google tag (gtag.js) para Google Ads / GA4. El ID "G-XXXX" del
+    # panel de Google. Vacio = sin tag (dev). Ademas del pageview, el
+    # sitio dispara un evento `purchase` UNA vez por compra pagada.
+    GOOGLE_TAG_ID=(str, ''),
     # BUG-009: número de WhatsApp del local. Formato E.164 sin + ni
     # espacios (ej. '56912345678'). Vacío = el bloque "WhatsApp directo"
     # se muestra como texto plano (estado actual hasta que se configure).
@@ -411,6 +415,7 @@ SITE_URL = env('SITE_URL')                              # ej: https://ideasbouti
 OWNER_NOTIFICATION_EMAIL = env('OWNER_NOTIFICATION_EMAIL')  # email de Blanca
 ANALYTICS_DOMAIN = env('ANALYTICS_DOMAIN')              # dominio Plausible (vacío = sin analytics)
 CLARITY_PROJECT_ID = env('CLARITY_PROJECT_ID')          # Microsoft Clarity (vacío = sin heatmaps)
+GOOGLE_TAG_ID = env('GOOGLE_TAG_ID')                    # Google Ads/GA4 gtag (vacío = sin tag)
 PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del local, ej '56912345678'
 
 # Feature flags. Bloque 9 (resenas) sigue codeado y testeado pero

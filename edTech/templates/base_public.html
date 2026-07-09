@@ -113,6 +113,21 @@
       })(window, document, "clarity", "script", "{{ CLARITY_PROJECT_ID }}");
     </script>
     {% endif %}
+    {% if GOOGLE_TAG_ID %}
+    {% comment %}
+      3) Google tag (gtag.js) — Google Ads + GA4. Pageviews en todo el
+         sitio publico; la conversion de compra se dispara como evento
+         `purchase` en la pagina del pedido (una sola vez, ver
+         pedido.html). Se activa con GOOGLE_TAG_ID en el .env.
+    {% endcomment %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ GOOGLE_TAG_ID }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ GOOGLE_TAG_ID }}');
+    </script>
+    {% endif %}
 
     {% comment %}
       HTMX: AJAX declarativo. Alpine: estado local pequeño. Defer

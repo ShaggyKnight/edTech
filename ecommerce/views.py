@@ -1043,6 +1043,10 @@ def checkout_retorno(request):
     if recibo.estado == ReciboVenta.ESTADO_PAGADO:
         Cart(request.session).clear()
         request.session.pop('ecommerce_token_pendiente', None)
+        # Marca one-shot para que la pagina del pedido dispare la
+        # conversion de Google Ads UNA sola vez (la pagina se revisita
+        # despues desde el email — sin esto se contaria doble).
+        request.session['ads_compra_pk'] = recibo.pk
         try:
             enviar_boleta(recibo)
         except Exception:  # noqa: BLE001 — el flujo de compra no debe romperse por email.
@@ -1068,6 +1072,15 @@ def ver_pedido(request, token: str):
         canal=ReciboVenta.CANAL_ONLINE,
         payment_reference=token,
     )
+    # Conversion de Google Ads: SOLO en la primera visita post-pago
+    # (checkout_retorno deja la marca en sesion). El cliente revisita
+    # esta pagina desde el email — el pop garantiza un solo disparo.
+    es_compra_recien_pagada = (
+        request.session.pop('ads_compra_pk', None) == recibo.pk
+    )
+    if es_compra_recien_pagada:
+        request.session.modified = True
+
     return render(request, 'ecommerce/pedido.html', {
         'recibo': recibo,
         'items_count': Cart(request.session).items_count,
@@ -1075,6 +1088,7 @@ def ver_pedido(request, token: str):
         # FEATURE_ENVIOS apagada el checkout no pide direccion, asi que
         # TODOS los pedidos son retiro.
         'es_retiro_local': not (recibo.cliente_direccion or '').strip(),
+        'es_compra_recien_pagada': es_compra_recien_pagada,
     })
 
 

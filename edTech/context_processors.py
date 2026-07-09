@@ -19,6 +19,8 @@ def public_settings(request):
         # Microsoft Clarity: heatmaps + session replays. Solo se inyecta
         # si esta seteado (en dev queda vacio -> sin tracking).
         'CLARITY_PROJECT_ID': getattr(settings, 'CLARITY_PROJECT_ID', ''),
+        # Google tag (Ads/GA4). Solo se inyecta si esta seteado.
+        'GOOGLE_TAG_ID': getattr(settings, 'GOOGLE_TAG_ID', ''),
         'SITE_URL': getattr(settings, 'SITE_URL', ''),
         # BUG-009: número de WhatsApp para wa.me/... en el landing y /info/.
         'PUBLIC_WHATSAPP': getattr(settings, 'PUBLIC_WHATSAPP', ''),

@@ -263,6 +263,21 @@
 
 {% include 'ecommerce/_shop_footer.html' %}
 
+{% if es_compra_recien_pagada and GOOGLE_TAG_ID %}
+{% comment %}
+  Conversión de Google Ads / GA4: evento `purchase` estándar.
+  Se dispara SOLO en la primera visita tras el pago (flag one-shot
+  de sesión) y lleva transaction_id — Google deduplica por si acaso.
+{% endcomment %}
+<script>
+  gtag('event', 'purchase', {
+    transaction_id: 'IB-{{ recibo.pk }}',
+    value: {{ recibo.total|floatformat:0 }},
+    currency: 'CLP',
+  });
+</script>
+{% endif %}
+
 <style>
   /* ============================================================
      Página pública de pedido — vocabulario boutique

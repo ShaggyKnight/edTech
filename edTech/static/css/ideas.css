@@ -364,6 +364,11 @@ input, select { font-family: inherit; }
 .shop-actions button:hover { background: var(--cream-3); }
 .cart-dot { position: absolute; top: 4px; right: 4px; background: var(--vino); color: var(--cream); border-radius: 999px; font-size: 10px; font-weight: 600; min-width: 16px; height: 16px; padding: 0 4px; display: flex; align-items: center; justify-content: center; }
 .shop-promo { background: var(--ink); color: var(--cream); text-align: center; padding: 8px; font-size: 12px; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: center; gap: 10px; }
+/* Banner de campaña: la misma barra, pero en vino y clickeable. Aparece
+   solo cuando hay una oferta vigente de toda la tienda o de una familia. */
+a.shop-promo--sale { background: var(--vino); color: #fff; font-weight: 600; text-decoration: none; flex-wrap: wrap; row-gap: 2px; }
+a.shop-promo--sale:hover { filter: brightness(1.08); }
+a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 
 /* Shop home */
 .shop-home { max-width: 1360px; margin: 0 auto; padding: 40px; }

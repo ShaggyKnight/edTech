@@ -84,6 +84,31 @@ def mejor_descuento_unitario(item, canal: str, ahora=None):
     return (min(mejor_desc, precio_unit), mejor_oferta)
 
 
+def oferta_banner_online(ahora=None):
+    """La campaña vigente que merece banner en la tienda online.
+
+    Solo ofertas de alcance amplio — toda la tienda o una familia
+    completa (las puntuales de producto/variante no son "campaña").
+    Si conviven varias: gana la global; si no hay, la de familia que
+    partió más recientemente. Devuelve la `Oferta` o None.
+    """
+    ahora = ahora or timezone.now()
+    campanas = Oferta.objects.filter(
+        activa=True,
+        fecha_inicio__lte=ahora,
+        fecha_fin__gte=ahora,
+        canal__in=(Oferta.CANAL_ONLINE, Oferta.CANAL_AMBOS),
+        producto__isnull=True,
+        variante__isnull=True,
+    ).select_related('familia')
+    global_vigente = (campanas.filter(familia__isnull=True)
+                      .order_by('-fecha_inicio').first())
+    if global_vigente:
+        return global_vigente
+    return (campanas.filter(familia__isnull=False)
+            .order_by('-fecha_inicio').first())
+
+
 def descuento_unitario(item, precio_unit: Decimal, canal: str, ahora=None) -> Decimal:
     """Wrapper retrocompatible para pos.cart / ecommerce.cart.
 

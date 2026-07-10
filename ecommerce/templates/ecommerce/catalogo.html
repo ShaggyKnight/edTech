@@ -125,12 +125,12 @@
 
         <div id="filter-talla">
           {% comment %}
-            Talle: solo muestra los que existen con stock. Filtra productos
+            Tallas: solo muestra las que existen con stock. Filtra productos
             que tienen al menos una variante de esa talla disponible.
           {% endcomment %}
           {% if tallas_disponibles %}
             <div class="filter-group">
-              <div class="filter-title">Talle</div>
+              <div class="filter-title">Talla</div>
               <div class="size-chips">
                 {% for t in tallas_disponibles %}
                   <button type="button" data-talla="{{ t }}"

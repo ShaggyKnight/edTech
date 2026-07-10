@@ -592,6 +592,15 @@ class Oferta(models.Model):
             return f'Familia {self.familia.nombre}'
         return 'Toda la tienda'
 
+    @property
+    def descuento_texto(self):
+        """El descuento listo para mostrar: "-15%" o "-$5.000"."""
+        if self.tipo == self.TIPO_PORCENTAJE:
+            entero = int(self.valor)
+            valor = entero if self.valor == entero else self.valor.normalize()
+            return f'-{valor}%'
+        return '-$' + f'{int(self.valor):,}'.replace(',', '.')
+
     def vigente(self, momento=None):
         momento = momento or timezone.now()
         return self.activa and self.fecha_inicio <= momento <= self.fecha_fin

@@ -14,6 +14,13 @@ def public_settings(request):
     Mantenido minimo a proposito - no exponer secretos. Solo flags y
     valores publicos cuyo conocimiento por el cliente no es problema.
     """
+    def _oferta_banner():
+        # Campaña vigente (toda la tienda / familia) para el banner del
+        # sitio publico. Lazy: la query solo corre si un template lo pide
+        # (el header de la tienda y el landing).
+        from catalogo.precios import oferta_banner_online
+        return oferta_banner_online()
+
     return {
         'ANALYTICS_DOMAIN': getattr(settings, 'ANALYTICS_DOMAIN', ''),
         # Microsoft Clarity: heatmaps + session replays. Solo se inyecta
@@ -27,6 +34,9 @@ def public_settings(request):
         # Envios a domicilio. OFF = solo retiro en tienda: el checkout no
         # pide direccion y los templates esconden toda mencion a envios.
         'FEATURE_ENVIOS': getattr(settings, 'FEATURE_ENVIOS', False),
+        # Oferta de campaña vigente (o None) — banner automatico en la
+        # barra de promo: aparece al crear la oferta y muere con ella.
+        'OFERTA_BANNER': SimpleLazyObject(_oferta_banner),
     }
 
 

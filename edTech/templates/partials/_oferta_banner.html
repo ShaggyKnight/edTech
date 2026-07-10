@@ -1,0 +1,17 @@
+{% comment %}
+  Banner de campaña — aparece solo cuando hay una oferta vigente online
+  de toda la tienda o de una familia completa (OFERTA_BANNER, context
+  processor public_settings). Se crea la oferta en el backoffice y el
+  banner aparece; vence la oferta y desaparece. Cero mantención.
+{% endcomment %}
+{% if OFERTA_BANNER %}
+  <a class="shop-promo shop-promo--sale" href="{% url 'ecommerce:catalogo' %}?oferta=1">
+    <svg class="ico ico--14"><use href="#ico-tag"/></svg>
+    <span>
+      {{ OFERTA_BANNER.descuento_texto }}
+      {% if OFERTA_BANNER.familia %}en {{ OFERTA_BANNER.familia.nombre }}{% else %}en toda la tienda{% endif %}
+      · hasta el {{ OFERTA_BANNER.fecha_fin|date:"j \d\e F" }}
+    </span>
+    <span class="promo-cta">Ver ofertas →</span>
+  </a>
+{% endif %}

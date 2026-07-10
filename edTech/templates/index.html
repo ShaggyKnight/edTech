@@ -7,6 +7,9 @@
 {% block body %}
 <div class="landing">
 
+  {# Banner de campaña — solo aparece con una oferta vigente de tienda/familia. #}
+  {% include 'partials/_oferta_banner.html' %}
+
   {# ========== NAV ========== #}
   <nav class="landing-nav" id="landingNav">
     <a href="{% url 'index' %}" class="ideas-logo ideas-logo--cream" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">

@@ -96,6 +96,108 @@ class PreciosHelpersTests(TestCase):
         self.assertEqual(desc, Decimal('2000.00'))
 
 
+class OfertasFamiliaYTiendaTests(TestCase):
+    """Ofertas por familia completa y por toda la tienda (lanzamiento).
+
+    Reglas: la oferta de familia alcanza a todos los productos (y sus
+    variantes) de esa familia; la global a todo el catálogo. Cuando un
+    item queda alcanzado por varias, gana la que MÁS descuenta — no se
+    acumulan.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.perfumes = Familia.objects.create(nombre='Perfumes')
+        cls.uniformes = Familia.objects.create(nombre='Uniformes')
+
+        cls.perfume = Producto.objects.create(
+            familia=cls.perfumes, nombre='Perfume F',
+            precio_base=Decimal('20000'), tiene_variantes=False,
+        )
+        cls.buzo = Producto.objects.create(
+            familia=cls.uniformes, nombre='Buzo F',
+            precio_base=Decimal('30000'), tiene_variantes=True,
+        )
+        atr = Atributo.objects.create(nombre='Talla')
+        val_m = ValorAtributo.objects.create(atributo=atr, valor='M', orden=2)
+        cls.buzo_m = ProductoVariante.objects.create(producto=cls.buzo, sku='BZF-M')
+        cls.buzo_m.valores.add(val_m)
+
+    def _oferta(self, **kw):
+        defaults = dict(
+            nombre='O', tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('10'),
+            canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=timezone.now() - timedelta(days=1),
+            fecha_fin=timezone.now() + timedelta(days=5),
+            activa=True,
+        )
+        defaults.update(kw)
+        return Oferta.objects.create(**defaults)
+
+    def test_oferta_de_familia_aplica_a_sus_productos(self):
+        self._oferta(nombre='Perfumes -20%', familia=self.perfumes,
+                     valor=Decimal('20'))
+        desc, oferta = mejor_descuento_unitario(self.perfume, 'online')
+        self.assertEqual(desc, Decimal('4000.00'))  # 20% de 20000
+        self.assertEqual(oferta.nombre, 'Perfumes -20%')
+
+    def test_oferta_de_familia_no_aplica_a_otra_familia(self):
+        self._oferta(nombre='Perfumes -20%', familia=self.perfumes,
+                     valor=Decimal('20'))
+        desc, oferta = mejor_descuento_unitario(self.buzo, 'online')
+        self.assertEqual(desc, Decimal('0'))
+        self.assertIsNone(oferta)
+
+    def test_oferta_de_familia_alcanza_a_las_variantes(self):
+        self._oferta(nombre='Uniformes -10%', familia=self.uniformes)
+        desc, oferta = mejor_descuento_unitario(self.buzo_m, 'online')
+        self.assertEqual(desc, Decimal('3000.00'))  # 10% de 30000
+        self.assertIsNotNone(oferta)
+
+    def test_oferta_global_aplica_a_todo(self):
+        self._oferta(nombre='Lanzamiento -15%', valor=Decimal('15'))
+        desc_p, _ = mejor_descuento_unitario(self.perfume, 'online')
+        desc_v, _ = mejor_descuento_unitario(self.buzo_m, 'online')
+        self.assertEqual(desc_p, Decimal('3000.00'))   # 15% de 20000
+        self.assertEqual(desc_v, Decimal('4500.00'))   # 15% de 30000
+
+    def test_gana_el_mayor_descuento_sin_acumular(self):
+        """Global -15% + familia perfumes -30% → el perfume descuenta 30%
+        (no 45%) y el buzo el 15% global."""
+        self._oferta(nombre='Global', valor=Decimal('15'))
+        self._oferta(nombre='Perfumes 30', familia=self.perfumes,
+                     valor=Decimal('30'))
+        desc_perfume, oferta_p = mejor_descuento_unitario(self.perfume, 'online')
+        self.assertEqual(desc_perfume, Decimal('6000.00'))  # 30%, no 45%
+        self.assertEqual(oferta_p.nombre, 'Perfumes 30')
+        desc_buzo, oferta_b = mejor_descuento_unitario(self.buzo_m, 'online')
+        self.assertEqual(desc_buzo, Decimal('4500.00'))
+        self.assertEqual(oferta_b.nombre, 'Global')
+
+    def test_oferta_puntual_mayor_le_gana_a_la_de_familia(self):
+        self._oferta(nombre='Familia 10', familia=self.perfumes)
+        self._oferta(nombre='Puntual 25', producto=self.perfume,
+                     valor=Decimal('25'))
+        desc, oferta = mejor_descuento_unitario(self.perfume, 'online')
+        self.assertEqual(desc, Decimal('5000.00'))
+        self.assertEqual(oferta.nombre, 'Puntual 25')
+
+    def test_familia_respeta_canal(self):
+        self._oferta(nombre='Solo presencial', familia=self.perfumes,
+                     canal=Oferta.CANAL_PRESENCIAL, valor=Decimal('50'))
+        desc, _ = mejor_descuento_unitario(self.perfume, 'online')
+        self.assertEqual(desc, Decimal('0'))
+
+    def test_properties_online_con_oferta_de_familia(self):
+        """El catálogo y el PDP (properties del modelo) reflejan la
+        oferta de familia sin código extra."""
+        self._oferta(nombre='Perfumes -20%', familia=self.perfumes,
+                     valor=Decimal('20'))
+        self.assertTrue(self.perfume.tiene_oferta_online)
+        self.assertEqual(self.perfume.precio_oferta_online, Decimal('16000.00'))
+        self.assertEqual(self.perfume.descuento_porcentaje_online, 20)
+
+
 class ProductoPreciosOnlineTests(TestCase):
     """Properties precio_oferta_online / tiene_oferta_online / descuento_pct."""
 

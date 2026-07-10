@@ -158,6 +158,83 @@ class OfertasCrudTests(TestCase):
         o = Oferta.objects.get()
         self.assertEqual(o.valor, Decimal('5000'))
 
+    # ── Alcances nuevos: familia completa y toda la tienda ─────────────
+
+    def test_crear_oferta_por_familia(self):
+        resp = self._post_oferta(producto='', familia=self.fam.pk)
+        self.assertEqual(resp.status_code, 302)
+        o = Oferta.objects.get()
+        self.assertEqual(o.familia, self.fam)
+        self.assertIsNone(o.producto)
+        self.assertIsNone(o.variante)
+
+    def test_crear_oferta_toda_la_tienda(self):
+        """El check explícito crea una oferta global (sin ningún target)."""
+        resp = self._post_oferta(producto='', toda_la_tienda='on')
+        self.assertEqual(resp.status_code, 302)
+        o = Oferta.objects.get()
+        self.assertIsNone(o.familia)
+        self.assertIsNone(o.producto)
+        self.assertIsNone(o.variante)
+        self.assertEqual(o.alcance_texto, 'Toda la tienda')
+
+    def test_crear_falla_familia_y_producto_juntos(self):
+        """Alcances ambiguos se rechazan — la oferta aplica a UNO solo."""
+        resp = self._post_oferta(familia=self.fam.pk)  # + producto default
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'un solo alcance')
+        self.assertEqual(Oferta.objects.count(), 0)
+
+    def test_crear_falla_toda_la_tienda_mas_producto(self):
+        """Backstop server-side: si llegan el check Y un producto (sin el
+        JS que deshabilita los selects), se rechaza."""
+        resp = self._post_oferta(toda_la_tienda='on')  # + producto default
+        self.assertEqual(resp.status_code, 200)
+        # "Marcaste" solo aparece en el mensaje de error, no en el form.
+        self.assertContains(resp, 'Marcaste')
+        self.assertEqual(Oferta.objects.count(), 0)
+
+    def test_editar_oferta_global_muestra_check_marcado(self):
+        o = Oferta.objects.create(
+            nombre='Lanzamiento', tipo=Oferta.TIPO_PORCENTAJE,
+            valor=Decimal('15'), canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=self.ahora - timedelta(days=1),
+            fecha_fin=self.ahora + timedelta(days=7),
+        )
+        resp = self.client.get(reverse('bodega:oferta_editar', args=[o.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.context['form'].initial.get('toda_la_tienda'))
+
+    def test_listado_describe_alcances_familia_y_tienda(self):
+        Oferta.objects.create(
+            nombre='Solo perfumes', familia=self.fam,
+            tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('20'),
+            canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=self.ahora - timedelta(days=1),
+            fecha_fin=self.ahora + timedelta(days=7),
+        )
+        Oferta.objects.create(
+            nombre='Lanzamiento general',
+            tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('10'),
+            canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=self.ahora - timedelta(days=1),
+            fecha_fin=self.ahora + timedelta(days=7),
+        )
+        resp = self.client.get(reverse('bodega:lista_ofertas'))
+        self.assertContains(resp, 'Familia Perfumes')
+        self.assertContains(resp, 'Toda la tienda')
+
+    def test_busqueda_encuentra_por_nombre_de_familia(self):
+        Oferta.objects.create(
+            nombre='PromoFam', familia=self.fam,
+            tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('20'),
+            canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=self.ahora - timedelta(days=1),
+            fecha_fin=self.ahora + timedelta(days=7),
+        )
+        resp = self.client.get(reverse('bodega:lista_ofertas') + '?q=perfum')
+        self.assertContains(resp, 'PromoFam')
+
     # ── Listar / filtros ───────────────────────────────────────────────
 
     def _crear_oferta_directa(self, nombre, fi_delta_dias, ff_delta_dias,

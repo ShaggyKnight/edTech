@@ -199,3 +199,83 @@ class FiltroSoloOfertasTests(TestCase):
         resp = self.client.get(reverse('ecommerce:catalogo') + '?cat=perfumes&oferta=1')
         self.assertContains(resp, 'Perfume Con Oferta')
         self.assertNotContains(resp, 'Buzo Con Oferta')
+
+
+@override_settings(ECOMMERCE_PAYMENT_GATEWAY='mock')
+class FiltroOfertasFamiliaYGlobalTests(TestCase):
+    """El filtro ?oferta=1 también reconoce ofertas por familia completa
+    y por toda la tienda (descuento general de lanzamiento)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.tienda = Tienda.objects.create(nombre_organizacion='Online', activa=True)
+        cls.perfumes = Familia.objects.create(nombre='Perfumes')
+        cls.uniformes = Familia.objects.create(nombre='Uniformes')
+
+        cls.perfume = Producto.objects.create(
+            familia=cls.perfumes, nombre='Perfume Familiar',
+            precio_base=Decimal('20000'), tiene_variantes=False,
+        )
+        StockTienda.objects.create(tienda=cls.tienda, producto=cls.perfume, cantidad=5)
+
+        cls.buzo = Producto.objects.create(
+            familia=cls.uniformes, nombre='Buzo Sin Nada',
+            precio_base=Decimal('30000'), tiene_variantes=False,
+        )
+        StockTienda.objects.create(tienda=cls.tienda, producto=cls.buzo, cantidad=5)
+
+    def setUp(self):
+        self.settings_override = self.settings(ECOMMERCE_TIENDA_ID=self.tienda.pk)
+        self.settings_override.enable()
+        self.ahora = timezone.now()
+
+    def tearDown(self):
+        self.settings_override.disable()
+
+    def _oferta(self, **kw):
+        defaults = dict(
+            nombre='O', tipo=Oferta.TIPO_PORCENTAJE, valor=Decimal('15'),
+            canal=Oferta.CANAL_AMBOS,
+            fecha_inicio=self.ahora - timedelta(days=1),
+            fecha_fin=self.ahora + timedelta(days=5),
+            activa=True,
+        )
+        defaults.update(kw)
+        return Oferta.objects.create(**defaults)
+
+    def test_oferta_de_familia_entra_al_filtro(self):
+        self._oferta(nombre='Perfumes -20%', familia=self.perfumes)
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?oferta=1')
+        self.assertContains(resp, 'Perfume Familiar')
+        self.assertNotContains(resp, 'Buzo Sin Nada')
+
+    def test_oferta_global_muestra_todo_el_catalogo(self):
+        self._oferta(nombre='Lanzamiento -15%')
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?oferta=1')
+        self.assertContains(resp, 'Perfume Familiar')
+        self.assertContains(resp, 'Buzo Sin Nada')
+
+    def test_oferta_global_vencida_no_cuenta(self):
+        self._oferta(
+            nombre='Lanzamiento viejo',
+            fecha_inicio=self.ahora - timedelta(days=10),
+            fecha_fin=self.ahora - timedelta(days=1),
+        )
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?oferta=1')
+        self.assertNotContains(resp, 'Perfume Familiar')
+        self.assertNotContains(resp, 'Buzo Sin Nada')
+
+    def test_oferta_de_familia_solo_presencial_no_cuenta_online(self):
+        self._oferta(nombre='Solo local', familia=self.perfumes,
+                     canal=Oferta.CANAL_PRESENCIAL)
+        resp = self.client.get(reverse('ecommerce:catalogo') + '?oferta=1')
+        self.assertNotContains(resp, 'Perfume Familiar')
+
+    def test_card_muestra_precio_rebajado_con_oferta_global(self):
+        """Con el descuento general activo, las cards del catálogo
+        muestran el precio tachado sin tocar nada más."""
+        self._oferta(nombre='Lanzamiento -15%')
+        resp = self.client.get(reverse('ecommerce:catalogo'))
+        body = resp.content.decode()
+        self.assertIn('pcard-price-sale', body)
+        self.assertIn('pcard-old', body)

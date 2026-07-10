@@ -1,7 +1,6 @@
 from decimal import Decimal
 from functools import cached_property
 
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils import timezone
@@ -522,7 +521,10 @@ class ProductoVariante(models.Model):
 
 
 class Oferta(models.Model):
-    """Descuento aplicable a un producto o variante, por canal y ventana de fechas."""
+    """Descuento por canal y ventana de fechas, con cuatro alcances posibles:
+    variante puntual > producto > familia completa > toda la tienda (sin
+    target). Los descuentos NO se acumulan: para cada item gana el mayor.
+    """
 
     CANAL_PRESENCIAL = 'presencial'
     CANAL_ONLINE = 'online'
@@ -547,6 +549,11 @@ class Oferta(models.Model):
     variante = models.ForeignKey(
         ProductoVariante, on_delete=models.CASCADE, null=True, blank=True, related_name='ofertas'
     )
+    familia = models.ForeignKey(
+        Familia, on_delete=models.CASCADE, null=True, blank=True, related_name='ofertas',
+        help_text='Descuento a TODOS los productos de la familia. '
+                  'Sin familia, producto ni variante = toda la tienda.',
+    )
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     valor = models.DecimalField(max_digits=10, decimal_places=2)
     canal = models.CharField(max_length=20, choices=CANAL_CHOICES, default=CANAL_AMBOS)
@@ -559,10 +566,6 @@ class Oferta(models.Model):
     class Meta:
         ordering = ['-fecha_inicio']
         constraints = [
-            CheckConstraint(
-                check=Q(producto__isnull=False) | Q(variante__isnull=False),
-                name='oferta_tiene_target',
-            ),
             CheckConstraint(
                 check=Q(fecha_fin__gte=models.F('fecha_inicio')),
                 name='oferta_fechas_coherentes',
@@ -578,9 +581,16 @@ class Oferta(models.Model):
     def __str__(self):
         return self.nombre
 
-    def clean(self):
-        if not self.producto and not self.variante:
-            raise ValidationError('Debe aplicar a un producto o una variante.')
+    @property
+    def alcance_texto(self):
+        """Descripción corta del alcance, para listados y el admin."""
+        if self.variante_id:
+            return f'{self.variante.producto.nombre} — SKU {self.variante.sku}'
+        if self.producto_id:
+            return self.producto.nombre
+        if self.familia_id:
+            return f'Familia {self.familia.nombre}'
+        return 'Toda la tienda'
 
     def vigente(self, momento=None):
         momento = momento or timezone.now()

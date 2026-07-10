@@ -73,8 +73,12 @@
               {% elif o.producto %}
                 <div>{{ o.producto.nombre }}</div>
                 <div style="font-size:11px;color:var(--bo-muted);">Todas las variantes</div>
+              {% elif o.familia %}
+                <div>Familia {{ o.familia.nombre }}</div>
+                <div style="font-size:11px;color:var(--bo-muted);">Todos sus productos</div>
               {% else %}
-                <span style="color:var(--bo-muted);">—</span>
+                <div>🏷️ Toda la tienda</div>
+                <div style="font-size:11px;color:var(--bo-muted);">Todos los productos</div>
               {% endif %}
             </td>
             <td class="num">

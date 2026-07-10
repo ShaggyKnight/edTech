@@ -34,6 +34,32 @@
         <div class="bo-card-head" style="border-top:1px solid var(--bo-border);padding-top:16px;margin-top:8px;">
           <h3 style="font-size:14px;">¿A qué aplica la oferta?</h3>
         </div>
+        <p style="margin:0 0 12px;font-size:12px;color:var(--bo-muted);">
+          Elige <strong>un</strong> alcance: toda la tienda, una familia completa,
+          un producto o una variante puntual. Si un producto queda alcanzado por
+          varias ofertas, se aplica la que más descuenta (no se suman).
+        </p>
+
+        <div class="bo-field" style="display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--bo-border);border-radius:var(--bo-radius);background:var(--bo-bg);">
+          {{ form.toda_la_tienda }}
+          <label for="{{ form.toda_la_tienda.id_for_label }}" style="margin:0;font-weight:600;">
+            🏷️ Toda la tienda
+          </label>
+          <small style="color:var(--bo-muted);font-size:11px;">
+            Descuento general a todos los productos del catálogo.
+          </small>
+        </div>
+        {% if form.toda_la_tienda.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.toda_la_tienda.errors }}</div>{% endif %}
+
+        <div id="alcances-puntuales">
+        <div class="bo-field">
+          <label for="{{ form.familia.id_for_label }}">Familia completa</label>
+          {{ form.familia }}
+          {% if form.familia.help_text %}
+            <small style="color:var(--bo-muted);font-size:11px;">{{ form.familia.help_text }}</small>
+          {% endif %}
+          {% if form.familia.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.familia.errors }}</div>{% endif %}
+        </div>
 
         <div class="bo-field">
           <label for="{{ form.producto.id_for_label }}">Producto</label>
@@ -68,6 +94,28 @@
           {% endif %}
           {% if form.variante.errors %}<div class="bo-alert bo-alert-danger" style="margin-top:6px;">{{ form.variante.errors }}</div>{% endif %}
         </div>
+        </div>{% comment %} /#alcances-puntuales {% endcomment %}
+
+        <script>
+          // Check "toda la tienda" → apaga (y deshabilita) los alcances
+          // puntuales. Deshabilitados no viajan en el POST, así el server
+          // recibe un alcance limpio. La validación del form igual cubre
+          // el caso sin JS.
+          (function () {
+            var check = document.getElementById('{{ form.toda_la_tienda.id_for_label }}');
+            var zona = document.getElementById('alcances-puntuales');
+            if (!check || !zona) return;
+            function refrescar() {
+              var global = check.checked;
+              zona.style.opacity = global ? '0.45' : '';
+              zona.querySelectorAll('select, input').forEach(function (el) {
+                el.disabled = global;
+              });
+            }
+            check.addEventListener('change', refrescar);
+            refrescar();
+          })();
+        </script>
 
         <script>
           // Filtra las options de un <select size=8> ocultando las que

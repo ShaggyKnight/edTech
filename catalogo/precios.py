@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from django.db.models import Q
 from django.utils import timezone
 
 from catalogo.models import Oferta, Producto, ProductoVariante
@@ -23,15 +24,32 @@ def precio_unitario(item) -> Decimal:
     return item.precio_base
 
 
+# Ofertas SIN target puntual: aplican a una familia entera o (con familia
+# también en NULL) a toda la tienda.
+_SIN_TARGET_PUNTUAL = Q(producto__isnull=True, variante__isnull=True)
+
+
 def _ofertas_para_item(item):
-    """Queryset de ofertas que apuntan a este item (no filtra fecha/canal/activa)."""
+    """Queryset de ofertas que alcanzan a este item (no filtra fecha/canal/activa).
+
+    Cuatro alcances, de más puntual a más amplio: la variante misma, su
+    producto padre, la familia del producto y toda la tienda. Acá se juntan
+    TODAS las candidatas; `mejor_descuento_unitario` elige la que más
+    descuenta (no se acumulan).
+    """
     if isinstance(item, ProductoVariante):
-        # Ofertas puntuales de la variante O del producto padre (que aplican
-        # a todas las variantes).
-        return Oferta.objects.filter(variante=item) | Oferta.objects.filter(
-            producto=item.producto, variante__isnull=True,
+        producto = item.producto
+        return Oferta.objects.filter(
+            Q(variante=item)
+            | Q(producto=producto, variante__isnull=True)
+            | (_SIN_TARGET_PUNTUAL & Q(familia_id=producto.familia_id))
+            | (_SIN_TARGET_PUNTUAL & Q(familia__isnull=True))
         )
-    return Oferta.objects.filter(producto=item, variante__isnull=True)
+    return Oferta.objects.filter(
+        Q(producto=item, variante__isnull=True)
+        | (_SIN_TARGET_PUNTUAL & Q(familia_id=item.familia_id))
+        | (_SIN_TARGET_PUNTUAL & Q(familia__isnull=True))
+    )
 
 
 def mejor_descuento_unitario(item, canal: str, ahora=None):

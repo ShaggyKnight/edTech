@@ -259,6 +259,25 @@ Revisar la cartola del banco y:
 Solo `admin` y `operador` pueden confirmar/anular (es plata); el
 despachador puro solo ve la lista.
 
+### Descuento general de lanzamiento (ofertas por tienda o familia)
+
+Backoffice → **Ofertas → Nueva oferta** (rol `admin` u `operador`).
+Una oferta tiene **un** alcance:
+
+- **🏷️ Toda la tienda** (checkbox) — descuento general a todo el catálogo.
+- **Familia completa** — ej. solo los perfumes.
+- **Producto** o **variante puntual** — como siempre.
+
+Reglas útiles:
+- Los descuentos **no se suman**: si un producto queda alcanzado por
+  varias ofertas, se aplica la que MÁS descuenta. Ej: "-15% toda la
+  tienda" + "-30% perfumes" → los perfumes bajan 30%, el resto 15%.
+- El fin de la promo se programa con la **fecha de término** — al
+  vencer, los precios vuelven solos (no hay que borrar nada).
+- El **canal** permite diferenciar online vs tienda física.
+- El precio tachado y el % aparecen automáticamente en catálogo, PDP,
+  carrito y POS; el link "Ofertas" del sitio lista lo rebajado.
+
 ### Conectarse al Django shell (debugging avanzado)
 
 ```bash

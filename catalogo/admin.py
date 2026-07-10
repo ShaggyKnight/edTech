@@ -176,9 +176,19 @@ class ProductoVarianteAdmin(admin.ModelAdmin):
 
 @admin.register(Oferta)
 class OfertaAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'tipo', 'valor', 'canal', 'fecha_inicio', 'fecha_fin', 'activa']
-    list_filter = ['canal', 'tipo', 'activa']
-    search_fields = ['nombre']
+    list_display = ['nombre', 'alcance_texto', 'tipo', 'valor', 'canal',
+                    'fecha_inicio', 'fecha_fin', 'activa']
+    list_filter = ['canal', 'tipo', 'activa', 'familia']
+    search_fields = ['nombre', 'producto__nombre', 'familia__nombre']
+
+    @admin.display(description='Aplica a')
+    def alcance_texto(self, obj):
+        return obj.alcance_texto
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'producto', 'variante', 'variante__producto', 'familia',
+        )
 
 
 @admin.register(Resena)

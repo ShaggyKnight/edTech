@@ -1050,17 +1050,24 @@ def producto_editar(request, pk):
     else:
         form = ProductoForm(instance=p)
 
-    # Ofertas que afectan a este producto: ya sea directas (Oferta.producto)
-    # o vía variante (Oferta.variante.producto). Solo se muestran a quien
+    # Ofertas que afectan a este producto: directas (Oferta.producto),
+    # vía variante (Oferta.variante.producto), por su familia o por una
+    # oferta de toda la tienda — así el precio rebajado que se ve en el
+    # catálogo siempre tiene su explicación acá. Solo se muestran a quien
     # ya tiene permisos para ver/cambiar ofertas — no es información que
     # un bodeguero de stock necesite ver.
     ofertas = []
     if _puede_gestionar_ofertas(request.user):
         ahora = timezone.now()
+        sin_target = Q(producto__isnull=True, variante__isnull=True)
         ofertas_qs = (
             Oferta.objects
-            .filter(Q(producto=p) | Q(variante__producto=p))
-            .select_related('producto', 'variante', 'variante__producto')
+            .filter(
+                Q(producto=p) | Q(variante__producto=p)
+                | (sin_target & Q(familia=p.familia_id))
+                | (sin_target & Q(familia__isnull=True))
+            )
+            .select_related('producto', 'variante', 'variante__producto', 'familia')
             .order_by('-fecha_inicio')
         )
         for o in ofertas_qs:
@@ -1471,7 +1478,7 @@ def lista_ofertas(request):
     qs = (
         Oferta.objects
         .select_related('producto', 'producto__familia',
-                        'variante', 'variante__producto')
+                        'variante', 'variante__producto', 'familia')
     )
 
     q = (request.GET.get('q') or '').strip()
@@ -1484,6 +1491,7 @@ def lista_ofertas(request):
             | Q(producto__nombre__icontains=q)
             | Q(variante__sku__icontains=q)
             | Q(variante__producto__nombre__icontains=q)
+            | Q(familia__nombre__icontains=q)
         )
     if canal in (Oferta.CANAL_PRESENCIAL, Oferta.CANAL_ONLINE, Oferta.CANAL_AMBOS):
         qs = qs.filter(canal=canal)

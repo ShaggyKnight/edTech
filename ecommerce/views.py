@@ -253,8 +253,9 @@ def catalogo(request):
     if solo_ofertas:
         # "Solo ofertas vigentes" del header de la tienda. Vigente =
         # activa + en ventana de fechas + canal online o ambos.
-        # La oferta puede apuntar al producto o a una variante del
-        # producto — ambos casos lo hacen "estar en oferta".
+        # La oferta puede apuntar al producto, a una variante, a la
+        # familia completa o a toda la tienda — cualquiera de los
+        # cuatro alcances lo hace "estar en oferta".
         ahora = timezone.now()
         ofertas_vigentes = Oferta.objects.filter(
             activa=True,
@@ -262,16 +263,28 @@ def catalogo(request):
             fecha_fin__gte=ahora,
             canal__in=(Oferta.CANAL_ONLINE, Oferta.CANAL_AMBOS),
         )
-        oferta_directa = ofertas_vigentes.filter(producto=OuterRef('pk'))
-        oferta_via_variante = ofertas_vigentes.filter(
-            variante__producto=OuterRef('pk'),
+        sin_target_puntual = ofertas_vigentes.filter(
+            producto__isnull=True, variante__isnull=True,
         )
-        productos_qs = productos_qs.annotate(
-            tiene_oferta_directa=Exists(oferta_directa),
-            tiene_oferta_via_variante=Exists(oferta_via_variante),
-        ).filter(
-            Q(tiene_oferta_directa=True) | Q(tiene_oferta_via_variante=True)
-        )
+        if not sin_target_puntual.filter(familia__isnull=True).exists():
+            # No hay oferta global vigente. (Con una, TODO el catálogo
+            # está en oferta y no hay nada que filtrar.)
+            oferta_directa = ofertas_vigentes.filter(producto=OuterRef('pk'))
+            oferta_via_variante = ofertas_vigentes.filter(
+                variante__producto=OuterRef('pk'),
+            )
+            oferta_familia = sin_target_puntual.filter(
+                familia=OuterRef('familia_id'),
+            )
+            productos_qs = productos_qs.annotate(
+                tiene_oferta_directa=Exists(oferta_directa),
+                tiene_oferta_via_variante=Exists(oferta_via_variante),
+                tiene_oferta_familia=Exists(oferta_familia),
+            ).filter(
+                Q(tiene_oferta_directa=True)
+                | Q(tiene_oferta_via_variante=True)
+                | Q(tiene_oferta_familia=True)
+            )
 
     cart = Cart(request.session)
 

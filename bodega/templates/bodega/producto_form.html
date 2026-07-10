@@ -321,8 +321,12 @@
                     <td>
                       {% if o.variante %}
                         <span style="font-size:11px;color:var(--bo-muted);">SKU {{ o.variante.sku }}</span>
-                      {% else %}
+                      {% elif o.producto %}
                         <span style="font-size:11px;color:var(--bo-muted);">Todas las variantes</span>
+                      {% elif o.familia %}
+                        <span style="font-size:11px;color:var(--bo-muted);">Familia {{ o.familia.nombre }}</span>
+                      {% else %}
+                        <span style="font-size:11px;color:var(--bo-muted);">🏷️ Toda la tienda</span>
                       {% endif %}
                     </td>
                     <td class="num">

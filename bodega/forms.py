@@ -262,10 +262,17 @@ class MaterialForm(forms.ModelForm):
 
 
 class OfertaForm(forms.ModelForm):
-    """Crea o edita una Oferta (descuento aplicado a producto o variante).
+    """Crea o edita una Oferta.
+
+    Alcances (UNO solo por oferta):
+    - Toda la tienda (checkbox `toda_la_tienda` → sin familia/producto/variante).
+    - Una familia completa (todos sus productos).
+    - Un producto (todas sus variantes).
+    - Una variante puntual.
 
     Validaciones:
-    - Debe seleccionarse producto o variante (al menos uno).
+    - Debe elegirse exactamente un alcance. El checkbox "toda la tienda"
+      es explícito para que una oferta global jamás se cree por accidente.
     - Si se elige variante y producto, la variante debe pertenecer al
       producto. En cualquier caso si hay variante, el producto se ignora
       (la oferta queda anclada a la variante).
@@ -273,14 +280,21 @@ class OfertaForm(forms.ModelForm):
     - fecha_fin posterior a fecha_inicio.
     """
 
+    toda_la_tienda = forms.BooleanField(
+        required=False,
+        label='Toda la tienda',
+        help_text='Descuento general a TODOS los productos del catálogo.',
+    )
+
     class Meta:
         model = Oferta
         fields = [
-            'nombre', 'producto', 'variante', 'tipo', 'valor',
+            'nombre', 'familia', 'producto', 'variante', 'tipo', 'valor',
             'canal', 'fecha_inicio', 'fecha_fin', 'activa',
         ]
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'bo-input'}),
+            'familia': forms.Select(attrs={'class': 'bo-select'}),
             'producto': forms.Select(attrs={'class': 'bo-select'}),
             'variante': forms.Select(attrs={'class': 'bo-select'}),
             'tipo': forms.Select(attrs={'class': 'bo-select'}),
@@ -297,7 +311,8 @@ class OfertaForm(forms.ModelForm):
             'activa': forms.CheckboxInput(),
         }
         help_texts = {
-            'nombre': 'Identificable. Ej. "Black Friday 2026", "SFJ uniforme -10%".',
+            'nombre': 'Identificable. Ej. "Black Friday 2026", "Lanzamiento -15%".',
+            'familia': 'Aplica a TODOS los productos de la familia (ej. todos los perfumes). Vacío si es más puntual.',
             'producto': 'Aplica a todas las variantes del producto. Vacío si la oferta es por variante específica.',
             'variante': 'Solo si la oferta aplica a una variante puntual (ej. solo el Yara 30 ml). Si eliges variante, ignora el producto de arriba.',
             'valor': 'Si tipo=Porcentaje: 0-100. Si tipo=Monto fijo: pesos a descontar.',
@@ -306,6 +321,15 @@ class OfertaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['familia'].queryset = Familia.objects.order_by('nombre')
+        self.fields['familia'].required = False
+        self.fields['familia'].empty_label = '— Sin familia (más puntual) —'
+        # Al editar una oferta global existente, el checkbox llega marcado.
+        if self.instance.pk and not any([
+            self.instance.familia_id, self.instance.producto_id,
+            self.instance.variante_id,
+        ]):
+            self.initial.setdefault('toda_la_tienda', True)
         self.fields['producto'].queryset = (
             Producto.objects.filter(activo=True)
             .select_related('familia')
@@ -335,21 +359,37 @@ class OfertaForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        toda_la_tienda = cleaned.get('toda_la_tienda')
+        familia = cleaned.get('familia')
         producto = cleaned.get('producto')
         variante = cleaned.get('variante')
 
-        if not producto and not variante:
-            raise ValidationError(
-                'Tienes que elegir un producto o una variante específica.'
-            )
-        if producto and variante and variante.producto_id != producto.pk:
-            raise ValidationError(
-                f'La variante {variante.sku} no pertenece al producto {producto.nombre}.'
-            )
-        # Si la oferta es por variante, el producto queda en None — la
-        # variante ya determina a qué producto pertenece.
-        if variante:
-            cleaned['producto'] = None
+        if toda_la_tienda:
+            if familia or producto or variante:
+                raise ValidationError(
+                    'Marcaste "toda la tienda" — deja familia, producto y '
+                    'variante vacíos, o desmarca el check para acotar la oferta.'
+                )
+        else:
+            if familia and (producto or variante):
+                raise ValidationError(
+                    'Elegiste una familia Y un producto/variante. La oferta '
+                    'aplica a un solo alcance: deja solo la familia si es para '
+                    'todos sus productos, o quítala si es puntual.'
+                )
+            if not familia and not producto and not variante:
+                raise ValidationError(
+                    'Elige a qué aplica: toda la tienda (check de arriba), '
+                    'una familia, un producto o una variante específica.'
+                )
+            if producto and variante and variante.producto_id != producto.pk:
+                raise ValidationError(
+                    f'La variante {variante.sku} no pertenece al producto {producto.nombre}.'
+                )
+            # Si la oferta es por variante, el producto queda en None — la
+            # variante ya determina a qué producto pertenece.
+            if variante:
+                cleaned['producto'] = None
 
         tipo = cleaned.get('tipo')
         valor = cleaned.get('valor')

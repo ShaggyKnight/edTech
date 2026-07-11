@@ -792,3 +792,26 @@ button.needs-selection:hover {
 .resena-done strong { font-family: var(--serif); font-size: 18px; }
 .resena-done p { margin: 4px 0 0; color: var(--ink-60); font-size: 14px; }
 
+/* --- Catálogo en teléfonos: 2 columnas compactas --------------
+   ideas.css colapsa la grilla a 1 columna bajo 520px → cards
+   gigantes y apenas 1½ productos por pantalla. Patrón retail
+   móvil: 2 columnas con card compacta ≈ 4 productos a la vista.
+   Este archivo carga después, así que estas reglas ganan.
+   -------------------------------------------------------------*/
+@media (max-width: 520px) {
+  .shop-grid,
+  .shop-grid.four          { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .shop-cat-page           { padding-left: 12px; padding-right: 12px; }
+
+  /* Card compacta: menos padding y tipografía un punto más chica,
+     manteniendo el precio bien legible. */
+  .pcard-body              { padding: 10px; }
+  .pcard-cat               { font-size: 9.5px; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .pcard-name              { font-size: 12.5px; min-height: 32px; margin-bottom: 6px; }
+  .pcard-price             { font-size: 13.5px; }
+  .pcard-old               { font-size: 11px; }
+  .pcard-price-row         { gap: 6px; }
+  .pcard-tag               { font-size: 9px; padding: 4px 8px; top: 8px; left: 8px; }
+  .pcard-quick             { font-size: 11px; padding: 6px 10px; bottom: 8px; }
+}
+

@@ -7,10 +7,18 @@
 <style>
   .checkout-wrap { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; }
   .checkout-form h2 { font-family: var(--serif); font-size: 36px; margin-bottom: 24px; }
-  .checkout-form .field { margin-bottom: 18px; }
-  .checkout-form label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 6px; }
-  .checkout-form input, .checkout-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--cream-3); }
-  .checkout-form input:focus, .checkout-form textarea:focus { outline: none; border-color: var(--gold); background: white; }
+  .checkout-form .field { margin-bottom: 14px; }
+  /* Solo los labels de campo (hijos directos de .field) llevan el estilo
+     mayúsculas+espaciado. Los .gateway-option también son <label> pero
+     muestran texto normal — sin este selector acotado heredaban el
+     uppercase y se veían desbordados. */
+  .checkout-form .field > label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 6px; }
+  /* :not([type=radio]) — sin esto, los radios del método de pago heredan
+     width:100% + padding de campo de texto y aplastan su texto contra el
+     borde derecho. */
+  .checkout-form input:not([type=radio]), .checkout-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--cream-3); }
+  .checkout-form input:not([type=radio]):focus, .checkout-form textarea:focus { outline: none; border-color: var(--gold); background: white; }
+  .gateway-option input[type=radio] { width: 16px; height: 16px; }
   .checkout-form .hint { font-size: 12px; color: var(--ink-60); margin-top: 4px; }
   .checkout-form .err { color: var(--vino); font-size: 13px; margin-top: 4px; }
   .field-msg {
@@ -36,7 +44,12 @@
   .checkout-line .qty-mul { color: var(--ink-60); font-size: 12px; }
   .checkout-total { margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
   .checkout-total strong { font-family: var(--serif); font-size: 28px; }
-  @media (max-width: 860px) { .checkout-wrap { grid-template-columns: 1fr; } .checkout-form .row-2 { grid-template-columns: 1fr; } }
+  @media (max-width: 860px) {
+    .checkout-wrap { grid-template-columns: 1fr; padding: 20px 16px 60px; gap: 28px; }
+    .checkout-form h2 { font-size: 28px; margin-bottom: 14px; }
+    .checkout-form .row-2 { grid-template-columns: 1fr; gap: 0; }
+    .checkout-summary { padding: 20px; position: static; }
+  }
 </style>
 {% endblock %}
 
@@ -73,24 +86,23 @@
         {% if form.cliente_nombre.errors %}<div class="err">{{ form.cliente_nombre.errors|join:", " }}</div>{% endif %}
       </div>
 
-      <div style="background:var(--cream-3,#faf6ef); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:18px; font-size:13px; color:var(--ink-60);">
-        📬 Déjanos <strong>al menos uno</strong>: tu email o tu celular.
-        Con el email te enviamos la boleta; con el celular te avisamos por
-        WhatsApp cuando tu pedido esté listo.
+      <div style="background:var(--cream-3,#faf6ef); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-60); line-height:1.45;">
+        📬 Déjanos <strong>al menos uno</strong>: al email te llega la boleta,
+        al celular te avisamos por WhatsApp cuando esté listo.
       </div>
 
-      <div class="field">
-        <label>Email</label>
-        {{ form.cliente_email }}
-        <div class="hint">Para enviarte la boleta de tu compra.</div>
-        {% if form.cliente_email.errors %}<div class="err">{{ form.cliente_email.errors|join:", " }}</div>{% endif %}
-      </div>
+      <div class="row-2">
+        <div class="field">
+          <label>Email</label>
+          {{ form.cliente_email }}
+          {% if form.cliente_email.errors %}<div class="err">{{ form.cliente_email.errors|join:", " }}</div>{% endif %}
+        </div>
 
-      <div class="field">
-        <label>Celular (WhatsApp)</label>
-        {{ form.cliente_telefono }}
-        <div class="hint">Te avisamos por WhatsApp cuando tu pedido esté listo. 📱</div>
-        {% if form.cliente_telefono.errors %}<div class="err">{{ form.cliente_telefono.errors|join:", " }}</div>{% endif %}
+        <div class="field">
+          <label>Celular (WhatsApp)</label>
+          {{ form.cliente_telefono }}
+          {% if form.cliente_telefono.errors %}<div class="err">{{ form.cliente_telefono.errors|join:", " }}</div>{% endif %}
+        </div>
       </div>
 
       {% if FEATURE_ENVIOS %}
@@ -105,11 +117,11 @@
           se informa claro en vez de pedir una direccion que no usamos.
         {% endcomment %}
         <div class="field"
-             style="background:var(--cream); border:1px solid var(--line); border-radius:10px; padding:14px 16px;">
-          <div style="font-weight:600; font-size:14px; margin-bottom:4px;">🏬 Retiro en tienda — gratis</div>
-          <div style="font-size:13px; color:var(--ink-60); line-height:1.5;">
-            Caupolicán 437-B, Los Vilos · lunes a sábado de 9 a 19 hrs.<br>
-            Te avisamos por WhatsApp y correo apenas esté listo.
+             style="background:var(--cream); border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
+          <div style="font-weight:600; font-size:13.5px;">🏬 Retiro en tienda — gratis</div>
+          <div style="font-size:12.5px; color:var(--ink-60); line-height:1.45;">
+            Caupolicán 437-B, Los Vilos · lunes a sábado de 9 a 19 hrs.
+            Te avisamos apenas esté listo.
           </div>
         </div>
       {% endif %}
@@ -121,18 +133,19 @@
           <div style="display:flex;flex-direction:column;gap:10px;">
             {% for g in gateways %}
               <label class="gateway-option"
-                     style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;
+                     style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;
                             border:1.5px solid var(--line);border-radius:10px;cursor:pointer;
-                            background:#fff;transition:all .15s;">
+                            background:#fff;transition:all .15s;
+                            text-transform:none;letter-spacing:normal;">
                 <input type="radio" name="gateway" value="{{ g.provider }}"
                        {% if g.provider == gateway_default %}checked{% endif %}
-                       style="margin-top:3px;accent-color:var(--vino);">
-                <span style="display:flex;flex-direction:column;gap:2px;flex:1;">
-                  <span style="font-weight:600;font-size:15px;">
+                       style="margin-top:3px;accent-color:var(--vino);flex-shrink:0;">
+                <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;">
+                  <span style="font-weight:600;font-size:14.5px;line-height:1.3;">
                     {{ g.icono }} {{ g.nombre_publico }}
                   </span>
                   {% if g.subtitulo %}
-                    <span style="font-size:12px;color:var(--ink-60);">{{ g.subtitulo }}</span>
+                    <span style="font-size:12px;color:var(--ink-60);line-height:1.4;">{{ g.subtitulo }}</span>
                   {% endif %}
                 </span>
               </label>

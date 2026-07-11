@@ -48,8 +48,8 @@ def datos_cuenta() -> dict:
 
 class TransferenciaGateway(OnlinePaymentGateway):
     provider = 'transferencia'
-    nombre_publico = 'Transferencia bancaria'
-    subtitulo = 'Te mostramos los datos y confirmamos apenas llegue tu abono'
+    nombre_publico = 'Transferencia directa'
+    subtitulo = 'Te damos los datos y confirmamos apenas llegue tu abono'
     icono = '💸'
     comision_descripcion = 'Sin comision — confirmacion manual de la dueña'
 

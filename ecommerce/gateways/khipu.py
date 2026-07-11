@@ -50,8 +50,8 @@ WEBHOOK_MAX_EDAD_SEGUNDOS = 15 * 60
 
 class KhipuGateway(OnlinePaymentGateway):
     provider = 'khipu'
-    nombre_publico = 'Transferencia bancaria'
-    subtitulo = 'Pagas desde tu banco con Khipu — sin tarjeta'
+    nombre_publico = 'Paga con tu banco (Khipu)'
+    subtitulo = 'Transferencia automática — queda pagado al instante'
     icono = '🏦'
     comision_descripcion = '0,79% por transferencia · sin fee fijo'
 

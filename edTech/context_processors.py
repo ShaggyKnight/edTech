@@ -28,6 +28,8 @@ def public_settings(request):
         'CLARITY_PROJECT_ID': getattr(settings, 'CLARITY_PROJECT_ID', ''),
         # Google tag (Ads/GA4). Solo se inyecta si esta seteado.
         'GOOGLE_TAG_ID': getattr(settings, 'GOOGLE_TAG_ID', ''),
+        # Meta Pixel (FB/IG Ads). Solo se inyecta si esta seteado.
+        'META_PIXEL_ID': getattr(settings, 'META_PIXEL_ID', ''),
         'SITE_URL': getattr(settings, 'SITE_URL', ''),
         # BUG-009: número de WhatsApp para wa.me/... en el landing y /info/.
         'PUBLIC_WHATSAPP': getattr(settings, 'PUBLIC_WHATSAPP', ''),

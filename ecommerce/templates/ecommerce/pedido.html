@@ -278,6 +278,23 @@
 </script>
 {% endif %}
 
+{% if es_compra_recien_pagada and META_PIXEL_ID %}
+{% comment %}
+  Conversión de Meta (Facebook/Instagram Ads): evento `Purchase`.
+  Igual que el de Google: SOLO en la primera visita tras el pago. Si el
+  cliente no aceptó las cookies, fbq no se inicializó y esto queda como
+  no-op (no se rastrea) — el consentimiento manda.
+{% endcomment %}
+<script>
+  if (window.fbq) {
+    fbq('track', 'Purchase', {
+      value: {{ recibo.total|floatformat:0 }},
+      currency: 'CLP',
+    });
+  }
+</script>
+{% endif %}
+
 <style>
   /* ============================================================
      Página pública de pedido — vocabulario boutique

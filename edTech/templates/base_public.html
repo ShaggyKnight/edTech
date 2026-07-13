@@ -128,6 +128,41 @@
       gtag('config', '{{ GOOGLE_TAG_ID }}');
     </script>
     {% endif %}
+    {% if META_PIXEL_ID %}
+    {% comment %}
+      4) Meta Pixel (Facebook/Instagram Ads) — retargeting + conversiones.
+         Es publicidad (mas sensible que la analitica), asi que NO se
+         inicializa hasta que el visitante acepta las cookies: si ya
+         acepto antes, arranca al tiro; si no, arranca cuando aprieta
+         "Entendido" en el aviso. La conversion de compra se dispara como
+         evento `Purchase` en la pagina del pedido (una vez, ver pedido.html).
+    {% endcomment %}
+    <script>
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+      document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      (function () {
+        function activar() {
+          if (window._fbqIniciado) return;
+          window._fbqIniciado = true;
+          fbq('init', '{{ META_PIXEL_ID }}');
+          fbq('track', 'PageView');
+        }
+        var yaAcepto = false;
+        try { yaAcepto = !!localStorage.getItem('ideas_cookies_ok'); } catch (e) {}
+        if (yaAcepto) {
+          activar();
+        } else {
+          document.addEventListener('DOMContentLoaded', function () {
+            var ok = document.getElementById('cookie-notice-ok');
+            if (ok) ok.addEventListener('click', activar);
+          });
+        }
+      })();
+    </script>
+    {% endif %}
 
     {% comment %}
       HTMX: AJAX declarativo. Alpine: estado local pequeño. Defer
@@ -214,12 +249,13 @@
 
     {% block body %}{% endblock %}
 
-    {% if CLARITY_PROJECT_ID %}
+    {% if CLARITY_PROJECT_ID or META_PIXEL_ID %}
     {% comment %}
-      Aviso de cookies (Ley 19.628): solo aplica cuando Clarity esta
-      activo (unico tracking con cookies — Plausible no usa). Banner
-      informativo con dismiss persistente en localStorage; no bloquea
-      la navegacion.
+      Aviso de cookies (Ley 19.628): aplica cuando hay tracking con
+      cookies — Clarity (analitica) o Meta Pixel (publicidad). Plausible
+      no usa cookies, por eso no cuenta. Banner informativo con dismiss
+      persistente en localStorage; ademas, el click en "Entendido" es lo
+      que activa el Meta Pixel (ver el snippet del pixel en el <head>).
     {% endcomment %}
     <div id="cookie-notice" hidden
          style="position:fixed; bottom:16px; left:16px; right:16px; z-index:9000;
@@ -227,8 +263,14 @@
                 border-radius:12px; padding:14px 18px; display:flex; gap:14px;
                 align-items:center; box-shadow:0 8px 30px rgba(0,0,0,.25); font-size:13px;">
       <span style="flex:1; line-height:1.5;">
-        🍪 Usamos cookies para entender cómo se usa la tienda y mejorarla.
-        Nada de publicidad ni venta de datos.
+        {% if META_PIXEL_ID %}
+          🍪 Usamos cookies para entender cómo se usa la tienda y para
+          mostrarte nuestros productos en Instagram y Facebook. No vendemos
+          tus datos.
+        {% else %}
+          🍪 Usamos cookies para entender cómo se usa la tienda y mejorarla.
+          Nada de publicidad ni venta de datos.
+        {% endif %}
       </span>
       <button type="button" id="cookie-notice-ok"
               style="background:var(--gold,#C9A96E); color:#1F1F1F; border:none;

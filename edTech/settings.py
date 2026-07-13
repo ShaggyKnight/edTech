@@ -106,6 +106,11 @@ env = environ.Env(
     # panel de Google. Vacio = sin tag (dev). Ademas del pageview, el
     # sitio dispara un evento `purchase` UNA vez por compra pagada.
     GOOGLE_TAG_ID=(str, ''),
+    # Meta Pixel (Facebook/Instagram Ads) — retargeting + conversiones.
+    # El ID numerico del Administrador de Eventos de Meta. Vacio = sin
+    # pixel. Es publicidad: solo se inicializa si el visitante acepta las
+    # cookies (ver base_public.html).
+    META_PIXEL_ID=(str, ''),
     # BUG-009: número de WhatsApp del local. Formato E.164 sin + ni
     # espacios (ej. '56912345678'). Vacío = el bloque "WhatsApp directo"
     # se muestra como texto plano (estado actual hasta que se configure).
@@ -464,6 +469,7 @@ OWNER_NOTIFICATION_EMAIL = env('OWNER_NOTIFICATION_EMAIL')  # email de Blanca
 ANALYTICS_DOMAIN = env('ANALYTICS_DOMAIN')              # dominio Plausible (vacío = sin analytics)
 CLARITY_PROJECT_ID = env('CLARITY_PROJECT_ID')          # Microsoft Clarity (vacío = sin heatmaps)
 GOOGLE_TAG_ID = env('GOOGLE_TAG_ID')                    # Google Ads/GA4 gtag (vacío = sin tag)
+META_PIXEL_ID = env('META_PIXEL_ID')                    # Meta Pixel FB/IG Ads (vacío = sin pixel)
 PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del local, ej '56912345678'
 GOOGLE_MAPS_EMBED_URL = env('GOOGLE_MAPS_EMBED_URL')    # src del iframe del mapa (vacío = sin mapa)
 GOOGLE_MAPS_PLACE_URL = env('GOOGLE_MAPS_PLACE_URL')    # link a la ficha de Google (horario/reseñas)

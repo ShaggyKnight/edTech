@@ -211,10 +211,13 @@ MIDDLEWARE = [
 #   - MAINTENANCE: pagina "Volvemos pronto" (503) en todo el sitio.
 #   - LANDING_ONLY: solo la home (`/`) y `/info/` quedan publicas;
 #     el resto redirige a `/`. Util para soft-launch.
+#   - TIENDA_DIRECTA: la home (`/`) redirige a la tienda, saltandose la
+#     landing. Lo contrario de LANDING_ONLY.
 #
-# Si ambos archivos existen, MAINTENANCE gana.
+# Prioridad si hay mas de un flag: MANTENIMIENTO > LANDING > TIENDA_DIRECTA.
 MAINTENANCE_FLAG_FILE = env('MAINTENANCE_FLAG_FILE', default=str(BASE_DIR / 'MAINTENANCE'))
 LANDING_ONLY_FLAG_FILE = env('LANDING_ONLY_FLAG_FILE', default=str(BASE_DIR / 'LANDING_ONLY'))
+TIENDA_DIRECTA_FLAG_FILE = env('TIENDA_DIRECTA_FLAG_FILE', default=str(BASE_DIR / 'TIENDA_DIRECTA'))
 
 # Auth backends: AxesStandaloneBackend RECHAZA logins de IPs/usuarios
 # bloqueados antes de llegar al ModelBackend. No autentica por si solo —

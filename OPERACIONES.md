@@ -84,7 +84,8 @@ Ya cargados en `~/.bashrc` del user `ideas`. Si no funcionan, haz `source ~/.bas
 | Alias | Hace |
 |---|---|
 | `modo` | Ver modo actual del sitio |
-| `modo normal` | Tienda 100% abierta al público |
+| `modo normal` | Tienda abierta; la home muestra la landing |
+| `modo tienda` | Tienda abierta; la home va directo al catálogo (sin landing) |
 | `modo landing` | Solo `/` y `/info/` visibles, resto redirige a `/` |
 | `modo mantenimiento` | "Volvemos pronto" (HTTP 503) en todo |
 | `rol` | Listar usuarios y sus roles |
@@ -111,11 +112,23 @@ source ~/.bashrc     # cargar en la sesion actual
 
 ## 4. Modos del sitio (control de visibilidad pública)
 
-Tres estados toggleables sin restart:
+Cuatro estados toggleables sin restart:
 
-### `modo normal` — todo abierto
+### `modo normal` — todo abierto, home = landing
 
-Tienda, catálogo, productos, carrito. Estado de operación habitual.
+Tienda, catálogo, productos, carrito. La home (`/`) muestra la landing
+con la historia de la boutique. Estado de operación habitual.
+
+### `modo tienda` — todo abierto, home = tienda directa
+
+Igual que normal pero la home (`/`) redirige directo al catálogo
+(`/tienda/`), saltándose la landing. Quien entra a ideasboutique.cl cae
+al tiro en los productos. Lo contrario de `landing`. Útil para campañas
+de Google Ads donde quieres que la gente llegue directo a comprar.
+
+> Se aplica a todos, **incluido tú**: no bloquea nada, solo redirige la
+> raíz, así que ves lo mismo que el cliente. Para editar o previsualizar
+> la landing en vivo, vuelve a `modo normal` un momento.
 
 ### `modo landing` — soft-launch
 
@@ -130,11 +143,11 @@ Google interpreta 503 como "vuelve más tarde" y **NO desindexa el dominio**.
 
 ### Quién ve qué en cada modo
 
-| Visitante | Normal | Landing | Mantenimiento |
-|---|---|---|---|
-| Público anónimo | Todo | Solo `/` y `/info/` | "Volvemos pronto" |
-| Tú (logueado como staff) | Todo | Todo | Todo |
-| Bots / Google | Todo | Solo `/` y `/info/` | 503 (no desindexa) |
+| Visitante | Normal | Tienda | Landing | Mantenimiento |
+|---|---|---|---|---|
+| Público anónimo | Todo (home = landing) | Todo (home → tienda) | Solo `/` y `/info/` | "Volvemos pronto" |
+| Tú (logueado como staff) | Todo | Todo (home → tienda) | Todo | Todo |
+| Bots / Google | Todo | Todo (home → tienda) | Solo `/` y `/info/` | 503 (no desindexa) |
 
 En todos los modos, los paths necesarios para administrar
 (`/admin-R0z8NiGVcdE/`, `/cuenta/login/`, `/static/`, `/media/`,

@@ -1,25 +1,29 @@
-"""Cambia el modo del sitio publico: normal | landing | mantenimiento.
+"""Cambia el modo del sitio publico: normal | tienda | landing | mantenimiento.
 
 Modos:
-  - normal          tienda completa abierta al publico.
+  - normal          tienda abierta; la home (`/`) muestra la landing.
+  - tienda          tienda abierta; la home (`/`) va DIRECTO al catalogo,
+                    saltandose la landing. Lo contrario de landing.
   - landing         solo se ve la home (`/`) y `/info/`; el resto
                     redirige a la home. Util para soft-launch.
   - mantenimiento   pagina "Volvemos pronto" en todo el sitio (HTTP 503).
 
-En cualquier modo, el staff (is_staff=True) sigue navegando normal,
-y los paths /admin/, ADMIN_URL custom, /cuenta/login/, /static/, /media/
-y /healthz quedan accesibles para que la duena pueda loguearse y volver
-al modo normal.
+En los modos restrictivos (landing/mantenimiento), el staff (is_staff=True)
+sigue navegando normal, y los paths /admin/, ADMIN_URL custom,
+/cuenta/login/, /static/, /media/ y /healthz quedan accesibles para que la
+duena pueda loguearse y volver al modo normal.
 
 Uso:
     python manage.py modo                 # consultar estado
     python manage.py modo normal
+    python manage.py modo tienda
     python manage.py modo landing
     python manage.py modo mantenimiento
 
-Los modos se controlan con dos archivos flag (definidos en settings).
-Cambiar de modo es instantaneo — no requiere restart de gunicorn. Si
-los dos flags estan presentes a la vez, mantenimiento gana.
+Los modos se controlan con archivos flag (definidos en settings). Cambiar
+de modo es instantaneo — no requiere restart de gunicorn. Los modos son
+mutuamente excluyentes: setear uno apaga los otros. Si varios flags
+estan presentes a la vez, la prioridad es mantenimiento > landing > tienda.
 """
 
 from pathlib import Path
@@ -34,7 +38,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             'modo', nargs='?', default='estado',
-            choices=['normal', 'landing', 'mantenimiento', 'estado'],
+            choices=['normal', 'tienda', 'landing', 'mantenimiento', 'estado'],
             help='Modo a setear, o "estado" (default) para consultar.',
         )
 
@@ -42,13 +46,25 @@ class Command(BaseCommand):
         modo = opts['modo']
         mant = self._path('MAINTENANCE_FLAG_FILE')
         land = self._path('LANDING_ONLY_FLAG_FILE')
+        tienda = self._path('TIENDA_DIRECTA_FLAG_FILE')
 
         if modo == 'normal':
             self._desactivar(mant)
             self._desactivar(land)
-            self.stdout.write(self.style.SUCCESS('Modo NORMAL — tienda abierta al publico.'))
+            self._desactivar(tienda)
+            self.stdout.write(self.style.SUCCESS(
+                'Modo NORMAL — tienda abierta; la home muestra la landing.'
+            ))
+        elif modo == 'tienda':
+            self._desactivar(mant)
+            self._desactivar(land)
+            self._activar(tienda)
+            self.stdout.write(self.style.SUCCESS(
+                'Modo TIENDA — la home (/) va directo al catalogo, sin landing.'
+            ))
         elif modo == 'landing':
             self._desactivar(mant)  # mant gana sobre landing — apagarlo
+            self._desactivar(tienda)
             self._activar(land)
             self.stdout.write(self.style.WARNING(
                 'Modo LANDING — solo se ve la home. El resto redirige a /.'
@@ -59,12 +75,12 @@ class Command(BaseCommand):
                 'Modo MANTENIMIENTO — publico ve "Volvemos pronto" (HTTP 503).'
             ))
         else:  # estado
-            self._mostrar_estado(mant, land)
+            self._mostrar_estado(mant, land, tienda)
             return
 
         # Despues de cambiar, mostrar estado final para confirmar.
         self.stdout.write('')
-        self._mostrar_estado(mant, land)
+        self._mostrar_estado(mant, land, tienda)
 
     def _path(self, setting_name):
         valor = getattr(settings, setting_name, None)
@@ -105,7 +121,7 @@ class Command(BaseCommand):
                     f'sudo chown ideas:ideas {ruta}. Error: {e}'
                 )
 
-    def _mostrar_estado(self, mant, land):
+    def _mostrar_estado(self, mant, land, tienda):
         if mant.exists():
             self.stdout.write(self.style.WARNING(
                 f'Estado actual: MANTENIMIENTO ({mant} presente).'
@@ -114,7 +130,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(
                 f'Estado actual: LANDING ({land} presente).'
             ))
+        elif tienda.exists():
+            self.stdout.write(self.style.SUCCESS(
+                f'Estado actual: TIENDA — la home va directo al catalogo '
+                f'({tienda} presente).'
+            ))
         else:
             self.stdout.write(self.style.SUCCESS(
-                'Estado actual: NORMAL (ningun flag presente).'
+                'Estado actual: NORMAL (la home muestra la landing).'
             ))

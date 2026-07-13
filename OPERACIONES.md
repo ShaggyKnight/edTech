@@ -260,9 +260,12 @@ restart-app
 > retira a la CuentaRUT. Los pedidos pagados llegan solos a Despacho →
 > "Nuevos" (no hay que confirmar a mano como en la transferencia).
 
-**Probar antes de cobrar de verdad:** usar un Access Token `TEST-…` y las
-tarjetas de prueba del panel — el gateway detecta el `TEST-` y usa el
-ambiente sandbox automáticamente.
+**Probar antes de cobrar de verdad:** Mercado Pago da dos juegos de
+credenciales, **"de prueba"** y **"de producción"** (ojo: ambos empiezan
+con `APP_USR-`, no hay prefijo `TEST-`). Poné el Access Token **de prueba**
+en el `.env` e inicia sesión con el **usuario de prueba** (`TESTUSER…`) del
+panel para pagar con las tarjetas de prueba. Cuando el pedido entre bien a
+Despacho, cambia al Access Token **de producción**.
 
 ### Transferencia bancaria directa (respaldo de la pasarela)
 

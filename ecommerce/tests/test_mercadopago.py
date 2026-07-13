@@ -22,13 +22,13 @@ from pos.payments import (
 )
 
 TOKEN_PROD = 'APP_USR-1234567890'
-TOKEN_TEST = 'TEST-1234567890'
 SECRET = 'webhook-secret-abc'
 RETURN_URL = 'https://ideasboutique.cl/tienda/checkout/retorno/'
 
 
 def _recibo(**kwargs):
-    tienda = Tienda.objects.create(nombre_organizacion='Online', activa=True)
+    tienda, _ = Tienda.objects.get_or_create(
+        nombre_organizacion='Online', defaults={'activa': True})
     defaults = dict(
         tienda=tienda,
         canal=ReciboVenta.CANAL_ONLINE,
@@ -87,19 +87,25 @@ class MercadoPagoIniciarPagoTests(TestCase):
         self.assertEqual(init.token, f'IBR-{recibo.pk:08d}')
         self.assertEqual(init.provider, 'mercadopago')
 
-    @override_settings(MERCADOPAGO_ACCESS_TOKEN=TOKEN_TEST)
     @mock.patch('ecommerce.gateways.mercadopago.requests.post')
-    def test_token_test_usa_sandbox_init_point(self, m_post):
+    def test_usa_init_point_y_cae_a_sandbox_si_falta(self, m_post):
+        # Modelo actual de Mercado Pago: siempre init_point (el ambiente lo
+        # da el token, no el prefijo). Las credenciales de prueba también
+        # son APP_USR-, así que no hay branch por prefijo.
         m_post.return_value = mock.Mock(
             status_code=201,
-            json=lambda: {
-                'id': 'pref-1',
-                'init_point': 'https://mercadopago.cl/prod',
-                'sandbox_init_point': 'https://sandbox.mercadopago.cl/test',
-            },
+            json=lambda: {'id': 'p', 'init_point': 'https://mp.cl/checkout',
+                          'sandbox_init_point': 'https://sandbox.mp.cl/x'},
         )
         init = MercadoPagoGateway().iniciar_pago(_recibo(), RETURN_URL)
-        self.assertEqual(init.redirect_url, 'https://sandbox.mercadopago.cl/test')
+        self.assertEqual(init.redirect_url, 'https://mp.cl/checkout')
+        # Fallback a sandbox_init_point solo si no viene init_point.
+        m_post.return_value = mock.Mock(
+            status_code=201,
+            json=lambda: {'id': 'p', 'sandbox_init_point': 'https://sandbox.mp.cl/x'},
+        )
+        init = MercadoPagoGateway().iniciar_pago(_recibo(), RETURN_URL)
+        self.assertEqual(init.redirect_url, 'https://sandbox.mp.cl/x')
 
     @mock.patch('ecommerce.gateways.mercadopago.requests.post')
     def test_error_http_levanta_gateway_error(self, m_post):

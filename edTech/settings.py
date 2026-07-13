@@ -50,8 +50,8 @@ env = environ.Env(
     KHIPU_SECRET=(str, ''),
     KHIPU_BASE_URL=(str, 'https://payment-api.khipu.com'),
     # Mercado Pago (Checkout Pro) — billetera + tarjetas + cuotas.
-    # ACCESS_TOKEN es el Bearer de las llamadas API (TEST-… en pruebas,
-    # APP_USR-… en prod); WEBHOOK_SECRET valida la firma x-signature.
+    # ACCESS_TOKEN es el Bearer de las llamadas API (credenciales de prueba
+    # o de produccion, ambas APP_USR-); WEBHOOK_SECRET valida x-signature.
     MERCADOPAGO_ACCESS_TOKEN=(str, ''),
     MERCADOPAGO_PUBLIC_KEY=(str, ''),
     MERCADOPAGO_WEBHOOK_SECRET=(str, ''),

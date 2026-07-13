@@ -23,8 +23,10 @@ credenciales.
 Docs: https://www.mercadopago.cl/developers/es/docs/checkout-pro/landing
 
 Settings esperados:
-    MERCADOPAGO_ACCESS_TOKEN=...    # "Access Token" del panel (Bearer).
-                                    # TEST-... para pruebas, APP_USR-... en prod.
+    MERCADOPAGO_ACCESS_TOKEN=...    # "Access Token" del panel (Bearer). El
+                                    # ambiente (prueba/producción) lo define
+                                    # cuál uses: las credenciales de PRUEBA y de
+                                    # PRODUCCIÓN ambas empiezan con APP_USR-.
     MERCADOPAGO_WEBHOOK_SECRET=...  # "Clave secreta" para validar la firma
                                     # x-signature de los webhooks.
     MERCADOPAGO_PUBLIC_KEY=...      # Public Key (informativo; sirve para el
@@ -77,8 +79,6 @@ class MercadoPagoGateway(OnlinePaymentGateway):
         self.base_url = getattr(
             settings, 'MERCADOPAGO_BASE_URL', 'https://api.mercadopago.com',
         ).rstrip('/')
-        # Access token TEST-... → ambiente sandbox (usa sandbox_init_point).
-        self.es_test = self.access_token.startswith('TEST-')
         self.mock_mode = not self.access_token
         if self.mock_mode and not settings.DEBUG:
             log.warning(
@@ -112,12 +112,12 @@ class MercadoPagoGateway(OnlinePaymentGateway):
                 f'Mercado Pago {resp.status_code}: {resp.text[:300]}',
             )
         data = resp.json()
-        # Con access token TEST-… hay que usar el sandbox_init_point; en
-        # producción, el init_point real.
-        checkout = (
-            data.get('sandbox_init_point') if self.es_test
-            else data.get('init_point')
-        ) or data.get('init_point')
+        # init_point = URL del checkout. Con el modelo actual de Mercado
+        # Pago el ambiente (prueba vs producción) lo determina el Access
+        # Token — las credenciales de PRUEBA y de PRODUCCIÓN ambas empiezan
+        # con APP_USR-. sandbox_init_point queda como fallback para tokens
+        # legacy TEST-.
+        checkout = data.get('init_point') or data.get('sandbox_init_point')
         if not checkout:
             raise PaymentGatewayError(
                 f'Mercado Pago respondió sin init_point: {str(data)[:300]}',

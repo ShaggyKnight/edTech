@@ -114,6 +114,22 @@ class MercadoPagoIniciarPagoTests(TestCase):
         with self.assertRaises(PaymentGatewayError):
             MercadoPagoGateway().iniciar_pago(_recibo(), RETURN_URL)
 
+    @mock.patch('ecommerce.gateways.mercadopago.requests.post')
+    def test_auto_return_y_notification_solo_con_https(self, m_post):
+        m_post.return_value = mock.Mock(
+            status_code=201, json=lambda: {'id': 'p', 'init_point': 'https://mp/x'})
+        # HTTPS (prod) → manda auto_return + notification_url (webhook).
+        MercadoPagoGateway().iniciar_pago(_recibo(), 'https://ideasboutique.cl/r/')
+        pref = m_post.call_args.kwargs['json']
+        self.assertEqual(pref.get('auto_return'), 'approved')
+        self.assertIn('notification_url', pref)
+        # http localhost (dev) → sin auto_return ni notification_url (MP los
+        # rechaza por no ser URLs públicas).
+        MercadoPagoGateway().iniciar_pago(_recibo(), 'http://127.0.0.1:8021/r/')
+        pref = m_post.call_args.kwargs['json']
+        self.assertNotIn('auto_return', pref)
+        self.assertNotIn('notification_url', pref)
+
 
 @override_settings(MERCADOPAGO_ACCESS_TOKEN=TOKEN_PROD,
                    MERCADOPAGO_WEBHOOK_SECRET=SECRET)

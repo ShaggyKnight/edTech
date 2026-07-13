@@ -269,12 +269,16 @@ class MercadoPagoGateway(OnlinePaymentGateway):
                 'pending': return_url,
                 'failure': return_url,
             },
-            # Vuelve solo a la tienda al aprobar (sin que el cliente tenga
-            # que apretar "volver al sitio").
-            'auto_return': 'approved',
-            'notification_url': self._notify_url(return_url),
             'statement_descriptor': 'IDEAS BOUTIQUE',
         }
+        # notification_url (webhook) y auto_return: Mercado Pago exige URLs
+        # públicas y válidas para ambos — con http://localhost los rechaza.
+        # Se agregan solo cuando el retorno es HTTPS (prod). En local se
+        # omiten para poder probar el flujo completo: el pago igual se
+        # confirma por la búsqueda al volver (confirmar_pago).
+        if return_url.startswith('https://'):
+            preference['notification_url'] = self._notify_url(return_url)
+            preference['auto_return'] = 'approved'
         payer = {}
         if recibo.cliente_email:
             payer['email'] = recibo.cliente_email

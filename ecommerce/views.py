@@ -1067,9 +1067,13 @@ def checkout_retorno(request):
         or request.GET.get('token')
         or request.session.get('ecommerce_token_pendiente', '')
     )
+    # El carrito sigue intacto salvo que el pago quede pagado — lo pasamos
+    # al header (badge) en todos los casos de retorno.
+    items_count = Cart(request.session).items_count
     if not token:
         return render(request, 'ecommerce/retorno.html', {
             'error': 'No se recibió token de la pasarela.',
+            'items_count': items_count,
         }, status=400)
 
     try:
@@ -1077,6 +1081,7 @@ def checkout_retorno(request):
     except PedidoNoEncontrado:
         return render(request, 'ecommerce/retorno.html', {
             'error': 'No encontramos el pedido asociado a este pago.',
+            'items_count': items_count,
         }, status=404)
 
     # Limpieza del carrito y notificación si quedó pagado.
@@ -1101,6 +1106,7 @@ def checkout_retorno(request):
     return render(request, 'ecommerce/retorno.html', {
         'recibo': recibo,
         'error': None,
+        'items_count': items_count,
     })
 
 

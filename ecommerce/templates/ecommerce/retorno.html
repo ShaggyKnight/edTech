@@ -1,41 +1,77 @@
-{% extends "base.html" %}
+{% extends 'base_public.html' %}
+{% load humanize %}
 
-{% block titulo %}Resultado del pago{% endblock %}
+{% block titulo %}Resultado del pago · Ideas Boutique{% endblock %}
 
-{% block content %}
-<div class="container" style="padding: 40px; max-width: 600px;">
-    {% if error %}
-        <div class="panel panel-danger">
-            <div class="panel-heading"><h3 class="panel-title">No pudimos procesar tu pago</h3></div>
-            <div class="panel-body">
-                <p>{{ error }}</p>
-                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">Volver al carrito</a>
-            </div>
-        </div>
-    {% elif recibo.estado == 'fallido' %}
-        <div class="panel panel-danger">
-            <div class="panel-heading"><h3 class="panel-title">Pago rechazado</h3></div>
-            <div class="panel-body">
-                <p>No se pudo cobrar la compra #{{ recibo.pk }}. Intenta con otro medio.</p>
-                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">Volver al carrito</a>
-            </div>
-        </div>
-    {% elif recibo.estado == 'cancelado' %}
-        <div class="panel panel-warning">
-            <div class="panel-heading"><h3 class="panel-title">Pago cancelado</h3></div>
-            <div class="panel-body">
-                <p>Cancelaste el pago de la compra #{{ recibo.pk }}. Tu carrito sigue disponible.</p>
-                <a href="{% url 'ecommerce:carrito' %}" class="btn btn-default">Volver al carrito</a>
-            </div>
-        </div>
-    {% else %}
-        <div class="panel panel-info">
-            <div class="panel-heading"><h3 class="panel-title">Procesando...</h3></div>
-            <div class="panel-body">
-                <p>Estamos esperando confirmación de la pasarela.</p>
-                <a href="{% url 'ecommerce:catalogo' %}" class="btn btn-default">Ir al catálogo</a>
-            </div>
-        </div>
-    {% endif %}
-</div>
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
+
+<main id="main-content" tabindex="-1"
+      style="max-width:600px; margin:0 auto; padding:56px 24px 90px; text-align:center;">
+
+  {% if error %}
+    {# Sin token o pedido no encontrado. #}
+    <div class="eyebrow" style="color:var(--vino);">Algo salió mal</div>
+    <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
+      No pudimos procesar tu pago
+    </h1>
+    <p style="color:var(--ink-60); font-size:15px; line-height:1.7; margin:0 auto 28px; max-width:440px;">
+      {{ error }} No te preocupes: no se te cobró nada y tu carrito sigue tal cual.
+    </p>
+    <a href="{% url 'ecommerce:carrito' %}" class="btn-primary lg" style="display:inline-block;">
+      Volver al carrito
+    </a>
+
+  {% elif recibo.estado == 'fallido' %}
+    <div class="eyebrow" style="color:var(--vino);">Pago rechazado</div>
+    <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
+      No se pudo cobrar tu compra
+    </h1>
+    <p style="color:var(--ink-60); font-size:15px; line-height:1.7; margin:0 auto 28px; max-width:440px;">
+      El pago de tu pedido <strong>#{{ recibo.pk }}</strong> no se completó y
+      no se te cobró nada. Puedes volver al carrito e intentar de nuevo, con
+      el mismo u otro medio de pago.
+    </p>
+    <a href="{% url 'ecommerce:carrito' %}" class="btn-primary lg" style="display:inline-block;">
+      Volver al carrito e intentar de nuevo
+    </a>
+
+  {% elif recibo.estado == 'cancelado' %}
+    <div class="eyebrow" style="color:var(--gold);">Pago cancelado</div>
+    <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
+      Cancelaste el pago
+    </h1>
+    <p style="color:var(--ink-60); font-size:15px; line-height:1.7; margin:0 auto 28px; max-width:440px;">
+      No pasó nada: cancelaste el pago de tu pedido <strong>#{{ recibo.pk }}</strong>
+      y tu carrito sigue intacto. Puedes retomar la compra cuando quieras.
+    </p>
+    <a href="{% url 'ecommerce:carrito' %}" class="btn-primary lg" style="display:inline-block;">
+      Volver al carrito
+    </a>
+
+  {% else %}
+    {# Pendiente: la pasarela todavía no confirma (in_process / pending). #}
+    <div class="eyebrow" style="color:var(--gold);">Casi listo</div>
+    <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
+      Estamos confirmando tu pago
+    </h1>
+    <p style="color:var(--ink-60); font-size:15px; line-height:1.7; margin:0 auto 28px; max-width:440px;">
+      Tu pago del pedido <strong>#{{ recibo.pk }}</strong> está en proceso.
+      Apenas se acredite te avisamos por correo{% if recibo.cliente_telefono %} y WhatsApp{% endif %}.
+      Puedes ver el estado cuando quieras.
+    </p>
+    <a href="{% url 'ecommerce:pedido' recibo.payment_reference %}" class="btn-primary lg" style="display:inline-block;">
+      Ver el estado de mi pedido
+    </a>
+  {% endif %}
+
+  <div style="margin-top:18px;">
+    <a href="{% url 'ecommerce:catalogo' %}"
+       style="color:var(--ink-60); font-size:14px; text-decoration:none;">
+      ← Seguir viendo la tienda
+    </a>
+  </div>
+</main>
+
+{% include 'ecommerce/_shop_footer.html' %}
 {% endblock %}

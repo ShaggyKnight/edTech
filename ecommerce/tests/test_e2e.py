@@ -119,6 +119,11 @@ class EcommerceFlujoCompletoTests(TestCase):
             resp = self.client.get(resp['Location'])
             self.assertEqual(resp.status_code, 200)
             self.assertContains(resp, 'Pago rechazado')
+            self.assertContains(resp, 'Volver al carrito')
+            # Anti-regresion: la pagina de retorno debe usar el layout de la
+            # TIENDA (shop-header), no el del backoffice. Antes extendia
+            # base.html y exponia el molde de admin al cancelar/fallar.
+            self.assertContains(resp, 'shop-header')
 
             recibo = ReciboVenta.objects.get()
             self.assertEqual(recibo.estado, ReciboVenta.ESTADO_FALLIDO)

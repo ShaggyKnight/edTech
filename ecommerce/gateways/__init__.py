@@ -48,6 +48,9 @@ _REGISTRY = {
     'mock':  'ecommerce.gateways.mock.MockOnlineGateway',
     'klap':  'ecommerce.gateways.klap.KlapGateway',
     'khipu': 'ecommerce.gateways.khipu.KhipuGateway',
+    # Mercado Pago (Checkout Pro): billetera + tarjetas + cuotas. Requiere
+    # MERCADOPAGO_ACCESS_TOKEN en el .env para activarse.
+    'mercadopago': 'ecommerce.gateways.mercadopago.MercadoPagoGateway',
     # Transferencia directa con confirmacion manual — respaldo sin
     # pasarela. Requiere TRANSFERENCIA_* en el .env para activarse.
     'transferencia': 'ecommerce.gateways.transferencia.TransferenciaGateway',

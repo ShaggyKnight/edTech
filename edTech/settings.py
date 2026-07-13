@@ -49,6 +49,13 @@ env = environ.Env(
     KHIPU_RECEIVER_ID=(str, ''),
     KHIPU_SECRET=(str, ''),
     KHIPU_BASE_URL=(str, 'https://payment-api.khipu.com'),
+    # Mercado Pago (Checkout Pro) — billetera + tarjetas + cuotas.
+    # ACCESS_TOKEN es el Bearer de las llamadas API (TEST-… en pruebas,
+    # APP_USR-… en prod); WEBHOOK_SECRET valida la firma x-signature.
+    MERCADOPAGO_ACCESS_TOKEN=(str, ''),
+    MERCADOPAGO_PUBLIC_KEY=(str, ''),
+    MERCADOPAGO_WEBHOOK_SECRET=(str, ''),
+    MERCADOPAGO_BASE_URL=(str, 'https://api.mercadopago.com'),
     # Transferencia bancaria DIRECTA (sin pasarela): el cliente ve los
     # datos de la cuenta y la dueña confirma el abono a mano en
     # Despacho. Respaldo activable cuando la pasarela falla o mientras
@@ -392,6 +399,12 @@ KHIPU_API_KEY = env('KHIPU_API_KEY')          # x-api-key (llamadas API)
 KHIPU_RECEIVER_ID = env('KHIPU_RECEIVER_ID')  # id de cobrador (informativo)
 KHIPU_SECRET = env('KHIPU_SECRET')            # llave de cobrador (firma webhooks)
 KHIPU_BASE_URL = env('KHIPU_BASE_URL')
+
+# Mercado Pago — Checkout Pro (billetera + tarjetas + cuotas)
+MERCADOPAGO_ACCESS_TOKEN = env('MERCADOPAGO_ACCESS_TOKEN')   # Bearer de la API
+MERCADOPAGO_PUBLIC_KEY = env('MERCADOPAGO_PUBLIC_KEY')       # informativo (frontend SDK)
+MERCADOPAGO_WEBHOOK_SECRET = env('MERCADOPAGO_WEBHOOK_SECRET')  # firma x-signature
+MERCADOPAGO_BASE_URL = env('MERCADOPAGO_BASE_URL')
 
 # Transferencia directa (confirmacion manual) — respaldo de pasarelas.
 TRANSFERENCIA_NOMBRE = env('TRANSFERENCIA_NOMBRE')

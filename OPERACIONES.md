@@ -231,6 +231,39 @@ djmanage cargar_uniformes --aplicar
   despachadores activos.
 - Preview de todos los emails del sistema: `https://ideasboutique.cl/cuenta/emails/`.
 
+### Mercado Pago (billetera + tarjetas + cuotas)
+
+Pasarela con redirección (Checkout Pro): el cliente paga en el entorno
+de Mercado Pago con su saldo, tarjeta o cuotas, y vuelve a la tienda ya
+pagado. Nosotros nunca vemos los datos de la tarjeta.
+
+**Setup por única vez** (en el panel de Mercado Pago, con el RUT de Blanca):
+1. Crear cuenta de vendedor en mercadopago.cl y una aplicación en
+   *Tus integraciones*.
+2. Copiar de *Credenciales de producción*: **Access Token** (`APP_USR-…`).
+3. En *Webhooks*, configurar la URL
+   `https://ideasboutique.cl/tienda/pago/webhook/mercadopago/` y copiar
+   la **Clave secreta**.
+
+**Activar:**
+
+```bash
+edit-env
+#   ECOMMERCE_GATEWAYS_ACTIVOS=mercadopago,transferencia
+#   MERCADOPAGO_ACCESS_TOKEN=APP_USR-...
+#   MERCADOPAGO_WEBHOOK_SECRET=...   (la clave secreta del webhook)
+restart-app
+```
+
+> Sin `MERCADOPAGO_ACCESS_TOKEN` el método no aparece en el checkout
+> (queda en modo simulador). La plata cae en la cuenta Mercado Pago y se
+> retira a la CuentaRUT. Los pedidos pagados llegan solos a Despacho →
+> "Nuevos" (no hay que confirmar a mano como en la transferencia).
+
+**Probar antes de cobrar de verdad:** usar un Access Token `TEST-…` y las
+tarjetas de prueba del panel — el gateway detecta el `TEST-` y usa el
+ambiente sandbox automáticamente.
+
 ### Transferencia bancaria directa (respaldo de la pasarela)
 
 Método de pago SIN pasarela: el cliente ve los datos de la cuenta,

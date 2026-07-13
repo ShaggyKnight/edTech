@@ -100,6 +100,30 @@ class ModoTiendaDirectaTests(TestCase):
                 self.assertFalse(os.path.exists(tienda))
 
 
+class GoogleMapsEmbedTests(TestCase):
+    """El mapa de Google aparece en el landing y en /info/ cuando
+    GOOGLE_MAPS_EMBED_URL esta seteado, y se oculta si esta vacio."""
+
+    def test_mapa_en_landing_con_embed(self):
+        with self.settings(GOOGLE_MAPS_EMBED_URL='https://maps.example/embed'):
+            r = self.client.get(reverse('index'))
+        self.assertContains(r, 'class="mapa-google"')
+        self.assertContains(r, 'https://maps.example/embed')
+
+    def test_mapa_e_horario_en_info(self):
+        with self.settings(GOOGLE_MAPS_EMBED_URL='https://maps.example/embed',
+                           GOOGLE_MAPS_PLACE_URL='https://maps.example/place'):
+            r = self.client.get(reverse('info'))
+        self.assertContains(r, 'mapa-google')
+        self.assertContains(r, 'https://maps.example/place')
+        self.assertContains(r, 'Ver horario en vivo en Google')
+
+    def test_sin_embed_no_muestra_mapa(self):
+        with self.settings(GOOGLE_MAPS_EMBED_URL=''):
+            r = self.client.get(reverse('index'))
+        self.assertNotContains(r, 'class="mapa-google"')
+
+
 class BasePublicHeadTests(TestCase):
     def setUp(self):
         self.resp = self.client.get(reverse('index'))

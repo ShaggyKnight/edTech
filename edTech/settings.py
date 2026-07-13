@@ -110,6 +110,19 @@ env = environ.Env(
     # espacios (ej. '56912345678'). Vacío = el bloque "WhatsApp directo"
     # se muestra como texto plano (estado actual hasta que se configure).
     PUBLIC_WHATSAPP=(str, ''),
+    # Google Maps. EMBED_URL = el `src` del iframe (mapa incrustado en
+    # "Visítanos" e /info/#contacto). PLACE_URL = link a la ficha de Google
+    # (horario en vivo, reseñas, "cómo llegar"). Defaults por direccion (sin
+    # API key); reemplazar por el "Insertar un mapa" de tu ficha de Google
+    # Business para mostrar el negocio con horario y reseñas. Vacío = sin mapa.
+    GOOGLE_MAPS_EMBED_URL=(str, (
+        'https://www.google.com/maps?q=Ideas+Boutique,+Caupolic%C3%A1n+437-B,'
+        '+Los+Vilos,+Chile&z=16&output=embed'
+    )),
+    GOOGLE_MAPS_PLACE_URL=(str, (
+        'https://www.google.com/maps/search/?api=1&query=Ideas+Boutique,'
+        '+Caupolic%C3%A1n+437-B,+Los+Vilos,+Chile'
+    )),
     # Feature flags publicas. Bloque 9 quedo apagado por default hasta
     # que la duena tenga banda para moderar las resenas. La data
     # (model + admin + tests) se mantiene — solo se oculta el UI.
@@ -452,6 +465,8 @@ ANALYTICS_DOMAIN = env('ANALYTICS_DOMAIN')              # dominio Plausible (vac
 CLARITY_PROJECT_ID = env('CLARITY_PROJECT_ID')          # Microsoft Clarity (vacío = sin heatmaps)
 GOOGLE_TAG_ID = env('GOOGLE_TAG_ID')                    # Google Ads/GA4 gtag (vacío = sin tag)
 PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del local, ej '56912345678'
+GOOGLE_MAPS_EMBED_URL = env('GOOGLE_MAPS_EMBED_URL')    # src del iframe del mapa (vacío = sin mapa)
+GOOGLE_MAPS_PLACE_URL = env('GOOGLE_MAPS_PLACE_URL')    # link a la ficha de Google (horario/reseñas)
 
 # Feature flags. Bloque 9 (resenas) sigue codeado y testeado pero
 # se oculta en la UI publica hasta que la duena tenga ancho de banda

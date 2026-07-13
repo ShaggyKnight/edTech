@@ -365,7 +365,8 @@
       <img src="{% static 'img/ideas/fachada-letrero.jpg' %}"
            alt="Fachada de Ideas Boutique en Caupolicán 437-B, Los Vilos"
            loading="lazy" width="1600" height="1200"
-           style="aspect-ratio:4/3;object-fit:cover;box-shadow:0 20px 48px -16px rgba(14,14,14,.35);">
+           style="aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-lg);box-shadow:0 20px 48px -16px rgba(14,14,14,.35);">
+      {% include 'partials/_mapa_google.html' with mapa_alto=240 %}
     </div>
   </section>
 

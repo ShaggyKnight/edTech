@@ -1,0 +1,30 @@
+{% comment %}
+  Mapa de Google de la tienda física. Se muestra solo si
+  GOOGLE_MAPS_EMBED_URL está seteado (context processor public_settings).
+  El link a la ficha (GOOGLE_MAPS_PLACE_URL) lleva a Google Maps, donde el
+  cliente ve el horario en vivo ("Abierto ahora · cierra 19:00"), reseñas y
+  cómo llegar — datos que salen directo de la ficha de Google del negocio.
+
+  Params opcionales al incluirlo:
+    mapa_alto   alto del iframe en px (default 320)
+{% endcomment %}
+{% if GOOGLE_MAPS_EMBED_URL %}
+<div class="mapa-google" style="margin-top:16px;">
+  <iframe
+    src="{{ GOOGLE_MAPS_EMBED_URL }}"
+    title="Mapa de Ideas Boutique en Caupolicán 437-B, Los Vilos"
+    width="100%" height="{{ mapa_alto|default:320 }}"
+    style="border:0; display:block; border-radius:var(--radius-lg, 16px);"
+    loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+    allowfullscreen></iframe>
+  {% if GOOGLE_MAPS_PLACE_URL %}
+    <a href="{{ GOOGLE_MAPS_PLACE_URL }}" target="_blank" rel="noopener"
+       style="display:inline-flex; align-items:center; gap:6px; margin-top:12px;
+              font-size:14px; font-weight:500; color:var(--gold-2, #B5860C);
+              text-decoration:none;">
+      <svg class="ico ico--16"><use href="#ico-pin"/></svg>
+      Cómo llegar y horario actualizado en Google Maps →
+    </a>
+  {% endif %}
+</div>
+{% endif %}

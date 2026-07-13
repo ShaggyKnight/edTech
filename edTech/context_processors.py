@@ -31,6 +31,9 @@ def public_settings(request):
         'SITE_URL': getattr(settings, 'SITE_URL', ''),
         # BUG-009: número de WhatsApp para wa.me/... en el landing y /info/.
         'PUBLIC_WHATSAPP': getattr(settings, 'PUBLIC_WHATSAPP', ''),
+        # Google Maps: iframe incrustado + link a la ficha (horario/reseñas).
+        'GOOGLE_MAPS_EMBED_URL': getattr(settings, 'GOOGLE_MAPS_EMBED_URL', ''),
+        'GOOGLE_MAPS_PLACE_URL': getattr(settings, 'GOOGLE_MAPS_PLACE_URL', ''),
         # Envios a domicilio. OFF = solo retiro en tienda: el checkout no
         # pide direccion y los templates esconden toda mencion a envios.
         'FEATURE_ENVIOS': getattr(settings, 'FEATURE_ENVIOS', False),

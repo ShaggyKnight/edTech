@@ -148,6 +148,12 @@
           9:00 – 19:00 hrs<br>
           <span style="color:var(--ink-60);font-size:14px;">Domingos cerrado</span>
         </span>
+        {% if GOOGLE_MAPS_PLACE_URL %}
+          <a href="{{ GOOGLE_MAPS_PLACE_URL }}" target="_blank" rel="noopener"
+             style="display:block;margin-top:6px;font-size:13px;color:var(--gold);font-weight:500;text-decoration:none;">
+            Ver horario en vivo en Google →
+          </a>
+        {% endif %}
       </div>
       <div>
         <strong style="display:block;margin-bottom:4px;">💬 WhatsApp</strong>
@@ -166,6 +172,13 @@
         {% endif %}
       </div>
     </div>
+
+    {% if GOOGLE_MAPS_EMBED_URL %}
+    <div style="margin-top:28px;">
+      <strong style="display:block;margin-bottom:10px;">🗺️ Dónde estamos</strong>
+      {% include 'partials/_mapa_google.html' with mapa_alto=320 %}
+    </div>
+    {% endif %}
   </section>
 
 </main>

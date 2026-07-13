@@ -188,11 +188,13 @@ class MercadoPagoGateway(OnlinePaymentGateway):
                 pass
 
         if 'payment' not in tipo:
-            # merchant_order u otros topics: los ignoramos (el estado real
-            # lo sacamos del pago). No es error — 200 silencioso.
+            # merchant_order u otros topics que Checkout Pro también manda:
+            # los reconocemos con 200 (handled=True) sin hacer nada — el
+            # estado real lo sacamos de la notificación de pago. Devolver
+            # 401 acá haría que Mercado Pago reintente y los marque fallidos.
             return WebhookResult(
-                recibo_pk=None, payment_result=None, handled=False,
-                detalle=f'Topic ignorado: {tipo!r}',
+                recibo_pk=None, payment_result=None, handled=True,
+                detalle=f'Topic ignorado (200): {tipo!r}',
             )
         if not data_id:
             return WebhookResult(

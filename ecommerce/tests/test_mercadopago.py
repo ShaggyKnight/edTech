@@ -219,9 +219,12 @@ class MercadoPagoWebhookTests(TestCase):
         req = self._request(ts=int(time.time()) - 3600)  # 1 hora atrás
         self.assertFalse(MercadoPagoGateway().webhook(req).handled)
 
-    def test_topic_no_payment_se_ignora(self):
-        req = self._request(tipo='merchant_order')
-        self.assertFalse(MercadoPagoGateway().webhook(req).handled)
+    def test_topic_no_payment_se_reconoce_con_200_sin_actuar(self):
+        # merchant_order y otros topics: 200 (handled=True) pero sin
+        # payment_result, para que Mercado Pago no reintente. No actúa.
+        result = MercadoPagoGateway().webhook(self._request(tipo='merchant_order'))
+        self.assertTrue(result.handled)
+        self.assertIsNone(result.payment_result)
 
     @override_settings(MERCADOPAGO_WEBHOOK_SECRET='')
     def test_sin_secret_configurado_se_ignora(self):

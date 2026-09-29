@@ -22,6 +22,25 @@
       Volver al carrito
     </a>
 
+  {% elif recibo.estado == 'fallido' and recibo.pago_recibido_en %}
+    {# Se cobró, pero el stock se agotó justo antes de confirmar. #}
+    <div class="eyebrow" style="color:var(--vino);">Producto agotado</div>
+    <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
+      Recibimos tu pago, pero se agotó
+    </h1>
+    <p style="color:var(--ink-60); font-size:15px; line-height:1.7; margin:0 auto 28px; max-width:440px;">
+      Justo se agotó un producto de tu pedido <strong>#{{ recibo.pk }}</strong>
+      y no podemos completarlo. Te devolvemos los
+      <strong>${{ recibo.total|floatformat:0|intcomma }}</strong> por el mismo
+      medio de pago y te contactamos a la brevedad. Disculpa las molestias.
+    </p>
+    {% if PUBLIC_WHATSAPP %}
+      <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}?text=Hola%2C%20consulta%20por%20la%20devoluci%C3%B3n%20del%20pedido%20%23{{ recibo.pk }}"
+         class="btn-primary lg" style="display:inline-block;" target="_blank" rel="noopener">
+        Escríbenos por WhatsApp
+      </a>
+    {% endif %}
+
   {% elif recibo.estado == 'fallido' %}
     <div class="eyebrow" style="color:var(--vino);">Pago rechazado</div>
     <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
@@ -63,6 +82,10 @@
     <a href="{% url 'ecommerce:pedido' recibo.payment_reference %}" class="btn-primary lg" style="display:inline-block;">
       Ver el estado de mi pedido
     </a>
+    <p style="color:var(--ink-60); font-size:13.5px; line-height:1.6; margin:18px auto 0; max-width:440px;">
+      ¿No alcanzaste a pagar? Tu carrito sigue intacto:
+      <a href="{% url 'ecommerce:carrito' %}" style="color:var(--vino);">vuelve a intentarlo</a>.
+    </p>
   {% endif %}
 
   <div style="margin-top:18px;">

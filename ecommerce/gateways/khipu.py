@@ -5,8 +5,9 @@ elige su banco, se loguea via su webapp, y autoriza la transferencia.
 Comision aproximada 0,79% — la mas baja del mercado chileno.
 
 Estado: INTEGRACION REAL contra la API 3.0. Si falta KHIPU_API_KEY en
-el .env, cae a modo mock (simulador local) — asi dev/staging siguen
-funcionando sin credenciales.
+el .env: en dev/tests cae a modo mock (simulador local); en prod el
+gateway se desactiva (ver ECOMMERCE_PERMITIR_SIMULADOR) — nunca un
+pedido "pagado" sin cobro real.
 
 Docs: docs.khipu.com (API 3.0)
 Soporte: comercios@khipu.com
@@ -34,7 +35,7 @@ from django.conf import settings
 from django.urls import reverse
 
 from ecommerce.gateways.base import (
-    OnlinePaymentGateway, OnlinePaymentInit, WebhookResult,
+    OnlinePaymentGateway, OnlinePaymentInit, WebhookResult, simulador_permitido,
 )
 from pos.payments import (
     ESTADO_CANCELADO, ESTADO_FALLIDO, ESTADO_PAGADO, ESTADO_PENDIENTE,
@@ -64,10 +65,12 @@ class KhipuGateway(OnlinePaymentGateway):
             settings, 'KHIPU_BASE_URL', 'https://payment-api.khipu.com',
         ).rstrip('/')
         self.mock_mode = not self.api_key
-        if self.mock_mode and not settings.DEBUG:
-            log.warning(
-                'KhipuGateway en MOCK_MODE en prod — falta KHIPU_API_KEY '
-                'en .env.',
+        if self.mock_mode and not simulador_permitido():
+            # Levantar aca hace que get_gateways_activos() lo salte: sin
+            # credenciales el metodo no aparece en el checkout (antes caia
+            # al simulador y aprobaba pedidos sin cobrar).
+            raise PaymentGatewayError(
+                'Khipu sin KHIPU_API_KEY en .env — gateway desactivado.',
             )
         if self.api_key and not self.secret:
             log.warning(

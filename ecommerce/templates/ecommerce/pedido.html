@@ -25,8 +25,13 @@
     recibo                       — ReciboVenta
     items_count                  — int (badge del carrito en header)
     es_retiro_local              — bool (sin envío)
+    es_transferencia             — bool (pago por transferencia directa)
     pickup_slot                  — SlotRetiro asignado, opcional
     tracking_url, tracking_code  — si despacho, opcional
+
+  El contenido depende de recibo.estado: la página también se abre para
+  pedidos NO pagados (transferencia esperando el abono, pago en proceso,
+  rechazado, anulado) — antes decía "pagado" en todos los casos.
 {% endcomment %}
 
 {% block body %}
@@ -34,43 +39,88 @@
 
 <main class="pedido-page">
 
-  {# ============== HERO DE CONFIRMACIÓN ============== #}
+  {# ============== HERO (según el estado del pago) ============== #}
   <header class="pedido-hero">
-    <div class="pedido-hero-check" aria-hidden="true">
-      <svg viewBox="0 0 64 64" width="56" height="56">
-        <circle cx="32" cy="32" r="28" fill="none" stroke="#547852" stroke-width="2.5"/>
-        <path d="M20 33 l9 9 l16 -19" fill="none" stroke="#547852"
-              stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <div class="eyebrow">¡Gracias por tu compra!</div>
+    {% if recibo.estado == 'pagado' %}
+      <div class="pedido-hero-check" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="56" height="56">
+          <circle cx="32" cy="32" r="28" fill="none" stroke="#547852" stroke-width="2.5"/>
+          <path d="M20 33 l9 9 l16 -19" fill="none" stroke="#547852"
+                stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="eyebrow">¡Gracias por tu compra!</div>
+    {% elif recibo.estado == 'pendiente' %}
+      <div class="pedido-hero-check pedido-hero-espera" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="56" height="56">
+          <circle cx="32" cy="32" r="28" fill="none" stroke="#B08D4F" stroke-width="2.5"/>
+          <path d="M32 18 v15 l9 6" fill="none" stroke="#B08D4F"
+                stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="eyebrow">{% if es_transferencia %}Pedido recibido{% else %}Pago en proceso{% endif %}</div>
+    {% else %}
+      <div class="eyebrow" style="color:var(--vino);">
+        {% if recibo.pago_recibido_en %}Producto agotado{% elif recibo.estado == 'cancelado' %}Pedido anulado{% else %}Pago no completado{% endif %}
+      </div>
+    {% endif %}
     <h1>
       Pedido <span class="pedido-num">#{{ recibo.pk }}</span>
     </h1>
     <p class="pedido-sub">
-      {% if recibo.cliente_nombre %}{{ recibo.cliente_nombre|capfirst }}, t{% else %}T{% endif %}u pedido quedó
-      <strong>pagado</strong> el {{ recibo.creado|date:"d \d\e F" }} a las {{ recibo.creado|date:"H:i" }}.
-      {% if recibo.cliente_email %}
-        Te enviamos la confirmación a <strong>{{ recibo.cliente_email }}</strong>.
+      {% if recibo.estado == 'pagado' %}
+        {% if recibo.cliente_nombre %}{{ recibo.cliente_nombre|capfirst }}, t{% else %}T{% endif %}u pedido quedó
+        <strong>pagado</strong> el {{ recibo.pago_recibido_en|default:recibo.creado|date:"d \d\e F" }} a las {{ recibo.pago_recibido_en|default:recibo.creado|date:"H:i" }}.
+        {% if recibo.cliente_email %}
+          Te enviamos la confirmación a <strong>{{ recibo.cliente_email }}</strong>.
+        {% endif %}
+      {% elif recibo.estado == 'pendiente' and es_transferencia %}
+        {% if recibo.cliente_nombre %}{{ recibo.cliente_nombre|capfirst }}, t{% else %}T{% endif %}u pedido está
+        <strong>esperando tu transferencia</strong> de ${{ recibo.total|floatformat:0|intcomma }}.
+        Apenas veamos el abono lo confirmamos y te enviamos la boleta{% if recibo.cliente_email %} a <strong>{{ recibo.cliente_email }}</strong>{% endif %}.
+      {% elif recibo.estado == 'pendiente' %}
+        Estamos <strong>confirmando tu pago</strong>{% if recibo.payment_provider %} con {{ medio_pago }}{% endif %}.
+        Si ya pagaste, apenas se acredite te enviamos la boleta{% if recibo.cliente_email %} a <strong>{{ recibo.cliente_email }}</strong>{% endif %}.
+        Si no alcanzaste a pagar, tu <a href="{% url 'ecommerce:carrito' %}">carrito</a> sigue intacto para intentarlo de nuevo.
+      {% elif recibo.pago_recibido_en %}
+        Recibimos tu pago, pero justo se agotó un producto de tu pedido y no
+        podemos completarlo. Te devolvemos los <strong>${{ recibo.total|floatformat:0|intcomma }}</strong>
+        por el mismo medio de pago y te contactamos a la brevedad.
+      {% elif recibo.estado == 'cancelado' %}
+        Este pedido se anuló y no se hizo ningún cargo.
+      {% else %}
+        El pago de este pedido no se completó, así que no se hizo ningún cargo.
+        Puedes <a href="{% url 'ecommerce:carrito' %}">volver al carrito</a> e intentarlo de nuevo.
       {% endif %}
     </p>
   </header>
 
+  {% if recibo.estado == 'pagado' or recibo.estado == 'pendiente' %}
   {# ============== TIMELINE DE ESTADO ============== #}
   <section class="pedido-timeline" aria-label="Estado del pedido">
     <ol>
-      <li class="step done">
-        <span class="dot"></span>
-        <div>
-          <strong>Pagado</strong>
-          <span>{{ recibo.creado|date:"d-m-Y H:i" }}</span>
-        </div>
-      </li>
-      <li class="step {% if not recibo.despachado_en %}current{% else %}done{% endif %}">
+      {% if recibo.estado == 'pagado' %}
+        <li class="step done">
+          <span class="dot"></span>
+          <div>
+            <strong>Pagado</strong>
+            <span>{{ recibo.pago_recibido_en|default:recibo.creado|date:"d-m-Y H:i" }}</span>
+          </div>
+        </li>
+      {% else %}
+        <li class="step current">
+          <span class="dot"></span>
+          <div>
+            <strong>Pago</strong>
+            <span>{% if es_transferencia %}Esperando tu transferencia{% else %}Confirmando tu pago{% endif %}</span>
+          </div>
+        </li>
+      {% endif %}
+      <li class="step {% if recibo.estado == 'pagado' %}{% if not recibo.despachado_en %}current{% else %}done{% endif %}{% endif %}">
         <span class="dot"></span>
         <div>
           <strong>En preparación</strong>
-          <span>{% if recibo.despachado_en %}Listo el {{ recibo.despachado_en|date:"d-m H:i" }}{% else %}Estamos armando tu pedido{% endif %}</span>
+          <span>{% if recibo.despachado_en %}Listo el {{ recibo.despachado_en|date:"d-m H:i" }}{% elif recibo.estado == 'pagado' %}Estamos armando tu pedido{% else %}Apenas se confirme el pago{% endif %}</span>
         </div>
       </li>
       {% if es_retiro_local %}
@@ -106,10 +156,21 @@
       {% endif %}
     </ol>
   </section>
+  {% endif %}
 
+  {% if recibo.estado == 'pagado' or recibo.estado == 'pendiente' %}
   {# ============== QUÉ PASA AHORA ============== #}
   <section class="pedido-callout">
-    {% if recibo.despachado_en %}
+    {% if recibo.estado == 'pendiente' and es_transferencia %}
+      Transfiere <strong>${{ recibo.total|floatformat:0|intcomma }}</strong> a la
+      cuenta que te enviamos por correo, con el <strong>pedido #{{ recibo.pk }}</strong>
+      como referencia, y mándanos el comprobante por WhatsApp. Apenas lo
+      confirmemos, preparamos tu pedido.
+      <a href="{% url 'ecommerce:transferencia_instrucciones' recibo.payment_reference %}">Ver los datos para transferir →</a>
+    {% elif recibo.estado == 'pendiente' %}
+      <strong>Tu pedido se prepara apenas se confirme el pago.</strong>
+      Suele tardar unos minutos; te avisamos por correo.
+    {% elif recibo.despachado_en %}
       {% if es_retiro_local %}
         Tu pedido ya está <strong>listo para retiro</strong> en
         <strong>Caupolicán 437-B, Los Vilos</strong>. Lun a Sáb · 9:00–19:00.
@@ -128,6 +189,7 @@
       a tu domicilio.
     {% endif %}
   </section>
+  {% endif %}
 
   {# ============== DETALLE DEL PEDIDO ============== #}
   <section class="pedido-detalle">
@@ -174,7 +236,7 @@
         </div>
       {% endif %}
       <div class="row total">
-        <dt>Total pagado</dt>
+        <dt>{% if recibo.estado == 'pagado' %}Total pagado{% else %}Total{% endif %}</dt>
         <dd>${{ recibo.total|floatformat:0|intcomma }}</dd>
       </div>
     </dl>
@@ -185,7 +247,7 @@
     <div class="pedido-card">
       <div class="pedido-card-head">Forma de pago</div>
       <div class="pedido-card-body">
-        <strong>{{ recibo.payment_provider|default:"Webpay"|capfirst }}</strong>
+        <strong>{{ medio_pago }}</strong>
         {% if recibo.payment_reference %}
           <div class="pedido-card-sub">
             Ref. <code>{{ recibo.payment_reference|truncatechars:24 }}</code>
@@ -311,6 +373,8 @@
     animation: pedido-check-pop 0.4s cubic-bezier(.2,.8,.2,1);
   }
   @keyframes pedido-check-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .pedido-hero-espera { background: rgba(176, 141, 79, 0.10); }
+  .pedido-sub a, .pedido-callout a { color: var(--vino); font-weight: 600; }
   .pedido-hero h1 { font-family: var(--serif); font-size: clamp(34px, 5vw, 48px); font-weight: 600; margin: 8px 0 14px; letter-spacing: -0.005em; }
   .pedido-num { color: var(--gold-2); font-style: italic; font-weight: 500; }
   .pedido-sub { color: var(--ink-60); font-size: 16px; max-width: 56ch; margin: 0 auto; line-height: 1.55; }
@@ -332,7 +396,9 @@
     background: var(--cream); border: 2px solid var(--line);
     margin-bottom: 10px; z-index: 1; position: relative;
   }
-  .pedido-timeline .step.done .dot { background: var(--low); border-color: var(--low); }
+  /* --low no esta definida en las paginas publicas: sin el respaldo el
+     paso completado salia como circulo vacio. #547852 = verde del check. */
+  .pedido-timeline .step.done .dot { background: var(--low, #547852); border-color: var(--low, #547852); }
   .pedido-timeline .step.done .dot::after {
     content: ''; position: absolute; inset: 4px;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M2 6 l3 3 l5 -6'/></svg>");
@@ -346,7 +412,7 @@
   @keyframes pedido-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(201,169,110,.25); } 50% { box-shadow: 0 0 0 8px rgba(201,169,110,.1); } }
   .pedido-timeline strong { display: block; font-size: 13px; font-weight: 600; }
   .pedido-timeline span { font-size: 11px; color: var(--ink-60); display: block; margin-top: 2px; line-height: 1.4; }
-  .pedido-timeline .step.done strong { color: var(--low); }
+  .pedido-timeline .step.done strong { color: var(--low, #547852); }
   .pedido-timeline .step.current strong { color: var(--ink); }
   .pedido-timeline .step:not(.done):not(.current) { opacity: 0.5; }
 

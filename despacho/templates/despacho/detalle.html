@@ -22,7 +22,11 @@
     </button>
     <h1 style="font-size:32px; margin:8px 0 0;">
       Pedido #{{ pedido.pk }}
-      {% if pedido.despachado_en %}
+      {% if pedido.estado != 'pagado' %}
+        <span style="font-size:14px; background:#fdecea; color:#991b1b; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">
+          {% if pedido.estado == 'pendiente' %}{% if pedido.payment_provider == 'transferencia' %}ESPERANDO TRANSFERENCIA{% else %}PAGO PENDIENTE{% endif %}{% elif pedido.pago_recibido_en %}PAGO POR DEVOLVER{% else %}{{ pedido.get_estado_display|upper }}{% endif %}
+        </span>
+      {% elif pedido.despachado_en %}
         <span style="font-size:14px; background:#c8e6c9; color:#2e7d32; padding:4px 10px; border-radius:12px; vertical-align:middle; margin-left:8px;">
           ✓ DESPACHADO
         </span>
@@ -39,8 +43,38 @@
 
   {% if messages %}
     {% for message in messages %}
-      <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px; background:#e8f5e9;">{{ message }}</div>
+      <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px; background:{% if message.tags == 'error' %}#fdecea{% else %}#e8f5e9{% endif %};">{{ message }}</div>
     {% endfor %}
+  {% endif %}
+
+  {% if pedido.estado != 'pagado' %}
+    {% comment %}
+      Solo los pedidos pagados se preparan. Sin este aviso la pagina
+      mostraba "EN COLA" y el boton de despachar para una transferencia
+      sin confirmar o un pedido fallido.
+    {% endcomment %}
+    <div class="no-print" style="padding:14px 18px; margin-bottom:18px; border-radius:8px; border-left:4px solid #991b1b; background:#fdecea; font-size:14px; line-height:1.6;">
+      {% if pedido.estado == 'pendiente' %}
+        {% if pedido.payment_provider == 'transferencia' %}
+          <strong>Esperando la transferencia.</strong> No lo prepares todavía:
+          cuando veas el abono en la cartola, confírmalo en
+          <a href="{% url 'despacho:cola' %}?estado=transferencias" style="color:#7A1E2B;">Por confirmar</a>.
+        {% else %}
+          <strong>Pago pendiente.</strong> La pasarela todavía no confirma el
+          pago. No lo prepares hasta que aparezca en la cola de nuevos.
+        {% endif %}
+      {% elif pedido.pago_recibido_en %}
+        <strong>Pago por devolver.</strong> Se recibió el pago el
+        {{ pedido.pago_recibido_en|date:"d-m-Y H:i" }} ({{ pedido.payment_provider|default:"pasarela" }}),
+        pero no quedaba stock para cumplirlo. Hay que devolverle
+        <strong>${{ pedido.total|floatformat:0|intcomma }}</strong> al cliente:
+        en Mercado Pago, Actividad → el pago → Devolver dinero; si pagó por
+        transferencia o Khipu, transfiérele de vuelta.
+      {% else %}
+        <strong>Pedido {{ pedido.get_estado_display|lower }}.</strong>
+        No se pagó, así que no se despacha.
+      {% endif %}
+    </div>
   {% endif %}
 
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
@@ -57,7 +91,7 @@
           🆔 {{ pedido.cliente_rut|default:"sin RUT" }}
         </div>
         {% wa_aviso_pedido pedido as wa_url %}
-        {% if wa_url %}
+        {% if wa_url and pedido.estado == 'pagado' %}
           {% comment %}
             Abre WhatsApp con el aviso ya escrito (según estado del
             pedido) — Blanca solo revisa el texto y aprieta enviar.
@@ -155,7 +189,7 @@
         </button>
       </form>
     </div>
-  {% else %}
+  {% elif pedido.estado == 'pagado' %}
     <div style="text-align:right;" class="no-print">
       <form method="post" action="{% url 'despacho:marcar_despachado' pedido.pk %}"
             onsubmit="return confirm('¿Confirmar despacho del pedido #{{ pedido.pk }}? Esto registra la fecha y tu usuario como responsable.');">

@@ -45,7 +45,7 @@ def wa_aviso_pedido(pedido) -> str:
             cuerpo = (
                 f'¡Hola {nombre}! Soy de Ideas Boutique 🙌 '
                 f'Tu pedido #{pedido.pk} ya está listo para retiro en '
-                f'Caupolicán 437-B, Los Vilos (lunes a sábado, 9 a 19hs). '
+                f'Caupolicán 437-B, Los Vilos (lunes a sábado, 9 a 19 hrs). '
                 f'¡Te esperamos!'
             )
     else:

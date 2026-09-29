@@ -7,18 +7,22 @@ NUNCA tocamos datos de tarjeta (PCI queda del lado de Mercado Pago).
 
 Flujo (idéntico en forma al de Khipu):
   1. iniciar_pago  → POST /checkout/preferences → devuelve `init_point`
-     (URL de checkout) al que redirigimos. Guardamos `external_reference`
-     = "IBR-<pk>" como token para reconocer el recibo después.
+     (URL de checkout) al que redirigimos. El `external_reference` =
+     "IBR-<pk>-<llave aleatoria>" es también el token del pedido: con él
+     se reconoce el recibo después y arma la URL pública del pedido, así
+     que NO puede ser adivinable (esa página muestra nombre, email y RUT).
   2. Cliente paga en Mercado Pago y vuelve al return_url.
   3. confirmar_pago(token) → GET /v1/payments/search?external_reference=…
-     para leer el estado final del pago.
+     para leer el estado final del pago. Puede haber varios intentos: tras
+     un rechazo, Checkout Pro deja pagar con otro medio en la misma
+     preferencia — un intento aprobado manda.
   4. webhook → Mercado Pago avisa server-to-server con el payment_id;
      lo consultamos y aplicamos el resultado (cubre el caso de que el
      cliente cierre el browser antes de volver).
 
-Estado: INTEGRACIÓN REAL. Sin MERCADOPAGO_ACCESS_TOKEN cae a modo mock
-(simulador local), igual que Khipu — dev/staging siguen andando sin
-credenciales.
+Estado: INTEGRACIÓN REAL. Sin MERCADOPAGO_ACCESS_TOKEN: en dev/tests cae
+a modo mock (simulador local), igual que Khipu; en prod el gateway se
+desactiva (ver ECOMMERCE_PERMITIR_SIMULADOR).
 
 Docs: https://www.mercadopago.cl/developers/es/docs/checkout-pro/landing
 
@@ -41,6 +45,7 @@ import hmac
 import json
 import logging
 import time
+import uuid
 from urllib.parse import urlsplit, urlunsplit
 
 import requests
@@ -48,7 +53,7 @@ from django.conf import settings
 from django.urls import reverse
 
 from ecommerce.gateways.base import (
-    OnlinePaymentGateway, OnlinePaymentInit, WebhookResult,
+    OnlinePaymentGateway, OnlinePaymentInit, WebhookResult, simulador_permitido,
 )
 from pos.payments import (
     ESTADO_CANCELADO, ESTADO_FALLIDO, ESTADO_PAGADO, ESTADO_PENDIENTE,
@@ -61,8 +66,9 @@ log = logging.getLogger(__name__)
 # `ts=<epoch_segundos>` en la firma; descartamos avisos más viejos.
 WEBHOOK_MAX_EDAD_SEGUNDOS = 15 * 60
 
-# Prefijo del external_reference: "IBR-00000123". Estable, único por
-# recibo, y sirve tanto para buscar el recibo como para consultar el pago.
+# Prefijo del external_reference: "IBR-00000123-<llave>". El número de
+# pedido lo hace legible en el panel de Mercado Pago; la llave aleatoria
+# lo hace imposible de adivinar.
 _REF_PREFIX = 'IBR-'
 
 
@@ -80,10 +86,11 @@ class MercadoPagoGateway(OnlinePaymentGateway):
             settings, 'MERCADOPAGO_BASE_URL', 'https://api.mercadopago.com',
         ).rstrip('/')
         self.mock_mode = not self.access_token
-        if self.mock_mode and not settings.DEBUG:
-            log.warning(
-                'MercadoPagoGateway en MOCK_MODE en prod — falta '
-                'MERCADOPAGO_ACCESS_TOKEN en .env.',
+        if self.mock_mode and not simulador_permitido():
+            # Sin token en prod el gateway se desactiva (el registry lo
+            # salta) en vez de caer al simulador y aprobar sin cobrar.
+            raise PaymentGatewayError(
+                'Mercado Pago sin MERCADOPAGO_ACCESS_TOKEN en .env — gateway desactivado.',
             )
         if self.access_token and not self.webhook_secret:
             log.warning(
@@ -97,7 +104,8 @@ class MercadoPagoGateway(OnlinePaymentGateway):
         if self.mock_mode:
             return self._mock_iniciar_pago(recibo, return_url)
 
-        payload = self._build_preference(recibo, return_url)
+        referencia = self._external_reference(recibo)
+        payload = self._build_preference(recibo, return_url, referencia)
         try:
             resp = requests.post(
                 f'{self.base_url}/checkout/preferences',
@@ -127,7 +135,7 @@ class MercadoPagoGateway(OnlinePaymentGateway):
         # para buscar el pago en Mercado Pago.
         return OnlinePaymentInit(
             redirect_url=checkout,
-            token=self._external_reference(recibo),
+            token=referencia,
             provider=self.provider,
         )
 
@@ -158,14 +166,23 @@ class MercadoPagoGateway(OnlinePaymentGateway):
                 estado=ESTADO_FALLIDO, provider=self.provider,
                 detalle=f'Mercado Pago {resp.status_code}: {resp.text[:200]}',
             )
-        resultados = (resp.json() or {}).get('results') or []
-        if not resultados:
+        pagos = (resp.json() or {}).get('results') or []
+        if not pagos:
             # Todavía no hay pago (cliente abandonó o volvió sin pagar).
             return PaymentResult(
                 estado=ESTADO_PENDIENTE, provider=self.provider,
                 detalle='Mercado Pago sin pagos para el pedido aún',
             )
-        return self._map_estado(resultados[0])
+        # Puede haber varios intentos (tras un rechazo, Checkout Pro deja
+        # pagar con otro medio en la misma preferencia). Uno aprobado manda;
+        # si no, uno en proceso deja el pedido pendiente; si no, vale el
+        # último intento (vienen ordenados del más nuevo al más viejo).
+        resultados = [self._map_estado(p) for p in pagos]
+        for estado in (ESTADO_PAGADO, ESTADO_PENDIENTE):
+            for resultado in resultados:
+                if resultado.estado == estado:
+                    return resultado
+        return resultados[0]
 
     def webhook(self, request):
         """Procesa una notificación de Mercado Pago (tipo `payment`).
@@ -227,7 +244,7 @@ class MercadoPagoGateway(OnlinePaymentGateway):
             )
 
         pago = resp.json()
-        recibo_pk = self._parsear_recibo_pk(pago.get('external_reference', ''))
+        recibo_pk = self._recibo_pk(pago.get('external_reference') or '')
         result = self._map_estado(pago)
         log.info(
             'Webhook Mercado Pago procesado: payment_id=%s recibo=%s estado=%s',
@@ -246,7 +263,14 @@ class MercadoPagoGateway(OnlinePaymentGateway):
         }
 
     def _external_reference(self, recibo) -> str:
-        return f'{_REF_PREFIX}{recibo.pk:08d}'
+        """Referencia del pedido en Mercado Pago = token de su URL pública.
+
+        Antes era "IBR-<pk>" a secas: cambiando el número se recorrían los
+        pedidos de otros clientes en /tienda/pedido/<token>/. Ahora lleva
+        la llave de idempotencia del recibo (uuid4, aleatoria).
+        """
+        llave = recibo.payment_idempotency_key or str(uuid.uuid4())
+        return f'{_REF_PREFIX}{recibo.pk:08d}-{llave.replace("-", "")}'
 
     def _notify_url(self, return_url: str) -> str:
         """URL absoluta del webhook, derivada del origen del return_url
@@ -256,7 +280,7 @@ class MercadoPagoGateway(OnlinePaymentGateway):
                        kwargs={'gateway': self.provider})
         return urlunsplit((partes.scheme, partes.netloc, path, '', ''))
 
-    def _build_preference(self, recibo, return_url):
+    def _build_preference(self, recibo, return_url, referencia):
         preference = {
             'items': [{
                 'title': f'Compra Ideas Boutique #{recibo.pk}',
@@ -265,7 +289,7 @@ class MercadoPagoGateway(OnlinePaymentGateway):
                 'unit_price': int(recibo.total),
                 'currency_id': 'CLP',
             }],
-            'external_reference': self._external_reference(recibo),
+            'external_reference': referencia,
             'back_urls': {
                 'success': return_url,
                 'pending': return_url,
@@ -353,19 +377,25 @@ class MercadoPagoGateway(OnlinePaymentGateway):
                     + (f' detail={detalle_mp}' if detalle_mp else ''),
         )
 
-    def _parsear_recibo_pk(self, external_reference: str) -> int | None:
-        if not external_reference.startswith(_REF_PREFIX):
+    def _recibo_pk(self, external_reference: str) -> int | None:
+        """external_reference → pk del recibo. Es el token con el que se
+        creó la preferencia, guardado en `payment_reference`."""
+        if not external_reference:
             return None
-        try:
-            return int(external_reference[len(_REF_PREFIX):])
-        except ValueError:
-            return None
+        from pos.models import ReciboVenta
+        return (
+            ReciboVenta.objects
+            .filter(canal=ReciboVenta.CANAL_ONLINE,
+                    payment_reference=external_reference)
+            .values_list('pk', flat=True)
+            .first()
+        )
 
     # ─── Modo mock (sin MERCADOPAGO_ACCESS_TOKEN) ──────────────────
 
     def _mock_iniciar_pago(self, recibo, return_url):
-        # En mock el token igual es el external_reference, para que
-        # confirmar_pedido encuentre el recibo por payment_reference.
+        # En mock el token igual es el external_reference (mismo formato
+        # no adivinable), para que confirmar_pedido encuentre el recibo.
         token = self._external_reference(recibo)
         redirect_url = (
             reverse('ecommerce:mock_pago') +

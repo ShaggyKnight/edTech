@@ -3,16 +3,21 @@
 Redirige a una vista interna que simula la pasarela con botones
 "Aprobar / Rechazar / Cancelar". No toca red. Tokens con sufijos
 `:fail` o `:cancel` resuelven al estado correspondiente.
+
+Solo opera con el simulador permitido (ECOMMERCE_PERMITIR_SIMULADOR):
+en prod no se puede instanciar y el registry lo salta.
 """
 
 from __future__ import annotations
 
 from django.urls import reverse
 
-from ecommerce.gateways.base import OnlinePaymentGateway, OnlinePaymentInit
+from ecommerce.gateways.base import (
+    OnlinePaymentGateway, OnlinePaymentInit, simulador_permitido,
+)
 from pos.payments import (
     ESTADO_CANCELADO, ESTADO_FALLIDO, ESTADO_PAGADO,
-    PaymentResult,
+    PaymentGatewayError, PaymentResult,
 )
 
 
@@ -22,6 +27,13 @@ class MockOnlineGateway(OnlinePaymentGateway):
     subtitulo = 'Pasarela simulada — no toca red'
     icono = '🧪'
     comision_descripcion = 'N/A (mock)'
+
+    def __init__(self):
+        if not simulador_permitido():
+            raise PaymentGatewayError(
+                'Gateway mock deshabilitado: el simulador solo corre en dev/tests '
+                '(ECOMMERCE_PERMITIR_SIMULADOR).'
+            )
 
     def iniciar_pago(self, recibo, return_url):
         token = recibo.payment_idempotency_key or f'MOCK-{recibo.pk}'

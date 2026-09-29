@@ -115,6 +115,14 @@ def marcar_despachado(request, pk):
         ReciboVenta, pk=pk,
         canal=ReciboVenta.CANAL_ONLINE,
     )
+    if pedido.estado != ReciboVenta.ESTADO_PAGADO:
+        # Una transferencia sin confirmar o un pedido fallido no se
+        # entregan: primero tiene que estar pagado.
+        messages.error(
+            request,
+            f'El pedido #{pedido.pk} no está pagado — no se puede despachar.',
+        )
+        return redirect('despacho:detalle', pk=pedido.pk)
     if pedido.despachado_en is None:
         pedido.despachado_en = timezone.now()
         pedido.despachado_por = request.user
@@ -143,11 +151,11 @@ def confirmar_transferencia(request, pk):
     """La dueña vio el abono en su banco → el pedido queda PAGADO.
 
     Reusa `aplicar_resultado_pago`: el mismo camino que un webhook de
-    pasarela — descuenta stock con lock, asiento contable, DTE y
-    WhatsApp automatico. Si el stock se evaporo mientras esperaba la
-    transferencia, queda FALLIDO y hay que devolver la plata.
+    pasarela — descuenta stock con lock, asiento contable, DTE, WhatsApp
+    automatico, boleta al cliente y aviso de venta. Si el stock se
+    evaporo mientras esperaba la transferencia, queda FALLIDO (por
+    devolver) y hay que devolver la plata.
     """
-    from ecommerce.emails import enviar_boleta, notificar_dueno_nueva_orden
     from ecommerce.services import aplicar_resultado_pago
     from pos.payments import ESTADO_PAGADO, PaymentResult
 
@@ -168,12 +176,6 @@ def confirmar_transferencia(request, pk):
     ))
 
     if resultado.estado == ReciboVenta.ESTADO_PAGADO:
-        # Mismo post-pago que las pasarelas: boleta + aviso interno.
-        try:
-            enviar_boleta(resultado)
-            notificar_dueno_nueva_orden(resultado)
-        except Exception:  # noqa: BLE001 — el pago ya quedo firme.
-            pass
         messages.success(
             request,
             f'Transferencia del pedido #{pedido.pk} confirmada — '

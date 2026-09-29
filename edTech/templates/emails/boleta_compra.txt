@@ -10,7 +10,7 @@ DETALLE
 Descuentos                        −${{ recibo.descuento|floatformat:0 }}{% endif %}
 TOTAL                              ${{ recibo.total|floatformat:0 }}
 
-Pagado con {{ recibo.payment_provider|default:"Webpay" }} el {{ recibo.creado|date:"d-m-Y H:i" }}.
+Pagado con {{ recibo.payment_provider|default:"Webpay" }} el {{ recibo.pago_recibido_en|default:recibo.creado|date:"d-m-Y H:i" }}.
 
 Ver el pedido online:
 {{ recibo_url }}

@@ -26,6 +26,7 @@ from django.db.models import Exists, OuterRef, Q, Subquery
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
@@ -33,14 +34,14 @@ from bodega.models import StockTienda
 from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, Resena, ValorAtributo
 from ecommerce.cart import CANAL, Cart
 from ecommerce.emails import (
-    enviar_boleta, enviar_instrucciones_transferencia,
-    notificar_dueno_nueva_orden, notificar_dueno_transferencia_pendiente,
+    enviar_instrucciones_transferencia, notificar_dueno_transferencia_pendiente,
 )
 from ecommerce.forms import ActualizarCantidadForm, AgregarForm, CheckoutForm, ResenaForm
 from ecommerce.gateways import (
     get_gateway, get_gateways_activos, get_gateway_default,
     get_online_gateway,  # alias retrocompat
 )
+from ecommerce.gateways.base import simulador_permitido
 from ecommerce.services import (
     ItemPedido,
     PedidoNoEncontrado,
@@ -897,7 +898,7 @@ def checkout(request):
         'items_count': cart.items_count,
         'form': CheckoutForm(initial=_checkout_initial(request)),
         'gateways': gateways,
-        'gateway_default': gateways[0].provider if gateways else 'mock',
+        'gateway_default': gateways[0].provider if gateways else '',
     })
 
 
@@ -952,6 +953,10 @@ def checkout_iniciar(request):
     form = CheckoutForm(request.POST)
     if not form.is_valid():
         subtotal_bruto, descuento_total, total_neto = cart.totales()
+        # El selector de pago se vuelve a mostrar con lo que eligio el
+        # cliente: sin esto desaparecia tras un error (p. ej. celular mal
+        # escrito) y el reenvio caia al gateway default sin avisar.
+        gateways = get_gateways_activos()
         return render(request, 'ecommerce/checkout.html', {
             'lineas': list(cart.lineas()),
             'subtotal_bruto': subtotal_bruto,
@@ -959,6 +964,9 @@ def checkout_iniciar(request):
             'total_neto': total_neto,
             'items_count': cart.items_count,
             'form': form,
+            'gateways': gateways,
+            'gateway_default': (request.POST.get('gateway')
+                                or (gateways[0].provider if gateways else '')),
         }, status=400)
 
     items = [
@@ -1084,7 +1092,10 @@ def checkout_retorno(request):
             'items_count': items_count,
         }, status=404)
 
-    # Limpieza del carrito y notificación si quedó pagado.
+    # Limpieza del carrito si quedo pagado. La boleta y el aviso al dueno
+    # los manda aplicar_resultado_pago una sola vez, al pasar a pagado
+    # (aunque lo haya confirmado antes el webhook): recargar esta pagina
+    # ya no los duplica.
     if recibo.estado == ReciboVenta.ESTADO_PAGADO:
         Cart(request.session).clear()
         request.session.pop('ecommerce_token_pendiente', None)
@@ -1092,15 +1103,6 @@ def checkout_retorno(request):
         # conversion de Google Ads UNA sola vez (la pagina se revisita
         # despues desde el email — sin esto se contaria doble).
         request.session['ads_compra_pk'] = recibo.pk
-        try:
-            enviar_boleta(recibo)
-        except Exception:  # noqa: BLE001 — el flujo de compra no debe romperse por email.
-            log.exception('Error enviando boleta recibo %s', recibo.pk)
-        try:
-            # Sprint 3 · 3.5: avisar a Blanca apenas entra la venta.
-            notificar_dueno_nueva_orden(recibo)
-        except Exception:  # noqa: BLE001 — idem, no bloqueante.
-            log.exception('Error notificando al dueño sobre recibo %s', recibo.pk)
         return redirect('ecommerce:pedido', token=recibo.payment_reference)
 
     return render(request, 'ecommerce/retorno.html', {
@@ -1131,15 +1133,28 @@ def transferencia_instrucciones(request, token: str):
         return redirect('ecommerce:pedido', token=recibo.payment_reference)
 
     # El pedido ya quedo tomado: limpiar el carrito para que el cliente
-    # no "compre de nuevo" lo mismo (idempotente en revisitas).
-    Cart(request.session).clear()
-    request.session.pop('ecommerce_token_pendiente', None)
+    # no "compre de nuevo" lo mismo. Solo en la primera visita, recien
+    # salido del checkout — si vuelve despues (link desde la pagina del
+    # pedido) no le borramos un carrito nuevo.
+    if request.session.get('ecommerce_token_pendiente') == token:
+        Cart(request.session).clear()
+        request.session.pop('ecommerce_token_pendiente', None)
 
     return render(request, 'ecommerce/transferencia.html', {
         'recibo': recibo,
         'cuenta': datos_cuenta(),
-        'items_count': 0,
+        'items_count': Cart(request.session).items_count,
     })
+
+
+# Nombre visible de cada medio de pago en la pagina del pedido.
+_MEDIOS_PAGO = {
+    'mercadopago': 'Mercado Pago',
+    'khipu': 'Khipu',
+    'klap': 'Tarjeta (KLAP)',
+    'transferencia': 'Transferencia',
+    'mock': 'Simulador',
+}
 
 
 def ver_pedido(request, token: str):
@@ -1155,6 +1170,7 @@ def ver_pedido(request, token: str):
     # esta pagina desde el email — el pop garantiza un solo disparo.
     es_compra_recien_pagada = (
         request.session.pop('ads_compra_pk', None) == recibo.pk
+        and recibo.estado == ReciboVenta.ESTADO_PAGADO
     )
     if es_compra_recien_pagada:
         request.session.modified = True
@@ -1167,6 +1183,9 @@ def ver_pedido(request, token: str):
         # TODOS los pedidos son retiro.
         'es_retiro_local': not (recibo.cliente_direccion or '').strip(),
         'es_compra_recien_pagada': es_compra_recien_pagada,
+        'es_transferencia': recibo.payment_provider == 'transferencia',
+        'medio_pago': _MEDIOS_PAGO.get(
+            recibo.payment_provider, (recibo.payment_provider or 'Webpay').capitalize()),
     })
 
 
@@ -1184,13 +1203,20 @@ def pago_webhook(request, gateway):
 
     Cada gateway valida la firma/HMAC de su request en su metodo
     `webhook()`. Si la firma es invalida, devolvemos 401 sin tocar
-    nada. Si es valida, actualizamos el ReciboVenta.
+    nada. Si es valida, actualizamos el ReciboVenta — boleta y aviso al
+    dueño salen desde aplicar_resultado_pago (una sola vez, aunque el
+    gateway repita el aviso).
     """
     try:
         gw = get_gateway(gateway)
     except KeyError:
         log.warning('Webhook recibido para gateway desconocido: %s', gateway)
         return HttpResponse(status=404)
+    except PaymentGatewayError as exc:
+        # Gateway desactivado (sin credenciales): 503 para que la pasarela
+        # reintente despues, cuando vuelva a estar configurado.
+        log.warning('Webhook %s recibido con el gateway desactivado: %s', gateway, exc)
+        return HttpResponse(status=503)
 
     result = gw.webhook(request)
     if not result.handled:
@@ -1202,24 +1228,14 @@ def pago_webhook(request, gateway):
 
     if result.recibo_pk and result.payment_result:
         try:
-            recibo = ReciboVenta.objects.get(pk=result.recibo_pk)
-            aplicar_resultado_pago(recibo, result.payment_result)
-            # Si el pago quedo confirmado por el webhook (cliente cerro
-            # browser antes del redirect), disparamos boleta + email.
-            if recibo.estado == ReciboVenta.ESTADO_PAGADO:
-                try:
-                    enviar_boleta(recibo)
-                except Exception:  # noqa: BLE001
-                    log.exception('Error enviando boleta tras webhook %s recibo %s',
-                                  gateway, recibo.pk)
-                try:
-                    notificar_dueno_nueva_orden(recibo)
-                except Exception:  # noqa: BLE001
-                    log.exception('Error notificando dueno tras webhook %s recibo %s',
-                                  gateway, recibo.pk)
+            recibo = ReciboVenta.objects.get(
+                pk=result.recibo_pk, canal=ReciboVenta.CANAL_ONLINE,
+            )
         except ReciboVenta.DoesNotExist:
             log.warning('Webhook %s para recibo inexistente: pk=%s',
                         gateway, result.recibo_pk)
+        else:
+            aplicar_resultado_pago(recibo, result.payment_result)
 
     return HttpResponse('OK', status=200, content_type='text/plain')
 
@@ -1230,8 +1246,11 @@ def mock_pago(request):
     Se expone cuando hay AL MENOS UN gateway en modo mock activo
     (el mock puro, o KLAP/Khipu en mock_mode por faltarles credenciales).
     Asi el `mock_pago` puede recibir tokens de KLAP-MOCK-X o KHIPU-MOCK-X
-    durante el desarrollo sin credenciales reales.
+    durante el desarrollo sin credenciales reales. Nunca en prod: sin
+    simulador permitido (ECOMMERCE_PERMITIR_SIMULADOR) es 404.
     """
+    if not simulador_permitido():
+        raise Http404('Simulador de pagos deshabilitado')
     activos = get_gateways_activos()
     # Aceptamos si hay algun gateway en mock-mode (mock puro o
     # KLAP/Khipu sin credenciales).
@@ -1247,6 +1266,12 @@ def mock_pago(request):
     if not token or not return_url:
         return render(request, 'ecommerce/retorno.html', {
             'error': 'Mock pago sin token o return_url.',
+        }, status=400)
+    # El retorno tiene que ser de este mismo sitio (sin esto, el
+    # simulador servia de redirect abierto a cualquier dominio).
+    if not url_has_allowed_host_and_scheme(return_url, allowed_hosts={request.get_host()}):
+        return render(request, 'ecommerce/retorno.html', {
+            'error': 'Mock pago con return_url de otro sitio.',
         }, status=400)
 
     if request.method == 'POST':

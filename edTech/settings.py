@@ -408,6 +408,13 @@ ECOMMERCE_GATEWAY_DEFAULT = env('ECOMMERCE_GATEWAY_DEFAULT')
 if ECOMMERCE_PAYMENT_GATEWAY:
     ECOMMERCE_GATEWAYS_ACTIVOS = [ECOMMERCE_PAYMENT_GATEWAY]
     ECOMMERCE_GATEWAY_DEFAULT = ECOMMERCE_PAYMENT_GATEWAY
+# Simulador de pagos: el gateway `mock` y el modo mock de Khipu / Mercado
+# Pago / KLAP cuando les faltan credenciales. APRUEBA PEDIDOS SIN COBRAR,
+# asi que solo corre en dev y tests. En prod queda apagado: un gateway sin
+# credenciales se desactiva (no aparece en el checkout). Un staging sin
+# pasarelas reales puede prenderlo con ECOMMERCE_PERMITIR_SIMULADOR=True.
+ECOMMERCE_PERMITIR_SIMULADOR = env.bool(
+    'ECOMMERCE_PERMITIR_SIMULADOR', default=DEBUG or TESTING)
 
 # KLAP — pasarela tarjetas
 KLAP_COMMERCE_ID = env('KLAP_COMMERCE_ID')

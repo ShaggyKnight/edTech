@@ -5,10 +5,13 @@ Dos pasos, no uno (a diferencia del POS):
      construye las líneas y pide al gateway una URL de redirect. No toca
      stock todavía — solo valida que exista disponibilidad razonable.
   2. `confirmar_pedido` se ejecuta cuando el cliente vuelve de la pasarela;
-     pregunta al gateway por el resultado, y si fue pagado bloquea stock
+     pregunta al gateway por el resultado y lo aplica con
+     `aplicar_resultado_pago` (el mismo camino que webhooks y la
+     confirmacion manual de transferencias): si fue pagado bloquea stock
      con select_for_update, valida otra vez, descuenta y audita — todo
      dentro de @transaction.atomic. Si falta stock tras el pago, el recibo
-     queda en estado 'fallido' con mensaje para refund manual.
+     queda 'fallido' con `pago_recibido_en` (por devolver) y se avisa al
+     dueño.
 
 La tienda que surte el canal online se configura con
 `settings.ECOMMERCE_TIENDA_ID`; si no está o apunta a una tienda inactiva
@@ -26,9 +29,15 @@ from typing import Iterable, Optional
 from django.conf import settings
 from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
 
 from bodega.models import MovimientoStock, StockTienda, Tienda
 from catalogo.models import Producto, ProductoVariante
+from ecommerce.emails import (
+    enviar_boleta,
+    notificar_dueno_nueva_orden,
+    notificar_dueno_pago_por_devolver,
+)
 from ecommerce.gateways import (
     OnlinePaymentInit,
     get_gateway,
@@ -36,7 +45,10 @@ from ecommerce.gateways import (
     get_online_gateway,  # alias retrocompat de get_gateway_default
 )
 from pos.models import ReciboVenta, ReciboVentaDetalle
-from pos.payments import ESTADO_PAGADO, PaymentGatewayError, PaymentResult
+from pos.payments import (
+    ESTADO_CANCELADO, ESTADO_FALLIDO, ESTADO_PAGADO,
+    PaymentGatewayError, PaymentResult,
+)
 
 log = logging.getLogger(__name__)
 
@@ -182,11 +194,13 @@ def iniciar_pedido(
 
 
 def confirmar_pedido(*, token: str) -> ReciboVenta:
-    """Cierra el flujo: consulta al gateway y, si fue pagado, descuenta stock.
+    """Cierra el flujo: consulta al gateway y aplica el resultado.
 
-    Busca el recibo por `payment_reference` (token del gateway). Idempotente:
-    si el recibo ya está en estado terminal lo devuelve sin volver a llamar
-    al gateway.
+    Busca el recibo por `payment_reference` (token del gateway). No vuelve
+    a llamar al gateway si el pedido ya esta resuelto: pagado, o fallido
+    con el pago recibido (sin stock, por devolver). Un fallido/cancelado
+    SIN pago si se vuelve a consultar: en Mercado Pago el cliente puede
+    pagar con otro medio despues de un rechazo.
     """
     try:
         recibo = ReciboVenta.objects.get(
@@ -196,43 +210,114 @@ def confirmar_pedido(*, token: str) -> ReciboVenta:
     except ReciboVenta.DoesNotExist as exc:
         raise PedidoNoEncontrado(f'No hay pedido con token {token!r}') from exc
 
-    if recibo.estado in (
-        ReciboVenta.ESTADO_PAGADO,
-        ReciboVenta.ESTADO_FALLIDO,
-        ReciboVenta.ESTADO_CANCELADO,
-    ):
+    if recibo.estado == ReciboVenta.ESTADO_PAGADO or recibo.pago_recibido_en:
         return recibo  # idempotencia: ya estaba resuelto
 
-    # Confirmar contra el gateway que originalmente proceso el pago.
-    # Si por alguna razon no esta registrado, fallback al default.
-    # get_online_gateway() = alias estable (los tests lo mockean).
     try:
-        gateway = (get_gateway(recibo.payment_provider)
-                   if recibo.payment_provider else get_online_gateway())
-    except KeyError:
-        gateway = get_online_gateway()
+        gateway = _gateway_del_recibo(recibo)
+    except PaymentGatewayError as exc:
+        # Pasarela desactivada (p. ej. se sacaron sus credenciales del
+        # .env): no se puede consultar. El pedido queda como esta — el
+        # webhook o un reintento lo resuelven cuando vuelva a operar.
+        log.warning('No se pudo consultar el pago del recibo #%s: %s', recibo.pk, exc)
+        return recibo
     result = gateway.confirmar_pago(token)
     return aplicar_resultado_pago(recibo, result)
 
 
-@transaction.atomic
-def aplicar_resultado_pago(recibo: ReciboVenta, result: PaymentResult) -> ReciboVenta:
-    """Aplica el PaymentResult al recibo; descuenta stock solo si pagó."""
-    # Re-lee bajo lock por si se está confirmando dos veces en paralelo.
-    recibo = ReciboVenta.objects.select_for_update().get(pk=recibo.pk)
-    if recibo.estado != ReciboVenta.ESTADO_PENDIENTE:
-        return recibo
+def _gateway_del_recibo(recibo: ReciboVenta):
+    """Gateway que proceso el pago del recibo; si no esta registrado,
+    el default. get_online_gateway() = alias estable (los tests lo
+    mockean)."""
+    if recibo.payment_provider:
+        try:
+            return get_gateway(recibo.payment_provider)
+        except KeyError:
+            pass
+    return get_online_gateway()
 
+
+# Avisos que dispara una transicion (se mandan despues de guardar).
+_AVISO_PAGADO = 'pagado'
+_AVISO_POR_DEVOLVER = 'por_devolver'
+
+
+def aplicar_resultado_pago(recibo: ReciboVenta, result: PaymentResult) -> ReciboVenta:
+    """Aplica el resultado de la pasarela al recibo. Es EL punto de
+    transicion a pagado: lo usan el retorno, los webhooks y la
+    confirmacion manual de transferencias.
+
+    Reglas:
+      - PENDIENTE (Khipu conciliando, Mercado Pago en revision, red
+        caida): no cambia nada; el webhook o un reintento lo resuelven.
+      - FALLIDO / CANCELADO: solo cierran un pedido pendiente.
+      - PAGADO: pasa a pagado si hay stock; si no, queda fallido "por
+        devolver" (con pago_recibido_en). Tambien aplica sobre un
+        fallido/cancelado sin pago: tras un rechazo el cliente puede
+        pagar con otro medio, y la plata recibida manda.
+      - Pagado es terminal, igual que un fallido con pago ya recibido
+        (los avisos duplicados no repiten nada).
+
+    Los correos (boleta al cliente, aviso al dueño) salen despues de
+    guardar y una sola vez por transicion: webhooks repetidos y recargas
+    del retorno no los duplican.
+    """
+    recibo, aviso = _aplicar_resultado(recibo, result)
+    if aviso == _AVISO_PAGADO:
+        _avisar(recibo, enviar_boleta, notificar_dueno_nueva_orden)
+    elif aviso == _AVISO_POR_DEVOLVER:
+        _avisar(recibo, notificar_dueno_pago_por_devolver)
+    return recibo
+
+
+def _acepta_resultado(recibo: ReciboVenta, result: PaymentResult) -> bool:
+    """True si el resultado cambia el recibo (reglas en aplicar_resultado_pago)."""
+    if result.estado == ESTADO_PAGADO:
+        return (recibo.estado != ReciboVenta.ESTADO_PAGADO
+                and recibo.pago_recibido_en is None)
+    if result.estado in (ESTADO_FALLIDO, ESTADO_CANCELADO):
+        return recibo.estado == ReciboVenta.ESTADO_PENDIENTE
+    return False
+
+
+def _avisar(recibo: ReciboVenta, *envios) -> None:
+    """Correos post-pago. Best-effort: un correo caido no deshace el pago."""
+    for enviar in envios:
+        try:
+            enviar(recibo)
+        except Exception:  # noqa: BLE001
+            log.exception('Fallo %s del recibo #%s', enviar.__name__, recibo.pk)
+
+
+@transaction.atomic
+def _aplicar_resultado(recibo: ReciboVenta, result: PaymentResult):
+    """Transicion bajo lock. Devuelve (recibo, aviso a mandar o None)."""
+    # Re-lee bajo lock por si se está confirmando dos veces en paralelo
+    # (el retorno y el webhook suelen llegar casi juntos).
+    recibo = ReciboVenta.objects.select_for_update().get(pk=recibo.pk)
+    if not _acepta_resultado(recibo, result):
+        return recibo, None
+
+    estado_anterior = recibo.estado
     recibo.payment_provider = result.provider or recibo.payment_provider
 
     if result.estado != ESTADO_PAGADO:
         recibo.estado = (
             ReciboVenta.ESTADO_CANCELADO
-            if result.estado == 'cancelado'
+            if result.estado == ESTADO_CANCELADO
             else ReciboVenta.ESTADO_FALLIDO
         )
         recibo.save(update_fields=['estado', 'payment_provider', 'modificado'])
-        return recibo
+        return recibo, None
+
+    if estado_anterior != ReciboVenta.ESTADO_PENDIENTE:
+        log.warning(
+            'Recibo #%s: pago aprobado despues de quedar %s (reintento del '
+            'cliente) — se cierra como pagado si hay stock.',
+            recibo.pk, estado_anterior,
+        )
+    recibo.pago_recibido_en = timezone.now()
+    campos = ['estado', 'payment_provider', 'pago_recibido_en', 'modificado']
 
     # Stock. Este es el punto crítico: el cliente ya pagó, hay que cumplir.
     items = list(recibo.detalles.all())
@@ -241,14 +326,15 @@ def aplicar_resultado_pago(recibo: ReciboVenta, result: PaymentResult) -> Recibo
         fila = filas[_stock_key(det)]
         if fila.cantidad < det.cantidad:
             # Stock se evaporó entre iniciar_pedido y confirmar_pedido.
-            # Marcamos fallido para refund manual — NO cobramos dos veces.
+            # Fallido "por devolver" (pago_recibido_en queda puesto) y
+            # aviso al dueño — NO cobramos dos veces.
             recibo.estado = ReciboVenta.ESTADO_FALLIDO
-            recibo.save(update_fields=['estado', 'payment_provider', 'modificado'])
+            recibo.save(update_fields=campos)
             log.error(
                 'Pago online recibido pero stock insuficiente post-pago. '
                 'Recibo #%s, requiere refund manual.', recibo.pk,
             )
-            return recibo
+            return recibo, _AVISO_POR_DEVOLVER
 
     for det in items:
         fila = filas[_stock_key(det)]
@@ -266,7 +352,7 @@ def aplicar_resultado_pago(recibo: ReciboVenta, result: PaymentResult) -> Recibo
         MovimientoStock.objects.create(**mov_kwargs)
 
     recibo.estado = ReciboVenta.ESTADO_PAGADO
-    recibo.save(update_fields=['estado', 'payment_provider', 'modificado'])
+    recibo.save(update_fields=campos)
 
     # Asiento contable de ingreso (idempotente).
     # Import local: evita dependencias circulares con contabilidad en el arranque.
@@ -286,7 +372,7 @@ def aplicar_resultado_pago(recibo: ReciboVenta, result: PaymentResult) -> Recibo
     from ecommerce.whatsapp import notificar_pedido_confirmado
     notificar_pedido_confirmado(recibo)
 
-    return recibo
+    return recibo, _AVISO_PAGADO
 
 
 # --- helpers internos ---

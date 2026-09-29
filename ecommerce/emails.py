@@ -7,6 +7,7 @@ y texto plano como fallback. Multipart por defecto.
 Funciones activas:
   - enviar_boleta(recibo)              cliente recibe boleta tras pago
   - notificar_dueno_nueva_orden(recibo) Blanca recibe aviso de venta online
+  - notificar_dueno_pago_por_devolver(recibo) pago recibido sin stock
 
 Funciones detras de feature flags (apagadas por default):
   - enviar_bienvenida(usuario)         registro de cuenta nueva
@@ -97,9 +98,11 @@ def enviar_boleta(recibo: ReciboVenta) -> bool:
         return False
     contexto = {
         'recibo': recibo,
+        # Pagina publica del pedido (/tienda/pedido/<token>/). Antes apuntaba
+        # a una ruta que no existe y el boton "Ver mi pedido" salia vacio.
         'recibo_url': _absolute_url(
-            reverse('ecommerce:detalle_pedido', args=[recibo.pk])
-        ) if _tiene_url('ecommerce:detalle_pedido') else '',
+            reverse('ecommerce:pedido', args=[recibo.payment_reference])
+        ) if recibo.payment_reference else '',
     }
     return _enviar_multipart(
         subject=f'Boleta #{recibo.pk} · Ideas Boutique',
@@ -194,6 +197,48 @@ def notificar_dueno_nueva_orden(recibo: ReciboVenta) -> bool:
         return True
     except Exception:  # noqa: BLE001
         log.exception('Fallo notificar venta online #%s a %s',
+                      recibo.pk, destinatarios)
+        return False
+
+
+def notificar_dueno_pago_por_devolver(recibo: ReciboVenta) -> bool:
+    """Alerta interna: se cobro un pedido que no se pudo cumplir porque el
+    stock se agoto entre el checkout y la confirmacion del pago. Hay que
+    devolver la plata — antes esto quedaba solo en el log del servidor.
+
+    Va a los correos del dueño (OWNER_NOTIFICATION_EMAIL). Texto plano.
+    """
+    destinatarios = _emails_dueno()
+    if not destinatarios:
+        return False
+
+    total_fmt = f'{int(recibo.total):,}'.replace(',', '.')
+    medio = recibo.payment_provider or 'pasarela'
+    cuerpo = (
+        f'Se recibió el pago del pedido #{recibo.pk} por ${total_fmt} '
+        f'({medio}), pero ya no quedaba stock para completarlo. El pedido '
+        f'quedó FALLIDO y hay que DEVOLVERLE el dinero al cliente.\n\n'
+        f'Cliente: {recibo.cliente_nombre or "(sin nombre)"}\n'
+        f'Email: {recibo.cliente_email or "(sin email)"}\n'
+        f'Teléfono: {recibo.cliente_telefono or "(sin teléfono)"}\n\n'
+        f'Cómo devolver:\n'
+        f'  - Mercado Pago: en tu cuenta, Actividad → el pago → Devolver dinero.\n'
+        f'  - Transferencia o Khipu: transfiérele de vuelta el total.\n\n'
+        f'Detalle del pedido: '
+        f'{_absolute_url(reverse("despacho:detalle", args=[recibo.pk]))}\n'
+    )
+    try:
+        msg = EmailMultiAlternatives(
+            subject=(f'⚠ Pedido #{recibo.pk}: pago recibido sin stock — '
+                     f'devolver ${total_fmt}'),
+            body=cuerpo,
+            from_email=_remitente(),
+            to=destinatarios,
+        )
+        msg.send(fail_silently=False)
+        return True
+    except Exception:  # noqa: BLE001
+        log.exception('Fallo alerta de pago por devolver #%s a %s',
                       recibo.pk, destinatarios)
         return False
 

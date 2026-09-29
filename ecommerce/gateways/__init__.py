@@ -67,7 +67,9 @@ def _activos_csv() -> list[str]:
 def get_gateway(nombre: str) -> OnlinePaymentGateway:
     """Devuelve la instancia del gateway por nombre publico.
 
-    Lanza KeyError si el nombre no existe en el registry.
+    Lanza KeyError si el nombre no existe en el registry, y
+    PaymentGatewayError si el gateway no puede operar (sin credenciales
+    fuera de dev, sin datos bancarios, etc.).
     """
     if nombre not in _REGISTRY:
         raise KeyError(f'Gateway desconocido: {nombre!r} (validos: {list(_REGISTRY)})')
@@ -106,8 +108,10 @@ def get_gateway_default() -> OnlinePaymentGateway:
     solo soporta un gateway."""
     activos = get_gateways_activos()
     if not activos:
-        # Fallback al mock — para que las pantallas no exploten si .env
-        # esta vacio. En prod normalmente esto NO pasa.
+        # Fallback al mock para que dev no explote con el .env vacio. Sin
+        # simulador permitido (prod) el mock no se instancia: esto levanta
+        # PaymentGatewayError y el checkout avisa que no se pudo iniciar
+        # el pago — nunca un pedido aprobado sin cobrar.
         return get_gateway('mock')
     return activos[0]
 

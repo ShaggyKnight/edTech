@@ -29,7 +29,7 @@ import uuid
 from django.conf import settings
 
 from ecommerce.gateways.base import (
-    OnlinePaymentGateway, OnlinePaymentInit, WebhookResult,
+    OnlinePaymentGateway, OnlinePaymentInit, WebhookResult, simulador_permitido,
 )
 from pos.payments import (
     ESTADO_CANCELADO, ESTADO_FALLIDO, ESTADO_PAGADO, ESTADO_PENDIENTE,
@@ -54,13 +54,12 @@ class KlapGateway(OnlinePaymentGateway):
             settings, 'KLAP_BASE_URL', 'https://sandbox.klap.cl',
         ).rstrip('/')
         # MODO MOCK: si no hay credenciales, el adapter funciona pero
-        # contra una simulacion local (util en dev/staging sin tocar
-        # KLAP). En prod ESTO debe fallar duro.
+        # contra una simulacion local (util en dev/tests sin tocar KLAP).
+        # Sin simulador permitido (prod) falla duro: el registry lo salta.
         self.mock_mode = not (self.commerce_id and self.api_key)
-        if self.mock_mode and not settings.DEBUG:
-            log.warning(
-                'KlapGateway en MOCK_MODE en prod — faltan KLAP_COMMERCE_ID '
-                'o KLAP_API_KEY en .env. Las "transacciones" no son reales.'
+        if self.mock_mode and not simulador_permitido():
+            raise PaymentGatewayError(
+                'KLAP sin KLAP_COMMERCE_ID / KLAP_API_KEY en .env — gateway desactivado.',
             )
 
     # ─── Flujo principal ────────────────────────────────────────────

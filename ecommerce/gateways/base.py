@@ -5,11 +5,25 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
+from django.conf import settings
+
 from pos.payments import PaymentResult
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
     from pos.models import ReciboVenta
+
+
+def simulador_permitido() -> bool:
+    """True si se puede "pagar" con el simulador local: el gateway `mock`
+    y el modo mock de Khipu / Mercado Pago / KLAP cuando les faltan
+    credenciales.
+
+    El simulador aprueba pedidos SIN cobrar, asi que solo corre en dev y
+    tests (ECOMMERCE_PERMITIR_SIMULADOR, por defecto DEBUG). En prod un
+    gateway sin credenciales se desactiva en vez de regalar pedidos.
+    """
+    return bool(getattr(settings, 'ECOMMERCE_PERMITIR_SIMULADOR', settings.DEBUG))
 
 
 @dataclass

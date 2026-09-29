@@ -37,7 +37,7 @@
   </td></tr>
 </table>
 
-<p style="margin:18px 0 0;font-size:14px;">Pagado con <strong>{{ recibo.payment_provider|default:"Webpay" }}</strong> el {{ recibo.creado|date:"d-m-Y \a \l\a\s H:i" }}.</p>
+<p style="margin:18px 0 0;font-size:14px;">Pagado con <strong>{{ recibo.payment_provider|default:"Webpay" }}</strong> el {{ recibo.pago_recibido_en|default:recibo.creado|date:"d-m-Y \a \l\a\s H:i" }}.</p>
 {% endblock %}
 
 {% block cta %}

@@ -9,6 +9,7 @@ import hashlib
 import hmac
 import json
 import time
+import uuid
 from decimal import Decimal
 from unittest import mock
 
@@ -62,7 +63,8 @@ class MercadoPagoIniciarPagoTests(TestCase):
                 'sandbox_init_point': 'https://sandbox.mercadopago.cl/pref-999',
             },
         )
-        recibo = _recibo()
+        llave = str(uuid.uuid4())
+        recibo = _recibo(payment_idempotency_key=llave)
         init = MercadoPagoGateway().iniciar_pago(recibo, RETURN_URL)
 
         args, kwargs = m_post.call_args
@@ -72,7 +74,10 @@ class MercadoPagoIniciarPagoTests(TestCase):
         pref = kwargs['json']
         self.assertEqual(pref['items'][0]['unit_price'], 30510)  # int CLP
         self.assertEqual(pref['items'][0]['currency_id'], 'CLP')
-        self.assertEqual(pref['external_reference'], f'IBR-{recibo.pk:08d}')
+        # Número de pedido legible + llave aleatoria del recibo: el token
+        # arma la URL pública del pedido, no puede ser "IBR-<pk>" a secas.
+        self.assertEqual(pref['external_reference'],
+                         f'IBR-{recibo.pk:08d}-{llave.replace("-", "")}')
         self.assertEqual(pref['back_urls']['success'], RETURN_URL)
         self.assertEqual(pref['auto_return'], 'approved')
         self.assertEqual(
@@ -84,8 +89,21 @@ class MercadoPagoIniciarPagoTests(TestCase):
         # Token prod → init_point real. El token es el external_reference
         # (lo usa confirmar_pedido para encontrar el recibo).
         self.assertEqual(init.redirect_url, 'https://mercadopago.cl/checkout/pref-999')
-        self.assertEqual(init.token, f'IBR-{recibo.pk:08d}')
+        self.assertEqual(init.token, pref['external_reference'])
         self.assertEqual(init.provider, 'mercadopago')
+
+    @mock.patch('ecommerce.gateways.mercadopago.requests.post')
+    def test_sin_llave_de_idempotencia_token_igual_es_aleatorio_y_consistente(self, m_post):
+        m_post.return_value = mock.Mock(
+            status_code=201, json=lambda: {'id': 'p', 'init_point': 'https://mp/x'})
+        recibo = _recibo()  # sin payment_idempotency_key
+        init = MercadoPagoGateway().iniciar_pago(recibo, RETURN_URL)
+        pref = m_post.call_args.kwargs['json']
+        # El token devuelto es el mismo que va en la preferencia (se calcula
+        # una sola vez) y no es el número de pedido pelado.
+        self.assertEqual(init.token, pref['external_reference'])
+        self.assertTrue(init.token.startswith(f'IBR-{recibo.pk:08d}-'))
+        self.assertGreaterEqual(len(init.token), len(f'IBR-{recibo.pk:08d}-') + 32)
 
     @mock.patch('ecommerce.gateways.mercadopago.requests.post')
     def test_usa_init_point_y_cae_a_sandbox_si_falta(self, m_post):
@@ -172,6 +190,27 @@ class MercadoPagoConfirmarPagoTests(TestCase):
         self.assertEqual(gw.confirmar_pago('IBR-1').estado, ESTADO_PENDIENTE)
 
     @mock.patch('ecommerce.gateways.mercadopago.requests.get')
+    def test_varios_intentos_uno_aprobado_manda(self, m_get):
+        # Rechazo y después pago aprobado con otra tarjeta en la misma
+        # preferencia (vienen del más nuevo al más viejo): manda el aprobado.
+        gw = self._gw_con_busqueda(m_get, [
+            {'id': 3, 'status': 'rejected'},
+            {'id': 2, 'status': 'approved'},
+            {'id': 1, 'status': 'rejected'},
+        ])
+        r = gw.confirmar_pago('IBR-1')
+        self.assertEqual(r.estado, ESTADO_PAGADO)
+        self.assertEqual(r.reference, '2')
+
+    @mock.patch('ecommerce.gateways.mercadopago.requests.get')
+    def test_intento_en_proceso_no_se_cierra_por_un_rechazo_posterior(self, m_get):
+        gw = self._gw_con_busqueda(m_get, [
+            {'id': 2, 'status': 'rejected'},
+            {'id': 1, 'status': 'in_process'},
+        ])
+        self.assertEqual(gw.confirmar_pago('IBR-1').estado, ESTADO_PENDIENTE)
+
+    @mock.patch('ecommerce.gateways.mercadopago.requests.get')
     def test_error_de_red_devuelve_pendiente_no_fallido(self, m_get):
         import requests as req
         m_get.side_effect = req.ConnectionError('boom')
@@ -195,19 +234,36 @@ class MercadoPagoWebhookTests(TestCase):
         )
 
     @mock.patch('ecommerce.gateways.mercadopago.requests.get')
-    def test_firma_valida_consulta_pago_y_parsea_recibo(self, m_get):
+    def test_firma_valida_consulta_pago_y_encuentra_recibo(self, m_get):
+        referencia = 'IBR-00000042-0f3c9a7e5b2d4c8e9a1b6f0d2e4c8a6b'
+        recibo = _recibo(payment_provider='mercadopago', payment_reference=referencia)
         m_get.return_value = mock.Mock(
             status_code=200,
             json=lambda: {'id': 111222, 'status': 'approved',
-                          'external_reference': 'IBR-00000042'},
+                          'external_reference': referencia},
         )
         result = MercadoPagoGateway().webhook(self._request(data_id='111222'))
         self.assertTrue(result.handled)
-        self.assertEqual(result.recibo_pk, 42)
+        # El recibo se encuentra por su token (payment_reference), no
+        # parseando el número del external_reference.
+        self.assertEqual(result.recibo_pk, recibo.pk)
         self.assertEqual(result.payment_result.estado, ESTADO_PAGADO)
         # Consulto el pago por id.
         args, _ = m_get.call_args
         self.assertEqual(args[0], 'https://api.mercadopago.com/v1/payments/111222')
+
+    @mock.patch('ecommerce.gateways.mercadopago.requests.get')
+    def test_external_reference_desconocido_no_apunta_a_ningun_recibo(self, m_get):
+        _recibo(payment_provider='mercadopago',
+                payment_reference='IBR-00000001-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        m_get.return_value = mock.Mock(
+            status_code=200,
+            json=lambda: {'id': 5, 'status': 'approved',
+                          'external_reference': 'IBR-00000001'},
+        )
+        result = MercadoPagoGateway().webhook(self._request(data_id='5'))
+        self.assertTrue(result.handled)
+        self.assertIsNone(result.recibo_pk)
 
     def test_firma_invalida_se_ignora(self):
         req = self._request(secret='otra-llave-equivocada')
@@ -244,10 +300,11 @@ class MercadoPagoMockModeTests(TestCase):
 
     @override_settings(MERCADOPAGO_ACCESS_TOKEN='')
     def test_mock_iniciar_redirige_a_mock_pago(self):
-        init = MercadoPagoGateway().iniciar_pago(_recibo(), RETURN_URL)
+        recibo = _recibo()
+        init = MercadoPagoGateway().iniciar_pago(recibo, RETURN_URL)
         self.assertIn('/tienda/mock-pago/', init.redirect_url)
         self.assertIn('gateway=mercadopago', init.redirect_url)
-        self.assertTrue(init.token.startswith('IBR-'))
+        self.assertTrue(init.token.startswith(f'IBR-{recibo.pk:08d}-'))
 
 
 @override_settings(

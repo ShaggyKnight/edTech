@@ -75,6 +75,13 @@ class ReciboVenta(models.Model):
         max_length=36, unique=True, null=True, blank=True
     )
     payment_reference = models.CharField(max_length=120, blank=True)
+    # Cuando la pasarela (o la duena, en transferencias) confirmo el pago.
+    # Separa "rechazado" de "cobrado pero sin stock": un pedido FALLIDO con
+    # esta fecha se cobro y hay que devolver la plata.
+    pago_recibido_en = models.DateTimeField(
+        null=True, blank=True,
+        help_text='Cuándo se confirmó el pago. Fallido con fecha = cobrado sin stock, por devolver.',
+    )
 
     dte_tipo = models.IntegerField(
         null=True,

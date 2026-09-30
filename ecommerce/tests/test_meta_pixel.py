@@ -1,9 +1,9 @@
 """Meta Pixel (Facebook/Instagram Ads) + conversión de compra.
 
-- El pixel solo se inyecta si META_PIXEL_ID está seteado.
-- Es publicidad: el aviso de cookies cambia el texto para reflejarlo, y el
-  pixel se inicializa recién cuando el visitante acepta (lógica JS — acá
-  verificamos que el snippet y el gate de consentimiento estén presentes).
+- El pixel solo existe en la página si META_PIXEL_ID está seteado.
+- Es publicidad: vive detrás del gestor de consentimiento (Ley 21.719) y
+  se carga recién cuando el visitante acepta esa categoría (lógica JS —
+  acá verificamos que pase por window.IdeasConsent y no arranque solo).
 - El evento `Purchase` se dispara UNA sola vez, igual que el de Google:
   en la primera visita a la página del pedido tras el pago.
 """
@@ -24,23 +24,28 @@ class MetaPixelBaseTests(TestCase):
     def test_pixel_presente_cuando_esta_configurado(self):
         resp = self.client.get(reverse('index'))
         self.assertContains(resp, 'connect.facebook.net')
-        self.assertContains(resp, "fbq('init', '111222333')")
-        # No arranca a ciegas: el init está detrás del gate de consentimiento.
-        self.assertContains(resp, 'ideas_cookies_ok')
+        # No arranca a ciegas: el ID va a la config del gestor de
+        # consentimiento y el init solo corre con la publicidad aceptada.
+        self.assertContains(resp, "meta: '111222333'")
+        self.assertContains(resp, 'window.IdeasConsent')
+        self.assertNotContains(resp, "fbq('init', '111222333')")
 
+    @override_settings(META_PIXEL_ID='')
     def test_sin_id_no_hay_pixel(self):
         resp = self.client.get(reverse('index'))
         self.assertNotContains(resp, 'connect.facebook.net')
 
     @override_settings(META_PIXEL_ID='111222333')
-    def test_aviso_cookies_menciona_publicidad_con_pixel(self):
+    def test_aviso_cookies_ofrece_publicidad_con_pixel(self):
         resp = self.client.get(reverse('index'))
+        self.assertContains(resp, 'id="consent-publicidad"')
         self.assertContains(resp, 'Instagram y Facebook')
 
-    @override_settings(META_PIXEL_ID='', CLARITY_PROJECT_ID='abc')
-    def test_aviso_cookies_sin_pixel_dice_nada_de_publicidad(self):
+    @override_settings(META_PIXEL_ID='', GOOGLE_TAG_ID='', CLARITY_PROJECT_ID='abc')
+    def test_aviso_cookies_sin_pixel_no_ofrece_publicidad(self):
         resp = self.client.get(reverse('index'))
-        self.assertContains(resp, 'Nada de publicidad')
+        self.assertContains(resp, 'id="consent-analitica"')
+        self.assertNotContains(resp, 'id="consent-publicidad"')
         self.assertNotContains(resp, 'Instagram y Facebook')
 
 

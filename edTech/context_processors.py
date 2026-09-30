@@ -21,15 +21,28 @@ def public_settings(request):
         from catalogo.precios import oferta_banner_online
         return oferta_banner_online()
 
+    clarity = getattr(settings, 'CLARITY_PROJECT_ID', '')
+    google = getattr(settings, 'GOOGLE_TAG_ID', '')
+    meta = getattr(settings, 'META_PIXEL_ID', '')
+
     return {
         'ANALYTICS_DOMAIN': getattr(settings, 'ANALYTICS_DOMAIN', ''),
-        # Microsoft Clarity: heatmaps + session replays. Solo se inyecta
-        # si esta seteado (en dev queda vacio -> sin tracking).
-        'CLARITY_PROJECT_ID': getattr(settings, 'CLARITY_PROJECT_ID', ''),
-        # Google tag (Ads/GA4). Solo se inyecta si esta seteado.
-        'GOOGLE_TAG_ID': getattr(settings, 'GOOGLE_TAG_ID', ''),
-        # Meta Pixel (FB/IG Ads). Solo se inyecta si esta seteado.
-        'META_PIXEL_ID': getattr(settings, 'META_PIXEL_ID', ''),
+        # Microsoft Clarity: heatmaps + session replays. Solo se carga si
+        # esta seteado Y el visitante acepta la analitica.
+        'CLARITY_PROJECT_ID': clarity,
+        # Google tag (GA4 / Ads). Idem: analitica (y publicidad para Ads).
+        'GOOGLE_TAG_ID': google,
+        # Meta Pixel (FB/IG Ads). Solo con la publicidad aceptada.
+        'META_PIXEL_ID': meta,
+        # Categorias de cookies opcionales que existen segun lo configurado
+        # (gestor de consentimiento, Ley 21.719). Sin ninguna, no hay aviso.
+        'CONSENT_ANALITICA': bool(clarity or google),
+        'CONSENT_PUBLICIDAD': bool(meta or google),
+        # Responsable de los datos (politica de privacidad y terminos).
+        'EMPRESA_RAZON_SOCIAL': getattr(settings, 'EMPRESA_RAZON_SOCIAL', ''),
+        'EMPRESA_RUT': getattr(settings, 'EMPRESA_RUT', ''),
+        'EMPRESA_DIRECCION': getattr(settings, 'EMPRESA_DIRECCION', ''),
+        'PRIVACIDAD_EMAIL': getattr(settings, 'PRIVACIDAD_EMAIL', ''),
         'SITE_URL': getattr(settings, 'SITE_URL', ''),
         # BUG-009: número de WhatsApp para wa.me/... en el landing y /info/.
         'PUBLIC_WHATSAPP': getattr(settings, 'PUBLIC_WHATSAPP', ''),

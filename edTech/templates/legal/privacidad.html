@@ -1,0 +1,303 @@
+{% extends 'legal/_base_legal.html' %}
+
+{% block titulo %}Política de privacidad · Ideas Boutique{% endblock %}
+{% block meta_description %}Cómo Ideas Boutique trata tus datos personales: qué datos pedimos, para qué, con quién los compartimos, cuánto tiempo los guardamos y cómo ejercer tus derechos (Ley 21.719).{% endblock %}
+
+{% comment %}
+  Politica de privacidad — Ley 21.719 (modifica la Ley 19.628), art. 14 ter:
+  el responsable debe tener disponible en forma permanente su politica
+  (con version), su identificacion y contacto, las categorias de datos,
+  destinatarios, finalidades y bases de licitud, las medidas de seguridad,
+  los derechos del titular y el derecho a reclamar ante la Agencia, las
+  transferencias internacionales, el plazo de conservacion, el origen de
+  los datos, el derecho a retirar el consentimiento y si hay decisiones
+  automatizadas. Los plazos salen de settings (ver edTech/views.py).
+
+  BORRADOR TECNICO: conviene que lo revise un abogado antes del
+  1 de diciembre de 2026 (ver docs/ley_21719.md).
+{% endcomment %}
+
+{% block legal %}
+<header class="legal-head">
+  <div class="eyebrow" style="color:var(--gold);">Privacidad</div>
+  <h1>Política de privacidad</h1>
+  <p>
+    En Ideas Boutique usamos tus datos solo para lo que necesitamos: venderte,
+    entregarte tus productos y cumplir la ley. Aquí te contamos qué datos
+    pedimos, para qué, con quién los compartimos, cuánto tiempo los guardamos
+    y cómo puedes ver, corregir o eliminar lo que tenemos de ti.
+  </p>
+  <p class="legal-version">
+    Versión {{ version_legal }} · vigente desde el {{ fecha_legal|date:"j \d\e F \d\e Y" }}.
+    Se rige por la Ley N° 19.628 sobre protección de datos personales, modificada por la Ley N° 21.719.
+  </p>
+</header>
+
+<nav class="legal-indice" aria-label="Secciones">
+  <a href="#responsable">Quiénes somos</a>
+  <a href="#datos">Qué datos y para qué</a>
+  <a href="#cookies">Cookies</a>
+  <a href="#destinatarios">Con quién los compartimos</a>
+  <a href="#conservacion">Cuánto tiempo</a>
+  <a href="#derechos">Tus derechos</a>
+  <a href="#seguridad">Seguridad</a>
+</nav>
+
+<section id="responsable">
+  <h2>1. Quién es responsable de tus datos</h2>
+  <p>
+    <strong>{{ EMPRESA_RAZON_SOCIAL|default:"Ideas Boutique" }}</strong>{% if EMPRESA_RUT %}, RUT {{ EMPRESA_RUT }}{% endif %},
+    con domicilio en {{ EMPRESA_DIRECCION }}.
+  </p>
+  <p>Para cualquier consulta sobre tus datos personales puedes escribirnos:</p>
+  <ul>
+    {% if PRIVACIDAD_EMAIL %}<li>Correo: <a href="mailto:{{ PRIVACIDAD_EMAIL }}">{{ PRIVACIDAD_EMAIL }}</a></li>{% endif %}
+    {% if PUBLIC_WHATSAPP %}<li>WhatsApp: <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" target="_blank" rel="noopener">+{{ PUBLIC_WHATSAPP }}</a></li>{% endif %}
+    <li>En la tienda: {{ EMPRESA_DIRECCION }}, de lunes a sábado de 9 a 19 hrs.</li>
+  </ul>
+</section>
+
+<section id="datos">
+  <h2>2. Qué datos tratamos y para qué</h2>
+  <p>
+    Nos entregas tus datos directamente, cuando compras, creas una cuenta o
+    nos pides un aviso. No compramos bases de datos ni usamos datos de
+    fuentes públicas.
+  </p>
+
+  <div class="legal-bloque">
+    <h3>Cuando compras en la tienda online</h3>
+    <dl>
+      <dt>Datos</dt>
+      <dd>Nombre, correo y/o celular{% if FEATURE_ENVIOS %}, dirección de envío{% endif %}, los productos que compras, el monto y el medio de pago que eliges.</dd>
+      <dt>Para qué</dt>
+      <dd>Gestionar tu pedido: confirmar el pago, prepararlo, avisarte cuando esté listo{% if FEATURE_ENVIOS %} o despacharlo{% endif %}, enviarte la boleta y atender cambios o garantías.</dd>
+      <dt>Base legal</dt>
+      <dd>La ejecución del contrato de compraventa que celebramos contigo. La boleta y los registros contables, además, los exige la ley tributaria.</dd>
+    </dl>
+  </div>
+
+  <div class="legal-bloque">
+    <h3>Si creas una cuenta</h3>
+    <dl>
+      <dt>Datos</dt>
+      <dd>Nombre, apellido, correo y una contraseña que guardamos cifrada (nadie puede leerla, ni siquiera nosotros).</dd>
+      <dt>Para qué</dt>
+      <dd>Que veas tus pedidos, completes más rápido tus compras y administres tus datos.</dd>
+      <dt>Base legal</dt>
+      <dd>La ejecución del contrato: la cuenta es un servicio que nos pides.</dd>
+    </dl>
+  </div>
+
+  <div class="legal-bloque">
+    <h3>Si pides que te avisemos cuando vuelva un producto</h3>
+    <dl>
+      <dt>Datos</dt>
+      <dd>Tu correo y el producto o talla que esperas.</dd>
+      <dt>Para qué</dt>
+      <dd>Enviarte un solo correo cuando vuelva a haber stock. Cada aviso trae un enlace para darte de baja.</dd>
+      <dt>Base legal</dt>
+      <dd>Tu consentimiento: lo pides tú y lo puedes retirar cuando quieras.</dd>
+    </dl>
+  </div>
+
+  <div class="legal-bloque">
+    <h3>Si dejas una reseña</h3>
+    <dl>
+      <dt>Datos</dt>
+      <dd>El nombre o apodo que eliges publicar, tu reseña y tu correo (el correo no se publica).</dd>
+      <dt>Para qué</dt>
+      <dd>Publicar tu opinión, una vez revisada, y poder contactarte si hay que validarla.</dd>
+      <dt>Base legal</dt>
+      <dd>Tu consentimiento.</dd>
+    </dl>
+  </div>
+
+  <div class="legal-bloque">
+    <h3>Cuando nos escribes por WhatsApp o correo</h3>
+    <dl>
+      <dt>Datos</dt>
+      <dd>Tu número o correo y lo que nos cuentas.</dd>
+      <dt>Para qué</dt>
+      <dd>Responderte y ayudarte con tu compra.</dd>
+      <dt>Base legal</dt>
+      <dd>La ejecución del contrato o nuestro interés legítimo en atender tus consultas.</dd>
+    </dl>
+  </div>
+
+  <div class="legal-bloque">
+    <h3>Para mantener el sitio seguro</h3>
+    <dl>
+      <dt>Datos</dt>
+      <dd>Dirección IP, navegador y los intentos de inicio de sesión.</dd>
+      <dt>Para qué</dt>
+      <dd>Detectar abusos, bloquear intentos de adivinar contraseñas y resolver fallas.</dd>
+      <dt>Base legal</dt>
+      <dd>Nuestro interés legítimo en proteger la tienda y tus datos.</dd>
+    </dl>
+  </div>
+
+  <h3 id="pagos">Pagos</h3>
+  <p>
+    <strong>Nunca vemos ni guardamos los datos de tu tarjeta ni de tu cuenta bancaria.</strong>
+    El pago lo procesa directamente la plataforma que elijas{% if pasarelas %} ({{ pasarelas|join:" o " }}){% endif %}.
+    Si pagas por transferencia directa, recibimos el comprobante que nos envías.
+  </p>
+</section>
+
+<section id="cookies">
+  <h2>3. Cookies y medición</h2>
+  <p>
+    Las cookies son pequeños archivos que el sitio guarda en tu navegador.
+    Usamos tres tipos, y <strong>solo las necesarias funcionan sin tu permiso</strong>:
+  </p>
+  <ul>
+    <li>
+      <strong>Necesarias</strong>: mantienen tu sesión, tu carrito y la seguridad del sitio,
+      y recuerdan tu decisión sobre las cookies. Sin ellas la tienda no funciona.
+    </li>
+    {% if CONSENT_ANALITICA %}
+    <li>
+      <strong>Analítica</strong> (solo si la aceptas): nos muestran cómo se usa la tienda para mejorarla.
+      {% if CLARITY_PROJECT_ID %}Microsoft Clarity registra mapas de calor y grabaciones de cómo se navega el sitio.{% endif %}
+      {% if GOOGLE_TAG_ID %}Google Analytics mide visitas y compras.{% endif %}
+    </li>
+    {% endif %}
+    {% if CONSENT_PUBLICIDAD %}
+    <li>
+      <strong>Publicidad</strong> (solo si la aceptas): miden si nuestros anuncios funcionan y pueden
+      mostrarte nuestros productos en
+      {% if META_PIXEL_ID %}Instagram y Facebook (Pixel de Meta){% endif %}{% if META_PIXEL_ID and GOOGLE_TAG_ID %} y en {% endif %}{% if GOOGLE_TAG_ID %}Google (Google Ads){% endif %}.
+    </li>
+    {% endif %}
+  </ul>
+  {% if ANALYTICS_DOMAIN %}
+  <p>
+    Además contamos las visitas con <strong>Plausible</strong>, instalado en nuestro propio servidor:
+    no usa cookies ni guarda datos que te identifiquen, por eso no necesita tu permiso.
+  </p>
+  {% endif %}
+  {% if CONSENT_ANALITICA or CONSENT_PUBLICIDAD %}
+  <p class="legal-nota">
+    Puedes aceptar, rechazar o cambiar tu elección cuando quieras en
+    <button type="button" class="footer-legal-btn" data-abrir-consent
+            style="color:var(--vino);font-weight:600;">Preferencias de cookies</button>
+    (también está al final de cada página). Retirar tu permiso es tan simple como darlo y
+    no afecta lo que ya se midió antes.
+  </p>
+  {% endif %}
+</section>
+
+<section id="destinatarios">
+  <h2>4. Con quién compartimos tus datos</h2>
+  <p><strong>No vendemos ni arrendamos tus datos.</strong> Solo los compartimos con los proveedores que necesitamos para operar, y cada uno los usa únicamente para prestarnos su servicio:</p>
+  <ul>
+    {% if pasarelas %}<li><strong>Plataformas de pago</strong> ({{ pasarelas|join:", " }}): procesan tu pago.</li>{% endif %}
+    <li><strong>Hetzner Online</strong>: servidores donde funciona la tienda.</li>
+    <li><strong>Zoho</strong>: envío de correos (boletas y avisos).</li>
+    <li><strong>Google</strong>: el mapa de la tienda{% if GOOGLE_TAG_ID %} y, solo si lo aceptas, analítica y publicidad{% endif %}.</li>
+    {% if CLARITY_PROJECT_ID %}<li><strong>Microsoft</strong>: Clarity, solo si aceptas la analítica.</li>{% endif %}
+    {% if META_PIXEL_ID %}<li><strong>Meta</strong>: Pixel de Meta, solo si aceptas la publicidad.</li>{% endif %}
+    <li><strong>Meta (WhatsApp)</strong>: si nos escribes o te escribimos por WhatsApp.</li>
+    <li><strong>Autoridades</strong>: solo cuando una ley o un tribunal lo exija.</li>
+  </ul>
+
+  <h3 id="transferencias">Datos que se tratan fuera de Chile</h3>
+  <p>
+    Algunos de estos proveedores tratan datos fuera de Chile: Hetzner en Alemania
+    (Unión Europea, con un nivel de protección de datos exigente), y Zoho, Google,
+    Microsoft y Meta principalmente en Estados Unidos. Las plataformas de pago pueden
+    procesar datos en otros países según sus propias políticas. Estos proveedores se
+    obligan, en sus términos de servicio y acuerdos de tratamiento de datos, a
+    proteger la información que manejan.
+  </p>
+</section>
+
+<section id="conservacion">
+  <h2>5. Cuánto tiempo guardamos tus datos</h2>
+  <ul>
+    <li><strong>Compras pagadas</strong>: tus datos de contacto, {{ retencion.pagados_meses }} meses desde la compra; después los borramos del pedido. El registro de la venta (productos y montos, sin tus datos) lo guardamos el plazo que exige la ley tributaria.</li>
+    <li><strong>Pedidos que no se pagaron</strong> (abandonados, rechazados o anulados): {{ retencion.no_pagados_meses }} meses.</li>
+    <li><strong>Cuenta</strong>: mientras la tengas. Puedes eliminarla cuando quieras.</li>
+    <li><strong>Avisos de reposición</strong>: hasta {{ retencion.avisos_cerrados_meses }} meses después de avisarte o de que te des de baja; si el producto no vuelve, {{ retencion.avisos_pendientes_meses }} meses.</li>
+    <li><strong>Reseñas</strong>: mientras estén publicadas, o hasta que nos pidas eliminarlas.</li>
+    <li><strong>Registros de seguridad</strong>: los intentos de inicio de sesión, {{ retencion.accesos_dias }} días; los registros técnicos del servidor, hasta 90 días.</li>
+    {% if CONSENT_ANALITICA or CONSENT_PUBLICIDAD %}<li><strong>Datos de cookies de analítica y publicidad</strong>: los plazos de cada proveedor, que puedes revisar en sus propias políticas.</li>{% endif %}
+  </ul>
+</section>
+
+<section id="derechos">
+  <h2>6. Tus derechos y cómo ejercerlos</h2>
+  <p>Sobre tus datos personales tienes derecho a:</p>
+  <ul>
+    <li><strong>Acceso</strong>: saber qué datos tenemos de ti, para qué y de dónde salieron.</li>
+    <li><strong>Rectificación</strong>: corregirlos si están mal o incompletos.</li>
+    <li><strong>Supresión</strong>: pedir que los eliminemos.</li>
+    <li><strong>Oposición</strong>: pedir que dejemos de usarlos para algo en particular.</li>
+    <li><strong>Portabilidad</strong>: recibirlos en un formato ordenado y de uso común.</li>
+    <li><strong>Bloqueo temporal</strong>: pedir que los suspendamos mientras resolvemos una solicitud tuya.</li>
+    <li><strong>Retirar tu consentimiento</strong> en cualquier momento, cuando lo usamos como base (cookies, avisos, reseñas).</li>
+  </ul>
+
+  <h3>Cómo hacerlo</h3>
+  <ul>
+    <li>
+      <strong>Si tienes cuenta</strong>: en <a href="{% url 'ecommerce:perfil' %}">Mi perfil</a> puedes
+      corregir tus datos, <strong>descargar todos tus datos</strong> y <strong>eliminar tu cuenta</strong> tú mismo.
+    </li>
+    <li>
+      <strong>Si compraste sin cuenta, o para cualquier otra solicitud</strong>: escríbenos
+      {% if PRIVACIDAD_EMAIL %}a <a href="mailto:{{ PRIVACIDAD_EMAIL }}">{{ PRIVACIDAD_EMAIL }}</a>{% endif %}{% if PRIVACIDAD_EMAIL and PUBLIC_WHATSAPP %} o {% endif %}{% if PUBLIC_WHATSAPP %}por <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}{% if not PRIVACIDAD_EMAIL and not PUBLIC_WHATSAPP %}en la tienda{% endif %},
+      indicando qué necesitas y el correo o número que usaste al comprar. Para proteger tus datos, podemos pedirte que confirmes tu identidad.
+    </li>
+  </ul>
+  <p>
+    Es <strong>gratis</strong>. Te respondemos dentro de <strong>30 días corridos</strong>; si necesitamos más tiempo,
+    te avisaremos y podremos extenderlo una sola vez por otros 30 días.
+  </p>
+  <p>
+    Si no te respondemos a tiempo o no estás de acuerdo con la respuesta, puedes reclamar ante la
+    <strong>Agencia de Protección de Datos Personales</strong> dentro de los 30 días hábiles siguientes.
+  </p>
+</section>
+
+<section id="seguridad">
+  <h2>7. Cómo protegemos tus datos</h2>
+  <ul>
+    <li>Todo el sitio funciona con conexión cifrada (HTTPS).</li>
+    <li>Las contraseñas se guardan cifradas y nadie puede leerlas.</li>
+    <li>Solo el personal autorizado entra al sistema, cada persona con su usuario y solo a lo que necesita; los intentos repetidos de adivinar una contraseña se bloquean.</li>
+    <li>No guardamos datos de tarjetas ni de cuentas bancarias.</li>
+    <li>Respaldamos la información para poder recuperarla ante una falla.</li>
+  </ul>
+  <p>
+    Si alguna vez ocurriera una vulneración de seguridad que afecte tus datos, la informaremos a la
+    Agencia de Protección de Datos Personales y, cuando corresponda, también a ti, con un lenguaje claro.
+  </p>
+</section>
+
+<section id="menores">
+  <h2>8. Niños, niñas y adolescentes</h2>
+  <p>
+    La tienda está pensada para personas adultas. Cuando compras uniformes para tus hijos, los datos
+    que pedimos son los tuyos, no los del niño o niña. No recopilamos a sabiendas datos de menores de
+    14 años; si nos damos cuenta de que lo hicimos, los eliminamos.
+  </p>
+</section>
+
+<section id="otros">
+  <h2>9. Decisiones automatizadas</h2>
+  <p>
+    No tomamos decisiones automatizadas sobre ti ni armamos perfiles para evaluarte.
+    {% if CONSENT_PUBLICIDAD %}Si aceptas las cookies de publicidad, las plataformas de anuncios pueden usar esa información para decidir qué anuncios mostrarte, según sus propias políticas.{% endif %}
+  </p>
+</section>
+
+<section id="cambios">
+  <h2>10. Cambios a esta política</h2>
+  <p>
+    Si cambiamos algo importante, actualizaremos la versión y la fecha de esta página y, si tienes cuenta,
+    te lo contaremos por correo. Si un cambio requiere tu consentimiento, te lo pediremos de nuevo.
+  </p>
+</section>
+{% endblock %}

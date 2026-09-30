@@ -61,8 +61,10 @@ class MaintenanceMiddleware:
     SAFE_PREFIXES = ('/admin/', '/cuenta/login/', '/cuenta/logout/',
                      '/static/', '/media/', '/healthz')
 
-    # Paths publicos en modo LANDING. La home + about-us pages.
-    LANDING_OK_PREFIXES = ('/info',)
+    # Paths publicos en modo LANDING. La home + about-us pages + los
+    # textos legales (la politica de privacidad debe estar disponible
+    # siempre, Ley 21.719 art. 14 ter).
+    LANDING_OK_PREFIXES = ('/info', '/privacidad', '/terminos')
     LANDING_OK_EXACT = ('/', '/sitemap.xml', '/robots.txt')
 
     def __init__(self, get_response):

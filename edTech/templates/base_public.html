@@ -81,19 +81,11 @@
     <link rel="stylesheet" href="{% static 'css/sprint2-mobile.css' %}">
 
     {% comment %}
-      Analytics — dos stacks complementarios:
-
-      1) Plausible (self-host en plausible.ideasboutique.cl) — privacy-first,
-         sin cookies, cumple Ley 19.628. Mide visitas, paginas, referrers,
-         dispositivos, ubicaciones. Tagged events via window.plausible("...").
-         Solo se inyecta si ANALYTICS_DOMAIN esta seteado.
-
-      2) Microsoft Clarity — heatmaps + session replays + scroll maps.
-         Free forever. Cookies de 1ra parte (GDPR compliant). Solo se
-         inyecta si CLARITY_PROJECT_ID esta seteado.
-
-      Ambos opcionales: en dev quedan vacios y el HTML sale sin scripts
-      de tracking.
+      Medicion. Plausible (self-host en plausible.ideasboutique.cl) cuenta
+      visitas SIN cookies ni datos personales, asi que no necesita
+      consentimiento. Todo lo demas (Clarity, Google, Meta) pasa por el
+      gestor de consentimiento de mas abajo. En dev todo queda vacio y el
+      HTML sale sin scripts de terceros.
     {% endcomment %}
     {% if ANALYTICS_DOMAIN %}
     <script defer data-domain="{{ ANALYTICS_DOMAIN }}"
@@ -104,62 +96,159 @@
       };
     </script>
     {% endif %}
-    {% if CLARITY_PROJECT_ID %}
-    <script type="text/javascript">
-      (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-      })(window, document, "clarity", "script", "{{ CLARITY_PROJECT_ID }}");
-    </script>
-    {% endif %}
-    {% if GOOGLE_TAG_ID %}
+    {% if CONSENT_ANALITICA or CONSENT_PUBLICIDAD %}
     {% comment %}
-      3) Google tag (gtag.js) — Google Ads + GA4. Pageviews en todo el
-         sitio publico; la conversion de compra se dispara como evento
-         `purchase` en la pagina del pedido (una sola vez, ver
-         pedido.html). Se activa con GOOGLE_TAG_ID en el .env.
-    {% endcomment %}
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ GOOGLE_TAG_ID }}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '{{ GOOGLE_TAG_ID }}');
-    </script>
-    {% endif %}
-    {% if META_PIXEL_ID %}
-    {% comment %}
-      4) Meta Pixel (Facebook/Instagram Ads) — retargeting + conversiones.
-         Es publicidad (mas sensible que la analitica), asi que NO se
-         inicializa hasta que el visitante acepta las cookies: si ya
-         acepto antes, arranca al tiro; si no, arranca cuando aprieta
-         "Entendido" en el aviso. La conversion de compra se dispara como
-         evento `Purchase` en la pagina del pedido (una vez, ver pedido.html).
+      Gestor de consentimiento (Ley 21.719, art. 12: consentimiento previo,
+      libre, informado y especifico, revocable por un medio equivalente).
+      NADA de esto se carga hasta que el visitante acepta, en el aviso o en
+      "Preferencias de cookies" del pie de pagina:
+        analitica  -> Microsoft Clarity + Google Analytics (tag de Google)
+        publicidad -> Pixel de Meta + senales de Google Ads (estas ultimas
+                      solo si tambien acepto la analitica, porque viajan
+                      por el mismo tag de Google)
+      La eleccion vive en localStorage ('ideas_consent') con version y
+      fecha; se vuelve a preguntar a los 12 meses o si cambia VERSION.
+      Retirar un permiso borra las cookies de esa categoria y recarga la
+      pagina (un script ya cargado no se puede descargar). El aviso y el
+      panel estan en partials/_consentimiento.html.
     {% endcomment %}
     <script>
-      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-      document,'script','https://connect.facebook.net/en_US/fbevents.js');
-      (function () {
-        function activar() {
-          if (window._fbqIniciado) return;
-          window._fbqIniciado = true;
-          fbq('init', '{{ META_PIXEL_ID }}');
-          fbq('track', 'PageView');
+      window.IdeasConsent = (function () {
+        var CLAVE = 'ideas_consent', VERSION = 2, VIGENCIA_DIAS = 365;
+        var cfg = {
+          clarity: '{{ CLARITY_PROJECT_ID|escapejs }}',
+          google: '{{ GOOGLE_TAG_ID|escapejs }}',
+          meta: '{{ META_PIXEL_ID|escapejs }}'
+        };
+        var COOKIES = {
+          analitica: [/^_clck$/, /^_clsk$/, /^_ga($|_)/, /^_gid$/, /^_gat/],
+          publicidad: [/^_gcl_/, /^_fbp$/, /^_fbc$/]
+        };
+
+        function leer() {
+          try {
+            var c = JSON.parse(localStorage.getItem(CLAVE) || 'null');
+            if (!c || c.v !== VERSION) return null;
+            if ((Date.now() - Date.parse(c.fecha)) / 864e5 > VIGENCIA_DIAS) return null;
+            return c;
+          } catch (e) { return null; }
         }
-        var yaAcepto = false;
-        try { yaAcepto = !!localStorage.getItem('ideas_cookies_ok'); } catch (e) {}
-        if (yaAcepto) {
-          activar();
-        } else {
-          document.addEventListener('DOMContentLoaded', function () {
-            var ok = document.getElementById('cookie-notice-ok');
-            if (ok) ok.addEventListener('click', activar);
+
+        {% comment %}
+          Cada cargador solo se escribe en la pagina si su proveedor esta
+          configurado: sin ID no queda ni la URL del tercero en el HTML.
+        {% endcomment %}
+        function cargarClarity() {
+          {% if CLARITY_PROJECT_ID %}
+          if (window.clarity) return;
+          (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+            t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+          })(window, document, 'clarity', 'script', cfg.clarity);
+          {% endif %}
+        }
+
+        function cargarGoogle(c) {
+          {% if GOOGLE_TAG_ID %}
+          var permisos = {
+            analytics_storage: 'granted',
+            ad_storage: c.publicidad ? 'granted' : 'denied',
+            ad_user_data: c.publicidad ? 'granted' : 'denied',
+            ad_personalization: c.publicidad ? 'granted' : 'denied'
+          };
+          if (window.gtag) { window.gtag('consent', 'update', permisos); return; }
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () { window.dataLayer.push(arguments); };
+          window.gtag('consent', 'default', permisos);
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(cfg.google);
+          document.head.appendChild(s);
+          window.gtag('js', new Date());
+          window.gtag('config', cfg.google);
+          {% endif %}
+        }
+
+        function cargarMeta() {
+          {% if META_PIXEL_ID %}
+          if (window.fbq) return;
+          !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+              n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = [];
+            t = b.createElement(e); t.async = !0; t.src = v;
+            s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+          }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+          window.fbq('init', cfg.meta);
+          window.fbq('track', 'PageView');
+          {% endif %}
+        }
+
+        function aplicar(c) {
+          if (c.analitica) { cargarClarity(); cargarGoogle(c); }
+          if (c.publicidad) cargarMeta();
+        }
+
+        function detener() {
+          // Que los scripts ya cargados dejen de escribir cookies antes de
+          // recargar (Google reescribe _ga_* al salir de la pagina).
+          if (cfg.google) window['ga-disable-' + cfg.google] = true;
+          if (window.gtag) window.gtag('consent', 'update', {
+            analytics_storage: 'denied', ad_storage: 'denied',
+            ad_user_data: 'denied', ad_personalization: 'denied'
+          });
+          if (window.clarity) window.clarity('stop');
+          if (window.fbq) window.fbq('consent', 'revoke');
+        }
+
+        function borrarCookies(categoria) {
+          var patrones = COOKIES[categoria] || [];
+          var partes = location.hostname.split('.');
+          var dominios = ['', location.hostname, '.' + location.hostname];
+          for (var i = 1; i < partes.length - 1; i++) dominios.push('.' + partes.slice(i).join('.'));
+          document.cookie.split(';').forEach(function (par) {
+            var nombre = par.split('=')[0].trim();
+            if (!nombre || !patrones.some(function (re) { return re.test(nombre); })) return;
+            dominios.forEach(function (d) {
+              document.cookie = nombre + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' +
+                (d ? '; domain=' + d : '');
+            });
           });
         }
+
+        function guardar(analitica, publicidad) {
+          var antes = leer();
+          var c = {
+            v: VERSION, analitica: !!analitica, publicidad: !!publicidad,
+            fecha: new Date().toISOString()
+          };
+          try {
+            localStorage.setItem(CLAVE, JSON.stringify(c));
+            localStorage.removeItem('ideas_cookies_ok');  // aviso antiguo, solo informativo
+          } catch (e) { /* almacenamiento bloqueado: vale solo para esta pagina */ }
+          var retira = antes && ((antes.analitica && !c.analitica) || (antes.publicidad && !c.publicidad));
+          if (retira) {
+            detener();
+            limpiar(c);
+            location.reload();
+          } else {
+            aplicar(c);
+          }
+          return c;
+        }
+
+        function limpiar(c) {
+          // Borra las cookies de las categorias NO permitidas. Corre en cada
+          // carga: si algo quedo escrito al retirar el permiso, se va aca.
+          if (!c.analitica) borrarCookies('analitica');
+          if (!c.publicidad) borrarCookies('publicidad');
+        }
+
+        var vigente = leer();
+        if (vigente) { limpiar(vigente); aplicar(vigente); }
+        return { leer: leer, guardar: guardar };
       })();
     </script>
     {% endif %}
@@ -249,51 +338,7 @@
 
     {% block body %}{% endblock %}
 
-    {% if CLARITY_PROJECT_ID or META_PIXEL_ID %}
-    {% comment %}
-      Aviso de cookies (Ley 19.628): aplica cuando hay tracking con
-      cookies — Clarity (analitica) o Meta Pixel (publicidad). Plausible
-      no usa cookies, por eso no cuenta. Banner informativo con dismiss
-      persistente en localStorage; ademas, el click en "Entendido" es lo
-      que activa el Meta Pixel (ver el snippet del pixel en el <head>).
-    {% endcomment %}
-    <div id="cookie-notice" hidden
-         style="position:fixed; bottom:16px; left:16px; right:16px; z-index:9000;
-                max-width:520px; margin:0 auto; background:var(--ink,#1F1F1F); color:#fff;
-                border-radius:12px; padding:14px 18px; display:flex; gap:14px;
-                align-items:center; box-shadow:0 8px 30px rgba(0,0,0,.25); font-size:13px;">
-      <span style="flex:1; line-height:1.5;">
-        {% if META_PIXEL_ID %}
-          🍪 Usamos cookies para entender cómo se usa la tienda y para
-          mostrarte nuestros productos en Instagram y Facebook. No vendemos
-          tus datos.
-        {% else %}
-          🍪 Usamos cookies para entender cómo se usa la tienda y mejorarla.
-          Nada de publicidad ni venta de datos.
-        {% endif %}
-      </span>
-      <button type="button" id="cookie-notice-ok"
-              style="background:var(--gold,#C9A96E); color:#1F1F1F; border:none;
-                     font-weight:600; font-size:13px; padding:8px 18px;
-                     border-radius:8px; cursor:pointer; white-space:nowrap;">
-        Entendido
-      </button>
-    </div>
-    <script>
-      (function () {
-        var KEY = 'ideas_cookies_ok';
-        var el = document.getElementById('cookie-notice');
-        if (!el) return;
-        try {
-          if (!localStorage.getItem(KEY)) el.hidden = false;
-        } catch (e) { /* storage bloqueado: no insistir */ }
-        document.getElementById('cookie-notice-ok').addEventListener('click', function () {
-          try { localStorage.setItem(KEY, '1'); } catch (e) {}
-          el.hidden = true;
-        });
-      })();
-    </script>
-    {% endif %}
+    {% include 'partials/_consentimiento.html' %}
 
     {% block extra_scripts %}{% endblock %}
   </body>

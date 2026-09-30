@@ -1,0 +1,62 @@
+{% extends 'base_public.html' %}
+{% comment %}
+  Molde de los textos legales (politica de privacidad y terminos).
+  Lectura larga: columna angosta, jerarquia clara y bloques por tema para
+  que se lea bien en el celular.
+{% endcomment %}
+
+{% block extra_head %}
+<style>
+  .legal { max-width: 780px; margin: 0 auto; padding: 48px 24px 80px; color: var(--ink-80, #333); }
+  .legal-head { margin-bottom: 36px; }
+  .legal-head h1 {
+    font-family: var(--serif); font-weight: 600; color: var(--ink);
+    font-size: clamp(36px, 6vw, 48px); line-height: 1.1; margin: 8px 0 14px;
+  }
+  .legal-head p { font-size: 16px; line-height: 1.65; color: var(--ink-60); margin: 0; }
+  .legal-version { font-size: 13px; color: var(--ink-60); margin-top: 12px !important; }
+  .legal-indice {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 40px; padding: 16px;
+    background: var(--cream-2, #FBF7EE); border-radius: 12px;
+  }
+  .legal-indice a {
+    padding: 6px 14px; background: #fff; border-radius: 20px; font-size: 13px;
+    text-decoration: none; color: var(--ink); font-weight: 500;
+  }
+  .legal section { margin-bottom: 44px; scroll-margin-top: 90px; }
+  .legal h2 {
+    font-family: var(--serif); font-weight: 600; color: var(--ink);
+    font-size: 28px; margin: 0 0 14px; line-height: 1.2;
+  }
+  .legal h3 { font-size: 16px; font-weight: 600; color: var(--ink); margin: 22px 0 8px; }
+  .legal p, .legal li { font-size: 15px; line-height: 1.7; }
+  .legal ul { padding-left: 20px; margin: 8px 0 12px; }
+  .legal li { margin-bottom: 6px; }
+  .legal a { color: var(--vino); font-weight: 500; }
+  .legal-bloque {
+    border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+    margin-bottom: 12px; background: #fff;
+  }
+  .legal-bloque h3 { margin-top: 0; }
+  .legal-bloque dl { display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; margin: 0; font-size: 14px; line-height: 1.55; }
+  .legal-bloque dt { color: var(--ink-60); font-weight: 600; }
+  .legal-bloque dd { margin: 0; }
+  .legal-nota {
+    background: rgba(201,169,110,0.12); border-left: 3px solid var(--gold);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; font-size: 14px; line-height: 1.6;
+  }
+  @media (max-width: 600px) {
+    .legal { padding: 32px 18px 64px; }
+    .legal-bloque dl { grid-template-columns: 1fr; gap: 2px; }
+    .legal-bloque dd { margin-bottom: 8px; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include 'ecommerce/_shop_header.html' with items_count=items_count %}
+<main id="main-content" class="legal" tabindex="-1">
+  {% block legal %}{% endblock %}
+</main>
+{% include 'ecommerce/_shop_footer.html' %}
+{% endblock %}

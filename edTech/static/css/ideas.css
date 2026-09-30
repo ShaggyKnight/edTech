@@ -218,7 +218,10 @@ input, select { font-family: inherit; }
 .footer-cols h5 { font-family: var(--sans); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 20px; }
 .footer-cols a { display: block; font-size: 14px; color: rgba(245,239,228,0.7); padding: 6px 0; }
 .footer-cols a:hover { color: var(--gold); }
-.footer-bot { display: flex; justify-content: space-between; padding-top: 32px; font-size: 12px; color: rgba(245,239,228,0.5); }
+.footer-bot { display: flex; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; padding-top: 32px; font-size: 12px; color: rgba(245,239,228,0.5); }
+.footer-legal { display: flex; gap: 6px 18px; flex-wrap: wrap; }
+.footer-legal a, .footer-legal-btn { color: rgba(245,239,228,0.7); font: inherit; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; }
+.footer-legal a:hover, .footer-legal-btn:hover { color: var(--gold); }
 
 /* ======== SHOP ======== */
 .shop { background: var(--cream-3); min-height: 100vh; }

@@ -1,6 +1,8 @@
 """Google tag (gtag.js) + conversion de compra.
 
-- El tag solo se inyecta si GOOGLE_TAG_ID esta seteado.
+- El tag solo existe en la pagina si GOOGLE_TAG_ID esta seteado, y se
+  carga recien cuando el visitante acepta la analitica (gestor de
+  consentimiento, Ley 21.719).
 - El evento `purchase` se dispara UNA sola vez: en la primera visita a
   la pagina del pedido despues del pago (el cliente la revisita desde
   el email de la boleta — no debe contar doble en Ads).
@@ -21,9 +23,13 @@ class GoogleTagBaseTests(TestCase):
     @override_settings(GOOGLE_TAG_ID='G-TEST123')
     def test_tag_presente_cuando_esta_configurado(self):
         resp = self.client.get(reverse('index'))
-        self.assertContains(resp, 'googletagmanager.com/gtag/js?id=G-TEST123')
-        self.assertContains(resp, "gtag('config', 'G-TEST123')")
+        self.assertContains(resp, 'googletagmanager.com/gtag/js?id=')
+        # escapejs deja el guion como - (en JS es el mismo "G-TEST123").
+        self.assertContains(resp, "google: 'G\\u002DTEST123'")
+        # Detras del consentimiento: nada de <script src> directo.
+        self.assertNotContains(resp, '<script async src="https://www.googletagmanager.com')
 
+    @override_settings(GOOGLE_TAG_ID='')
     def test_sin_id_no_hay_tag(self):
         resp = self.client.get(reverse('index'))
         self.assertNotContains(resp, 'googletagmanager.com')

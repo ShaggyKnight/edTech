@@ -28,6 +28,69 @@ def info(request):
     return render(request, 'info.html')
 
 
+# Version de los textos legales. Al cambiar el fondo de la politica de
+# privacidad o de los terminos, subir la version y la fecha (la ley pide
+# informar la version vigente).
+TEXTOS_LEGALES_VERSION = '1.0'
+TEXTOS_LEGALES_FECHA = datetime.date(2026, 9, 30)
+
+# Nombre de cada pasarela en los textos legales.
+_NOMBRE_PASARELA = {
+    'mercadopago': 'Mercado Pago',
+    'khipu': 'Khipu',
+    'klap': 'KLAP',
+    'mock': 'simulador de pagos',
+}
+
+
+def _contexto_legal(request):
+    """Datos compartidos por /privacidad/ y /terminos/.
+
+    Los plazos salen de settings (los mismos que aplica el comando
+    `purgar_datos_vencidos`) y los medios de pago, de las pasarelas
+    activas: el texto publicado no puede quedar desalineado del sistema.
+    """
+    from django.conf import settings as dj_settings
+
+    from ecommerce.cart import Cart
+    from ecommerce.gateways import get_gateways_activos
+
+    def meses(dias):
+        return max(1, round(dias / 30))
+
+    activos = [g.provider for g in get_gateways_activos()]
+    # Plataformas que procesan el pago (la transferencia directa no es una).
+    pasarelas = [_NOMBRE_PASARELA.get(p, p) for p in activos if p != 'transferencia']
+    medios_pago = pasarelas + (
+        ['transferencia bancaria directa'] if 'transferencia' in activos else [])
+
+    return {
+        'items_count': Cart(request.session).items_count,
+        'pasarelas': pasarelas,
+        'medios_pago': medios_pago,
+        'version_legal': TEXTOS_LEGALES_VERSION,
+        'fecha_legal': TEXTOS_LEGALES_FECHA,
+        'retencion': {
+            'pagados_meses': meses(dj_settings.RETENCION_PEDIDOS_PAGADOS_DIAS),
+            'no_pagados_meses': meses(dj_settings.RETENCION_PEDIDOS_NO_PAGADOS_DIAS),
+            'avisos_cerrados_meses': meses(dj_settings.RETENCION_AVISOS_CERRADOS_DIAS),
+            'avisos_pendientes_meses': meses(dj_settings.RETENCION_AVISOS_PENDIENTES_DIAS),
+            'accesos_dias': dj_settings.RETENCION_REGISTROS_ACCESO_DIAS,
+        },
+    }
+
+
+def privacidad(request):
+    """Politica de privacidad (Ley 21.719, art. 14 ter: informacion que el
+    responsable debe tener disponible en forma permanente)."""
+    return render(request, 'legal/privacidad.html', _contexto_legal(request))
+
+
+def terminos(request):
+    """Terminos y condiciones de la tienda online."""
+    return render(request, 'legal/terminos.html', _contexto_legal(request))
+
+
 @require_GET
 @cache_control(max_age=86400, public=True)
 def robots_txt(request):

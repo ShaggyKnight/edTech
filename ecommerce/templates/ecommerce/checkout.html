@@ -171,6 +171,9 @@
         🔒 Pago seguro procesado por
         {% for g in gateways %}{{ g.nombre_publico }}{% if not forloop.last %} / {% endif %}{% endfor %}
         — no vemos ni guardamos tus datos bancarios.<br>
+        Usamos tus datos solo para gestionar este pedido y enviarte la boleta
+        (<a href="{% url 'privacidad' %}" style="color:inherit;text-decoration:underline;">política de privacidad</a>).
+        Al pagar aceptas los <a href="{% url 'terminos' %}" style="color:inherit;text-decoration:underline;">términos y condiciones</a>.<br>
         Ideas Boutique · Caupolicán 437-B, Los Vilos · Desde 1987 ✦
       </div>
     </form>

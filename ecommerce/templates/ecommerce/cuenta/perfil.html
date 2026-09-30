@@ -164,6 +164,15 @@
   }
   .danger-zone .perfil-card-head h2 { color: var(--vino); }
   .danger-zone p { color: var(--ink-60); font-size: 13px; line-height: 1.55; margin: 0 0 14px; }
+  .perfil-texto { color: var(--ink-60); font-size: 14px; line-height: 1.6; margin: 0; }
+  .perfil-texto a { color: var(--vino); font-weight: 600; }
+  .perfil-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink); line-height: 1.5; cursor: pointer; }
+  .perfil-check input { margin-top: 3px; accent-color: var(--vino); }
+  .perfil-actions .btn-danger {
+    background: var(--vino); color: #fff; border: none; padding: 12px 28px;
+    border-radius: 999px; font-weight: 600; cursor: pointer; font-size: 14px;
+  }
+  .perfil-actions .btn-danger:hover { background: #5e1621; }
 
   @media (max-width: 600px) {
     .perfil-row { grid-template-columns: 1fr; }
@@ -279,6 +288,50 @@
 
     <div class="perfil-actions">
       <button type="submit" class="btn-primary">Cambiar contraseña</button>
+    </div>
+  </form>
+
+  {# ============== TUS DATOS (Ley 21.719: acceso y portabilidad) ============== #}
+  <section class="perfil-card">
+    <div class="perfil-card-head">
+      <h2>Tus datos</h2>
+      <div class="sub">Tú decides</div>
+    </div>
+    <p class="perfil-texto">
+      Descarga en un archivo todo lo que guardamos de ti: tu cuenta, tus pedidos,
+      tus avisos de reposición y tus reseñas. También puedes revisar cómo usamos tus
+      datos en nuestra <a href="{% url 'privacidad' %}">política de privacidad</a>.
+    </p>
+    <div class="perfil-actions">
+      <a href="{% url 'ecommerce:mis_datos' %}" class="btn-outline">Descargar mis datos</a>
+    </div>
+  </section>
+
+  {# ============== ELIMINAR CUENTA (Ley 21.719: supresion) ============== #}
+  <form method="post" action="{% url 'ecommerce:eliminar_cuenta' %}" class="perfil-card danger-zone"
+        onsubmit="return confirm('¿Eliminar tu cuenta y tus datos? Esto no se puede deshacer.');">
+    {% csrf_token %}
+    <div class="perfil-card-head">
+      <h2>Eliminar mi cuenta</h2>
+      <div class="sub">No se puede deshacer</div>
+    </div>
+    <p>
+      Se eliminan tu cuenta, tus avisos de reposición y tus reseñas. De tus compras
+      guardamos solo lo que exige la ley tributaria (productos, montos y fechas), sin tu
+      nombre, correo ni teléfono. Si tienes un pedido en curso, podrás hacerlo cuando lo recibas.
+    </p>
+    <div class="perfil-row">
+      <div class="perfil-field full">
+        <label for="eliminar-password">Tu contraseña</label>
+        <input type="password" name="password" id="eliminar-password" autocomplete="current-password" required>
+      </div>
+    </div>
+    <label class="perfil-check">
+      <input type="checkbox" name="confirmo" value="si" required>
+      Entiendo que mi cuenta y mis datos se eliminan de forma permanente.
+    </label>
+    <div class="perfil-actions">
+      <button type="submit" class="btn-danger">Eliminar mi cuenta</button>
     </div>
   </form>
 

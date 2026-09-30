@@ -1,0 +1,209 @@
+{% comment %}
+  Aviso de cookies + panel "Preferencias de cookies" (Ley 21.719).
+
+  - El aviso aparece abajo solo mientras el visitante no decide. Aceptar
+    y Rechazar tienen el mismo peso visual: rechazar tiene que ser tan
+    facil como aceptar (y retirar el permiso, tan facil como darlo).
+  - El panel se abre desde "Configurar" o desde el enlace fijo
+    "Preferencias de cookies" del pie de pagina (cualquier elemento con
+    data-abrir-consent) — nada flotando en pantalla despues de decidir.
+  - La logica (guardar, cargar scripts, borrar cookies) vive en
+    window.IdeasConsent, definido en el <head> de base_public.html.
+  Solo se muestran las categorias que existen segun lo configurado.
+{% endcomment %}
+{% if CONSENT_ANALITICA or CONSENT_PUBLICIDAD %}
+<div id="consent-aviso" class="consent-aviso" role="region" aria-label="Aviso de cookies" hidden>
+  <div class="consent-aviso-inner">
+    <p class="consent-texto">
+      <strong>Tu privacidad importa.</strong>
+      Usamos cookies necesarias para que la tienda funcione. Con tu permiso,
+      también usamos cookies
+      {% if CONSENT_ANALITICA %}de analítica, para entender cómo se usa el sitio{% endif %}{% if CONSENT_ANALITICA and CONSENT_PUBLICIDAD %}, y {% endif %}{% if CONSENT_PUBLICIDAD %}de publicidad, para medir nuestros anuncios{% endif %}.
+      Puedes cambiar tu decisión cuando quieras en «Preferencias de cookies», al final de la página.
+      <a href="{% url 'privacidad' %}#cookies">Más información</a>
+    </p>
+    <div class="consent-botones">
+      <button type="button" class="consent-btn" data-consent="rechazar">Rechazar</button>
+      <button type="button" class="consent-btn consent-btn-texto" data-consent="configurar">Configurar</button>
+      <button type="button" class="consent-btn" data-consent="aceptar">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<dialog id="consent-panel" class="consent-panel" aria-labelledby="consent-panel-titulo">
+  <div class="consent-panel-inner">
+    <h2 id="consent-panel-titulo">Preferencias de cookies</h2>
+    <p class="consent-panel-intro">
+      Elige qué nos permites usar. Puedes cambiarlo cuando quieras desde
+      el enlace «Preferencias de cookies» al final de cada página.
+    </p>
+
+    <div class="consent-cat">
+      <div class="consent-cat-texto">
+        <strong>Necesarias</strong>
+        <span>Mantienen tu sesión, el carrito y la seguridad del sitio. Sin ellas la tienda no funciona.</span>
+      </div>
+      <span class="consent-siempre">Siempre activas</span>
+    </div>
+
+    {% if CONSENT_ANALITICA %}
+    <label class="consent-cat" for="consent-analitica">
+      <span class="consent-cat-texto">
+        <strong id="consent-analitica-titulo">Analítica</strong>
+        <span>
+          Nos muestran cómo se usa la tienda para mejorarla:
+          {% if CLARITY_PROJECT_ID %}Microsoft Clarity (mapas de calor y grabaciones de cómo se navega el sitio){% endif %}{% if CLARITY_PROJECT_ID and GOOGLE_TAG_ID %} y {% endif %}{% if GOOGLE_TAG_ID %}Google Analytics{% endif %}.
+        </span>
+      </span>
+      <input type="checkbox" id="consent-analitica" class="consent-switch"
+             aria-labelledby="consent-analitica-titulo">
+    </label>
+    {% endif %}
+
+    {% if CONSENT_PUBLICIDAD %}
+    <label class="consent-cat" for="consent-publicidad">
+      <span class="consent-cat-texto">
+        <strong id="consent-publicidad-titulo">Publicidad</strong>
+        <span>
+          Miden si nuestros anuncios funcionan y pueden mostrarte nuestros
+          productos en esas plataformas:
+          {% if META_PIXEL_ID %}Meta (Instagram y Facebook){% endif %}{% if META_PIXEL_ID and GOOGLE_TAG_ID %} y {% endif %}{% if GOOGLE_TAG_ID %}Google Ads (junto con la analítica){% endif %}.
+        </span>
+      </span>
+      <input type="checkbox" id="consent-publicidad" class="consent-switch"
+             aria-labelledby="consent-publicidad-titulo">
+    </label>
+    {% endif %}
+
+    {% if ANALYTICS_DOMAIN %}
+    <p class="consent-nota">
+      Además contamos visitas de forma anónima con Plausible, en nuestro
+      propio servidor y sin cookies: no te identifica.
+    </p>
+    {% endif %}
+
+    <div class="consent-botones">
+      <button type="button" class="consent-btn" data-consent="rechazar">Rechazar todo</button>
+      <button type="button" class="consent-btn" data-consent="guardar">Guardar mi elección</button>
+      <button type="button" class="consent-btn" data-consent="aceptar">Aceptar todo</button>
+    </div>
+    <p class="consent-nota">
+      Detalle de cada cookie y proveedor en la
+      <a href="{% url 'privacidad' %}#cookies">política de privacidad</a>.
+    </p>
+  </div>
+</dialog>
+
+<style>
+  .consent-aviso {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000;
+    background: var(--ink, #1F1F1F); color: var(--cream, #F5EFE4);
+    box-shadow: 0 -8px 30px rgba(0,0,0,.18);
+  }
+  .consent-aviso-inner {
+    max-width: 1100px; margin: 0 auto; padding: 16px 24px;
+    display: flex; gap: 18px; align-items: center;
+  }
+  .consent-texto { flex: 1; margin: 0; font-size: 13px; line-height: 1.55; }
+  .consent-texto strong { color: var(--gold, #C9A96E); }
+  .consent-texto a, .consent-nota a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+  .consent-botones { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .consent-btn {
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    padding: 9px 18px; border-radius: 999px; white-space: nowrap;
+    background: var(--cream, #F5EFE4); color: var(--ink, #1F1F1F);
+    border: 1px solid var(--cream, #F5EFE4);
+  }
+  .consent-btn:hover { background: var(--gold, #C9A96E); border-color: var(--gold, #C9A96E); }
+  .consent-btn:focus-visible { outline: 2px solid var(--gold, #C9A96E); outline-offset: 2px; }
+  .consent-btn-texto { background: transparent; color: inherit; border-color: transparent; text-decoration: underline; text-underline-offset: 3px; }
+  .consent-btn-texto:hover { background: transparent; border-color: transparent; color: var(--gold, #C9A96E); }
+
+  .consent-panel {
+    border: none; border-radius: 16px; padding: 0; width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px); overflow-y: auto;
+    color: var(--ink, #1F1F1F); box-shadow: 0 24px 60px rgba(0,0,0,.25);
+  }
+  .consent-panel::backdrop { background: rgba(20,20,20,.55); }
+  .consent-panel-inner { padding: 26px 28px 20px; }
+  .consent-panel h2 { font-family: var(--serif); font-size: 26px; font-weight: 600; margin: 0 0 6px; }
+  .consent-panel-intro { font-size: 14px; color: var(--ink-60, #6a6a6a); margin: 0 0 18px; line-height: 1.5; }
+  .consent-cat {
+    display: flex; gap: 16px; align-items: center; justify-content: space-between;
+    padding: 14px 0; border-top: 1px solid var(--line, #E5DCC8); cursor: pointer;
+  }
+  div.consent-cat { cursor: default; }
+  .consent-cat-texto { display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 1.45; color: var(--ink-60, #6a6a6a); }
+  .consent-cat-texto strong { font-size: 15px; color: var(--ink, #1F1F1F); }
+  .consent-siempre { font-size: 12px; font-weight: 600; color: var(--ink-60, #6a6a6a); white-space: nowrap; }
+  .consent-switch {
+    appearance: none; -webkit-appearance: none; flex-shrink: 0; cursor: pointer;
+    width: 44px; height: 24px; border-radius: 999px; position: relative;
+    background: var(--line, #E5DCC8); transition: background .15s;
+  }
+  .consent-switch::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: #fff; transition: transform .15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  }
+  .consent-switch:checked { background: var(--vino, #7A1E2B); }
+  .consent-switch:checked::after { transform: translateX(20px); }
+  .consent-switch:focus-visible { outline: 2px solid var(--gold, #C9A96E); outline-offset: 2px; }
+  .consent-panel .consent-botones { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line, #E5DCC8); }
+  .consent-panel .consent-btn { background: #fff; border-color: var(--ink, #1F1F1F); }
+  .consent-panel .consent-btn:hover { background: var(--ink, #1F1F1F); color: var(--gold, #C9A96E); }
+  .consent-nota { font-size: 12px; color: var(--ink-60, #6a6a6a); margin: 12px 0 0; line-height: 1.5; }
+
+  @media (max-width: 720px) {
+    .consent-aviso-inner { flex-direction: column; align-items: stretch; padding: 14px 16px; gap: 12px; }
+    .consent-botones { justify-content: stretch; }
+    .consent-aviso .consent-btn { flex: 1; }
+    .consent-panel-inner { padding: 22px 18px 16px; }
+    .consent-panel .consent-btn { flex: 1 1 100%; }
+  }
+  @media print { .consent-aviso { display: none !important; } }
+</style>
+
+<script>
+  (function () {
+    var C = window.IdeasConsent;
+    var aviso = document.getElementById('consent-aviso');
+    var panel = document.getElementById('consent-panel');
+    if (!C || !aviso || !panel) return;
+    var chkAnalitica = document.getElementById('consent-analitica');
+    var chkPublicidad = document.getElementById('consent-publicidad');
+
+    function abrirPanel() {
+      var c = C.leer();
+      if (chkAnalitica) chkAnalitica.checked = !!(c && c.analitica);
+      if (chkPublicidad) chkPublicidad.checked = !!(c && c.publicidad);
+      if (typeof panel.showModal === 'function') panel.showModal();
+      else panel.setAttribute('open', '');
+    }
+    function cerrar() {
+      aviso.hidden = true;
+      if (panel.open) panel.close();
+    }
+
+    document.addEventListener('click', function (e) {
+      var boton = e.target.closest('[data-consent]');
+      if (boton) {
+        var accion = boton.getAttribute('data-consent');
+        if (accion === 'configurar') { abrirPanel(); return; }
+        if (accion === 'aceptar') C.guardar(true, true);
+        else if (accion === 'rechazar') C.guardar(false, false);
+        else if (accion === 'guardar') C.guardar(
+          chkAnalitica ? chkAnalitica.checked : false,
+          chkPublicidad ? chkPublicidad.checked : false
+        );
+        cerrar();
+        return;
+      }
+      if (e.target.closest('[data-abrir-consent]')) { e.preventDefault(); abrirPanel(); }
+      if (e.target === panel) panel.close();  // clic en el fondo
+    });
+
+    if (!C.leer()) aviso.hidden = false;
+  })();
+</script>
+{% endif %}

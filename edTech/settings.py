@@ -3,6 +3,7 @@ Django settings for edTech project (Ideas 2.0).
 """
 
 import sys
+from email.utils import parseaddr
 from pathlib import Path
 import environ
 
@@ -115,6 +116,21 @@ env = environ.Env(
     # espacios (ej. '56912345678'). Vacío = el bloque "WhatsApp directo"
     # se muestra como texto plano (estado actual hasta que se configure).
     PUBLIC_WHATSAPP=(str, ''),
+    # Ley 21.719 — responsable de los datos personales (politica de
+    # privacidad y terminos). RAZON_SOCIAL / RUT: la persona natural o la
+    # empresa titular del negocio (vacio = no se muestra). PRIVACIDAD_EMAIL:
+    # casilla para solicitudes de derechos (vacio = DEFAULT_FROM_EMAIL).
+    EMPRESA_RAZON_SOCIAL=(str, 'Ideas Boutique'),
+    EMPRESA_RUT=(str, ''),
+    EMPRESA_DIRECCION=(str, 'Caupolicán 437-B, Los Vilos, Región de Coquimbo, Chile'),
+    PRIVACIDAD_EMAIL=(str, ''),
+    # Plazos de conservacion (dias) que aplica `purgar_datos_vencidos`.
+    # Deben coincidir con lo publicado en /privacidad/ (ver docs/ley_21719.md).
+    RETENCION_PEDIDOS_NO_PAGADOS_DIAS=(int, 180),
+    RETENCION_PEDIDOS_PAGADOS_DIAS=(int, 730),
+    RETENCION_AVISOS_CERRADOS_DIAS=(int, 180),
+    RETENCION_AVISOS_PENDIENTES_DIAS=(int, 365),
+    RETENCION_REGISTROS_ACCESO_DIAS=(int, 90),
     # Google Maps. EMBED_URL = el `src` del iframe (mapa incrustado en
     # "Visítanos" e /info/#contacto). PLACE_URL = link a la ficha de Google
     # (horario en vivo, reseñas, "cómo llegar"). Defaults por direccion (sin
@@ -480,6 +496,22 @@ META_PIXEL_ID = env('META_PIXEL_ID')                    # Meta Pixel FB/IG Ads (
 PUBLIC_WHATSAPP = env('PUBLIC_WHATSAPP')                # BUG-009: WhatsApp del local, ej '56912345678'
 GOOGLE_MAPS_EMBED_URL = env('GOOGLE_MAPS_EMBED_URL')    # src del iframe del mapa (vacío = sin mapa)
 GOOGLE_MAPS_PLACE_URL = env('GOOGLE_MAPS_PLACE_URL')    # link a la ficha de Google (horario/reseñas)
+
+# Ley 21.719 — responsable de los datos y plazos de conservacion
+# (ver docs/ley_21719.md). El correo de privacidad cae al remitente de la
+# tienda si no se define uno propio (solo la direccion, sin el nombre).
+EMPRESA_RAZON_SOCIAL = env('EMPRESA_RAZON_SOCIAL')
+EMPRESA_RUT = env('EMPRESA_RUT')
+EMPRESA_DIRECCION = env('EMPRESA_DIRECCION')
+_remitente_tienda = parseaddr(DEFAULT_FROM_EMAIL)[1]
+PRIVACIDAD_EMAIL = env('PRIVACIDAD_EMAIL') or (
+    '' if _remitente_tienda.endswith('.local') else _remitente_tienda
+)
+RETENCION_PEDIDOS_NO_PAGADOS_DIAS = env('RETENCION_PEDIDOS_NO_PAGADOS_DIAS')
+RETENCION_PEDIDOS_PAGADOS_DIAS = env('RETENCION_PEDIDOS_PAGADOS_DIAS')
+RETENCION_AVISOS_CERRADOS_DIAS = env('RETENCION_AVISOS_CERRADOS_DIAS')
+RETENCION_AVISOS_PENDIENTES_DIAS = env('RETENCION_AVISOS_PENDIENTES_DIAS')
+RETENCION_REGISTROS_ACCESO_DIAS = env('RETENCION_REGISTROS_ACCESO_DIAS')
 
 # Feature flags. Bloque 9 (resenas) sigue codeado y testeado pero
 # se oculta en la UI publica hasta que la duena tenga ancho de banda

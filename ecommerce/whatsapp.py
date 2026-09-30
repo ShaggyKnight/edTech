@@ -43,6 +43,15 @@ log = logging.getLogger(__name__)
 API_VERSION = 'v20.0'
 
 
+def _enmascarar(telefono: str) -> str:
+    """'56955443322' -> '569******22'. Los logs del servidor no necesitan
+    el numero completo de la clienta (minimizacion, Ley 21.719)."""
+    digitos = ''.join(c for c in str(telefono or '') if c.isdigit())
+    if len(digitos) <= 5:
+        return '*' * len(digitos)
+    return digitos[:3] + '*' * (len(digitos) - 5) + digitos[-2:]
+
+
 def _config():
     return (
         bool(getattr(settings, 'FEATURE_WHATSAPP_AUTO', False)),
@@ -72,7 +81,7 @@ def enviar_plantilla(telefono: str, plantilla: str,
     fono = normalizar_fono_cl(telefono)
     if not fono:
         log.info('WhatsApp %r no enviado: telefono invalido %r.',
-                 plantilla, telefono)
+                 plantilla, _enmascarar(telefono))
         return False
 
     payload = {
@@ -99,13 +108,13 @@ def enviar_plantilla(telefono: str, plantilla: str,
             timeout=15,
         )
     except requests.RequestException as exc:
-        log.warning('WhatsApp %r a %s fallo (red): %s', plantilla, fono, exc)
+        log.warning('WhatsApp %r a %s fallo (red): %s', plantilla, _enmascarar(fono), exc)
         return False
     if resp.status_code >= 400:
         log.warning('WhatsApp %r a %s rechazado (%s): %s',
-                    plantilla, fono, resp.status_code, resp.text[:300])
+                    plantilla, _enmascarar(fono), resp.status_code, resp.text[:300])
         return False
-    log.info('WhatsApp %r enviado a %s.', plantilla, fono)
+    log.info('WhatsApp %r enviado a %s.', plantilla, _enmascarar(fono))
     return True
 
 

@@ -235,7 +235,10 @@
                   <svg class="ico ico--14"><use href="#ico-close"/></svg>
                 </button>
               </div>
-              <p>Te escribimos cuando vuelva a stock. Sin spam, sin promociones.</p>
+              <p>
+                Te escribimos una sola vez, cuando vuelva a stock. Sin spam, sin promociones
+                (<a href="{% url 'privacidad' %}#datos" target="_blank" rel="noopener">privacidad</a>).
+              </p>
               <div class="notify-input">
                 {% comment %}
                   IMPORTANTE: este input NO debe tener `required`. Esta
@@ -639,7 +642,7 @@
           {% endfor %}
         </ul>
       {% else %}
-        <p class="resenas-empty">Todavía nadie escribió una reseña. <strong>¡Animate a ser el primero!</strong></p>
+        <p class="resenas-empty">Todavía nadie escribió una reseña. <strong>¡Anímate a ser el primero!</strong></p>
       {% endif %}
 
       <div id="resena-form-wrap" class="resena-form-wrap">

@@ -1,0 +1,137 @@
+{% extends 'legal/_base_legal.html' %}
+
+{% block titulo %}Términos y condiciones · Ideas Boutique{% endblock %}
+{% block meta_description %}Términos y condiciones de compra en la tienda online de Ideas Boutique: precios, pagos, retiro, cambios y garantías.{% endblock %}
+
+{% comment %}
+  Terminos y condiciones de la tienda online. Describe solo como opera
+  hoy el sistema (medios de pago activos, retiro en tienda, validacion de
+  stock al pagar) y remite a la Ley 19.496 para los derechos del
+  consumidor. La politica de cambios vive en /info/#cambios (una sola
+  fuente de verdad). BORRADOR: revisar con abogado (docs/ley_21719.md).
+{% endcomment %}
+
+{% block legal %}
+<header class="legal-head">
+  <div class="eyebrow" style="color:var(--gold);">Compras</div>
+  <h1>Términos y condiciones</h1>
+  <p>
+    Estas son las reglas de compra en la tienda online de Ideas Boutique.
+    Al comprar, aceptas estos términos. Están escritos para que se entiendan:
+    si algo no queda claro, pregúntanos.
+  </p>
+  <p class="legal-version">Versión {{ version_legal }} · vigente desde el {{ fecha_legal|date:"j \d\e F \d\e Y" }}.</p>
+</header>
+
+<section id="quienes">
+  <h2>1. Quiénes somos</h2>
+  <p>
+    La tienda online es operada por <strong>{{ EMPRESA_RAZON_SOCIAL|default:"Ideas Boutique" }}</strong>{% if EMPRESA_RUT %}, RUT {{ EMPRESA_RUT }}{% endif %},
+    con domicilio en {{ EMPRESA_DIRECCION }}. Somos una boutique familiar de Los Vilos, desde 1987.
+  </p>
+</section>
+
+<section id="precios">
+  <h2>2. Productos y precios</h2>
+  <ul>
+    <li>Los precios están en pesos chilenos e incluyen IVA.</li>
+    <li>Las ofertas y descuentos indican su vigencia y se aplican automáticamente en el carrito.</li>
+    <li>El precio que pagas es el que ves en el carrito al momento de pagar.</li>
+    <li>Las fotos son referenciales; los colores pueden verse distintos según tu pantalla.</li>
+  </ul>
+</section>
+
+<section id="pago">
+  <h2>3. Cómo comprar y pagar</h2>
+  <p>
+    Agregas los productos al carrito, completas tus datos de contacto y eliges cómo pagar.
+    {% if medios_pago %}Hoy aceptamos: <strong>{{ medios_pago|join:", " }}</strong>.{% endif %}
+    No vemos ni guardamos los datos de tu tarjeta ni de tu cuenta bancaria: el pago lo procesa
+    directamente la plataforma que elijas.
+  </p>
+  <p>
+    El pedido queda <strong>confirmado cuando se confirma el pago</strong>. En ese momento te enviamos
+    la boleta por correo.{% if 'transferencia bancaria directa' in medios_pago %} Si pagas por
+    transferencia directa, lo confirmamos cuando vemos el abono en nuestra cuenta.{% endif %}
+  </p>
+</section>
+
+<section id="stock">
+  <h2>4. Stock</h2>
+  <p>
+    Revisamos el stock cuando inicias el pago y otra vez al confirmarlo. Si un producto se
+    agota justo antes de que se confirme tu pago, <strong>te devolvemos el total por el mismo medio de
+    pago</strong> y te contactamos para contarte.
+  </p>
+</section>
+
+<section id="entrega">
+  <h2>5. {% if FEATURE_ENVIOS %}Envío y retiro{% else %}Retiro en tienda{% endif %}</h2>
+  {% if FEATURE_ENVIOS %}
+  <p>
+    Puedes retirar gratis en la tienda o pedir envío a domicilio. Los plazos y costos de envío se
+    informan antes de pagar. El detalle está en <a href="{% url 'info' %}#envios">Ayuda → Envíos</a>.
+  </p>
+  {% else %}
+  <p>
+    Por ahora entregamos los pedidos online <strong>en nuestra tienda</strong>, sin costo:
+    {{ EMPRESA_DIRECCION }}, de lunes a sábado de 9 a 19 hrs. Te avisamos cuando tu pedido esté listo.
+    Para retirarlo, trae tu número de pedido; si lo retira otra persona, avísanos antes.
+    Más detalles en <a href="{% url 'info' %}#envios">Ayuda → Retiro en tienda</a>.
+  </p>
+  {% endif %}
+</section>
+
+<section id="cambios">
+  <h2>6. Cambios y devoluciones</h2>
+  <p>
+    Nuestra política de cambios (plazos y condiciones) está en
+    <a href="{% url 'info' %}#cambios">Ayuda → Cambios y devoluciones</a>.
+  </p>
+</section>
+
+<section id="garantia">
+  <h2>7. Garantía y derechos del consumidor</h2>
+  <p>
+    Nada de lo que dicen estos términos limita los derechos que te da la
+    <strong>Ley N° 19.496 sobre Protección de los Derechos de los Consumidores</strong>, incluida la
+    garantía legal por productos con fallas y, cuando corresponda, el derecho de retracto en compras a
+    distancia. Si un producto viene con una falla, escríbenos y lo resolvemos. También puedes acudir al
+    <a href="https://www.sernac.cl" target="_blank" rel="noopener">SERNAC</a>.
+  </p>
+</section>
+
+<section id="cuenta">
+  <h2>8. Tu cuenta</h2>
+  <p>
+    Crear una cuenta es opcional: también puedes comprar sin ella. Si la creas, cuida tu contraseña.
+    Puedes eliminar tu cuenta cuando quieras desde <a href="{% url 'ecommerce:perfil' %}">Mi perfil</a>.
+  </p>
+</section>
+
+<section id="privacidad">
+  <h2>9. Tus datos</h2>
+  <p>
+    Tratamos tus datos según nuestra <a href="{% url 'privacidad' %}">política de privacidad</a>,
+    donde explicamos qué datos pedimos, para qué y cómo ejercer tus derechos.
+  </p>
+</section>
+
+<section id="contacto">
+  <h2>10. Contacto</h2>
+  <ul>
+    {% if PUBLIC_WHATSAPP %}<li>WhatsApp: <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" target="_blank" rel="noopener">+{{ PUBLIC_WHATSAPP }}</a></li>{% endif %}
+    {% if PRIVACIDAD_EMAIL %}<li>Correo: <a href="mailto:{{ PRIVACIDAD_EMAIL }}">{{ PRIVACIDAD_EMAIL }}</a></li>{% endif %}
+    <li>Tienda: {{ EMPRESA_DIRECCION }}</li>
+  </ul>
+</section>
+
+<section id="ley">
+  <h2>11. Ley aplicable</h2>
+  <p>
+    Estos términos se rigen por las leyes de la República de Chile. Si los cambiamos, publicaremos
+    aquí la nueva versión con su fecha; las compras ya hechas se rigen por la versión vigente al
+    momento de comprar.
+  </p>
+</section>
+{% endblock %}

@@ -34,6 +34,19 @@ class LandingSitemap(Sitemap):
         return reverse(item)
 
 
+class LegalesSitemap(Sitemap):
+    """Politica de privacidad y terminos: cambian poco, pero tienen que
+    estar encontrables."""
+    priority = 0.2
+    changefreq = 'yearly'
+
+    def items(self):
+        return ['privacidad', 'terminos']
+
+    def location(self, item):
+        return reverse(item)
+
+
 class CategoriasSitemap(Sitemap):
     """Las 4 categorias publicas del catalogo."""
     priority = 0.9
@@ -91,4 +104,5 @@ SITEMAPS = {
     'landing': LandingSitemap,
     'categorias': CategoriasSitemap,
     'productos': ProductosSitemap,
+    'legales': LegalesSitemap,
 }

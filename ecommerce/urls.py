@@ -36,6 +36,9 @@ urlpatterns = [
     path('cuenta/registro/', views_cuenta.registro, name='registro'),
     path('cuenta/pedidos/', views_cuenta.mis_pedidos, name='mis_pedidos'),
     path('cuenta/perfil/', views_cuenta.perfil, name='perfil'),
+    # Ley 21.719: acceso/portabilidad y supresion en autoservicio.
+    path('cuenta/mis-datos/', views_cuenta.mis_datos, name='mis_datos'),
+    path('cuenta/eliminar/', views_cuenta.eliminar_cuenta, name='eliminar_cuenta'),
 
     # "Avísame cuando vuelva" — suscripcion del cliente a reposicion de
     # stock de una variante agotada. POST desde el PDP.

@@ -1,12 +1,6 @@
 from django.contrib import admin
 
-from .models import AvisoStockReposicion, Cliente
-
-
-@admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'apellido', 'email', 'rut', 'telefono']
-    search_fields = ['nombre', 'apellido', 'email', 'rut']
+from .models import AvisoStockReposicion
 
 
 @admin.register(AvisoStockReposicion)

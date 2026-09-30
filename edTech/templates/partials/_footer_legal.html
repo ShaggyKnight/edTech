@@ -1,0 +1,14 @@
+{% comment %}
+  Enlaces legales del pie de pagina (Ley 21.719): la politica debe estar
+  disponible "permanentemente" y retirar el consentimiento tiene que ser
+  tan facil como darlo. Van en el pie de TODAS las paginas publicas, fijos
+  y sin flotar sobre el contenido. El boton abre el panel del gestor de
+  consentimiento (partials/_consentimiento.html).
+{% endcomment %}
+<nav class="footer-legal" aria-label="Información legal">
+  <a href="{% url 'privacidad' %}">Política de privacidad</a>
+  <a href="{% url 'terminos' %}">Términos y condiciones</a>
+  {% if CONSENT_ANALITICA or CONSENT_PUBLICIDAD %}
+    <button type="button" class="footer-legal-btn" data-abrir-consent>Preferencias de cookies</button>
+  {% endif %}
+</nav>

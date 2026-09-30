@@ -63,6 +63,49 @@ class OfertasPermisosTests(TestCase):
         self.assertEqual(resp.status_code, 200)
 
 
+class OfertaTogglePermisosTests(TestCase):
+    """Pausar/reactivar exige lo mismo que el resto del CRUD. Estuvo sin
+    decoradores: un anonimo pausaba la campana con un GET."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.bodeguero = _crear_user('bod', 'bodeguero')
+        cls.admin = _crear_user('adm', 'admin')
+        ahora = timezone.now()
+        cls.oferta = Oferta.objects.create(
+            nombre='Lanzamiento -15%', tipo=Oferta.TIPO_PORCENTAJE,
+            valor=Decimal('15'), canal=Oferta.CANAL_AMBOS, activa=True,
+            fecha_inicio=ahora - timedelta(days=1),
+            fecha_fin=ahora + timedelta(days=7),
+        )
+        cls.url = reverse('bodega:oferta_toggle', args=[cls.oferta.pk])
+
+    def _sigue_activa(self):
+        self.oferta.refresh_from_db()
+        return self.oferta.activa
+
+    def test_anonimo_no_pausa_ni_por_get_ni_por_post(self):
+        self.client.get(self.url)
+        self.client.post(self.url)
+        self.assertTrue(self._sigue_activa())
+
+    def test_bodeguero_no_pausa(self):
+        self.client.force_login(self.bodeguero)
+        self.client.post(self.url)
+        self.assertTrue(self._sigue_activa())
+
+    def test_admin_por_get_no_pausa(self):
+        self.client.force_login(self.admin)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 405)
+        self.assertTrue(self._sigue_activa())
+
+    def test_admin_por_post_si_pausa(self):
+        self.client.force_login(self.admin)
+        self.client.post(self.url)
+        self.assertFalse(self._sigue_activa())
+
+
 class OfertasCrudTests(TestCase):
     @classmethod
     def setUpTestData(cls):

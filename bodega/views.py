@@ -1582,9 +1582,6 @@ def oferta_borrar(request, pk):
 @login_required
 @ofertas_required
 @require_POST
-@login_required
-@ofertas_required
-@require_POST
 def ofertas_bulk_action(request):
     """Bulk action para ofertas: pausar / reactivar varias a la vez.
 
@@ -1621,8 +1618,16 @@ def ofertas_bulk_action(request):
     return redirect('bodega:lista_ofertas')
 
 
+@login_required
+@ofertas_required
+@require_POST
 def oferta_toggle(request, pk):
-    """Pausa o reactiva una oferta sin tener que entrar al form."""
+    """Pausa o reactiva una oferta sin tener que entrar al form.
+
+    Mismos permisos que el resto del CRUD de ofertas. Estuvo sin ningun
+    decorador (quedaron duplicados sobre ofertas_bulk_action): cualquier
+    visitante anonimo pausaba una campana con un GET a esta URL.
+    """
     o = get_object_or_404(Oferta, pk=pk)
     o.activa = not o.activa
     o.save(update_fields=['activa', 'modificado'])

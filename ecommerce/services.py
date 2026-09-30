@@ -72,6 +72,17 @@ class StockInsuficienteOnline(Exception):
         )
 
 
+class ProductoNoDisponibleOnline(Exception):
+    """Un item del carrito ya no se vende online (producto o variante
+    desactivados despues de agregarlo, o un POST armado a mano)."""
+
+    def __init__(self, descripcion: str, *, tipo: str = '', item_id: int = 0):
+        self.descripcion = descripcion
+        self.tipo = tipo
+        self.item_id = item_id
+        super().__init__(f'{descripcion} ya no está disponible')
+
+
 class PedidoNoEncontrado(Exception):
     """No se encontró el ReciboVenta con el idempotency key dado."""
 
@@ -118,6 +129,15 @@ def iniciar_pedido(
         raise ValueError('El carrito está vacío')
 
     tienda = get_tienda_online()
+
+    # Solo se venden productos activos (el mismo criterio del catalogo y
+    # la ficha). Un carrito viejo o un POST directo no se saltan eso.
+    vendibles = keys_vendibles_online(items)
+    for item in items:
+        if (item.tipo, item.item_id) not in vendibles:
+            raise ProductoNoDisponibleOnline(
+                _descripcion(item), tipo=item.tipo, item_id=item.item_id,
+            )
 
     # Validación best-effort (no bloqueante) contra stock actual.
     stock_disponible = _stock_snapshot(tienda, items)
@@ -373,6 +393,33 @@ def _aplicar_resultado(recibo: ReciboVenta, result: PaymentResult):
     notificar_pedido_confirmado(recibo)
 
     return recibo, _AVISO_PAGADO
+
+
+def variantes_vendibles_online():
+    """Variantes que se pueden comprar online: activa, de un producto
+    activo y con variantes (mismo criterio que la ficha y las etiquetas)."""
+    return ProductoVariante.objects.filter(
+        activa=True, producto__activo=True, producto__tiene_variantes=True,
+    )
+
+
+def productos_vendibles_online():
+    """Productos sin variantes que se pueden comprar online."""
+    return Producto.objects.filter(activo=True, tiene_variantes=False)
+
+
+def keys_vendibles_online(items) -> set[tuple[str, int]]:
+    """De los items dados, las claves (tipo, id) que siguen a la venta."""
+    variante_ids = [i.item_id for i in items if i.tipo == 'v']
+    producto_ids = [i.item_id for i in items if i.tipo == 'p']
+    keys: set[tuple[str, int]] = set()
+    if variante_ids:
+        keys.update(('v', pk) for pk in variantes_vendibles_online()
+                    .filter(pk__in=variante_ids).values_list('pk', flat=True))
+    if producto_ids:
+        keys.update(('p', pk) for pk in productos_vendibles_online()
+                    .filter(pk__in=producto_ids).values_list('pk', flat=True))
+    return keys
 
 
 # --- helpers internos ---

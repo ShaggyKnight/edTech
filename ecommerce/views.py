@@ -45,12 +45,15 @@ from ecommerce.gateways.base import simulador_permitido
 from ecommerce.services import (
     ItemPedido,
     PedidoNoEncontrado,
+    ProductoNoDisponibleOnline,
     StockInsuficienteOnline,
     TiendaOnlineNoConfigurada,
     aplicar_resultado_pago,
     confirmar_pedido,
     get_tienda_online,
     iniciar_pedido,
+    productos_vendibles_online,
+    variantes_vendibles_online,
 )
 from pos.models import ReciboVenta
 from pos.payments import PaymentGatewayError
@@ -821,8 +824,11 @@ def agregar(request):
     cantidad = form.cleaned_data['cantidad']
 
     if tipo == 'v':
-        variante = ProductoVariante.objects.select_related('producto').filter(
-            pk=item_id, activa=True,
+        # Variante activa de un producto activo: sin el filtro por
+        # producto, una variante de un producto desactivado se podia
+        # comprar con un POST directo.
+        variante = variantes_vendibles_online().select_related('producto').filter(
+            pk=item_id,
         ).first()
         if not variante:
             messages.error(request, 'Variante no disponible.')
@@ -834,9 +840,7 @@ def agregar(request):
             extra_tags='cart-add',  # toast clickeable → /tienda/carrito/
         )
     else:
-        producto = Producto.objects.filter(
-            pk=item_id, activo=True, tiene_variantes=False,
-        ).first()
+        producto = productos_vendibles_online().filter(pk=item_id).first()
         if not producto:
             messages.error(request, 'Producto no disponible.')
             return _respuesta_agregar(request)
@@ -1027,6 +1031,23 @@ def checkout_iniciar(request):
         messages.error(
             request,
             f'Stock insuficiente para {exc.descripcion}. Revisa la línea marcada en rojo.',
+        )
+        return redirect('ecommerce:carrito')
+    except ProductoNoDisponibleOnline as exc:
+        # Se retiro de la tienda despues de agregarlo: misma mecanica que
+        # el stock insuficiente — linea en rojo con el boton para quitarla.
+        request.session['cart_errors'] = {
+            f'{exc.tipo}:{exc.item_id}': {
+                'codigo': 'no_disponible',
+                'titulo': 'Ya no está disponible',
+                'mensaje': 'Este producto se retiró de la tienda.',
+                'accion': {'label': 'Quitar del carrito', 'cantidad': 0},
+            },
+        }
+        request.session.modified = True
+        messages.error(
+            request,
+            f'{exc.descripcion} ya no está disponible. Quítalo del carrito para seguir.',
         )
         return redirect('ecommerce:carrito')
     except TiendaOnlineNoConfigurada:

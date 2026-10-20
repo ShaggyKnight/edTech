@@ -32,6 +32,14 @@
         {% if solo_ofertas %}Descuentos activos hoy en la tienda online · {% elif cat_info %}{{ cat_info.desc }} · {% endif %}
         {{ total_productos }} producto{{ total_productos|pluralize:"s" }}
       </p>
+      {% if seo_intro and not solo_ofertas %}<p>{{ seo_intro }}</p>{% endif %}
+      {% if seo_perfumes_arabes and not solo_ofertas %}
+        <p>
+          Explora por marca:
+          <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes&amp;marca=Lattafa">Lattafa</a>
+          · <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes&amp;marca=Armaf">Armaf y Club de Nuit</a>
+        </p>
+      {% endif %}
     </div>
     <div class="shop-cat-controls">
       {# Sprint 2 · 2.5: botón para abrir filtros en mobile/tablet portrait. #}

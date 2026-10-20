@@ -131,6 +131,39 @@ def _seo_context_catalogo(*, cat_info, colegio):
                 f'(Caupolicán 437-B, Los Vilos). Telas duraderas, atención personal. '
                 f'Tres generaciones vistiendo a las familias de la zona.'
             ),
+            'seo_intro': (
+                'Prepara la vuelta a clases con tiempo: revisa las medidas y el colegio '
+                'antes de elegir buzo, chaleco o polera. Consulta las tallas y el retiro en tienda.'
+            ),
+        }
+    if cat_info and cat_info['title'] == 'Perfumes':
+        return {
+            'seo_titulo': 'Perfumes originales y árabes en Los Vilos · Ideas Boutique',
+            'seo_h1': 'Perfumes originales y árabes',
+            'seo_descripcion': (
+                'Perfumes originales y árabes en Los Vilos: Lattafa, Armaf y otras marcas. '
+                'Compara fragancias y formatos del catálogo, y retira en Caupolicán 437-B.'
+            ),
+            'seo_intro': (
+                'Explora perfumes árabes de Lattafa y Armaf, además de otras fragancias '
+                'originales. Compara aromas, concentración y tamaño para elegir un regalo '
+                'o tu próximo perfume. Los formatos y la disponibilidad se indican en cada ficha.'
+            ),
+            'seo_perfumes_arabes': True,
+        }
+    if cat_info and cat_info['title'].startswith('Uniformes'):
+        return {
+            'seo_titulo': 'Uniformes escolares en Los Vilos · Ideas Boutique',
+            'seo_h1': 'Uniformes escolares para la vuelta a clases',
+            'seo_descripcion': (
+                'Buzos, chalecos y poleras para colegios de Los Vilos. '
+                'Revisa colegio y talla, y prepara la vuelta a clases con retiro en tienda.'
+            ),
+            'seo_intro': (
+                'Revisa el colegio y las medidas con tiempo. Encuentra uniformes del '
+                'San Francisco Javier y otros colegios de Los Vilos; consulta las tallas '
+                'y el retiro en Caupolicán 437-B.'
+            ),
         }
     return {}
 

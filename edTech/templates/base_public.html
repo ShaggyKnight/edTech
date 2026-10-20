@@ -8,6 +8,8 @@
     <meta name="description" content="{% block meta_description %}Boutique familiar en Los Vilos desde 1987. Perfumes originales, uniformes escolares y moda. Tres generaciones, un solo compromiso.{% endblock %}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#C9A96E">
+    <link rel="canonical" href="{{ CANONICAL_URL }}">
+    <meta property="og:url" content="{{ CANONICAL_URL }}">
 
     {# Open Graph / Twitter card — preview cuando se comparte en WhatsApp/IG/etc #}
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
@@ -28,10 +30,12 @@
     {
       "@context": "https://schema.org",
       "@type": "ClothingStore",
+      "@id": "{{ PUBLIC_SITE_ORIGIN }}/#tienda",
       "name": "Ideas Boutique",
+      "url": "{{ PUBLIC_SITE_ORIGIN }}/",
       "alternateName": "Ideas Perfumería y Boutique",
       "description": "Boutique familiar en Los Vilos. Perfumes originales, uniformes escolares y moda desde 1987.",
-      "image": "{% static 'img/ideas/logo-letrero.png' %}",
+      "image": "{{ PUBLIC_SITE_ORIGIN }}{% static 'img/ideas/logo-letrero.png' %}",
       "foundingDate": "1987",
       "founder": {"@type": "Person", "name": "Estela Contreras"},
       "address": {
@@ -46,11 +50,7 @@
         "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
         "opens": "09:00",
         "closes": "19:00"
-      }],
-      "makesOffer": [
-        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Uniformes Colegio San Francisco Javier (SFJ)"}},
-        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Perfumes originales"}}
-      ]
+      }]
     }
     </script>
     {% endblock %}

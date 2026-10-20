@@ -3,7 +3,23 @@
 from pathlib import Path
 
 from django.conf import settings
+from django.http import HttpResponsePermanentRedirect
 from django.shortcuts import render
+
+
+class CanonicalHostMiddleware:
+    """Unifica las visitas publicas sin redirigir envios de formularios."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if (request.method in {'GET', 'HEAD'}
+                and request.get_host().split(':')[0].lower() == 'www.ideasboutique.cl'):
+            return HttpResponsePermanentRedirect(
+                'https://ideasboutique.cl' + request.get_full_path()
+            )
+        return self.get_response(request)
 
 
 class HtmxMiddleware:

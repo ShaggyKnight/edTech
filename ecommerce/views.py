@@ -750,6 +750,10 @@ def detalle_producto(request, pk: int):
         'producto': producto,
         'variantes': variantes,
         'stock_directo': stock_directo,
+        'hay_stock_online': (
+            any((v.stock or 0) > 0 for v in variantes)
+            if producto.tiene_variantes else stock_directo > 0
+        ),
         'items_count': cart.items_count,
         'label_eleccion': label_eleccion,
         'chips_anchos': chips_anchos,

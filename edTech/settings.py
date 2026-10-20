@@ -218,6 +218,7 @@ USE_WHITENOISE = env('USE_WHITENOISE')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'edTech.middleware.CanonicalHostMiddleware',
     # WhiteNoise sirve static files en prod sin necesidad de nginx/CDN.
     # Se inserta justo después de SecurityMiddleware (documentación oficial).
     *(['whitenoise.middleware.WhiteNoiseMiddleware'] if USE_WHITENOISE else []),

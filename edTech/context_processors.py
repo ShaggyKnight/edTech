@@ -6,6 +6,7 @@ pasarlo explicitamente por cada `render()` va aca.
 
 from django.conf import settings
 from django.utils.functional import SimpleLazyObject
+from urllib.parse import urlencode
 
 
 def public_settings(request):
@@ -24,8 +25,22 @@ def public_settings(request):
     clarity = getattr(settings, 'CLARITY_PROJECT_ID', '')
     google = getattr(settings, 'GOOGLE_TAG_ID', '')
     meta = getattr(settings, 'META_PIXEL_ID', '')
+    site_url = (getattr(settings, 'SITE_URL', '') or 'https://ideasboutique.cl').rstrip('/')
+    # Conservar filtros y paginacion; quitar solo parametros de seguimiento.
+    query = urlencode([
+        (key, value)
+        for key in sorted(request.GET)
+        if not key.lower().startswith('utm_')
+        and key.lower() not in {'gclid', 'fbclid', 'msclkid'}
+        for value in request.GET.getlist(key)
+    ])
+    canonical_url = site_url + request.path
+    if query:
+        canonical_url += '?' + query
 
     return {
+        'CANONICAL_URL': canonical_url,
+        'PUBLIC_SITE_ORIGIN': site_url,
         'ANALYTICS_DOMAIN': getattr(settings, 'ANALYTICS_DOMAIN', ''),
         # Microsoft Clarity: heatmaps + session replays. Solo se carga si
         # esta seteado Y el visitante acepta la analitica.

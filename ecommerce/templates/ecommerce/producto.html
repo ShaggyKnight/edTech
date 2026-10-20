@@ -16,17 +16,17 @@
   "@context": "https://schema.org",
   "@type": "Product",
   "name": "{{ producto.nombre|escapejs }}",
-  "image": "{{ request.scheme }}://{{ request.get_host }}{{ pdp_img }}",
+  "image": "{{ PUBLIC_SITE_ORIGIN }}{{ pdp_img }}",
   {% if producto.descripcion %}"description": "{{ producto.descripcion|escapejs|truncatewords:60 }}",{% endif %}
-  "brand": {"@type": "Brand", "name": "Ideas Boutique"},
+  {% if producto.marca %}"brand": {"@type": "Brand", "name": "{{ producto.marca|escapejs }}"},{% endif %}
   {% if producto.colegio %}"category": "Uniforme escolar · {{ producto.colegio.nombre|escapejs }}",{% endif %}
   {% if producto.codigo_barras %}"gtin13": "{{ producto.codigo_barras }}",{% endif %}
   "offers": {
     "@type": "Offer",
-    "url": "{{ request.build_absolute_uri }}",
+    "url": "{{ CANONICAL_URL }}",
     "priceCurrency": "CLP",
     "price": "{{ producto.precio_minimo|floatformat:0 }}",
-    "availability": "https://schema.org/InStock",
+    "availability": "https://schema.org/{% if hay_stock_online %}InStock{% else %}OutOfStock{% endif %}",
     "itemCondition": "https://schema.org/NewCondition",
     "seller": {"@type": "Organization", "name": "Ideas Boutique"}
   }

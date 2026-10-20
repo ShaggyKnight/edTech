@@ -28,7 +28,7 @@ class LandingSitemap(Sitemap):
     changefreq = 'monthly'
 
     def items(self):
-        return ['index']
+        return ['index', 'ecommerce:catalogo', 'info']
 
     def location(self, item):
         return reverse(item)

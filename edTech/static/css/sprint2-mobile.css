@@ -811,10 +811,10 @@ button.needs-selection:hover {
   .pcard-cat               { font-size: 9.5px; letter-spacing: 0.08em; margin-bottom: 4px; }
   .pcard-name              { font-size: 12.5px; min-height: 32px; margin-bottom: 6px; }
   .pcard-price             { font-size: 13.5px; }
-  .pcard-old               { font-size: 11px; }
+  .pcard-old               { font-size: 12px; }
   .pcard-price-row         { gap: 6px; }
-  .pcard-tag               { font-size: 9px; padding: 4px 8px; top: 8px; left: 8px; }
-  .pcard-quick             { font-size: 11px; padding: 6px 10px; bottom: 8px; }
+  .pcard-tag               { font-size: 10px; padding: 4px 8px; top: 8px; left: 8px; }
+  .pcard-quick             { font-size: 12px; padding: 6px 10px; bottom: 8px; }
 }
 
 

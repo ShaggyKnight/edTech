@@ -19,22 +19,25 @@
   --radius-lg: 18px;
   --shadow-sm: 0 1px 2px rgba(14,14,14,.04), 0 4px 12px rgba(14,14,14,.05);
   --shadow-md: 0 2px 6px rgba(14,14,14,.06), 0 20px 40px rgba(14,14,14,.08);
-  /* EB Garamond primero (decisión del dueño). Cormorant queda de fallback.
-     Revertir = poner Cormorant primero; ambas fuentes están cargadas en
-     base_public.html, el cambio es instantáneo sin tocar la red. */
+  /* EB Garamond primero (decisión del dueño). De Cormorant solo se cargan
+     las 2 variantes del logo (600 normal e itálica, base_public.html);
+     volver a Cormorant como serif del sitio exige cargar sus otros pesos. */
   --serif: 'EB Garamond', 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { font-family: var(--sans); color: var(--ink); background: var(--cream-3); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+html, body { font-family: var(--sans); color: var(--ink); background: var(--cream-3); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
 h1,h2,h3,h4,h5 { font-family: var(--serif); font-weight: 500; line-height: 1.15; letter-spacing: -0.01em; padding-bottom: 0.08em; }
 a { color: inherit; text-decoration: none; cursor: pointer; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 img { max-width: 100%; display: block; }
 input, select { font-family: inherit; }
 
-.italic-gold { font-style: italic; color: var(--gold-2); font-weight: 400; }
+.italic-gold { font-style: italic; color: var(--vino); font-weight: 400; }
+/* Dorado solo sobre fondo oscuro: sobre crema daba 2,1-2,7:1 (WCAG pide
+   4,5:1). En fondos claros el acento es vino (9,6:1). */
+.hero .italic-gold, .uniformes .italic-gold { color: var(--gold); }
 
 /* Buttons */
 .btn-primary, .btn-outline, .btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font-size: 14px; font-weight: 500; letter-spacing: 0.02em; transition: all .2s; border: 1px solid transparent; }
@@ -47,8 +50,10 @@ input, select { font-family: inherit; }
 .btn-outline.lg { padding: 16px 24px; }
 .btn-ghost { background: transparent; color: inherit; padding: 8px 16px; border: 1px solid currentColor; font-size: 13px; }
 
-.eyebrow { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); margin-bottom: 16px; }
+.eyebrow { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--vino); margin-bottom: 16px; }
 .eyebrow.red { color: var(--vino); }
+/* "Producto estrella" va sobre negro: vino ahi daba 1,9:1. */
+.uniformes .eyebrow, .uniformes .eyebrow.red { color: var(--gold); }
 
 /* ======== APP CHROME ======== */
 .app { min-height: 100vh; background: var(--cream-3); }
@@ -100,7 +105,7 @@ input, select { font-family: inherit; }
 .historia-copy h2 { font-size: clamp(36px, 4vw, 56px); margin-bottom: 24px; }
 .historia-copy p { font-size: 16px; color: var(--ink-60); margin-bottom: 18px; line-height: 1.7; max-width: 520px; }
 .historia-sign { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
-.sign-name { font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--gold-2); }
+.sign-name { font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--vino); }
 .sign-sub { font-size: 12px; color: var(--ink-60); margin-top: 4px; }
 
 /* Historia timeline - removed, kept simple */
@@ -119,7 +124,7 @@ input, select { font-family: inherit; }
 .tela-badge { position: absolute; top: 12px; left: 12px; background: var(--gold); color: var(--ink); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
 .tela-badge.red { background: var(--vino); color: var(--cream); }
 .tela-body { padding: 22px 22px 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-.tela-cat { font-size: 11px; color: var(--vino); font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
+.tela-cat { font-size: 12px; color: var(--vino); font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
 .tela-card h4 { font-size: 19px; line-height: 1.25; }
 .tela-card ul { list-style: none; display: flex; flex-direction: column; gap: 5px; padding: 0; margin: 2px 0 8px; }
 .tela-card ul li { font-size: 12.5px; color: var(--ink-60); line-height: 1.5; padding-left: 12px; position: relative; }
@@ -131,7 +136,7 @@ input, select { font-family: inherit; }
 .telas-foot svg { color: var(--gold-2); }
 .telas-foot p strong { color: var(--vino); font-style: normal; font-weight: 600; }
 .telas-foot p { font-family: var(--serif); font-size: 22px; font-style: italic; line-height: 1.4; color: var(--ink); margin: 0; }
-.telas-foot em { font-style: normal; font-family: var(--sans); font-size: 13px; color: var(--gold-2); display: inline-block; margin-left: 8px; letter-spacing: 0.05em; }
+.telas-foot em { font-style: normal; font-family: var(--sans); font-size: 13px; color: var(--vino); display: inline-block; margin-left: 8px; letter-spacing: 0.05em; }
 
 /* Colegios strip */
 .colegios-strip { background: var(--cream-3); color: var(--ink); padding: 120px 56px; }
@@ -226,7 +231,7 @@ input, select { font-family: inherit; }
 .footer-top { display: grid; grid-template-columns: 1fr 2fr; gap: 60px; padding-bottom: 48px; border-bottom: 1px solid rgba(245,239,228,0.15); }
 .footer-brand p { font-size: 13px; color: rgba(245,239,228,0.6); margin-top: 20px; line-height: 1.7; }
 .footer-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
-.footer-cols h5 { font-family: var(--sans); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 20px; }
+.footer-cols h5 { font-family: var(--sans); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 20px; }
 .footer-cols a { display: block; font-size: 14px; color: rgba(245,239,228,0.7); padding: 6px 0; }
 .footer-cols a:hover { color: var(--gold); }
 .footer-bot { display: flex; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; padding-top: 32px; font-size: 12px; color: rgba(245,239,228,0.5); }
@@ -241,7 +246,7 @@ input, select { font-family: inherit; }
 .shop-menu { padding: 0; }
 .shop-nav { display: flex; gap: 28px; font-size: 14px; font-weight: 500; }
 .shop-nav a { padding: 8px 0; position: relative; }
-.shop-nav a:hover { color: var(--gold-2); }
+.shop-nav a:hover { color: var(--vino); }
 .shop-nav a.sale { color: var(--vino); font-weight: 600; }
 .shop-search { background: var(--cream-3); border: 1px solid var(--line); border-radius: 999px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; min-width: 300px; position: relative; transition: border-color .2s, background .2s; }
 .shop-search:focus-within { border-color: var(--ink); background: var(--cream); }
@@ -410,7 +415,7 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
 .shop-section { margin-bottom: 56px; }
 .shop-section-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 20px; }
 .shop-section-head h2 { font-size: 32px; }
-.shop-section-head a { font-size: 13px; color: var(--gold-2); font-weight: 500; }
+.shop-section-head a { font-size: 13px; color: var(--vino); font-weight: 500; }
 .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .shop-grid.four { grid-template-columns: repeat(3, 1fr); }
 /* Estado mientras se aplican filtros AJAX: dim sutil + bloquea clicks
@@ -483,7 +488,7 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
 .pcard-wish { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; background: var(--cream); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--ink); }
 .pcard-wish:hover { background: var(--vino); color: var(--cream); }
 .pcard-body { padding: 14px; }
-.pcard-cat { font-size: 11px; color: var(--ink-60); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.pcard-cat { font-size: 12px; color: var(--ink-60); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
 .pcard-name { font-size: 14px; font-weight: 500; line-height: 1.3; margin-bottom: 10px; min-height: 36px; font-family: var(--sans); }
 .pcard-price-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .pcard-price { font-size: 15px; font-weight: 600; font-family: var(--serif); }
@@ -650,10 +655,10 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
   text-decoration-color: var(--vino);
   margin-left: 4px;
 }
-.pdp-installments { width: 100%; font-size: 13px; color: var(--gold-2); margin-top: 4px; }
+.pdp-installments { width: 100%; font-size: 13px; color: var(--ink-60); margin-top: 4px; }
 .pdp-opts { margin-bottom: 24px; }
 .pdp-opt-label { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; }
-.size-help { font-size: 12px; color: var(--gold-2); font-weight: 500; }
+.size-help { font-size: 12px; color: var(--vino); font-weight: 500; }
 .qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
 .qty button { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
 .qty span { padding: 0 20px; font-size: 14px; font-weight: 600; min-width: 60px; text-align: center; }
@@ -665,7 +670,7 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
 .pdp-perks > div { display: flex; gap: 10px; align-items: flex-start; }
 .pdp-perks svg { color: var(--gold-2); flex-shrink: 0; margin-top: 2px; }
 .pdp-perks strong { display: block; font-size: 12px; font-weight: 600; }
-.pdp-perks span { font-size: 11px; color: var(--ink-60); }
+.pdp-perks span { font-size: 12px; color: var(--ink-60); }
 
 /* Las clases `.pdp-tabs` y `.prose` se removieron junto con la seccion
    de pestanas de la PDP (Descripcion / Guia de talles / Envio y cambios)
@@ -704,7 +709,7 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
 .cart-row { background: var(--cream); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; grid-template-columns: 90px 1fr auto; gap: 16px; align-items: center; }
 .cart-img { width: 90px; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: var(--cream-2); }
 .cart-img img { width: 100%; height: 100%; object-fit: cover; }
-.cart-cat { font-size: 11px; color: var(--ink-60); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+.cart-cat { font-size: 12px; color: var(--ink-60); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
 .cart-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
 .cart-meta { font-size: 12px; color: var(--ink-60); margin-bottom: 10px; }
 .cart-price { text-align: right; }
@@ -716,7 +721,7 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
 .ship-hint { font-size: 12px; color: var(--vino); background: rgba(122,30,43,0.08); padding: 10px 12px; border-radius: 8px; margin: 8px 0; }
 .sum-total { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0; border-top: 1px solid var(--line); margin: 12px 0 20px; }
 .sum-total strong { font-family: var(--serif); font-size: 28px; }
-.cart-perks { display: flex; justify-content: space-around; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 11px; color: var(--ink-60); }
+.cart-perks { display: flex; justify-content: space-around; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-60); }
 .cart-perks > div { display: flex; align-items: center; gap: 6px; }
 .cart-perks svg { color: var(--gold-2); }
 
@@ -917,7 +922,7 @@ code { font-family: 'SF Mono', monospace; font-size: 12px; background: var(--cre
   .shop-header-inner { padding: 14px 20px; gap: 12px; }
   .shop-header-inner > .shop-menu { margin-right: auto; }
   .shop-actions { gap: 4px; }
-  .shop-promo { font-size: 11px; padding: 8px 16px; }
+  .shop-promo { font-size: 12px; padding: 8px 16px; }
 
   /* Layout padding */
   .hero, .historia, .cats, .uniformes, .testi, .visita, .footer { padding-left: 20px; padding-right: 20px; }

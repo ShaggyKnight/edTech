@@ -815,3 +815,38 @@ button.needs-selection:hover {
   .pcard-quick             { font-size: 11px; padding: 6px 10px; bottom: 8px; }
 }
 
+
+/* Landing: con menos categorias con stock que columnas, la grilla se
+   ajusta a las que hay en vez de dejar huecos (ver .cats-grid--N). */
+@media (min-width: 521px) {
+  .cats-grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .cats-grid--1 { grid-template-columns: 1fr; }
+}
+
+/* Pie y barra de la landing en telefonos: el pie tenia 2 + 3 columnas
+   fijas con 40-60 px de separacion y la barra 56 px de margen, y en
+   375 px la pagina quedaba de ~490 px de ancho (se arrastraba hacia el
+   lado y el boton "Tienda online" se cortaba). */
+@media (max-width: 900px) {
+  .footer-top { grid-template-columns: 1fr; gap: 32px; }
+}
+@media (max-width: 600px) {
+  .footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  .landing-nav,
+  .landing-nav.is-scrolled { padding-left: 16px; padding-right: 16px; }
+  /* La fila de cifras del hero (39 · 3 · 2.º) no se achicaba y empujaba
+     el hero 16 px fuera de la pantalla. */
+  .hero-content { min-width: 0; }
+  .hero-stats { gap: 16px; }
+  /* Mismo margen de 20 px que el resto de las secciones. */
+  .telas,
+  .colegios-strip { padding-left: 20px; padding-right: 20px; }
+}
+
+/* Ficha en telefonos: la foto y la barra de compra sangran 20 px a cada
+   lado (.pdp-big / .pdp-ctas), asi que el margen de la pagina tiene que
+   ser 20 px y no 40; con 40 quedaban 18 px fuera de la pantalla. */
+@media (max-width: 720px) {
+  .pdp { padding-left: 20px; padding-right: 20px; }
+  .pdp-main > * { min-width: 0; }
+}

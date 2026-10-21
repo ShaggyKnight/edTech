@@ -44,10 +44,27 @@ class CheckoutForm(forms.Form):
     necesita. La direccion solo existe si FEATURE_ENVIOS esta activa; con
     la flag apagada la tienda opera solo con retiro en local.
     """
-    cliente_nombre = forms.CharField(max_length=200)
-    cliente_email = forms.EmailField(required=False)
-    cliente_telefono = forms.CharField(max_length=20, required=False)
-    cliente_direccion = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
+    # autocomplete + type/inputmode: en el celular el navegador ofrece
+    # rellenar los datos guardados y abre el teclado correcto.
+    cliente_nombre = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={'autocomplete': 'name'}),
+    )
+    cliente_email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={'autocomplete': 'email', 'spellcheck': 'false'}),
+    )
+    cliente_telefono = forms.CharField(
+        max_length=20, required=False,
+        widget=forms.TextInput(attrs={
+            'type': 'tel', 'inputmode': 'tel', 'autocomplete': 'tel',
+            'placeholder': '+56 9 1234 5678',
+        }),
+    )
+    cliente_direccion = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 2, 'autocomplete': 'street-address'}),
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

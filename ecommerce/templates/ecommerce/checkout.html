@@ -81,7 +81,7 @@
       {% endif %}
 
       <div class="field">
-        <label>Nombre completo *</label>
+        <label for="{{ form.cliente_nombre.id_for_label }}">Nombre completo *</label>
         {{ form.cliente_nombre }}
         {% if form.cliente_nombre.errors %}<div class="err">{{ form.cliente_nombre.errors|join:", " }}</div>{% endif %}
       </div>
@@ -93,13 +93,13 @@
 
       <div class="row-2">
         <div class="field">
-          <label>Email</label>
+          <label for="{{ form.cliente_email.id_for_label }}">Email</label>
           {{ form.cliente_email }}
           {% if form.cliente_email.errors %}<div class="err">{{ form.cliente_email.errors|join:", " }}</div>{% endif %}
         </div>
 
         <div class="field">
-          <label>Celular (WhatsApp)</label>
+          <label for="{{ form.cliente_telefono.id_for_label }}">Celular (WhatsApp)</label>
           {{ form.cliente_telefono }}
           {% if form.cliente_telefono.errors %}<div class="err">{{ form.cliente_telefono.errors|join:", " }}</div>{% endif %}
         </div>
@@ -107,7 +107,7 @@
 
       {% if FEATURE_ENVIOS %}
         <div class="field">
-          <label>Dirección de envío</label>
+          <label for="{{ form.cliente_direccion.id_for_label }}">Dirección de envío</label>
           {{ form.cliente_direccion }}
           <div class="hint">Déjala vacía si prefieres retirar en tienda.</div>
         </div>

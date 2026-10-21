@@ -852,3 +852,13 @@ button.needs-selection:hover {
   .pdp { padding-left: 20px; padding-right: 20px; }
   .pdp-main > * { min-width: 0; }
 }
+
+/* Busqueda en telefonos: el campo es angosto, asi que los resultados se
+   abren a todo el ancho de la pantalla bajo la barra (antes se corrian
+   11 px fuera por la izquierda). La barra es sticky y mide 72 px. */
+@media (max-width: 600px) {
+  .search-dropdown {
+    position: fixed; top: 66px; left: 12px; right: 12px;
+    max-height: calc(100dvh - 80px); overflow-y: auto;
+  }
+}

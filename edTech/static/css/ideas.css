@@ -246,7 +246,12 @@ input, select { font-family: inherit; }
 .shop-search { background: var(--cream-3); border: 1px solid var(--line); border-radius: 999px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; min-width: 300px; position: relative; transition: border-color .2s, background .2s; }
 .shop-search:focus-within { border-color: var(--ink); background: var(--cream); }
 .shop-search svg { color: var(--ink-40); flex-shrink: 0; }
-.shop-search input { border: none; outline: none; background: none; flex: 1; font-size: 14px; min-width: 0; font-family: inherit; }
+.shop-search input { border: none; outline: none; background: none; flex: 1; font-size: 16px; min-width: 0; font-family: inherit; -webkit-appearance: none; appearance: none; }
+/* 16 px: con menos, Safari en iPhone hace zoom al tocar el campo. El
+   campo es type=search (teclado con "Buscar"); su X nativa se oculta
+   porque ya esta el boton .search-clear. */
+.shop-search input::-webkit-search-cancel-button,
+.shop-search input::-webkit-search-decoration { -webkit-appearance: none; display: none; }
 .shop-search input::placeholder { color: var(--ink-40); }
 .search-clear { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: transparent; color: var(--ink-60); flex-shrink: 0; }
 .search-clear:hover { background: var(--cream); color: var(--ink); }

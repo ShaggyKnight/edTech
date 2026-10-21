@@ -25,22 +25,24 @@
           data-buscar-url="{% url 'ecommerce:buscar_json' %}"
           data-catalogo-url="{% url 'ecommerce:catalogo' %}">
       <svg class="ico ico--16"><use href="#ico-search"/></svg>
-      <input type="text" name="q" id="shop-search-input"
+      <input type="search" name="q" id="shop-search-input"
              value="{{ query|default:'' }}"
              placeholder="Buscar por colegio, marca o producto…"
-             aria-label="Buscar productos">
+             aria-label="Buscar productos"
+             aria-controls="shop-search-dropdown" aria-expanded="false"
+             enterkeyhint="search">
       <button type="button" class="search-clear" id="shop-search-clear"
               aria-label="Limpiar búsqueda" hidden>
         <svg class="ico ico--14"><use href="#ico-close"/></svg>
       </button>
-      <div class="search-dropdown" id="shop-search-dropdown" role="listbox" hidden></div>
+      {# Resultados en vivo; se recorren con las flechas (ver JS abajo). #}
+      <div class="search-dropdown" id="shop-search-dropdown" aria-label="Resultados de búsqueda" hidden></div>
     </form>
+    {% comment %}
+      Una sola busqueda en todos los tamaños: antes en celular habia ademas
+      una lupa que abria otro buscador, sin resultados en vivo.
+    {% endcomment %}
     <div class="shop-actions">
-      {# Mobile: icono lupa que expande el buscador en una fila propia. #}
-      <button type="button" class="shop-mobile-search" id="shop-mobile-search-toggle"
-              aria-label="Buscar" aria-expanded="false">
-        <svg class="ico ico--18"><use href="#ico-search"/></svg>
-      </button>
       {% if user.is_authenticated and user.is_staff %}
         {% comment %}
           Acceso rápido al panel privado para staff (admin/cajero/bodeguero)
@@ -71,16 +73,6 @@
         {% if items_count %}<span class="cart-dot">{{ items_count }}</span>{% endif %}
       </a>
     </div>
-  </div>
-  {# Mobile search expandido — toggled por el ícono lupa. #}
-  <div class="shop-search-mobile" id="shop-mobile-search-pane" hidden>
-    <form class="shop-search" method="get" action="{% url 'ecommerce:catalogo' %}" autocomplete="off">
-      <svg class="ico ico--16"><use href="#ico-search"/></svg>
-      <input type="text" name="q" value="{{ query|default:'' }}"
-             placeholder="Buscar productos o colegio…"
-             aria-label="Buscar productos"
-             id="shop-mobile-search-input">
-    </form>
   </div>
   {% if OFERTA_BANNER %}
     {% include 'partials/_oferta_banner.html' %}
@@ -177,21 +169,6 @@
         if (window.innerWidth > 900 && !drawer.hidden) closeDrawer();
       });
     }
-
-    // ============ Mobile search expand ============
-    var searchToggle = document.getElementById('shop-mobile-search-toggle');
-    var searchPane = document.getElementById('shop-mobile-search-pane');
-    var searchInputMobile = document.getElementById('shop-mobile-search-input');
-    if (searchToggle && searchPane) {
-      searchToggle.addEventListener('click', function () {
-        var willOpen = searchPane.hidden;
-        searchPane.hidden = !willOpen;
-        searchToggle.setAttribute('aria-expanded', String(willOpen));
-        if (willOpen && searchInputMobile) {
-          setTimeout(function () { searchInputMobile.focus(); }, 50);
-        }
-      });
-    }
   })();
 </script>
 
@@ -263,6 +240,13 @@
 
     function setOpen(open) {
       dropdown.hidden = !open;
+      input.setAttribute('aria-expanded', String(open));
+    }
+
+    // Opciones navegables del desplegable: links de resultados y el boton
+    // del estado vacio.
+    function opciones() {
+      return Array.prototype.slice.call(dropdown.querySelectorAll('a, button'));
     }
 
     function pintarResultados(data, q) {
@@ -321,11 +305,32 @@
       if (!form.contains(e.target)) setOpen(false);
     });
 
-    // Escape cierra; Enter en input sigue al primer resultado si existe.
+    // Escape cierra. Flecha abajo entra a los resultados. Enter (sin
+    // elegir resultado) busca en el catalogo con ?q=.
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         setOpen(false);
         input.blur();
+      } else if (e.key === 'ArrowDown' && !dropdown.hidden) {
+        var ops = opciones();
+        if (ops.length) { e.preventDefault(); ops[0].focus(); }
+      }
+    });
+
+    // Dentro del desplegable: flechas para moverse, arriba desde el
+    // primero vuelve al campo, Escape cierra y vuelve al campo.
+    dropdown.addEventListener('keydown', function (e) {
+      var ops = opciones();
+      var i = ops.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (i < ops.length - 1) ops[i + 1].focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (i > 0) ops[i - 1].focus(); else input.focus();
+      } else if (e.key === 'Escape') {
+        setOpen(false);
+        input.focus();
       }
     });
 

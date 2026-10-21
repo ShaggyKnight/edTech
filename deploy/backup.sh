@@ -19,7 +19,9 @@ cd "$APP_DIR"
 
 # Cargar .env (las vars quedan exportadas).
 if [[ -f .env ]]; then
-  set -a; source .env; set +a
+  # Sin `source .env`: un valor con < o > rompia el script (ver lib-env.sh).
+  source "$APP_DIR/deploy/lib-env.sh"
+  cargar_env .env
 else
   echo "[$(LOG_TS)] ERROR: $APP_DIR/.env no existe." >&2
   exit 1

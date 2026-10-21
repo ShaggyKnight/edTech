@@ -322,10 +322,15 @@ STATICFILES_DIRS = [BASE_DIR / 'edTech' / 'static']
 # Default = dentro del proyecto, util para `runserver` local sin .env.
 STATIC_ROOT = Path(env('STATIC_ROOT')) if env('STATIC_ROOT') else BASE_DIR / 'staticfiles'
 
-# En prod con WhiteNoise usamos el storage con manifest (hash + compresión).
-# Sin WhiteNoise Django sirve staticfiles "crudos" y no hay que forzar el storage.
-if USE_WHITENOISE and not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# En prod los estaticos llevan hash en el nombre (ideas.3f2a9c.css), con o
+# sin WhiteNoise: nginx los sirve con `expires 1y` + `immutable`
+# (deploy/nginx-ideas.conf), y sin hash un visitante que ya entro seguiria
+# viendo el CSS viejo hasta un año despues de cada despliegue.
+if not DEBUG:
+    STATICFILES_STORAGE = (
+        'edTech.storage.CompressedManifestTolerante' if USE_WHITENOISE
+        else 'edTech.storage.ManifestTolerante'
+    )
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = Path(env('MEDIA_ROOT')) if env('MEDIA_ROOT') else BASE_DIR / 'media'

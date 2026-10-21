@@ -2,6 +2,11 @@
 {% comment %}
   Tarjeta de producto para grids de catálogo/home.
   Param requerido: `producto` (Producto)
+
+  El botón "Vista rápida" va FUERA del enlace: un botón dentro de un <a>
+  es HTML inválido y el lector de pantalla leía "Vista rápida" como parte
+  del nombre del producto. Se ubica sobre la foto con .pcard-overlay, una
+  capa del mismo tamaño que la foto.
 {% endcomment %}
 <article class="pcard">
   <a href="{% url 'ecommerce:producto' producto.pk %}" class="pcard-link" style="display:block;">
@@ -14,16 +19,6 @@
       {% elif producto.tag %}
         <span class="pcard-tag">{{ producto.tag }}</span>
       {% endif %}
-      <button type="button"
-              class="pcard-quick"
-              aria-label="Vista rápida de {{ producto.nombre }}"
-              hx-get="{% url 'ecommerce:producto_quick' producto.pk %}"
-              hx-target="#quick-view-body"
-              hx-swap="innerHTML"
-              onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('quick-view-modal').showModal();">
-        <svg class="ico ico--16"><use href="#ico-search"/></svg>
-        <span>Vista rápida</span>
-      </button>
     </div>
     <div class="pcard-body">
       <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>
@@ -44,4 +39,17 @@
       </div>
     </div>
   </a>
+  <div class="pcard-overlay">
+    <button type="button"
+            class="pcard-quick"
+            aria-label="Vista rápida de {{ producto.nombre }}"
+            aria-haspopup="dialog"
+            hx-get="{% url 'ecommerce:producto_quick' producto.pk %}"
+            hx-target="#quick-view-body"
+            hx-swap="innerHTML"
+            onclick="document.getElementById('quick-view-modal').showModal();">
+      <svg class="ico ico--16" aria-hidden="true"><use href="#ico-search"/></svg>
+      <span>Vista rápida</span>
+    </button>
+  </div>
 </article>

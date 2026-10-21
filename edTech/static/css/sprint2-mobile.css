@@ -97,7 +97,7 @@
     border-bottom: 1px solid var(--line);
     flex-shrink: 0;
   }
-  .shop-filters-head h4 {
+  .shop-filters-head h2 {
     font-family: var(--serif);
     font-size: 22px;
     font-weight: 600;
@@ -273,6 +273,8 @@
 }
 .notify-done svg           { color: #547852; flex-shrink: 0; }
 .notify-done em            { font-style: normal; font-weight: 600; color: var(--ink); }
+.notify-error              { color: var(--vino); font-size: 13px; font-weight: 500; padding: 10px 0 0; }
+.notify-error a            { color: inherit; text-decoration: underline; }
 
 @media (max-width: 520px) {
   .notify-input            { grid-template-columns: 1fr; }

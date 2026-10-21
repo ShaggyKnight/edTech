@@ -25,7 +25,7 @@
   </div>
 
   <header class="shop-cat-head" style="--cat-accent: {% if solo_ofertas %}var(--vino){% elif cat_info %}{{ cat_info.accent }}{% else %}var(--gold){% endif %};">
-    <div id="shop-cat-info">
+    <div id="shop-cat-info" aria-live="polite">
       <div class="eyebrow">{% if solo_ofertas %}Ofertas vigentes{% elif cat_info %}Categoría{% else %}Catálogo{% endif %}</div>
       <h1>{% if solo_ofertas %}Productos en oferta{% elif seo_h1 %}{{ seo_h1 }}{% elif cat_info %}{{ cat_info.title }}{% elif query %}Resultados para “{{ query }}”{% else %}Toda la tienda{% endif %}</h1>
       <p>
@@ -34,11 +34,18 @@
       </p>
       {% if seo_intro and not solo_ofertas %}<p>{{ seo_intro }}</p>{% endif %}
       {% if seo_perfumes_arabes and not solo_ofertas %}
-        <p>
-          Explora por marca:
-          <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes&amp;marca=Lattafa">Lattafa</a>
-          · <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes&amp;marca=Armaf">Armaf y Club de Nuit</a>
-        </p>
+        {# Marcas como etiquetas: se ven tocables y la activa queda marcada. #}
+        <div class="cat-marcas">
+          <span id="cat-marcas-label">Explora por marca:</span>
+          <ul class="cat-tags" aria-labelledby="cat-marcas-label">
+            <li><a class="cat-tag{% if marca_activa == 'Lattafa' %} is-active{% endif %}"
+                   href="{% url 'ecommerce:catalogo' %}?cat=perfumes&amp;marca=Lattafa"
+                   {% if marca_activa == 'Lattafa' %}aria-current="true"{% endif %}>Lattafa</a></li>
+            <li><a class="cat-tag{% if marca_activa == 'Armaf' %} is-active{% endif %}"
+                   href="{% url 'ecommerce:catalogo' %}?cat=perfumes&amp;marca=Armaf"
+                   {% if marca_activa == 'Armaf' %}aria-current="true"{% endif %}>Armaf y Club de Nuit</a></li>
+          </ul>
+        </div>
       {% endif %}
     </div>
     <div class="shop-cat-controls">
@@ -48,12 +55,12 @@
         <svg class="ico ico--14"><use href="#ico-menu"/></svg> Filtrar
       </button>
       <div class="sort-sel">
-        <span>Ordenar:</span>
+        <label for="shop-sort">Ordenar:</label>
         {% comment %}
           El form="..." engancha el select al form de filtros aunque este
           visualmente afuera, asi se aplica junto con el resto.
         {% endcomment %}
-        <select name="sort" form="shop-filters-form">
+        <select name="sort" id="shop-sort" form="shop-filters-form">
           <option value="relevant" {% if sort == 'relevant' %}selected{% endif %}>Más relevantes</option>
           <option value="low" {% if sort == 'low' %}selected{% endif %}>Menor precio</option>
           <option value="high" {% if sort == 'high' %}selected{% endif %}>Mayor precio</option>
@@ -69,7 +76,7 @@
   <div class="shop-cat-body">
     <aside class="shop-filters" id="shop-filters" aria-label="Filtros">
       <div class="shop-filters-head">
-        <h4>Filtrar</h4>
+        <h2>Filtrar</h2>
         <button type="button" class="drawer-close" id="shop-filters-close" aria-label="Cerrar filtros">
           <svg class="ico ico--18"><use href="#ico-close"/></svg>
         </button>
@@ -88,10 +95,10 @@
         {% endcomment %}
         <input type="hidden" name="oferta" value="{% if solo_ofertas %}1{% endif %}">
 
-        <h4>Filtrar</h4>
+        <h2>Filtrar</h2>
 
-        <div class="filter-group">
-          <div class="filter-title">Categoría</div>
+        <div class="filter-group" role="group" aria-labelledby="f-cat">
+          <div class="filter-title" id="f-cat">Categoría</div>
           {% for c in categorias %}
             <label style="display:block;padding:4px 0;">
               <input type="radio" name="cat" value="{{ c.slug }}"
@@ -113,8 +120,8 @@
             categorías están activas para que no quede engañando al cliente.
           {% endcomment %}
           {% if colegios and colegio_aplicable %}
-            <div class="filter-group">
-              <div class="filter-title">Colegio</div>
+            <div class="filter-group" role="group" aria-labelledby="f-colegio">
+              <div class="filter-title" id="f-colegio">Colegio</div>
               <label style="display:block;padding:4px 0;">
                 <input type="radio" name="colegio" value=""
                        {% if not colegio_activo %}checked{% endif %}>
@@ -137,12 +144,13 @@
             que tienen al menos una variante de esa talla disponible.
           {% endcomment %}
           {% if tallas_disponibles %}
-            <div class="filter-group">
-              <div class="filter-title">Talla</div>
+            <div class="filter-group" role="group" aria-labelledby="f-talla">
+              <div class="filter-title" id="f-talla">Talla</div>
               <div class="size-chips">
                 {% for t in tallas_disponibles %}
                   <button type="button" data-talla="{{ t }}"
-                          class="size-chip {% if talla_activa == t %}active{% endif %}">
+                          class="size-chip {% if talla_activa == t %}active{% endif %}"
+                          aria-pressed="{% if talla_activa == t %}true{% else %}false{% endif %}">
                     {{ t }}
                   </button>
                 {% endfor %}
@@ -160,8 +168,8 @@
         {# ─── Filtros de perfumería (solo cuando cat=perfumes) ─── #}
         <div id="filter-perfume">
           {% if perfume_aplicable %}
-            <div class="filter-group">
-              <div class="filter-title">Para</div>
+            <div class="filter-group" role="group" aria-labelledby="f-genero">
+              <div class="filter-title" id="f-genero">Para</div>
               <label style="display:block;padding:4px 0;">
                 <input type="radio" name="genero" value=""
                        {% if not genero_activo %}checked{% endif %}>
@@ -184,8 +192,8 @@
               </label>
             </div>
 
-            <div class="filter-group">
-              <div class="filter-title">Concentración</div>
+            <div class="filter-group" role="group" aria-labelledby="f-concentracion">
+              <div class="filter-title" id="f-concentracion">Concentración</div>
               <label style="display:block;padding:4px 0;">
                 <input type="radio" name="concentracion" value=""
                        {% if not concentracion_activa %}checked{% endif %}>
@@ -219,9 +227,9 @@
             </div>
 
             {% if marcas_disponibles %}
-              <div class="filter-group">
-                <div class="filter-title">Marca</div>
-                <select name="marca" class="shop-select"
+              <div class="filter-group" role="group" aria-labelledby="f-marca">
+                <div class="filter-title" id="f-marca">Marca</div>
+                <select name="marca" class="shop-select" aria-labelledby="f-marca"
                         style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
                   <option value="">Todas las marcas</option>
                   {% for m in marcas_disponibles %}
@@ -232,9 +240,9 @@
             {% endif %}
 
             {% if familias_olfativas_disponibles %}
-              <div class="filter-group">
-                <div class="filter-title">Familia olfativa</div>
-                <select name="familia_olfativa" class="shop-select"
+              <div class="filter-group" role="group" aria-labelledby="f-familia">
+                <div class="filter-title" id="f-familia">Familia olfativa</div>
+                <select name="familia_olfativa" class="shop-select" aria-labelledby="f-familia"
                         style="width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
                   <option value="">Todas</option>
                   {% for f in familias_olfativas_disponibles %}
@@ -246,15 +254,15 @@
           {% endif %}
         </div>
 
-        <div class="filter-group">
-          <div class="filter-title">Precio</div>
+        <div class="filter-group" role="group" aria-labelledby="f-precio">
+          <div class="filter-title" id="f-precio">Precio</div>
           <div style="display:flex;gap:8px;align-items:center;">
             <input type="number" name="precio_min" min="0" step="1000"
-                   value="{{ precio_min }}" placeholder="Mín"
+                   value="{{ precio_min }}" placeholder="Mín" aria-label="Precio mínimo" inputmode="numeric"
                    style="width:0;flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
-            <span style="color:var(--ink-60);">—</span>
+            <span style="color:var(--ink-60);" aria-hidden="true">—</span>
             <input type="number" name="precio_max" min="0" step="1000"
-                   value="{{ precio_max }}" placeholder="Máx"
+                   value="{{ precio_max }}" placeholder="Máx" aria-label="Precio máximo" inputmode="numeric"
                    style="width:0;flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font:inherit;">
           </div>
           <button type="submit" class="btn-outline" style="margin-top:8px;width:100%;font-size:12px;padding:6px 10px;">
@@ -354,6 +362,7 @@
         swapInner('filter-colegio', doc);
         swapInner('filter-talla', doc);
         swapInner('filter-limpiar', doc);
+        swapInner('shop-filters-apply', doc);
         if (info) swapInner('shop-cat-info', doc);
         // Sincroniza el title del navegador y la URL.
         var t = doc.querySelector('title');
@@ -495,6 +504,7 @@
         swapInner('filter-colegio', doc);
         swapInner('filter-talla', doc);
         swapInner('filter-limpiar', doc);
+        swapInner('shop-filters-apply', doc);
         if (info) swapInner('shop-cat-info', doc);
         var t = doc.querySelector('title');
         if (t) document.title = t.textContent;

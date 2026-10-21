@@ -169,11 +169,11 @@ class CatalogoFiltrosTests(TestCase):
     def test_cat_perfumes_no_muestra_filtro_colegio(self):
         """En perfumes el sidebar no debe ofrecer el filtro de colegio."""
         resp = self.client.get(reverse('ecommerce:catalogo') + '?cat=perfumes')
-        self.assertNotContains(resp, '<div class="filter-title">Colegio</div>')
+        self.assertNotContains(resp, '<div class="filter-title" id="f-colegio">Colegio</div>')
 
     def test_cat_uniformes_si_muestra_filtro_colegio(self):
         resp = self.client.get(reverse('ecommerce:catalogo') + '?cat=uniformes')
-        self.assertContains(resp, '<div class="filter-title">Colegio</div>')
+        self.assertContains(resp, '<div class="filter-title" id="f-colegio">Colegio</div>')
 
     def test_sort_default_es_relevante(self):
         resp = self.client.get(reverse('ecommerce:catalogo'))

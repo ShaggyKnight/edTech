@@ -183,7 +183,7 @@
 
           <div class="pdp-opts">
             <div class="pdp-opt-label-row">
-              <div class="pdp-opt-label">Elige tu {{ label_eleccion|default:"variante" }}</div>
+              <div class="pdp-opt-label" id="pdp-opt-label">Elige tu {{ label_eleccion|default:"variante" }}</div>
               {% if mostrar_guia_talles %}
                 {# Bloque 12: trigger del modal de guia de talles. #}
                 <button type="button" class="pdp-guia-link"
@@ -193,7 +193,8 @@
                 </button>
               {% endif %}
             </div>
-            <div class="size-chips {% if chips_anchos %}wide-chips{% endif %}" id="pdp-chips">
+            <div class="size-chips {% if chips_anchos %}wide-chips{% endif %}" id="pdp-chips"
+                 role="group" aria-labelledby="pdp-opt-label">
               {% comment %}
                 Cada chip lleva los datos de la variante en data-attrs.
                 Click = marca como activa + actualiza precio + habilita botón.
@@ -203,7 +204,7 @@
               {% endcomment %}
               {% for v in variantes %}
                 {% if v.stock %}
-                  <button type="button" class="size-chip"
+                  <button type="button" class="size-chip" aria-pressed="false"
                           data-variante-id="{{ v.pk }}"
                           data-precio="{{ v.precio|floatformat:0 }}"
                           data-precio-oferta="{{ v.precio_oferta_online|floatformat:0 }}"
@@ -219,13 +220,14 @@
                           data-agotada="1"
                           data-variante-id="{{ v.pk }}"
                           data-label="{% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}"
-                          title="Sin stock — avísame cuando vuelva">
+                          title="Sin stock — avísame cuando vuelva"
+                          aria-label="{{ label_eleccion|default:'variante'|capfirst }} {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}, agotada: avísame cuando vuelva">
                     {% for val in v.valores.all %}{{ val.valor }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                   </button>
                 {% endif %}
               {% endfor %}
             </div>
-            <div style="margin-top:8px;font-size:12px;color:var(--ink-60);" id="pdp-stock-info"></div>
+            <div style="margin-top:8px;font-size:12px;color:var(--ink-60);" id="pdp-stock-info" aria-live="polite"></div>
 
             {# Sprint 2 · 2.3: inline "Avísame cuando vuelva" — oculto hasta click en agotada. #}
             <div class="notify-form" id="pdp-notify-form" hidden>
@@ -249,10 +251,15 @@
                   email con regex antes de procesarlo.
                 {% endcomment %}
                 <input type="email" inputmode="email" autocomplete="email"
-                       id="pdp-notify-email" placeholder="tu@email.cl">
+                       id="pdp-notify-email" placeholder="tu@email.cl"
+                       aria-label="Tu email para el aviso">
                 <button type="button" class="btn-primary" id="pdp-notify-submit">
                   Avísame
                 </button>
+              </div>
+              <div class="notify-error" id="pdp-notify-error" role="alert" hidden>
+                No pudimos guardar tu aviso. Intenta de nuevo{% if PUBLIC_WHATSAPP %} o
+                <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" target="_blank" rel="noopener">escríbenos por WhatsApp</a>{% endif %}.
               </div>
               <div class="notify-done" id="pdp-notify-done" hidden>
                 <svg class="ico ico--16"><use href="#ico-check"/></svg>
@@ -292,6 +299,7 @@
             var notifySubmit = document.getElementById('pdp-notify-submit');
             var notifyDone = document.getElementById('pdp-notify-done');
             var notifyDoneEmail = document.getElementById('pdp-notify-done-email');
+            var notifyError = document.getElementById('pdp-notify-error');
             var notifyVarianteId = null;
 
             function fmt(n) {
@@ -315,8 +323,12 @@
                 btn.disabled = false;
 
                 // 2) Estado visual del chip seleccionado.
-                chips.forEach(function(c) { c.classList.remove('active'); });
+                chips.forEach(function(c) {
+                  c.classList.remove('active');
+                  c.setAttribute('aria-pressed', 'false');
+                });
                 chip.classList.add('active');
+                chip.setAttribute('aria-pressed', 'true');
 
                 // 3) Cierra el form de "avisame" si estaba abierto.
                 if (notifyForm) notifyForm.hidden = true;
@@ -406,6 +418,7 @@
 
               // POST a /tienda/avisame/ para persistir la suscripcion.
               notifySubmit.disabled = true;
+              if (notifyError) notifyError.hidden = true;
               var labelOriginal = notifySubmit.textContent;
               notifySubmit.textContent = 'Enviando…';
 
@@ -430,6 +443,7 @@
                     notifyDone.hidden = false;
                   } else {
                     notifyEmail.classList.add('is-invalid');
+                    if (notifyError) notifyError.hidden = false;
                     if (window.console) console.warn('[avisame]', res.html);
                   }
                 })
@@ -437,11 +451,10 @@
                   notifySubmit.disabled = false;
                   notifySubmit.textContent = labelOriginal;
                   if (window.console) console.error('[avisame]', err);
-                  // Aun si el POST fallo a nivel red, mostramos el done.
-                  // El cliente cree que se anoto y nosotros lo guardamos
-                  // localmente; si la app vuelve, el proximo click reintenta.
-                  notifyDoneEmail.textContent = email;
-                  notifyDone.hidden = false;
+                  // Antes aca se mostraba "Listo" igual: el cliente esperaba
+                  // un correo que nunca iba a llegar. Ahora se le dice que
+                  // no quedo guardado y se le ofrece WhatsApp.
+                  if (notifyError) notifyError.hidden = false;
                 });
             });
           })();
@@ -476,13 +489,13 @@
           <input type="hidden" name="tipo" value="p">
           <input type="hidden" name="item_id" value="{{ producto.pk }}">
           <div class="pdp-opts">
-            <div class="pdp-opt-label">Cantidad</div>
+            <div class="pdp-opt-label" id="pdp-cantidad-label">Cantidad</div>
             <div class="qty">
-              <button type="button" onclick="var i=this.nextElementSibling.querySelector('input'); i.value=Math.max(1,(+i.value)-1);">
+              <button type="button" aria-label="Restar uno" onclick="var i=this.nextElementSibling.querySelector('input'); i.value=Math.max(1,(+i.value)-1);">
                 <svg class="ico ico--14"><use href="#ico-minus"/></svg>
               </button>
-              <span><input type="number" name="cantidad" value="1" min="1" max="{{ stock_directo|default:1 }}" style="width:50px;border:none;background:transparent;text-align:center;font:inherit;"></span>
-              <button type="button" onclick="var i=this.previousElementSibling.querySelector('input'); var m={{ stock_directo|default:1 }}; i.value=Math.min(m,(+i.value)+1);">
+              <span><input type="number" name="cantidad" value="1" min="1" max="{{ stock_directo|default:1 }}" aria-labelledby="pdp-cantidad-label" style="width:50px;border:none;background:transparent;text-align:center;font:inherit;"></span>
+              <button type="button" aria-label="Sumar uno" onclick="var i=this.previousElementSibling.querySelector('input'); var m={{ stock_directo|default:1 }}; i.value=Math.min(m,(+i.value)+1);">
                 <svg class="ico ico--14"><use href="#ico-plus"/></svg>
               </button>
             </div>

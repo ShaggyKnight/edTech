@@ -424,7 +424,11 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
 .colegio-chip.main { background: var(--gold); color: var(--ink); border-color: var(--gold); }
 
 /* Product card */
-.pcard { background: var(--cream); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); transition: all .2s; }
+.pcard { position: relative; background: var(--cream); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); transition: all .2s; }
+/* Capa del tamaño de la foto (mismo 4/5) para ubicar "Vista rapida"
+   sobre la imagen sin meter el boton dentro del enlace de la card. */
+.pcard-overlay { position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 4/5; pointer-events: none; }
+.pcard-overlay .pcard-quick { pointer-events: auto; }
 .pcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 /* aspect-ratio 4/5 coincide con el `width="400" height="500"` que el
    `_pcard.html` pone en el <img>. Antes era 3/4 (mas alargado), que
@@ -456,7 +460,8 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
   transition: opacity 0.2s ease, transform 0.2s ease;
   z-index: 2;
 }
-.pcard:hover .pcard-quick {
+.pcard:hover .pcard-quick,
+.pcard:focus-within .pcard-quick {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
@@ -487,10 +492,16 @@ a.shop-promo--sale .promo-cta { text-decoration: underline; text-underline-offse
 .shop-cat-head { display: flex; justify-content: space-between; align-items: end; padding-bottom: 24px; border-bottom: 2px solid var(--cat-accent); margin-bottom: 32px; }
 .shop-cat-head h1 { font-size: 48px; }
 .shop-cat-head p { font-size: 14px; color: var(--ink-60); margin-top: 6px; }
+/* "Explora por marca": etiquetas tocables (min. 36 px de alto). */
+.cat-marcas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 12px; font-size: 14px; color: var(--ink-60); }
+.cat-tags { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+.cat-tag { display: inline-flex; align-items: center; min-height: 36px; padding: 6px 16px; border-radius: 999px; background: var(--cream-2); color: var(--ink); font-size: 14px; font-weight: 500; transition: background-color .15s, color .15s; }
+.cat-tag:hover { background: var(--gold-soft); }
+.cat-tag.is-active { background: var(--ink); color: var(--cream); }
 .sort-sel { display: flex; align-items: center; gap: 10px; font-size: 13px; }
 .sort-sel select { border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; background: var(--cream); font-size: 13px; }
 .shop-cat-body { display: grid; grid-template-columns: 240px 1fr; gap: 32px; }
-.shop-filters h4 { font-family: var(--sans); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-60); margin-bottom: 20px; }
+.shop-filters h2 { font-family: var(--sans); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-60); margin-bottom: 20px; }
 .filter-group { padding: 20px 0; border-bottom: 1px solid var(--line); }
 .filter-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 .filter-group label { display: block; padding: 6px 0; font-size: 13px; }

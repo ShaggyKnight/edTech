@@ -32,6 +32,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from bodega.models import StockTienda
 from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, Resena, ValorAtributo
+from catalogo import miniaturas
 from ecommerce.cart import CANAL, Cart
 from ecommerce.categorias import (
     CAT_SLUGS, categoria_de_temporada, familias_por_slug,
@@ -504,7 +505,8 @@ def buscar_json(request):
         'colegio': p.colegio.nombre if p.colegio_id else '',
         'precio': float(p.precio_minimo),
         'precios_varian': p.precios_varian_por_variante,
-        'img': imagen_producto(p),
+        # Miniatura WebP de 400 px si existe (el resultado se ve a 48 px).
+        'img': miniaturas.url(p.imagen) if p.imagen else imagen_producto(p),
         'url': f'/tienda/p/{p.pk}/',
     } for p in top]
 

@@ -50,6 +50,17 @@ def imagen_producto(producto):
     return static(_svg_para_familia(nombre_fam, nombre_prod))
 
 
+@register.simple_tag
+def srcset_producto(producto):
+    """srcset con las miniaturas WebP de la foto del producto ('' si no hay).
+
+    Uso: {% srcset_producto producto as srcset %} y en el <img>
+    `{% if srcset %}srcset="{{ srcset }}" sizes="..."{% endif %}`.
+    """
+    from catalogo import miniaturas
+    return miniaturas.srcset(getattr(producto, 'imagen', None))
+
+
 @register.filter
 def split(value, separator='·'):
     """Divide un string por `separator` y devuelve la lista, con cada

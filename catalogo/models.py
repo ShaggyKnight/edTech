@@ -638,6 +638,9 @@ def _optimizar_imagen_post_save(sender, instance, created, raw, **kwargs):
             # El optimizador cambio el path (jpg vs png u otro). Persistimos
             # el nuevo nombre con un UPDATE que NO dispara post_save de nuevo.
             sender.objects.filter(pk=instance.pk).update(imagen=imagen.name)
+        # Miniaturas WebP para las tarjetas (ver catalogo/miniaturas.py).
+        from catalogo import miniaturas
+        miniaturas.generar(imagen, forzar=cambiada)
     except Exception:
         import logging
         logging.getLogger(__name__).exception(

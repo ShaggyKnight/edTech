@@ -12,7 +12,10 @@
   <a href="{% url 'ecommerce:producto' producto.pk %}" class="pcard-link" style="display:block;">
     <div class="pcard-img">
       {% imagen_producto producto as img_url %}
-      <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy" width="400" height="500">
+      {% srcset_producto producto as srcset %}
+      {# Miniaturas WebP de 400/800 px; la original queda de respaldo en src. #}
+      <img src="{{ img_url }}" alt="{{ producto.nombre }}" loading="lazy" width="400" height="500"
+           {% if srcset %}srcset="{{ srcset }}" sizes="(max-width: 520px) 50vw, (max-width: 900px) 33vw, 320px"{% endif %}>
       {# Sprint 2 · 2.9: oferta gana al tag manual. #}
       {% if producto.tiene_oferta_online %}
         <span class="pcard-tag pcard-tag-sale">Oferta</span>

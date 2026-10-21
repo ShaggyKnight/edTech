@@ -66,6 +66,10 @@ log "Migrate..."
 log "collectstatic..."
 "$VENV/bin/python" manage.py collectstatic --noinput --clear
 
+# ── 4b. miniaturas WebP de fotos de producto (solo las que falten) ──
+log "miniaturas..."
+"$VENV/bin/python" manage.py generar_miniaturas
+
 # ── 5. reload gunicorn (zero-downtime) ─────────────────────────────
 log "systemctl reload gunicorn-ideas..."
 sudo /bin/systemctl reload gunicorn-ideas.service

@@ -283,6 +283,13 @@
     <div class="shop-grid four" id="shop-grid">
       {% if productos %}
         {% include 'ecommerce/_catalogo_pagina.html' with productos=productos next_page_url=next_page_url %}
+      {% elif cat_sin_stock %}
+        {# Link viejo a una categoria que hoy no tiene nada a la venta online. #}
+        <div style="grid-column: 1 / -1; padding: 80px 20px; text-align:center; color: var(--ink);">
+          <p style="font-size:18px;margin-bottom:8px;">Por ahora no tenemos {{ cat_info.title|lower }} en la tienda online.</p>
+          <p style="margin-bottom:16px;">Pregúntanos en Caupolicán 437-B{% if PUBLIC_WHATSAPP %} o por <a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" target="_blank" rel="noopener" style="text-decoration:underline;">WhatsApp</a>{% endif %}.</p>
+          <a class="btn-outline" href="{% url 'ecommerce:catalogo' %}">Ver toda la tienda</a>
+        </div>
       {% else %}
         <div style="grid-column: 1 / -1; padding: 80px 20px; text-align:center; color: var(--ink-60);">
           <p style="font-size:18px;margin-bottom:12px;">No hay productos disponibles con esos filtros.</p>

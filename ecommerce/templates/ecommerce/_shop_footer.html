@@ -8,10 +8,10 @@
     <div class="footer-cols">
       <div>
         <h5>Tienda</h5>
-        <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes">Uniformes</a>
-        <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes">Perfumes</a>
-        <a href="{% url 'ecommerce:catalogo' %}?cat=moda">Moda</a>
-        <a href="{% url 'ecommerce:catalogo' %}?cat=intima">Ropa Íntima</a>
+        {% for c in CATEGORIAS_TIENDA %}
+          <a href="{% url 'ecommerce:catalogo' %}?cat={{ c.slug }}">{{ c.title }}</a>
+        {% endfor %}
+        <a href="{% url 'ecommerce:catalogo' %}">Toda la tienda</a>
       </div>
       <div>
         <h5>Ayuda</h5>

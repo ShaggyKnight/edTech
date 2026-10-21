@@ -8,6 +8,7 @@
     <meta name="description" content="{% block meta_description %}Boutique familiar en Los Vilos desde 1987. Perfumes originales, uniformes escolares y moda. Tres generaciones, un solo compromiso.{% endblock %}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#C9A96E">
+    {% if noindex %}<meta name="robots" content="noindex, follow">{% endif %}
     <link rel="canonical" href="{{ CANONICAL_URL }}">
     <meta property="og:url" content="{{ CANONICAL_URL }}">
 

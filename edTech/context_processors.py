@@ -22,6 +22,14 @@ def public_settings(request):
         from catalogo.precios import oferta_banner_online
         return oferta_banner_online()
 
+    def _categorias():
+        # Solo las categorias con algo a la venta online (menu, landing,
+        # pie). Lazy: una query, y solo si el template la usa.
+        from ecommerce.categorias import categorias_visibles
+        return categorias_visibles()
+
+    categorias = SimpleLazyObject(_categorias)
+
     clarity = getattr(settings, 'CLARITY_PROJECT_ID', '')
     google = getattr(settings, 'GOOGLE_TAG_ID', '')
     meta = getattr(settings, 'META_PIXEL_ID', '')
@@ -70,6 +78,12 @@ def public_settings(request):
         # Oferta de campaña vigente (o None) — banner automatico en la
         # barra de promo: aparece al crear la oferta y muere con ella.
         'OFERTA_BANNER': SimpleLazyObject(_oferta_banner),
+        # Categorias con stock online: [{slug, title, nav, desc, accent}]
+        # y sus slugs, para preguntar `{% if 'moda' in CATEGORIAS_TIENDA_SLUGS %}`.
+        'CATEGORIAS_TIENDA': categorias,
+        'CATEGORIAS_TIENDA_SLUGS': SimpleLazyObject(
+            lambda: [c['slug'] for c in categorias]
+        ),
     }
 
 

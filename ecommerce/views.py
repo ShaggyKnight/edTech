@@ -33,6 +33,9 @@ from django.views.decorators.http import require_GET, require_POST
 from bodega.models import StockTienda
 from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, Resena, ValorAtributo
 from ecommerce.cart import CANAL, Cart
+from ecommerce.categorias import (
+    CAT_SLUGS, familias_por_slug, productos_con_stock_online, slugs_con_stock,
+)
 from ecommerce.emails import (
     enviar_instrucciones_transferencia, notificar_dueno_transferencia_pendiente,
 )
@@ -61,47 +64,10 @@ from pos.payments import PaymentGatewayError
 log = logging.getLogger(__name__)
 
 
-# Slug → (título para el header, descripción, tintes de acento).
-# Permite que la landing enlace a `/tienda/?cat=uniformes` sin conocer la pk
-# de la familia correspondiente.
-CAT_SLUGS = {
-    'uniformes': {
-        'title': 'Uniformes Escolares',
-        'desc':  'Buzos, chalecos y remeras de tu colegio',
-        'accent': '#7A1E2B',
-        'match':  ['uniform'],
-    },
-    'perfumes': {
-        'title': 'Perfumes',
-        'desc':  'Fragancias originales y decants',
-        'accent': '#C9A96E',
-        # 'fragan' (no 'fragranc') matchea 'Fragancia(s)' en español.
-        'match':  ['perfum', 'fragan'],
-    },
-    'moda': {
-        'title': 'Moda',
-        'desc':  'Ropa casual y formal',
-        'accent': '#2B3140',
-        'match':  ['moda', 'ropa'],
-    },
-    'intima': {
-        'title': 'Ropa Íntima',
-        'desc':  'Lencería y ropa interior',
-        'accent': '#A03853',
-        'match':  ['intim', 'lenc'],
-    },
-}
-
-
-def _familias_por_slug(slug: str):
-    """Devuelve el queryset de familias que corresponden al slug de categoría."""
-    info = CAT_SLUGS.get(slug)
-    if not info:
-        return Familia.objects.none()
-    q = Familia.objects.none()
-    for term in info['match']:
-        q = q | Familia.objects.filter(nombre__icontains=term)
-    return q
+# Las categorias (CAT_SLUGS) y que cuenta como "a la venta" viven en
+# ecommerce/categorias.py: las comparten el catalogo, los menus, la
+# landing y el sitemap.
+_familias_por_slug = familias_por_slug
 
 
 SORT_OPTIONS = {
@@ -205,24 +171,9 @@ def catalogo(request):
     familia_olfativa = (request.GET.get('familia_olfativa') or '').strip()
     concentracion = (request.GET.get('concentracion') or '').strip().upper()
 
-    tiene_stock_variante = StockTienda.objects.filter(
-        tienda=tienda, variante__producto=OuterRef('pk'), cantidad__gt=0
-    )
-    tiene_stock_directo = StockTienda.objects.filter(
-        tienda=tienda, producto=OuterRef('pk'), cantidad__gt=0
-    )
-
     productos_qs = (
-        Producto.objects
-        .filter(activo=True)
+        productos_con_stock_online(tienda)
         .select_related('familia', 'colegio')
-        .annotate(
-            hay_stock_variante=Exists(tiene_stock_variante),
-            hay_stock_directo=Exists(tiene_stock_directo),
-        )
-    )
-    productos_qs = productos_qs.filter(hay_stock_variante=True) | productos_qs.filter(
-        hay_stock_directo=True
     )
 
     if familia_id.isdigit():
@@ -325,9 +276,13 @@ def catalogo(request):
 
     cart = Cart(request.session)
 
+    # El filtro lateral ofrece solo categorias con stock, mas la activa
+    # (si alguien llega por un link viejo a una categoria agotada).
+    con_stock = slugs_con_stock(tienda)
     categorias = [
         {'slug': slug, 'title': info['title'], 'desc': info['desc'], 'accent': info['accent']}
         for slug, info in CAT_SLUGS.items()
+        if slug in con_stock or slug == cat_slug
     ]
     cat_info = CAT_SLUGS.get(cat_slug) if cat_slug in CAT_SLUGS else None
 
@@ -424,6 +379,11 @@ def catalogo(request):
         'categorias': categorias,
         'cat_activa': cat_slug if cat_slug in CAT_SLUGS else '',
         'cat_info': cat_info,
+        # Categoria sin nada a la venta: mensaje propio en vez de la
+        # grilla vacia generica.
+        'cat_sin_stock': bool(cat_info) and cat_slug not in con_stock,
+        # Un listado vacio no aporta en buscadores.
+        'noindex': paginator.count == 0,
         'colegios': Colegio.objects.filter(activo=True).order_by('nombre'),
         'colegio_activo': int(colegio_id) if aplicar_filtro_colegio else None,
         'colegio_aplicable': colegio_aplicable,

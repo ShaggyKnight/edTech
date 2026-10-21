@@ -14,11 +14,11 @@
       {% include 'partials/_ideas_logo.html' with size=32 tone='ink' show_wordmark=False %}
     </a>
     <nav class="shop-nav">
-      <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes" {% if cat_activa == 'uniformes' %}class="active"{% endif %}>Uniformes</a>
-      <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes" {% if cat_activa == 'perfumes' %}class="active"{% endif %}>Perfumes</a>
-      <a href="{% url 'ecommerce:catalogo' %}?cat=moda" {% if cat_activa == 'moda' %}class="active"{% endif %}>Moda</a>
-      <a href="{% url 'ecommerce:catalogo' %}?cat=intima" {% if cat_activa == 'intima' %}class="active"{% endif %}>Íntima</a>
-      <a href="{% url 'ecommerce:catalogo' %}?oferta=1" class="sale">OFERTAS</a>
+      {# Solo categorias con stock online (ver ecommerce/categorias.py). #}
+      {% for c in CATEGORIAS_TIENDA %}
+        <a href="{% url 'ecommerce:catalogo' %}?cat={{ c.slug }}" {% if cat_activa == c.slug %}class="active"{% endif %}>{{ c.nav }}</a>
+      {% endfor %}
+      <a href="{% url 'ecommerce:catalogo' %}?oferta=1" class="sale">Ofertas</a>
     </nav>
     <form class="shop-search" method="get" action="{% url 'ecommerce:catalogo' %}"
           id="shop-search-form" autocomplete="off"
@@ -108,11 +108,10 @@
   <nav class="drawer-nav">
     <a href="{% url 'index' %}">Inicio</a>
     <div class="drawer-section">Categorías</div>
-    <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes">Uniformes Escolares</a>
-    <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes">Perfumes</a>
-    <a href="{% url 'ecommerce:catalogo' %}?cat=moda">Moda</a>
-    <a href="{% url 'ecommerce:catalogo' %}?cat=intima">Ropa Íntima</a>
-    <a href="{% url 'ecommerce:catalogo' %}?oferta=1" class="sale">★ Ofertas</a>
+    {% for c in CATEGORIAS_TIENDA %}
+      <a href="{% url 'ecommerce:catalogo' %}?cat={{ c.slug }}">{{ c.title }}</a>
+    {% endfor %}
+    <a href="{% url 'ecommerce:catalogo' %}?oferta=1" class="sale">Ofertas</a>
     <div class="drawer-section">Tu cuenta</div>
     {% if user.is_authenticated %}
       <a href="{% url 'ecommerce:mis_pedidos' %}">

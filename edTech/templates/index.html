@@ -122,11 +122,18 @@
   <section id="categorias" class="cats">
     <div class="section-head">
       <div class="eyebrow">Qué encuentras</div>
-      <h2>Cuatro mundos, una sola tienda.</h2>
+      {% with n=CATEGORIAS_TIENDA|length %}
+      <h2>{% if n == 4 %}Cuatro mundos{% elif n == 3 %}Tres mundos{% elif n == 2 %}Dos mundos{% endif %}{% if n > 1 %}, una sola tienda.{% else %}Lo que encuentras hoy.{% endif %}</h2>
+      {% endwith %}
     </div>
-    <div class="cats-grid">
+    {% comment %}
+      Solo las categorias con stock online: si una se agota (o todavia no
+      se carga), su tarjeta no aparece y el titulo cuenta las que quedan.
+    {% endcomment %}
+    <div class="cats-grid cats-grid--{{ CATEGORIAS_TIENDA|length }}">
+      {% if 'uniformes' in CATEGORIAS_TIENDA_SLUGS %}
       <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="--cat-accent:#7A1E2B; --cat-bg:url('{% static 'img/ideas/mundo-uniformes.jpg' %}');">
-        <div class="cat-num">01</div>
+        <div class="cat-num" aria-hidden="true"></div>
         <div class="cat-body">
           <h3>Uniformes Escolares</h3>
           <p>Buzos, chalecos y remeras de tu colegio.</p>
@@ -136,8 +143,10 @@
           </div>
         </div>
       </a>
+      {% endif %}
+      {% if 'perfumes' in CATEGORIAS_TIENDA_SLUGS %}
       <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=perfumes" style="--cat-accent:#C9A96E; --cat-bg:url('{% static 'img/ideas/mundo-perfumes.jpg' %}');">
-        <div class="cat-num">02</div>
+        <div class="cat-num" aria-hidden="true"></div>
         <div class="cat-body">
           <h3>Perfumes</h3>
           <p>Fragancias originales y decants.</p>
@@ -147,8 +156,10 @@
           </div>
         </div>
       </a>
+      {% endif %}
+      {% if 'moda' in CATEGORIAS_TIENDA_SLUGS %}
       <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=moda" style="--cat-accent:#2B3140; --cat-bg:url('{% static 'img/ideas/mundo-moda.jpg' %}');">
-        <div class="cat-num">03</div>
+        <div class="cat-num" aria-hidden="true"></div>
         <div class="cat-body">
           <h3>Moda</h3>
           <p>Ropa casual y formal para toda la familia.</p>
@@ -158,8 +169,10 @@
           </div>
         </div>
       </a>
+      {% endif %}
+      {% if 'intima' in CATEGORIAS_TIENDA_SLUGS %}
       <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=intima" style="--cat-accent:#A03853; --cat-bg:url('{% static 'img/ideas/mundo-intima.jpg' %}');">
-        <div class="cat-num">04</div>
+        <div class="cat-num" aria-hidden="true"></div>
         <div class="cat-body">
           <h3>Ropa Íntima</h3>
           <p>Lencería y ropa interior de calidad.</p>
@@ -169,6 +182,7 @@
           </div>
         </div>
       </a>
+      {% endif %}
     </div>
   </section>
 
@@ -380,10 +394,10 @@
       <div class="footer-cols">
         <div>
           <h5>Tienda</h5>
-          <a href="{% url 'ecommerce:catalogo' %}?cat=uniformes">Uniformes</a>
-          <a href="{% url 'ecommerce:catalogo' %}?cat=perfumes">Perfumes</a>
-          <a href="{% url 'ecommerce:catalogo' %}?cat=moda">Moda</a>
-          <a href="{% url 'ecommerce:catalogo' %}?cat=intima">Ropa Íntima</a>
+          {% for c in CATEGORIAS_TIENDA %}
+            <a href="{% url 'ecommerce:catalogo' %}?cat={{ c.slug }}">{{ c.title }}</a>
+          {% endfor %}
+          <a href="{% url 'ecommerce:catalogo' %}">Toda la tienda</a>
         </div>
         <div>
           <h5>Ayuda</h5>

@@ -155,6 +155,17 @@ input, select { font-family: inherit; }
 .cat-card::after { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--cat-accent); }
 .cat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 .cat-num { font-family: var(--serif); font-size: 18px; color: var(--cat-accent); letter-spacing: 0.1em; }
+/* Las tarjetas que se muestran dependen del stock online: el numero lo
+   pone un contador para que no salte de 02 a 04 si falta una. */
+.cats-grid { counter-reset: cat; }
+.cat-num::before { counter-increment: cat; content: "0" counter(cat); }
+@media (min-width: 1101px) {
+  .cats-grid--3 { grid-template-columns: repeat(3, 1fr); }
+  .cats-grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .cats-grid--2 .cat-card { aspect-ratio: 4 / 3; }
+  .cats-grid--1 { grid-template-columns: 1fr; }
+  .cats-grid--1 .cat-card { aspect-ratio: 21 / 9; }
+}
 .cat-body h3 { font-size: 32px; margin-bottom: 12px; }
 .cat-body p { font-size: 14px; color: var(--ink-60); margin-bottom: 20px; }
 .cat-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-60); }

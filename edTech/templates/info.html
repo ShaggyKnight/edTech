@@ -114,12 +114,15 @@
         <strong>Uniformes escolares →</strong><br>
         <span style="color:var(--ink-60);font-size:14px;">Tallas por colegio, modelos oficiales</span>
       </a>
-      <a href="{% url 'ecommerce:catalogo' %}?cat=moda"
+      {# Solo si alguna de las dos categorias tiene stock online. #}
+      {% if 'moda' in CATEGORIAS_TIENDA_SLUGS or 'intima' in CATEGORIAS_TIENDA_SLUGS %}
+      <a href="{% url 'ecommerce:catalogo' %}?cat={% if 'moda' in CATEGORIAS_TIENDA_SLUGS %}moda{% else %}intima{% endif %}"
          style="display:block;padding:24px;background:var(--cream-2,#FBF7EE);
                 border-radius:12px;text-decoration:none;color:var(--ink);">
-        <strong>Moda y ropa íntima →</strong><br>
+        <strong>{% if 'moda' in CATEGORIAS_TIENDA_SLUGS and 'intima' in CATEGORIAS_TIENDA_SLUGS %}Moda y ropa íntima{% elif 'moda' in CATEGORIAS_TIENDA_SLUGS %}Moda{% else %}Ropa íntima{% endif %} →</strong><br>
         <span style="color:var(--ink-60);font-size:14px;">XS · S · M · L · XL · XXL</span>
       </a>
+      {% endif %}
     </div>
     <p style="margin-top:16px;color:var(--ink-60);font-size:14px;">
       ¿Dudas con la talla?

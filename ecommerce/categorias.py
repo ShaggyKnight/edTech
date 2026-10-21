@@ -103,6 +103,21 @@ def slugs_con_stock(tienda=None) -> list[str]:
     ]
 
 
+def categoria_de_temporada(hoy=None) -> str | None:
+    """Categoria que va primero en el catalogo segun la fecha, o None.
+
+    En temporada escolar (settings.TEMPORADA_UNIFORMES_MESES, por defecto
+    diciembre a marzo) los apoderados vienen por uniformes: el orden
+    "Más relevantes" los pone antes que los perfumes. El resto del año,
+    ninguna categoria tiene prioridad.
+    """
+    from django.conf import settings
+    from django.utils import timezone
+    hoy = hoy or timezone.localdate()
+    meses = getattr(settings, 'TEMPORADA_UNIFORMES_MESES', [])
+    return 'uniformes' if hoy.month in meses else None
+
+
 def categorias_visibles(tienda=None) -> list[dict]:
     """Categorias a mostrar en menus, landing y pie (ver slugs_con_stock)."""
     return [

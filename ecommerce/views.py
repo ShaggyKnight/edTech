@@ -34,7 +34,8 @@ from bodega.models import StockTienda
 from catalogo.models import Colegio, Familia, Oferta, Producto, ProductoVariante, Resena, ValorAtributo
 from ecommerce.cart import CANAL, Cart
 from ecommerce.categorias import (
-    CAT_SLUGS, familias_por_slug, productos_con_stock_online, slugs_con_stock,
+    CAT_SLUGS, categoria_de_temporada, familias_por_slug,
+    productos_con_stock_online, slugs_con_stock,
 )
 from ecommerce.emails import (
     enviar_instrucciones_transferencia, notificar_dueno_transferencia_pendiente,
@@ -327,6 +328,18 @@ def catalogo(request):
             ),
         )
         orden = ('_sin_foto',) + orden
+        # En temporada escolar los uniformes van antes que todo lo demas
+        # (con foto primero entre ellos). Fuera de temporada no cambia nada.
+        destacada = categoria_de_temporada()
+        if destacada:
+            productos_qs = productos_qs.annotate(
+                _fuera_de_temporada=Case(
+                    When(familia__in=familias_por_slug(destacada), then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                ),
+            )
+            orden = ('_fuera_de_temporada',) + orden
     productos_ordenados = productos_qs.order_by(*orden).distinct()
     paginator = Paginator(productos_ordenados, PAGE_SIZE)
     page_num = (request.GET.get('page') or '1').strip()

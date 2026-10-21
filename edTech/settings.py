@@ -131,6 +131,10 @@ env = environ.Env(
     RETENCION_AVISOS_CERRADOS_DIAS=(int, 180),
     RETENCION_AVISOS_PENDIENTES_DIAS=(int, 365),
     RETENCION_REGISTROS_ACCESO_DIAS=(int, 90),
+    # Meses (1-12) de temporada escolar: el orden "Más relevantes" del
+    # catalogo muestra primero los uniformes. Default: diciembre a marzo
+    # (verano, compras para el inicio de clases). Vacio = nunca.
+    TEMPORADA_UNIFORMES_MESES=(list, ['12', '1', '2', '3']),
     # Google Maps. EMBED_URL = el `src` del iframe (mapa incrustado en
     # "Visítanos" e /info/#contacto). PLACE_URL = link a la ficha de Google
     # (horario en vivo, reseñas, "cómo llegar"). Defaults por direccion (sin
@@ -528,6 +532,12 @@ RETENCION_PEDIDOS_PAGADOS_DIAS = env('RETENCION_PEDIDOS_PAGADOS_DIAS')
 RETENCION_AVISOS_CERRADOS_DIAS = env('RETENCION_AVISOS_CERRADOS_DIAS')
 RETENCION_AVISOS_PENDIENTES_DIAS = env('RETENCION_AVISOS_PENDIENTES_DIAS')
 RETENCION_REGISTROS_ACCESO_DIAS = env('RETENCION_REGISTROS_ACCESO_DIAS')
+
+# Temporada escolar: uniformes primero en el catalogo (ver
+# ecommerce/categorias.py::categoria_de_temporada).
+TEMPORADA_UNIFORMES_MESES = [
+    int(m) for m in env('TEMPORADA_UNIFORMES_MESES') if str(m).strip()
+]
 
 # Feature flags. Bloque 9 (resenas) sigue codeado y testeado pero
 # se oculta en la UI publica hasta que la duena tenga ancho de banda

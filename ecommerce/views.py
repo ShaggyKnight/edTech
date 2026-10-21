@@ -120,9 +120,12 @@ def _seo_context_catalogo(*, cat_info, colegio):
             'seo_perfumes_arabes': True,
         }
     if cat_info and cat_info['title'].startswith('Uniformes'):
+        # "Para la vuelta a clases" solo en temporada escolar.
+        en_temporada = categoria_de_temporada() == 'uniformes'
         return {
             'seo_titulo': 'Uniformes escolares en Los Vilos · Ideas Boutique',
-            'seo_h1': 'Uniformes escolares para la vuelta a clases',
+            'seo_h1': ('Uniformes escolares para la vuelta a clases'
+                       if en_temporada else 'Uniformes escolares'),
             'seo_descripcion': (
                 'Buzos, chalecos y poleras para colegios de Los Vilos, '
                 'con retiro en Caupolicán 437-B.'

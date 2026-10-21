@@ -72,6 +72,19 @@ class OrdenTemporadaTests(TestCase):
         # Uniforme con foto, uniforme sin foto, y recien ahi el perfume.
         self.assertEqual(nombres, ['Buzo Colegio', 'Chaleco Sin Foto', 'Aaa Perfume'])
 
+    def h1_uniformes(self):
+        with self.settings(ECOMMERCE_TIENDA_ID=self.tienda.pk):
+            resp = self.client.get(reverse('ecommerce:catalogo') + '?cat=uniformes')
+        return resp.context['seo_h1']
+
+    def test_titulo_uniformes_en_temporada(self):
+        with en_fecha(ENERO):
+            self.assertEqual(self.h1_uniformes(), 'Uniformes escolares para la vuelta a clases')
+
+    def test_titulo_uniformes_fuera_de_temporada(self):
+        with en_fecha(OCTUBRE):
+            self.assertEqual(self.h1_uniformes(), 'Uniformes escolares')
+
     def test_fuera_de_temporada_orden_de_siempre(self):
         with en_fecha(OCTUBRE):
             nombres = self.nombres()

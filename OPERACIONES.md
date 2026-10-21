@@ -150,7 +150,7 @@ Google interpreta 503 como "vuelve más tarde" y **NO desindexa el dominio**.
 | Bots / Google | Todo | Todo (home → tienda) | Solo `/` y `/info/` | 503 (no desindexa) |
 
 En todos los modos, los paths necesarios para administrar
-(`/admin-R0z8NiGVcdE/`, `/cuenta/login/`, `/static/`, `/media/`,
+(la ruta del admin, `ADMIN_URL` en el `.env`; `/cuenta/login/`, `/static/`, `/media/`,
 `/healthz`) siguen accesibles.
 
 ---
@@ -160,19 +160,21 @@ En todos los modos, los paths necesarios para administrar
 ### Subir cambios de código
 
 ```bash
-# Cuando hay un nuevo commit en GitHub master
-deploy-quick
+# Cuando hay un nuevo commit en GitHub master (como user `ideas`)
+/srv/ideas/app/deploy/deploy.sh
 ```
 
-Si el commit incluye migraciones de DB:
+`deploy.sh` hace pull + pip (si cambió requirements) + migrate +
+collectstatic + reload de gunicorn, y al final revisa `/healthz`.
 
-```bash
-cd /srv/ideas/app
-git pull origin master
-djmanage migrate
-djmanage collectstatic --noinput
-restart-app
-```
+> `deploy-quick` (pull + restart) **no corre collectstatic**. Con
+> `DEBUG=False` los estáticos llevan hash en el nombre (manifest): si el
+> commit agrega un archivo estático nuevo, las páginas que lo usan dan
+> error 500 hasta correr `collectstatic`. Úsalo solo para cambios de
+> Python sin migraciones ni CSS/JS/imágenes nuevos.
+
+Antes de un deploy con migraciones, haz un backup manual (ver
+"Hacer un backup manual ahora").
 
 ### Editar el `.env` (agregar credenciales, etc.)
 
@@ -591,7 +593,7 @@ clona.
 | `https://ideasboutique.cl/` | Home completa | Home completa | "Volvemos pronto" |
 | `https://ideasboutique.cl/tienda/` | Catálogo | Redirige a `/` | "Volvemos pronto" |
 | `https://ideasboutique.cl/info/` | Página info | Página info | "Volvemos pronto" |
-| `https://ideasboutique.cl/admin-R0z8NiGVcdE/` | Admin Django | Admin Django | Admin Django |
+| `https://ideasboutique.cl/<ADMIN_URL>` (ver `.env`) | Admin Django | Admin Django | Admin Django |
 | `https://ideasboutique.cl/cuenta/login/` | Login | Login | Login |
 | `https://ideasboutique.cl/healthz` | `ok` | `ok` | `ok` |
 

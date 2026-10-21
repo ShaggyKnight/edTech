@@ -142,13 +142,12 @@ def robots_txt(request):
     cambia el path de los staticfiles, y para que cualquiera que clone
     el repo lo tenga sin pasos extra.
     """
-    from django.conf import settings as dj_settings
     lineas = [
         'User-agent: *',
-        # Bloquea backoffice, POS, reportes y admin Django. La ruta del
-        # admin viene de settings.ADMIN_URL para que el robots.txt siga
-        # alineado cuando la cambiamos en prod.
-        f'Disallow: /{dj_settings.ADMIN_URL}',
+        # Bloquea backoffice, POS y reportes. El admin de Django NO va
+        # aca: robots.txt es publico y listarlo revelaria su ruta secreta
+        # (settings.ADMIN_URL). Lo cubre AdminNoIndexMiddleware con la
+        # cabecera X-Robots-Tag.
         'Disallow: /bodega/',
         'Disallow: /pos/',
         'Disallow: /reportes/',

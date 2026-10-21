@@ -22,6 +22,25 @@ class CanonicalHostMiddleware:
         return self.get_response(request)
 
 
+class AdminNoIndexMiddleware:
+    """Pide a los buscadores no indexar el admin de Django.
+
+    La ruta del admin (settings.ADMIN_URL) es no obvia a proposito, asi
+    que no se lista en robots.txt (que es publico). En su lugar el admin
+    responde con `X-Robots-Tag: noindex, nofollow`.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.prefix = '/' + getattr(settings, 'ADMIN_URL', 'admin/').lstrip('/')
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.path.startswith(self.prefix):
+            response['X-Robots-Tag'] = 'noindex, nofollow'
+        return response
+
+
 class HtmxMiddleware:
     """Marca `request.htmx = True` cuando el request viene de HTMX.
 

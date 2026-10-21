@@ -326,8 +326,15 @@ STATIC_ROOT = Path(env('STATIC_ROOT')) if env('STATIC_ROOT') else BASE_DIR / 'st
 # sin WhiteNoise: nginx los sirve con `expires 1y` + `immutable`
 # (deploy/nginx-ideas.conf), y sin hash un visitante que ya entro seguiria
 # viendo el CSS viejo hasta un año despues de cada despliegue.
+#
+# Va en STORAGES: desde Django 5.1 STATICFILES_STORAGE ya no existe y se
+# ignoraba en silencio (prod corre 5.2; por eso nunca tuvo hash).
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}
 if not DEBUG:
-    STATICFILES_STORAGE = (
+    STORAGES['staticfiles']['BACKEND'] = (
         'edTech.storage.CompressedManifestTolerante' if USE_WHITENOISE
         else 'edTech.storage.ManifestTolerante'
     )

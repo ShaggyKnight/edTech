@@ -17,7 +17,7 @@
     <meta property="og:site_name" content="Ideas Boutique">
     <meta property="og:title" content="{% block og_title %}Ideas Boutique — Los Vilos{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Perfumes, uniformes escolares y moda en Caupolicán 437-B, Los Vilos. Boutique familiar desde 1987.{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{% static 'img/ideas/logo-letrero.png' %}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ PUBLIC_SITE_ORIGIN }}{% static 'img/ideas/og-ideas.jpg' %}{% endblock %}">
     <meta property="og:image:alt" content="{% block og_image_alt %}Letrero de Ideas Boutique en Caupolicán 437-B{% endblock %}">
     <meta name="twitter:card" content="summary_large_image">
 
@@ -36,7 +36,7 @@
       "url": "{{ PUBLIC_SITE_ORIGIN }}/",
       "alternateName": "Ideas Perfumería y Boutique",
       "description": "Boutique familiar en Los Vilos. Perfumes originales, uniformes escolares y moda desde 1987.",
-      "image": "{{ PUBLIC_SITE_ORIGIN }}{% static 'img/ideas/logo-letrero.png' %}",
+      "image": "{{ PUBLIC_SITE_ORIGIN }}{% static 'img/ideas/og-ideas.jpg' %}",
       "foundingDate": "1987",
       "founder": {"@type": "Person", "name": "Estela Contreras"},
       "address": {

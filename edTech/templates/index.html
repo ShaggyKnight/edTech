@@ -1,5 +1,5 @@
 {% extends 'base_public.html' %}
-{% load static %}
+{% load static humanize %}
 
 {% block titulo %}Ideas Boutique — Perfumes · Uniformes Escolares · Moda en Los Vilos{% endblock %}
 {% block meta_description %}Boutique familiar en Los Vilos desde 1987. Perfumes originales, uniformes del San Francisco Javier y otros colegios, y moda — ahora también online.{% endblock %}
@@ -41,7 +41,7 @@
 
   {# ========== HERO ========== #}
   <section class="hero" id="main-content" tabindex="-1">
-    <div class="hero-bg" style="background-image:url('{% static 'img/ideas/logo-letrero.png' %}');"></div>
+    <div class="hero-bg" style="background-image:url('{% static 'img/ideas/logo-letrero.jpg' %}');"></div>
     <div class="hero-veil"></div>
     <div class="hero-content">
       <div class="hero-kicker">
@@ -232,7 +232,7 @@
           </ul>
           <div class="tela-cta">
             <span>Buzo Gris Franja Roja</span>
-            <span class="tela-price">desde $24.990 <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
+            <span class="tela-price">{% if precios_desde.buzos %}desde ${{ precios_desde.buzos|floatformat:0|intcomma }}{% else %}Catálogo{% endif %} <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
           </div>
         </div>
       </a>
@@ -249,7 +249,7 @@
           </ul>
           <div class="tela-cta">
             <span>Polera Gris Manga Corta</span>
-            <span class="tela-price">desde $9.990 <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
+            <span class="tela-price">{% if precios_desde.poleras %}desde ${{ precios_desde.poleras|floatformat:0|intcomma }}{% else %}Catálogo{% endif %} <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
           </div>
         </div>
       </a>
@@ -268,7 +268,7 @@
           </ul>
           <div class="tela-cta">
             <span>Chaleco Rojo Vino</span>
-            <span class="tela-price">desde $18.990 <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
+            <span class="tela-price">{% if precios_desde.chalecos %}desde ${{ precios_desde.chalecos|floatformat:0|intcomma }}{% else %}Catálogo{% endif %} <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
           </div>
         </div>
       </a>
@@ -285,7 +285,7 @@
           </ul>
           <div class="tela-cta">
             <span>Falda y Jumper SFJ</span>
-            <span class="tela-price">Catálogo <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
+            <span class="tela-price">{% if precios_desde.faldas %}desde ${{ precios_desde.faldas|floatformat:0|intcomma }}{% else %}Catálogo{% endif %} <svg class="ico ico--14"><use href="#ico-arrow-right"/></svg></span>
           </div>
         </div>
       </a>

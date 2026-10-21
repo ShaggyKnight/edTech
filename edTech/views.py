@@ -10,10 +10,51 @@ from django.views.decorators.http import require_GET
 FUNDACION = 1987
 
 
+# Tarjetas "Calidad que se hereda" de la landing: prenda -> palabras que
+# la identifican en el nombre del producto (sin tildes, en minusculas).
+PRENDAS_LANDING = {
+    'buzos': ('buzo',),
+    'poleras': ('polera',),
+    'chalecos': ('chaleco', 'sueter'),
+    'faldas': ('falda', 'jumper'),
+}
+
+
+def _precios_desde_uniformes():
+    """Precio "desde" de cada prenda de la landing, leido del catalogo.
+
+    Solo cuenta uniformes activos con stock online, con la oferta vigente
+    aplicada (el mismo precio que muestra la tarjeta del catalogo). Una
+    prenda sin productos a la venta queda fuera y la tarjeta dice
+    "Catálogo" en vez de inventar un precio.
+    """
+    from ecommerce.categorias import familias_por_slug, productos_con_stock_online
+    from ecommerce.services import TiendaOnlineNoConfigurada, get_tienda_online
+    from edTech.search import normalize_text
+
+    try:
+        tienda = get_tienda_online()
+    except TiendaOnlineNoConfigurada:
+        return {}
+    uniformes = productos_con_stock_online(tienda).filter(
+        familia__in=familias_por_slug('uniformes'),
+    )
+    precios = {}
+    for producto in uniformes:
+        nombre = normalize_text(producto.nombre)
+        precio = (producto.precio_oferta_online if producto.tiene_oferta_online
+                  else producto.precio_minimo)
+        for prenda, palabras in PRENDAS_LANDING.items():
+            if any(p in nombre for p in palabras):
+                precios[prenda] = min(precios.get(prenda, precio), precio)
+    return precios
+
+
 def index(request):
     contexto = {
         'anios_negocio': datetime.date.today().year - FUNDACION,
         'fundacion': FUNDACION,
+        'precios_desde': _precios_desde_uniformes(),
     }
     return render(request, 'index.html', contexto)
 

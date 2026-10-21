@@ -6,7 +6,7 @@
 {% block og_type %}product{% endblock %}
 {% block og_title %}{{ producto.nombre }} · Ideas Boutique{% endblock %}
 {% block og_description %}{{ producto.nombre }}{% if producto.colegio %} · Uniforme oficial {{ producto.colegio.nombre }}{% endif %}. Caupolicán 437-B, Los Vilos.{% if FEATURE_ENVIOS %} Envío a todo Chile.{% endif %}{% endblock %}
-{% block og_image %}{% if producto.imagen and producto.imagen.name %}{{ producto.imagen.url }}{% else %}{% static 'img/ideas/logo-letrero.png' %}{% endif %}{% endblock %}
+{% block og_image %}{{ PUBLIC_SITE_ORIGIN }}{% if producto.imagen and producto.imagen.name %}{{ producto.imagen.url }}{% else %}{% static 'img/ideas/og-ideas.jpg' %}{% endif %}{% endblock %}
 
 {# Schema.org Product — SEO de producto para Google Shopping y rich snippets. #}
 {% block schema_org %}

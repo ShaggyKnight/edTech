@@ -72,7 +72,9 @@ sudo /bin/systemctl reload gunicorn-ideas.service
 
 # ── Sanity: ver que respondio ──────────────────────────────────────
 sleep 2
-if ! curl -s -o /dev/null -w '%{http_code}' http://localhost/healthz | grep -q 200; then
+# /healthz vive en el server block HTTPS de ideasboutique.cl: pedirlo a
+# http://localhost cae en otro sitio del VPS (404) y daba falsa alarma.
+if ! curl -s -o /dev/null -w '%{http_code}' \n    --resolve ideasboutique.cl:443:127.0.0.1 https://ideasboutique.cl/healthz | grep -q 200; then
   log "ADVERTENCIA: /healthz no responde 200. Revisa logs:"
   log "    sudo journalctl -u gunicorn-ideas -n 50"
   exit 1

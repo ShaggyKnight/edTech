@@ -308,7 +308,7 @@
   .pdp-main                { gap: 24px; }
   .pdp-big                 { border-radius: 0; margin: 0 -20px; aspect-ratio: 4/5; }
   .pdp-thumbs              { padding: 0 4px; }
-  .pdp-info h1             { font-size: 30px; }
+  .pdp-head h1, .pdp-info h1 { font-size: 30px; }
   .pdp-price .big          { font-size: 32px; }
 }
 
@@ -861,4 +861,25 @@ button.needs-selection:hover {
     position: fixed; top: 66px; left: 12px; right: 12px;
     max-height: calc(100dvh - 80px); overflow-y: auto;
   }
+}
+
+/* Ficha: nombre y precio (.pdp-head) a la derecha de la foto en pantallas
+   anchas y ARRIBA de la foto en telefonos, para verlos sin bajar. La
+   opcion de talla y el boton (.pdp-info) van despues de la foto. */
+.pdp-main {
+  grid-template-areas: "gallery head" "gallery info";
+  grid-template-rows: auto 1fr;
+  row-gap: 0;
+}
+.pdp-gallery { grid-area: gallery; }
+.pdp-head    { grid-area: head; padding-top: 8px; }
+.pdp-info    { grid-area: info; padding-top: 0; }
+.pdp-gallery--una { grid-template-columns: 1fr; }
+@media (max-width: 719px) {
+  .pdp-main {
+    grid-template-columns: 1fr;
+    grid-template-areas: "head" "gallery" "info";
+    row-gap: 20px;
+  }
+  .pdp-head { padding-top: 0; }
 }

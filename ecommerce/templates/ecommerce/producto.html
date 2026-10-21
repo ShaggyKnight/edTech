@@ -45,35 +45,12 @@
   </div>
 
   <div class="pdp-main">
-    {% imagen_producto producto as pdp_img %}
     {% comment %}
-      Bloque 8 · Galeria real PDP: si hay imagenes adicionales, las
-      montamos como thumbs clickables. Sin JS, click no hace swap;
-      el bloque script de abajo agrega el comportamiento.
+      Nombre y precio en su propio bloque: en pantallas anchas va a la
+      derecha de la foto, y en telefonos ARRIBA de la foto (ver
+      .pdp-head en sprint2-mobile.css), para que se vean sin bajar.
     {% endcomment %}
-    <div class="pdp-gallery" id="pdp-gallery"
-         data-has-extra="{% if imagenes_galeria %}1{% else %}0{% endif %}">
-      <div class="pdp-thumbs">
-        <button type="button" class="pdp-thumb active" data-full="{{ pdp_img }}"
-                aria-label="Ver imagen principal" aria-current="true">
-          <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" loading="lazy" width="120" height="120">
-        </button>
-        {% for img in imagenes_galeria %}
-          <button type="button" class="pdp-thumb" data-full="{{ img.imagen.url }}"
-                  aria-label="Ver imagen {{ forloop.counter|add:1 }}">
-            <img src="{{ img.imagen.url }}" alt="{{ img.alt|default:producto.nombre }}"
-                 loading="lazy" width="120" height="120">
-          </button>
-        {% endfor %}
-      </div>
-      <div class="pdp-big">
-        {# La imagen principal del PDP es above-the-fold — sin lazy, con fetchpriority alto. #}
-        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" id="pdp-big-img"
-             fetchpriority="high" width="600" height="600">
-      </div>
-    </div>
-
-    <div class="pdp-info">
+    <div class="pdp-head">
       <div class="pdp-school">
         {{ producto.familia.nombre }}
         {% if producto.marca %} · <em style="font-style:italic;color:var(--vino);">{{ producto.marca }}</em>{% endif %}
@@ -101,12 +78,6 @@
       {% endif %}
 
       {% if producto.tiene_variantes %}
-        {% comment %}
-          Precio dinámico: arranca como "desde $X" y se actualiza al
-          elegir talla. Si hay oferta vigente online, mostramos el
-          precio con descuento más prominente + el original tachado
-          + badge -N%.
-        {% endcomment %}
         <div class="pdp-price" id="pdp-price-block">
           {% if producto.precios_varian_por_variante %}
             <div style="font-size:12px;color:var(--ink-60);font-weight:600;
@@ -132,6 +103,64 @@
             o 3 cuotas sin interés de ${{ cuota_inicial|intcomma }}
           </span>
         </div>
+      {% else %}
+        <div class="pdp-price">
+          {% if producto.tiene_oferta_online %}
+            <span class="big pdp-price-sale">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
+            <span class="pdp-price-old">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+          {% else %}
+            <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
+          {% endif %}
+          {# BUG-004 / BUG-005: cuota usa el precio visible y va formateada. #}
+          {% if producto.tiene_oferta_online %}
+            {% widthratio producto.precio_oferta_online 3 1 as cuota_simple %}
+          {% else %}
+            {% widthratio producto.precio_base 3 1 as cuota_simple %}
+          {% endif %}
+          <span class="pdp-installments">o 3 cuotas sin interés de ${{ cuota_simple|intcomma }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    {% imagen_producto producto as pdp_img %}
+    {% comment %}
+      Bloque 8 · Galeria real PDP: si hay imagenes adicionales, las
+      montamos como thumbs clickables. Sin JS, click no hace swap;
+      el bloque script de abajo agrega el comportamiento.
+    {% endcomment %}
+    <div class="pdp-gallery{% if not imagenes_galeria %} pdp-gallery--una{% endif %}" id="pdp-gallery"
+         data-has-extra="{% if imagenes_galeria %}1{% else %}0{% endif %}">
+      {% if imagenes_galeria %}
+      <div class="pdp-thumbs">
+        <button type="button" class="pdp-thumb active" data-full="{{ pdp_img }}"
+                aria-label="Ver imagen principal" aria-current="true">
+          <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" loading="lazy" width="120" height="120">
+        </button>
+        {% for img in imagenes_galeria %}
+          <button type="button" class="pdp-thumb" data-full="{{ img.imagen.url }}"
+                  aria-label="Ver imagen {{ forloop.counter|add:1 }}">
+            <img src="{{ img.imagen.url }}" alt="{{ img.alt|default:producto.nombre }}"
+                 loading="lazy" width="120" height="120">
+          </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="pdp-big">
+        {# La imagen principal del PDP es above-the-fold — sin lazy, con fetchpriority alto. #}
+        <img src="{{ pdp_img }}" alt="{{ producto.nombre }}" id="pdp-big-img"
+             fetchpriority="high" width="600" height="600">
+      </div>
+    </div>
+
+    <div class="pdp-info">
+
+      {% if producto.tiene_variantes %}
+        {% comment %}
+          Precio dinámico: arranca como "desde $X" y se actualiza al
+          elegir talla. Si hay oferta vigente online, mostramos el
+          precio con descuento más prominente + el original tachado
+          + badge -N%.
+        {% endcomment %}
 
         {% if producto.descripcion %}
           <p style="color: var(--ink-60); margin: 16px 0;">{{ producto.descripcion|linebreaksbr }}</p>
@@ -461,21 +490,6 @@
         </script>
 
       {% else %}
-        <div class="pdp-price">
-          {% if producto.tiene_oferta_online %}
-            <span class="big pdp-price-sale">${{ producto.precio_oferta_online|floatformat:0|intcomma }}</span>
-            <span class="pdp-price-old">${{ producto.precio_base|floatformat:0|intcomma }}</span>
-          {% else %}
-            <span class="big">${{ producto.precio_base|floatformat:0|intcomma }}</span>
-          {% endif %}
-          {# BUG-004 / BUG-005: cuota usa el precio visible y va formateada. #}
-          {% if producto.tiene_oferta_online %}
-            {% widthratio producto.precio_oferta_online 3 1 as cuota_simple %}
-          {% else %}
-            {% widthratio producto.precio_base 3 1 as cuota_simple %}
-          {% endif %}
-          <span class="pdp-installments">o 3 cuotas sin interés de ${{ cuota_simple|intcomma }}</span>
-        </div>
 
         {% if producto.descripcion %}
           <p style="color: var(--ink-60); margin: 16px 0;">{{ producto.descripcion|linebreaksbr }}</p>

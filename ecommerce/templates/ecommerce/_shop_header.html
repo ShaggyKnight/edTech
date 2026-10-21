@@ -180,6 +180,11 @@
     var dropdown = document.getElementById('shop-search-dropdown');
     var clearBtn = document.getElementById('shop-search-clear');
     var buscarUrl = form.dataset.buscarUrl;
+    // En telefonos el campo es angosto y el texto largo se cortaba
+    // a mitad de palabra ("Buscar poı").
+    if (window.matchMedia && window.matchMedia('(max-width: 600px)').matches) {
+      input.placeholder = 'Buscar…';
+    }
     var catalogoUrl = form.dataset.catalogoUrl;
 
     var debounceId = null;

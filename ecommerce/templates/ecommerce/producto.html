@@ -51,11 +51,8 @@
       .pdp-head en sprint2-mobile.css), para que se vean sin bajar.
     {% endcomment %}
     <div class="pdp-head">
-      <div class="pdp-school">
-        {{ producto.familia.nombre }}
-        {% if producto.marca %} · <em style="font-style:italic;color:var(--vino);">{{ producto.marca }}</em>{% endif %}
-      </div>
       <h1>{{ producto.nombre }}</h1>
+      <p class="pdp-school">{{ producto.familia.nombre }}{% if producto.marca %} · {{ producto.marca }}{% endif %}</p>
 
       {% if feature_resenas %}
         {# Bloque 9 · Rating real (o "Nuevo" si no hay resenas aprobadas todavia). #}
@@ -218,7 +215,7 @@
                 <button type="button" class="pdp-guia-link"
                         onclick="document.getElementById('guia-talles-modal').showModal();">
                   <svg class="ico ico--14"><use href="#ico-info"/></svg>
-                  Guía de talles
+                  Guía de tallas
                 </button>
               {% endif %}
             </div>
@@ -596,7 +593,7 @@
             // Escritorio sin Web Share API: copiar el link.
             var confirmar = function () {
               var original = label.textContent;
-              label.textContent = '✓ Link copiado';
+              label.textContent = 'Link copiado';
               setTimeout(function () { label.textContent = original; }, 2000);
             };
             if (navigator.clipboard && navigator.clipboard.writeText) {

@@ -57,7 +57,7 @@ class GuiaTallesPDPTests(TestCase):
     def test_pdp_uniforme_muestra_boton_guia(self):
         r = self.client.get(reverse('ecommerce:producto', args=[self.uniforme.pk]))
         self.assertEqual(r.status_code, 200)
-        self.assertContains(r, 'Guía de talles')
+        self.assertContains(r, 'Guía de tallas')
         self.assertContains(r, 'pdp-guia-link')
         # El modal viene cargado en el HTML.
         self.assertContains(r, 'id="guia-talles-modal"')

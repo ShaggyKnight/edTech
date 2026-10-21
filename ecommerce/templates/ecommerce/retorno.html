@@ -11,7 +11,7 @@
 
   {% if error %}
     {# Sin token o pedido no encontrado. #}
-    <div class="eyebrow" style="color:var(--vino);">Algo salió mal</div>
+    <p class="estado estado--alerta">Algo salió mal</p>
     <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
       No pudimos procesar tu pago
     </h1>
@@ -24,7 +24,7 @@
 
   {% elif recibo.estado == 'fallido' and recibo.pago_recibido_en %}
     {# Se cobró, pero el stock se agotó justo antes de confirmar. #}
-    <div class="eyebrow" style="color:var(--vino);">Producto agotado</div>
+    <p class="estado estado--alerta">Producto agotado</p>
     <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
       Recibimos tu pago, pero se agotó
     </h1>
@@ -42,7 +42,7 @@
     {% endif %}
 
   {% elif recibo.estado == 'fallido' %}
-    <div class="eyebrow" style="color:var(--vino);">Pago rechazado</div>
+    <p class="estado estado--alerta">Pago rechazado</p>
     <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
       No se pudo cobrar tu compra
     </h1>
@@ -56,7 +56,7 @@
     </a>
 
   {% elif recibo.estado == 'cancelado' %}
-    <div class="eyebrow" style="color:var(--gold);">Pago cancelado</div>
+    <p class="estado">Pago cancelado</p>
     <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
       Cancelaste el pago
     </h1>
@@ -70,7 +70,7 @@
 
   {% else %}
     {# Pendiente: la pasarela todavía no confirma (in_process / pending). #}
-    <div class="eyebrow" style="color:var(--gold);">Casi listo</div>
+    <p class="estado">Casi listo</p>
     <h1 style="font-family:var(--serif); font-size:clamp(28px,5vw,40px); margin:8px 0 12px;">
       Estamos confirmando tu pago
     </h1>

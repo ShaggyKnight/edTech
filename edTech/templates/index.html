@@ -44,9 +44,6 @@
     <div class="hero-bg" style="background-image:url('{% static 'img/ideas/logo-letrero.jpg' %}');"></div>
     <div class="hero-veil"></div>
     <div class="hero-content">
-      <div class="hero-kicker">
-        <span class="dot"></span> Boutique familiar · Los Vilos · Desde 1987
-      </div>
       <h1 class="hero-title">
         Perfumes, uniformes<br>
         <span class="italic-gold">y el regalo perfecto</span><br>
@@ -65,9 +62,7 @@
       </div>
       <div class="hero-stats">
         <div><strong>{{ anios_negocio }}</strong><span>años en Los Vilos</span></div>
-        <div class="sep"></div>
         <div><strong>3</strong><span>generaciones</span></div>
-        <div class="sep"></div>
         <div><strong>2.º</strong><span>el hijo menor vuelve por su uniforme</span></div>
       </div>
     </div>
@@ -103,7 +98,6 @@
       </div>
     </div>
     <div class="historia-copy">
-      <div class="eyebrow">Tres generaciones</div>
       <h2>Una historia que empezó <span class="italic-gold">en la feria de Los Vilos.</span></h2>
       <p class="lead">
         Hace casi 40 años, <strong>Estela Contreras</strong> empezó a vender lo que cada familia del pueblo necesitaba. Primero en la feria. Después desde la casa. Y muchos años en aquel local de <strong>Purén 060</strong>, a la bajada a la playa, que tantas mamás y abuelas conocen de memoria.
@@ -121,7 +115,6 @@
   {# ========== CATEGORIAS ========== #}
   <section id="categorias" class="cats">
     <div class="section-head">
-      <div class="eyebrow">Qué encuentras</div>
       {% with n=CATEGORIAS_TIENDA|length %}
       <h2>{% if n == 4 %}Cuatro mundos{% elif n == 3 %}Tres mundos{% elif n == 2 %}Dos mundos{% endif %}{% if n > 1 %}, una sola tienda.{% else %}Lo que encuentras hoy.{% endif %}</h2>
       {% endwith %}
@@ -132,11 +125,10 @@
     {% endcomment %}
     <div class="cats-grid cats-grid--{{ CATEGORIAS_TIENDA|length }}">
       {% if 'uniformes' in CATEGORIAS_TIENDA_SLUGS %}
-      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="--cat-accent:#7A1E2B; --cat-bg:url('{% static 'img/ideas/mundo-uniformes.jpg' %}');">
-        <div class="cat-num" aria-hidden="true"></div>
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="--cat-bg:url('{% static 'img/ideas/mundo-uniformes.jpg' %}');">
         <div class="cat-body">
           <h3>Uniformes Escolares</h3>
-          <p>Buzos, chalecos y remeras de tu colegio.</p>
+          <p>Buzos, chalecos y poleras de tu colegio.</p>
           <div class="cat-foot">
             <span>San Francisco Javier y más</span>
             <svg class="ico ico--18"><use href="#ico-arrow-right"/></svg>
@@ -145,8 +137,7 @@
       </a>
       {% endif %}
       {% if 'perfumes' in CATEGORIAS_TIENDA_SLUGS %}
-      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=perfumes" style="--cat-accent:#C9A96E; --cat-bg:url('{% static 'img/ideas/mundo-perfumes.jpg' %}');">
-        <div class="cat-num" aria-hidden="true"></div>
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=perfumes" style="--cat-bg:url('{% static 'img/ideas/mundo-perfumes.jpg' %}');">
         <div class="cat-body">
           <h3>Perfumes</h3>
           <p>Fragancias originales y decants.</p>
@@ -158,8 +149,7 @@
       </a>
       {% endif %}
       {% if 'moda' in CATEGORIAS_TIENDA_SLUGS %}
-      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=moda" style="--cat-accent:#2B3140; --cat-bg:url('{% static 'img/ideas/mundo-moda.jpg' %}');">
-        <div class="cat-num" aria-hidden="true"></div>
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=moda" style="--cat-bg:url('{% static 'img/ideas/mundo-moda.jpg' %}');">
         <div class="cat-body">
           <h3>Moda</h3>
           <p>Ropa casual y formal para toda la familia.</p>
@@ -171,8 +161,7 @@
       </a>
       {% endif %}
       {% if 'intima' in CATEGORIAS_TIENDA_SLUGS %}
-      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=intima" style="--cat-accent:#A03853; --cat-bg:url('{% static 'img/ideas/mundo-intima.jpg' %}');">
-        <div class="cat-num" aria-hidden="true"></div>
+      <a class="cat-card has-foto" href="{% url 'ecommerce:catalogo' %}?cat=intima" style="--cat-bg:url('{% static 'img/ideas/mundo-intima.jpg' %}');">
         <div class="cat-body">
           <h3>Ropa Íntima</h3>
           <p>Lencería y ropa interior de calidad.</p>
@@ -189,7 +178,6 @@
   {# ========== UNIFORMES — STAR PRODUCT ========== #}
   <section id="uniformes" class="uniformes">
     <div class="uniformes-copy">
-      <div class="eyebrow red">Producto estrella</div>
       <h2>El uniforme del <span class="italic-gold">San Francisco Javier</span>, como debe ser.</h2>
       <p>El buzo gris con franja roja, el chaleco rojo vino, la polera gris — los más pedidos desde hace años. Telas mandadas hacer especialmente para el colegio, en el color original de los primeros buzos.</p>
       <ul class="uni-features">
@@ -212,18 +200,17 @@
   {# ========== TELAS Y CONFECCIÓN ========== #}
   <section class="telas">
     <div class="section-head center">
-      <div class="eyebrow">Calidad que se hereda</div>
       <h2>No vendemos uniformes. <span class="italic-gold">Vendemos años de uso.</span></h2>
       <p class="lead">Cada prenda tiene una razón por la que está hecha así. Mira la diferencia — y compra directo desde acá.</p>
     </div>
     <div class="telas-grid">
       <a class="tela-card" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="text-decoration:none;color:inherit;">
         <div class="tela-img" style="background-image:url('{% static 'img/ideas/tienda-buzos-grises.jpg' %}');">
-          <span class="tela-badge">★ Estrella</span>
+          <span class="tela-badge">Producto estrella</span>
         </div>
         <div class="tela-body">
-          <div class="tela-cat">Buzos y ropa deportiva</div>
-          <h4>Tela exclusiva, hecha con el color original del colegio</h4>
+          <h4>Buzos y ropa deportiva</h4>
+          <p class="tela-lead">Tela exclusiva, hecha con el color original del colegio</p>
           <ul>
             <li>Semi-elástica — libertad total de movimiento</li>
             <li>Alto gramaje, no se mancha con el agua</li>
@@ -240,8 +227,8 @@
       <a class="tela-card" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="text-decoration:none;color:inherit;">
         <div class="tela-img" style="background-image:url('{% static 'img/ideas/tienda-buzos-mix.jpg' %}');"></div>
         <div class="tela-body">
-          <div class="tela-cat">Poleras básicas y de color</div>
-          <h4>Casi 100% algodón, cuellos del mismo tono</h4>
+          <h4>Poleras básicas y de color</h4>
+          <p class="tela-lead">Casi 100% algodón, cuellos del mismo tono</p>
           <ul>
             <li>Mínima fibra sintética para que no se deformen</li>
             <li>Cuellos fabricados junto con la tela — mismo tono exacto</li>
@@ -259,8 +246,8 @@
           <span class="tela-badge red">Más vendido</span>
         </div>
         <div class="tela-body">
-          <div class="tela-cat">Chalecos y suéteres</div>
-          <h4>Lana de alta calidad, con memoria de forma</h4>
+          <h4>Chalecos y suéteres</h4>
+          <p class="tela-lead">Lana de alta calidad, con memoria de forma</p>
           <ul>
             <li>No genera pelotillas (pilling) en mangas ni cuerpo</li>
             <li>No se estira ni pierde estructura con el tiempo</li>
@@ -276,8 +263,8 @@
       <a class="tela-card" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="text-decoration:none;color:inherit;">
         <div class="tela-img" style="background-image:url('{% static 'img/ideas/tienda-estantes.jpg' %}');"></div>
         <div class="tela-body">
-          <div class="tela-cat">Faldas y jumper</div>
-          <h4>Casimir Garib — elegancia y resistencia</h4>
+          <h4>Faldas y jumper</h4>
+          <p class="tela-lead">Casimir Garib — elegancia y resistencia</p>
           <ul>
             <li>Tela de prestigio, tiende a no arrugarse</li>
             <li>Mantiene su caída y textura tras múltiples lavados</li>
@@ -291,7 +278,6 @@
       </a>
     </div>
     <div class="telas-foot">
-      <svg class="ico ico--22"><use href="#ico-sparkle"/></svg>
       <p>Mientras la competencia usa telas importadas delgadas y rígidas, nosotros nos centramos en la <strong>elasticidad</strong>, la <strong>fidelidad del color</strong> y una <strong>vida útil prolongada</strong> que representa un ahorro real para las familias.</p>
       <a class="btn-primary" href="{% url 'ecommerce:catalogo' %}?cat=uniformes">
         Ver todos los uniformes <svg class="ico ico--16"><use href="#ico-arrow-right"/></svg>
@@ -302,12 +288,10 @@
   {# ========== COLEGIOS QUE VESTIMOS ========== #}
   <section class="colegios-strip">
     <div class="section-head center">
-      <div class="eyebrow">Colegios que vestimos</div>
       <h2>Donde sea que estudie, tienes su uniforme acá.</h2>
     </div>
     <div class="col-grid">
       <a class="col-card main" href="{% url 'ecommerce:catalogo' %}?cat=uniformes" style="text-decoration:none;">
-        <div class="col-tag">Principal ★</div>
         <h3>Colegio San Francisco Javier</h3>
         <p>El uniforme original. Tres generaciones de estudiantes vistiendo nuestra tela.</p>
       </a>
@@ -326,7 +310,6 @@
   {# ========== TESTIMONIO ========== #}
   <section class="testi">
     <div class="testi-inner">
-      <svg class="ico ico--28"><use href="#ico-sparkle"/></svg>
       <blockquote>
         Le compro a Blanca desde que mi hijo mayor entró al San Francisco Javier — ahora le compro al chico. Siempre el mismo trato, la misma calidad, y ahora lo pido por WhatsApp y me llega a casa.
       </blockquote>
@@ -343,7 +326,6 @@
   {# ========== VISITANOS ========== #}
   <section id="visitanos" class="visita">
     <div class="visita-copy">
-      <div class="eyebrow">Visítanos</div>
       <h2>Estamos en el barrio, con el letrero dorado prendido.</h2>
       <div class="visita-info">
         <div>
@@ -379,7 +361,7 @@
       <img src="{% static 'img/ideas/fachada-letrero.jpg' %}"
            alt="Fachada de Ideas Boutique en Caupolicán 437-B, Los Vilos"
            loading="lazy" width="1600" height="1200"
-           style="aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-lg);box-shadow:0 20px 48px -16px rgba(14,14,14,.35);">
+           style="aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-lg);">
       {% include 'partials/_mapa_google.html' with mapa_alto=240 %}
     </div>
   </section>
@@ -422,7 +404,7 @@
     <div class="footer-bot">
       <span>© {% now "Y" %} Ideas Boutique · Caupolicán 437-B, Los Vilos, Chile</span>
       {% include 'partials/_footer_legal.html' %}
-      <span>Familia Contreras · Desde 1987 ✦</span>
+      <span>Familia Contreras · Desde 1987</span>
     </div>
   </footer>
 

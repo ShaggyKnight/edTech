@@ -98,6 +98,6 @@ class ScrollInfinitoTests(TestCase):
         self.assertContains(resp, 'page=2')
 
     def test_total_productos_refleja_todo_no_solo_pagina(self):
-        """El contador del header muestra el total real, no la pagina."""
+        """El boton "Ver N resultados" del panel de filtros cuenta todo, no la pagina."""
         resp = self.client.get(reverse('ecommerce:catalogo'))
-        self.assertContains(resp, '15 producto')
+        self.assertContains(resp, 'Ver 15 resultado')

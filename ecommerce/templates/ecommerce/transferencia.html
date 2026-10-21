@@ -10,7 +10,7 @@
       style="max-width:640px; margin:0 auto; padding:40px 24px 80px;">
 
   <div style="text-align:center; margin-bottom:28px;">
-    <div class="eyebrow" style="color:var(--gold);">Pedido #{{ recibo.pk }} · reservado</div>
+    <p class="estado">Pedido #{{ recibo.pk }} reservado</p>
     <h1 style="font-family:var(--serif); font-size:clamp(30px,5vw,42px); margin:8px 0 10px;">
       Ya casi — falta tu transferencia.
     </h1>
@@ -85,7 +85,7 @@
     btn.addEventListener('click', function () {
       var ok = function () {
         var t = btn.textContent;
-        btn.textContent = '✓ Datos copiados';
+        btn.textContent = 'Datos copiados';
         setTimeout(function () { btn.textContent = t; }, 2000);
       };
       if (navigator.clipboard && navigator.clipboard.writeText) {

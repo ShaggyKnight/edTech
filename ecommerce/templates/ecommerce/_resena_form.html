@@ -60,7 +60,7 @@
   </label>
 
   <label class="resena-row">
-    <span class="resena-label">Contanos cómo te fue</span>
+    <span class="resena-label">Cuéntanos cómo te fue</span>
     <textarea name="texto" rows="4" minlength="10" maxlength="2000" required
               {% if form.errors.texto %}aria-invalid="true"{% endif %}>{{ form.texto.value|default_if_none:'' }}</textarea>
     {% if form.errors.texto %}

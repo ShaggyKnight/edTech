@@ -21,7 +21,7 @@ CAT_SLUGS = {
     'uniformes': {
         'title': 'Uniformes Escolares',
         'nav':   'Uniformes',
-        'desc':  'Buzos, chalecos y remeras de tu colegio',
+        'desc':  'Buzos, chalecos y poleras de tu colegio',
         'accent': '#7A1E2B',
         'match':  ['uniform'],
     },

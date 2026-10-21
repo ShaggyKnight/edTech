@@ -100,8 +100,8 @@ def _seo_context_catalogo(*, cat_info, colegio):
                 f'Tres generaciones vistiendo a las familias de la zona.'
             ),
             'seo_intro': (
-                'Prepara la vuelta a clases con tiempo: revisa las medidas y el colegio '
-                'antes de elegir buzo, chaleco o polera. Consulta las tallas y el retiro en tienda.'
+                f'Buzos, chalecos y poleras del {colegio.nombre}. '
+                f'Pregúntanos por tallas y retiro en Caupolicán 437-B.'
             ),
         }
     if cat_info and cat_info['title'] == 'Perfumes':
@@ -124,13 +124,12 @@ def _seo_context_catalogo(*, cat_info, colegio):
             'seo_titulo': 'Uniformes escolares en Los Vilos · Ideas Boutique',
             'seo_h1': 'Uniformes escolares para la vuelta a clases',
             'seo_descripcion': (
-                'Buzos, chalecos y poleras para colegios de Los Vilos. '
-                'Revisa colegio y talla, y prepara la vuelta a clases con retiro en tienda.'
+                'Buzos, chalecos y poleras para colegios de Los Vilos, '
+                'con retiro en Caupolicán 437-B.'
             ),
             'seo_intro': (
-                'Revisa el colegio y las medidas con tiempo. Encuentra uniformes del '
-                'San Francisco Javier y otros colegios de Los Vilos; consulta las tallas '
-                'y el retiro en Caupolicán 437-B.'
+                'Buzos, chalecos y poleras del San Francisco Javier y otros colegios '
+                'de Los Vilos. Pregúntanos por tallas y retiro en Caupolicán 437-B.'
             ),
         }
     return {}

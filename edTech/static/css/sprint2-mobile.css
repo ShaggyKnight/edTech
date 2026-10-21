@@ -94,7 +94,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    border-bottom: 1px solid var(--line);
     flex-shrink: 0;
   }
   .shop-filters-head h2 {
@@ -117,7 +116,6 @@
     grid-template-columns: 1fr 2fr;
     gap: 10px;
     padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--line);
     flex-shrink: 0;
     background: var(--cream);
   }
@@ -296,7 +294,6 @@
     background: var(--cream);
     margin: 16px -20px 0;
     padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--line);
     z-index: 40;
     box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
   }
@@ -808,8 +805,8 @@ button.needs-selection:hover {
   /* Card compacta: menos padding y tipografía un punto más chica,
      manteniendo el precio bien legible. */
   .pcard-body              { padding: 10px; }
-  .pcard-cat               { font-size: 9.5px; letter-spacing: 0.08em; margin-bottom: 4px; }
-  .pcard-name              { font-size: 12.5px; min-height: 32px; margin-bottom: 6px; }
+  .pcard-name              { font-size: 12.5px; min-height: 32px; margin-bottom: 2px; }
+  .pcard-cat               { font-size: 12px; margin-bottom: 6px; }
   .pcard-price             { font-size: 13.5px; }
   .pcard-old               { font-size: 12px; }
   .pcard-price-row         { gap: 6px; }

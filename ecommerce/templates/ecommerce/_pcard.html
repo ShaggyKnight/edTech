@@ -24,8 +24,8 @@
       {% endif %}
     </div>
     <div class="pcard-body">
-      <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>
       <div class="pcard-name">{{ producto.nombre }}</div>
+      <div class="pcard-cat">{{ producto.familia.nombre|default:"" }}</div>
       <div class="pcard-price-row">
         {% if producto.precios_varian_por_variante %}
           <span class="pcard-price-from"

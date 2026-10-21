@@ -176,7 +176,7 @@ class FiltroSoloOfertasTests(TestCase):
     def test_filtro_oferta_muestra_titulo_apropiado(self):
         resp = self.client.get(reverse('ecommerce:catalogo') + '?oferta=1')
         self.assertContains(resp, 'Productos en oferta')
-        self.assertContains(resp, 'Ofertas vigentes')
+        self.assertContains(resp, 'Descuentos activos hoy')
 
     def test_filtro_oferta_combinado_con_cat(self):
         """Si el cliente filtra por categoria Y oferta=1, intersecta."""

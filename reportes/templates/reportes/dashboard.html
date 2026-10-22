@@ -156,9 +156,9 @@
       vertical-align: middle;
       letter-spacing: 0.02em;
     }
-    .variacion-up   { background: var(--bo-success-soft, #DFFBE6); color: #0E7B3F; }
-    .variacion-down { background: var(--bo-danger-soft,  #FEE2E2); color: #B42318; }
-    .variacion-flat { background: var(--bo-border-soft,  #F1F1F4); color: #6B7280; }
+    .variacion-up   { background: var(--bo-success-soft); color: var(--bo-success-tinta); }
+    .variacion-down { background: var(--bo-danger-soft);  color: var(--bo-danger-tinta); }
+    .variacion-flat { background: var(--bo-border-soft); color: var(--bo-muted); }
   </style>
 {% endblock %}
 
@@ -182,7 +182,7 @@
         gold:    css.getPropertyValue('--bo-gold').trim()    || '#C9A96E',
         success: css.getPropertyValue('--bo-success').trim() || '#17C653',
         grid:    css.getPropertyValue('--bo-border-soft').trim() || '#F1F1F4',
-        muted:   css.getPropertyValue('--bo-muted').trim()   || '#71717A',
+        muted:   css.getPropertyValue('--bo-text-2').trim()  || '#334155',  // ejes y leyendas
       };
     }
 
@@ -263,6 +263,8 @@
     };
 
     document.addEventListener('DOMContentLoaded', window.renderDashboardCharts);
+    // Al cambiar entre modo claro y oscuro, redibujar con los colores nuevos.
+    document.addEventListener('bo:tema', window.renderDashboardCharts);
   })();
 </script>
 {% endblock %}

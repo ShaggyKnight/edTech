@@ -58,9 +58,10 @@
   {% include 'partials/_confirm_modal.html' %}
 
   {% comment %}
-    Marco marino (marca edtech, personalizado para Ideas): el menu y la
-    barra superior comparten un fondo celeste palido y el trabajo va en
-    una hoja bruma con tarjetas blancas. Arriba del menu va la marca del
+    Marco marino (marca edtech, personalizado para Ideas): el menu va en
+    un fondo celeste palido y el trabajo en una hoja bruma con tarjetas
+    blancas. En escritorio no hay barra superior: la hoja usa todo el
+    alto; la barra (menu y logo) solo aparece en celular y tablet. Arriba del menu va la marca del
     comercio; edtech queda solo como referencia chica al pie. En el
     celular el menu se abre a pantalla completa con el boton de la barra.
     Las clases bo-bar / bo-side / bo-main / bo-content las usan tambien
@@ -200,6 +201,13 @@
       {% endwith %}
 
       <div class="bo-side-foot">
+        {# El boton dice a que modo pasa: "Modo oscuro" en claro, "Modo claro" en oscuro. #}
+        <button class="bo-side-link bo-tema" type="button" onclick="boTema()">
+          <svg class="ico ico-oscuro" aria-hidden="true"><use href="#ico-moon"/></svg>
+          <svg class="ico ico-claro" aria-hidden="true"><use href="#ico-sun"/></svg>
+          <span class="ico-oscuro">Modo oscuro</span>
+          <span class="ico-claro">Modo claro</span>
+        </button>
         {% if user.is_authenticated %}
           <a class="bo-side-link" href="{% url 'ecommerce:catalogo' %}">
             <svg class="ico" aria-hidden="true"><use href="#ico-store"/></svg>
@@ -241,18 +249,6 @@
           {% include 'partials/_ideas_logo.html' with size=28 show_wordmark=False %}
           <span class="bo-bar-nombre">Ideas Boutique</span>
         </a>
-        {% if user.is_authenticated and perms.bodega.view_stocktienda or user.is_superuser %}
-          <form class="bo-bar-search" method="get" action="{% url 'bodega:stock' %}" role="search">
-            <label class="bo-sr" for="bo-buscar">Buscar en el stock</label>
-            <svg class="ico" aria-hidden="true"><use href="#ico-search"/></svg>
-            <input id="bo-buscar" type="search" name="q" placeholder="Buscar producto o SKU en el stock…" autocomplete="off" spellcheck="false" enterkeyhint="search">
-          </form>
-        {% endif %}
-        <span class="bo-bar-fecha">Hoy, {% now "l j \d\e F" %}</span>
-        <button class="bo-tema" type="button" aria-pressed="false" aria-label="Modo oscuro" title="Modo oscuro" onclick="boTema()">
-          <svg class="ico ico-oscuro" aria-hidden="true"><use href="#ico-moon"/></svg>
-          <svg class="ico ico-claro" aria-hidden="true"><use href="#ico-sun"/></svg>
-        </button>
       </header>
 
       <main class="bo-content" id="main-content">
@@ -285,17 +281,18 @@
       if (t) return t === 'oscuro';
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
-    function boTemaBoton() {
-      var b = document.querySelector('.bo-tema');
-      if (b) b.setAttribute('aria-pressed', boTemaOscuro() ? 'true' : 'false');
-    }
     function boTema() {
       var nuevo = boTemaOscuro() ? 'claro' : 'oscuro';
       document.documentElement.setAttribute('data-tema', nuevo);
       try { localStorage.setItem('boTema', nuevo); } catch (e) {}
-      boTemaBoton();
+      document.dispatchEvent(new CustomEvent('bo:tema'));
     }
-    boTemaBoton();
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+        if (document.documentElement.getAttribute('data-tema')) return;
+        document.dispatchEvent(new CustomEvent('bo:tema'));
+      });
+    }
     document.addEventListener('keydown', function (e) {
       var side = document.getElementById('boSide');
       if (e.key === 'Escape' && side && side.classList.contains('open')) boMenu(false);

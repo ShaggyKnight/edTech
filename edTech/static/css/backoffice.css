@@ -97,8 +97,8 @@
 :root[data-tema="oscuro"] {
   --bo-marco: #0F172A; --bo-bg: #111C33; --bo-hoja-borde: #1E2A44; --bo-card: #16223A;
   --bo-border: #26344D; --bo-border-soft: #1E2A44; --bo-campo-borde: #334155;
-  --bo-text: #F1F5F9; --bo-text-2: #CBD5E1; --bo-muted: #94A3B8; --bo-muted-soft: #8391A7;
-  --bo-side-text: #E2E8F0; --bo-side-text-2: #94A3B8; --bo-side-icon: #94A3B8;
+  --bo-text: #F8FAFC; --bo-text-2: #E2E8F0; --bo-muted: #CBD5E1; --bo-muted-soft: #A8B3C4;
+  --bo-side-text: #F1F5F9; --bo-side-text-2: #CBD5E1; --bo-side-icon: #CBD5E1;
   --bo-side-active: #FFFFFF; --bo-side-active-bg: #1E2A44; --bo-side-hover: #172238;
   --bo-primary: #60B0F4; --bo-primary-2: #60B0F4; --bo-primary-hover: #93C9F8;
   --bo-on-primary: #0F172A; --bo-primary-soft: rgba(96, 176, 244, 0.16);
@@ -123,8 +123,8 @@
   :root:not([data-tema="claro"]) {
     --bo-marco: #0F172A; --bo-bg: #111C33; --bo-hoja-borde: #1E2A44; --bo-card: #16223A;
     --bo-border: #26344D; --bo-border-soft: #1E2A44; --bo-campo-borde: #334155;
-    --bo-text: #F1F5F9; --bo-text-2: #CBD5E1; --bo-muted: #94A3B8; --bo-muted-soft: #8391A7;
-    --bo-side-text: #E2E8F0; --bo-side-text-2: #94A3B8; --bo-side-icon: #94A3B8;
+    --bo-text: #F8FAFC; --bo-text-2: #E2E8F0; --bo-muted: #CBD5E1; --bo-muted-soft: #A8B3C4;
+    --bo-side-text: #F1F5F9; --bo-side-text-2: #CBD5E1; --bo-side-icon: #CBD5E1;
     --bo-side-active: #FFFFFF; --bo-side-active-bg: #1E2A44; --bo-side-hover: #172238;
     --bo-primary: #60B0F4; --bo-primary-2: #60B0F4; --bo-primary-hover: #93C9F8;
     --bo-on-primary: #0F172A; --bo-primary-soft: rgba(96, 176, 244, 0.16);
@@ -184,10 +184,13 @@ body.bo { background: var(--bo-marco); }
 .bo-main  { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .bo-content {
   flex: 1; min-width: 0;
-  margin: 0 8px 8px 0; padding: 28px 32px 40px;
+  margin: 8px 8px 8px 0; padding: 28px 32px 40px;
   background: var(--bo-bg); color: var(--bo-text);
   border: 1px solid var(--bo-hoja-borde); border-radius: 16px;
 }
+/* Enlaces sueltos dentro de la hoja: color del tema (no el azul o morado
+   por defecto del navegador, que en oscuro no se lee). */
+.bo-content a:not([class]) { color: var(--bo-primary); }
 .bo-sr {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -277,10 +280,10 @@ body.bo { background: var(--bo-marco); }
 .bo-edtech .acento { stroke: var(--bo-logo-acento); }
 .bo-edtech .punto  { fill: var(--bo-logo-forma); }
 
-/* ---- Barra superior (parte del marco) ------------------------------------ */
+/* ---- Barra superior: solo en celular y tablet (menu y logo) ---------------- */
 .bo-bar {
   height: var(--bo-bar-h); flex: none;
-  display: flex; align-items: center; gap: 12px;
+  display: none; align-items: center; gap: 12px;
   padding: 0 12px 0 4px; color: var(--bo-text);
 }
 .bo-top-burger {
@@ -294,30 +297,11 @@ body.bo { background: var(--bo-marco); }
   color: var(--bo-marca); text-decoration: none;
 }
 .bo-bar-nombre { font-size: 15px; font-weight: 600; color: var(--bo-text); white-space: nowrap; }
-.bo-bar-search { position: relative; flex: 1; max-width: 440px; display: flex; align-items: center; }
-.bo-bar-search .ico {
-  position: absolute; left: 12px; width: 16px; height: 16px;
-  color: var(--bo-side-icon); pointer-events: none;
+/* Boton de modo claro/oscuro en el pie del menu, con el aspecto de un link. */
+button.bo-side-link {
+  width: 100%; border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: 14px; text-align: left;
 }
-.bo-bar-search input {
-  box-sizing: border-box; width: 100%; height: 36px; padding: 0 12px 0 36px;
-  border: 1px solid var(--bo-campo-borde); border-radius: 8px;
-  background: var(--bo-card); color: var(--bo-text);
-  font: inherit; font-size: 14px;
-}
-.bo-bar-search input::placeholder { color: var(--bo-muted-soft); }
-.bo-bar-search input:focus {
-  outline: none; border-color: var(--bo-primary);
-  box-shadow: 0 0 0 3px var(--bo-primary-soft);
-}
-.bo-bar-fecha { margin-left: auto; font-size: 13px; color: var(--bo-side-text-2); white-space: nowrap; }
-.bo-tema {
-  width: 36px; height: 36px; flex: none;
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 0; border-radius: 8px; background: transparent; color: var(--bo-side-text); cursor: pointer;
-}
-.bo-tema:hover { background: var(--bo-side-hover); }
-.bo-tema .ico { width: 18px; height: 18px; }
 .bo-tema .ico-claro { display: none; }
 :root[data-tema="oscuro"] .bo-tema .ico-oscuro { display: none; }
 :root[data-tema="oscuro"] .bo-tema .ico-claro  { display: block; }
@@ -340,9 +324,8 @@ body.pos-fullscreen .bo-content { margin: 0; border: 0; border-radius: 0; }
   .bo-side-close { display: inline-flex; }
   body.bo-menu-abierto { overflow: hidden; }
   .bo-top-burger { display: inline-flex; }
+  .bo-bar { display: flex; }
   .bo-bar-brand { display: inline-flex; }
-  .bo-bar-search, .bo-bar-fecha { display: none; }
-  .bo-tema { margin-left: auto; }
   .bo-content { margin: 0; padding: 20px 16px 32px; border-width: 1px 0 0; border-radius: 16px 16px 0 0; }
   /* Una tabla ancha se desplaza dentro de su tarjeta: la pagina nunca
      se corre hacia el lado (eso tambien arrastraba el menu abierto). */
@@ -436,7 +419,7 @@ body.pos-fullscreen .bo-content { margin: 0; border: 0; border-radius: 0; }
   border: 1px solid var(--bo-border); background: var(--bo-card);
   color: var(--bo-text); font: inherit; font-size: 12px; font-weight: 500;
   cursor: pointer; text-decoration: none; transition: all .12s;
-  line-height: 1.4;
+  line-height: 1.4; white-space: nowrap;
 }
 .bo-btn:hover { background: var(--bo-bg); }
 .bo-btn-primary { background: var(--bo-primary-2); border-color: var(--bo-primary-2); color: var(--bo-on-primary); }

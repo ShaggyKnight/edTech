@@ -124,17 +124,20 @@
 
 {% block extra_scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  // Se redibuja al cambiar entre modo claro y oscuro (evento bo:tema).
+  function renderBalanceChart() {
     const dataEl = document.getElementById('data-balance');
     if (!dataEl || !window.Chart) return;
     const data = JSON.parse(dataEl.textContent);
     const ctx = document.getElementById('chartActivos');
     if (!ctx) return;
+    const prev = Chart.getChart(ctx);
+    if (prev) prev.destroy();
     const css = getComputedStyle(document.documentElement);
     const primary = css.getPropertyValue('--bo-primary-2').trim() || '#1B84FF';
     const success = css.getPropertyValue('--bo-success').trim() || '#17C653';
     const gold    = css.getPropertyValue('--bo-gold').trim()    || '#C9A96E';
-    const muted   = css.getPropertyValue('--bo-muted').trim()   || '#78829D';
+    const muted   = css.getPropertyValue('--bo-text-2').trim()  || '#334155';
 
     new Chart(ctx, {
       type: 'doughnut',
@@ -158,6 +161,8 @@
         }
       }
     });
-  });
+  }
+  document.addEventListener('DOMContentLoaded', renderBalanceChart);
+  document.addEventListener('bo:tema', renderBalanceChart);
 </script>
 {% endblock %}

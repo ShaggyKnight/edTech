@@ -15,14 +15,14 @@
   .uform-field input[type=email],
   .uform-field input[type=password],
   .uform-field select {
-    width:100%; border:1px solid #E5DCC8; border-radius:8px;
-    padding:11px 13px; font-size:15px; font-family:inherit; background:#fff;
+    width:100%; border:1px solid var(--bo-campo-borde); border-radius:8px;
+    padding:11px 13px; font-size:15px; font-family:inherit; background:var(--bo-card); color:var(--bo-text);
   }
   .uform-field .bo-input:focus,
   .uform-field select:focus { outline:none; border-color:#C9A96E; box-shadow:0 0 0 3px rgba(201,169,110,.15); }
   .uform-field .helptext { font-size:12px; color:var(--bo-muted); margin-top:4px; }
-  .uform-field .errorlist { color:#991b1b; font-size:13px; margin:4px 0 0; padding-left:18px; }
-  .uform-check { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:#FBF7EE; border:1px solid #E5DCC8; border-radius:8px; margin-bottom:14px; }
+  .uform-field .errorlist { color:var(--bo-danger-tinta); font-size:13px; margin:4px 0 0; padding-left:18px; }
+  .uform-check { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:var(--bo-bg-elev); border:1px solid var(--bo-border); border-radius:8px; margin-bottom:14px; }
   .uform-check input { margin-top:3px; width:18px; height:18px; }
   .uform-check label { font-weight:600; font-size:14px; }
   .uform-check .helptext { font-size:12px; color:var(--bo-muted); margin-top:2px; font-weight:400; }
@@ -34,7 +34,7 @@
 <div class="uform-wrap">
 
   <div style="margin-bottom:20px;">
-    <a href="{% url 'accounts:usuarios_lista' %}" style="color:#7A1E2B; text-decoration:none; font-size:13px;">
+    <a href="{% url 'accounts:usuarios_lista' %}" style="color:var(--bo-vino); text-decoration:none; font-size:13px;">
       ← Usuarios y roles
     </a>
     <h1 style="font-size:30px; margin:8px 0 0;">
@@ -57,7 +57,7 @@
     <input type="hidden" name="accion" value="editar">
 
     {% if form.non_field_errors %}
-      <div style="background:#fee; padding:12px 16px; border-radius:8px; margin-bottom:16px;">
+      <div style="background:var(--bo-danger-soft); color:var(--bo-danger-tinta); padding:12px 16px; border-radius:8px; margin-bottom:16px;">
         {{ form.non_field_errors }}
       </div>
     {% endif %}
@@ -96,7 +96,7 @@
     {% csrf_token %}
     <input type="hidden" name="accion" value="reset">
 
-    <h2 style="font-size:20px; margin:0 0 4px; color:#7A1E2B;">
+    <h2 style="font-size:20px; margin:0 0 4px; color:var(--bo-vino);">
       Resetear contraseña
     </h2>
     <p style="color:var(--bo-muted); font-size:13px; margin:0 0 16px;">
@@ -110,7 +110,7 @@
     </div>
 
     <div class="uform-actions">
-      <button type="submit" class="bo-btn" style="background:#fff; color:#7A1E2B; border:1px solid #7A1E2B;">
+      <button type="submit" class="bo-btn" style="background:var(--bo-card); color:var(--bo-vino); border:1px solid var(--bo-vino);">
         Resetear contraseña
       </button>
     </div>

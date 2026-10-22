@@ -32,7 +32,7 @@
   <div class="bo-card">
     <table class="bo-table" style="width:100%; border-collapse:collapse;">
       <thead>
-        <tr style="background:#FBF7EE; text-align:left;">
+        <tr style="text-align:left;">
           <th style="padding:14px 16px;">Usuario</th>
           <th style="padding:14px 16px;">Rol</th>
           <th style="padding:14px 16px;">Estado</th>
@@ -66,9 +66,9 @@
           </td>
           <td style="padding:14px 16px;">
             {% if fila.u.is_active %}
-              <span style="color:#166534; font-weight:600; font-size:13px;">● Activo</span>
+              <span style="color:var(--bo-success-tinta); font-weight:600; font-size:13px;">● Activo</span>
             {% else %}
-              <span style="color:#991b1b; font-weight:600; font-size:13px;">● Inactivo</span>
+              <span style="color:var(--bo-danger-tinta); font-weight:600; font-size:13px;">● Inactivo</span>
             {% endif %}
           </td>
           <td style="padding:14px 16px; font-size:13px; color:var(--bo-muted); white-space:nowrap;">
@@ -106,7 +106,7 @@
     </table>
   </div>
 
-  <div style="margin-top:20px; padding:16px; background:#FBF7EE; border:1px solid #E5DCC8; border-radius:10px; font-size:13px; line-height:1.6;">
+  <div style="margin-top:20px; padding:16px; background:var(--bo-bg-elev); border:1px solid var(--bo-border); border-radius:10px; font-size:13px; line-height:1.6;">
     <strong>Roles disponibles</strong>
     <ul style="margin:8px 0 0; padding-left:22px;">
       <li><strong>Administrador</strong> — acceso total, incluida esta pantalla.</li>

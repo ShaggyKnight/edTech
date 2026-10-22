@@ -16,11 +16,14 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon-180.png' %}">
   <link rel="icon" href="{% static 'favicon.ico' %}">
 
-  {# Inter para el backoffice (Cormorant en cabeceras y títulos) #}
+  {# Inter para el backoffice; Cormorant solo en el logo de Ideas del menú. #}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+  <script>
+    try { var boT = localStorage.getItem('boTema'); if (boT) document.documentElement.setAttribute('data-tema', boT); } catch (e) {}
+  </script>
   <link rel="stylesheet" href="{% static 'css/backoffice.css' %}">
   {# Sprite de íconos compartido con el front público #}
 
@@ -54,243 +57,250 @@
   {% endcomment %}
   {% include 'partials/_confirm_modal.html' %}
 
-  {# ─────────── TOPBAR GLOBAL (full width, oscura) ─────────── #}
-  <header class="bo-bar">
-    <button class="bo-top-burger" type="button" onclick="document.getElementById('boSide').classList.toggle('open')" aria-label="Menú" style="margin-right:12px;color:#fff;">
-      <svg class="ico" style="width:22px;height:22px;"><use href="#ico-menu"/></svg>
-    </button>
-    <a class="bo-bar-brand" href="{% if user.is_authenticated %}{% url 'reportes:dashboard' %}{% else %}{% url 'index' %}{% endif %}">
-      <span class="name">Ideas</span>
-      <span class="sub">Boutique</span>
-    </a>
-
-    <nav class="bo-bar-nav">
-      {% if user.is_authenticated %}
-        <a href="{% url 'ecommerce:catalogo' %}" title="Ver la tienda como cliente">
-          <svg class="ico ico--14"><use href="#ico-bag"/></svg>
-          Tienda
-        </a>
-        {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
-          <a href="{% url 'reportes:dashboard' %}" {% if request.resolver_match.namespace == 'reportes' %}class="active"{% endif %}>
-            Reportes
-          </a>
-        {% endif %}
-        {% if perms.pos.add_reciboventa or user.is_superuser %}
-          <a href="{% url 'pos:home' %}" {% if request.resolver_match.namespace == 'pos' %}class="active"{% endif %}>
-            POS
-          </a>
-        {% endif %}
-        {% if user|has_any_role:'admin,despachador,operador' %}
-          <a href="{% url 'despacho:cola' %}" {% if request.resolver_match.namespace == 'despacho' %}class="active"{% endif %}>
-            Despacho
-          </a>
-        {% endif %}
-        {% if perms.bodega.view_stocktienda or user.is_superuser %}
-          <a href="{% url 'bodega:stock' %}" {% if request.resolver_match.namespace == 'bodega' %}class="active"{% endif %}>
-            Bodega
-          </a>
-        {% endif %}
-        {% if user.is_superuser %}
-          <a href="{% url 'admin:index' %}">
-            Admin Django
-          </a>
-        {% endif %}
-      {% endif %}
-    </nav>
-
-    <div class="bo-bar-actions">
-      {% if user.is_authenticated %}
-        <span class="bo-bar-user">
-          <span class="avatar">{{ user.username|slice:":1"|upper }}</span>
-          {{ user.first_name|default:user.username }}
-        </span>
-        <form method="post" action="{% url 'logout' %}" style="margin:0;">
-          {% csrf_token %}
-          <button type="submit" class="bo-bar-btn">Salir</button>
-        </form>
-      {% else %}
-        <a class="bo-bar-btn" href="{% url 'login' %}">Ingresar</a>
-      {% endif %}
-    </div>
-  </header>
-
+  {% comment %}
+    Marco marino (marca edtech, personalizado para Ideas): el menu y la
+    barra superior comparten un fondo celeste palido y el trabajo va en
+    una hoja bruma con tarjetas blancas. Arriba del menu va la marca del
+    comercio; edtech queda solo como referencia chica al pie. En el
+    celular el menu se abre a pantalla completa con el boton de la barra.
+    Las clases bo-bar / bo-side / bo-main / bo-content las usan tambien
+    el POS en pantalla completa y la impresion de despacho.
+  {% endcomment %}
   <div class="bo-shell">
-    {# ─────────── SIDEBAR (secundaria, detalle) ─────────── #}
-    <aside class="bo-side" id="boSide">
-      <nav class="bo-side-nav">
+    <aside class="bo-side" id="boSide" aria-label="Menú principal">
+      <div class="bo-side-head">
+        <a class="bo-brand" href="{% if user.is_authenticated %}{% url 'accounts:dashboard' %}{% else %}{% url 'index' %}{% endif %}">
+          {% include 'partials/_ideas_logo.html' with size=38 show_wordmark=False %}
+          <span class="bo-brand-text">
+            <span class="bo-brand-name">IDEAS</span>
+            <span class="bo-brand-sub">Boutique · Los Vilos</span>
+          </span>
+        </a>
+        <button class="bo-side-close" type="button" aria-label="Cerrar menú" onclick="boMenu(false)">
+          <svg class="ico" aria-hidden="true"><use href="#ico-close"/></svg>
+        </button>
+      </div>
+
+      {% with ns=request.resolver_match.namespace un=request.resolver_match.url_name %}
+      <nav class="bo-side-nav" aria-label="Secciones">
         {% if user.is_authenticated %}
           <div class="bo-side-section">Operación</div>
 
           {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-               href="{% url 'reportes:dashboard' %}">
-              <svg class="ico"><use href="#ico-sparkle"/></svg>
-              Dashboard
+            <a class="bo-side-link{% if ns == 'reportes' and un == 'dashboard' %} active" aria-current="page{% endif %}" href="{% url 'reportes:dashboard' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-grid"/></svg>
+              Resumen
             </a>
           {% endif %}
 
           {% if perms.pos.add_reciboventa or user.is_superuser %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'home' %}active{% endif %}"
-               href="{% url 'pos:home' %}">
-              <svg class="ico"><use href="#ico-bag"/></svg>
-              POS
+            <a class="bo-side-link{% if ns == 'pos' and un == 'home' %} active" aria-current="page{% endif %}" href="{% url 'pos:home' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-register"/></svg>
+              Punto de venta
             </a>
           {% endif %}
 
           {% if perms.pos.view_reciboventa or user.is_superuser %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'ventas' %}active{% endif %}"
-               href="{% url 'pos:ventas' %}">
-              <svg class="ico"><use href="#ico-check"/></svg>
+            <a class="bo-side-link{% if ns == 'pos' and un == 'ventas' %} active" aria-current="page{% endif %}" href="{% url 'pos:ventas' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-receipt"/></svg>
               Ventas
             </a>
           {% endif %}
 
           {% if user|has_any_role:'admin,despachador,operador' %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'despacho' %}active{% endif %}"
-               href="{% url 'despacho:cola' %}">
-              <svg class="ico"><use href="#ico-truck"/></svg>
+            <a class="bo-side-link{% if ns == 'despacho' %} active" aria-current="page{% endif %}" href="{% url 'despacho:cola' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-truck"/></svg>
               Despacho
               {% if badge_despacho_nuevos %}
-                <span style="margin-left:auto; background:#e65100; color:#fff; font-size:11px;
-                             font-weight:700; padding:1px 8px; border-radius:10px;"
-                      title="Pedidos pagados sin despachar">{{ badge_despacho_nuevos }}</span>
+                <span class="bo-chip bo-chip--aviso" title="Pedidos pagados sin despachar">{{ badge_despacho_nuevos }} {% if badge_despacho_nuevos == 1 %}nuevo{% else %}nuevos{% endif %}</span>
               {% endif %}
             </a>
           {% endif %}
 
           {% if perms.bodega.view_stocktienda or user.is_superuser %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' %}active{% endif %}"
-               href="{% url 'bodega:stock' %}">
-              <svg class="ico"><use href="#ico-truck"/></svg>
+            <a class="bo-side-link{% if ns == 'bodega' and un in 'stock,stock_agregar,stock_bulk_agregar,reponer' %} active" aria-current="page{% endif %}" href="{% url 'bodega:stock' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-boxes"/></svg>
               Stock
               {% if badge_stock_agotados %}
-                <span style="margin-left:auto; background:#c62828; color:#fff; font-size:11px;
-                             font-weight:700; padding:1px 8px; border-radius:10px;"
-                      title="Productos/variantes agotados">{{ badge_stock_agotados }}</span>
+                <span class="bo-chip bo-chip--alerta" title="Productos o variantes sin stock">{{ badge_stock_agotados }} {% if badge_stock_agotados == 1 %}agotado{% else %}agotados{% endif %}</span>
               {% endif %}
             </a>
           {% endif %}
 
           {% comment %}
-            Toda la seccion Catalogo se muestra solo a quien gestiona
-            catalogo (admin/operador/bodeguero). Antes el header salia
-            siempre — un despachador o cajero (que solo tienen VIEW)
-            veian un encabezado "Catalogo" sin links debajo.
+            La seccion Catalogo se muestra solo a quien gestiona catalogo
+            (admin/operador/bodeguero): un despachador o cajero no ve el
+            encabezado sin links debajo.
           {% endcomment %}
           {% if user|has_any_role:'admin,operador,bodeguero' %}
-          <div class="bo-side-section">Catálogo</div>
-          {% if perms.catalogo.change_producto or user.is_superuser %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_productos' %}active{% endif %}"
-               href="{% url 'bodega:lista_productos' %}">
-              <svg class="ico"><use href="#ico-sparkle"/></svg>
-              Productos
-            </a>
+            <div class="bo-side-section">Catálogo</div>
+            {% if perms.catalogo.change_producto or user.is_superuser %}
+              <a class="bo-side-link{% if ns == 'bodega' and 'producto' in un or ns == 'bodega' and 'variante' in un or ns == 'bodega' and 'galeria' in un %} active" aria-current="page{% endif %}" href="{% url 'bodega:lista_productos' %}">
+                <svg class="ico" aria-hidden="true"><use href="#ico-tag"/></svg>
+                Productos
+              </a>
+            {% endif %}
+            {% comment %}
+              Telas del taller: el rol operador (duena, vista simplificada)
+              no las ve; bodeguero y admin si.
+            {% endcomment %}
+            {% if perms.bodega.change_material or user.is_superuser %}
+              <a class="bo-side-link{% if ns == 'bodega' and 'material' in un or ns == 'bodega' and 'rendimiento' in un %} active" aria-current="page{% endif %}" href="{% url 'bodega:lista_materiales' %}">
+                <svg class="ico" aria-hidden="true"><use href="#ico-layers"/></svg>
+                Telas y materiales
+              </a>
+            {% endif %}
+            {% if perms.catalogo.change_oferta or user.is_superuser %}
+              <a class="bo-side-link{% if ns == 'bodega' and 'oferta' in un %} active" aria-current="page{% endif %}" href="{% url 'bodega:lista_ofertas' %}">
+                <svg class="ico" aria-hidden="true"><use href="#ico-percent"/></svg>
+                Ofertas
+              </a>
+            {% endif %}
+            {% if user|has_any_role:'admin,bodeguero' %}
+              <a class="bo-side-link{% if ns == 'bodega' and 'etiqueta' in un %} active" aria-current="page{% endif %}" href="{% url 'bodega:etiquetas_seleccionar' %}">
+                <svg class="ico" aria-hidden="true"><use href="#ico-barcode"/></svg>
+                Etiquetas
+              </a>
+            {% endif %}
           {% endif %}
-          {% comment %}
-            Materiales/telas son del taller — el rol operador (dueña,
-            vista simplificada) no los ve; bodeguero y admin sí.
-          {% endcomment %}
-          {% if perms.bodega.change_material or user.is_superuser %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_materiales' %}active{% endif %}"
-               href="{% url 'bodega:lista_materiales' %}">
-              <svg class="ico"><use href="#ico-pin"/></svg>
-              Materiales
-            </a>
-          {% endif %}
-          {% if perms.catalogo.change_oferta or user.is_superuser %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'lista_ofertas' %}active{% endif %}"
-               href="{% url 'bodega:lista_ofertas' %}">
-              <svg class="ico"><use href="#ico-bag"/></svg>
-              Ofertas
-            </a>
-          {% endif %}
-          {% if user|has_any_role:'admin,bodeguero' %}
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'bodega' and request.resolver_match.url_name == 'etiquetas_seleccionar' %}active{% endif %}"
-               href="{% url 'bodega:etiquetas_seleccionar' %}">
-              <svg class="ico"><use href="#ico-pin"/></svg>
-              Etiquetas
-            </a>
-          {% endif %}
-          {% endif %}{# /seccion Catalogo #}
 
           {% if user.is_superuser or perms.contabilidad.view_movimientocaja %}
             <div class="bo-side-section">Reportes</div>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'caja' %}active{% endif %}"
-               href="{% url 'reportes:caja' %}">
-              <svg class="ico"><use href="#ico-shield"/></svg>
+            <a class="bo-side-link{% if ns == 'reportes' and un == 'caja' %} active" aria-current="page{% endif %}" href="{% url 'reportes:caja' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-wallet"/></svg>
               Caja
             </a>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'eerr' %}active{% endif %}"
-               href="{% url 'reportes:eerr' %}">
-              <svg class="ico"><use href="#ico-sparkle"/></svg>
-              Estado de Resultados
+            <a class="bo-side-link{% if ns == 'reportes' and un == 'eerr' %} active" aria-current="page{% endif %}" href="{% url 'reportes:eerr' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-chart"/></svg>
+              Estado de resultados
             </a>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'balance' %}active{% endif %}"
-               href="{% url 'reportes:balance' %}">
-              <svg class="ico"><use href="#ico-check"/></svg>
-              Balance General
+            <a class="bo-side-link{% if ns == 'reportes' and un == 'balance' %} active" aria-current="page{% endif %}" href="{% url 'reportes:balance' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-scale"/></svg>
+              Balance general
             </a>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'reportes' and request.resolver_match.url_name == 'produccion' %}active{% endif %}"
-               href="{% url 'reportes:produccion' %}">
-              <svg class="ico"><use href="#ico-scissors"/></svg>
+            <a class="bo-side-link{% if ns == 'reportes' and un == 'produccion' %} active" aria-current="page{% endif %}" href="{% url 'reportes:produccion' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-scissors"/></svg>
               Producción
             </a>
           {% endif %}
+
           {% if user|has_role:'admin' %}
             <div class="bo-side-section">Administración</div>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'accounts' and 'usuario' in request.resolver_match.url_name %}active{% endif %}"
-               href="{% url 'accounts:usuarios_lista' %}">
-              <svg class="ico"><use href="#ico-shield"/></svg>
+            <a class="bo-side-link{% if ns == 'accounts' and 'usuario' in un %} active" aria-current="page{% endif %}" href="{% url 'accounts:usuarios_lista' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-users"/></svg>
               Usuarios y roles
             </a>
-            <a class="bo-side-link {% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'emails_index' %}active{% endif %}"
-               href="{% url 'accounts:emails_index' %}">
-              <svg class="ico"><use href="#ico-sparkle"/></svg>
-              Preview de emails
+            <a class="bo-side-link{% if ns == 'accounts' and 'email' in un %} active" aria-current="page{% endif %}" href="{% url 'accounts:emails_index' %}">
+              <svg class="ico" aria-hidden="true"><use href="#ico-mail"/></svg>
+              Correos
             </a>
           {% endif %}
+        {% endif %}
+      </nav>
+      {% endwith %}
 
+      <div class="bo-side-foot">
+        {% if user.is_authenticated %}
+          <a class="bo-side-link" href="{% url 'ecommerce:catalogo' %}">
+            <svg class="ico" aria-hidden="true"><use href="#ico-store"/></svg>
+            Ver la tienda
+          </a>
           {% if user.is_superuser %}
             <a class="bo-side-link" href="{% url 'admin:index' %}">
-              <svg class="ico"><use href="#ico-shield"/></svg>
+              <svg class="ico" aria-hidden="true"><use href="#ico-shield"/></svg>
               Admin Django
             </a>
           {% endif %}
-
-          {% comment %}
-            Acceso directo a la tienda — separado del resto para que sea
-            facil de encontrar cuando se quiere "salir" del backoffice.
-          {% endcomment %}
-          <div class="bo-side-section">Tienda online</div>
-          <a class="bo-side-link" href="{% url 'ecommerce:catalogo' %}">
-            <svg class="ico"><use href="#ico-bag"/></svg>
-            Ir a la tienda
-          </a>
-          <a class="bo-side-link" href="{% url 'index' %}" style="font-size:12px;color:var(--bo-muted);">
-            <svg class="ico"><use href="#ico-arrow-right"/></svg>
-            Ver landing
-          </a>
+          <div class="bo-user">
+            <span class="bo-user-avatar" aria-hidden="true">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+            <span class="bo-user-text">
+              <span class="bo-user-name">{{ user.first_name|default:user.username }}</span>
+              <span class="bo-user-rol">{% if user.is_superuser %}Superusuario{% elif user|has_role:'admin' %}Administración{% elif user|has_role:'operador' %}Operación{% elif user|has_role:'cajero' %}Caja{% elif user|has_role:'bodeguero' %}Bodega{% elif user|has_role:'despachador' %}Despacho{% endif %}</span>
+            </span>
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="bo-user-salir">Salir</button>
+            </form>
+          </div>
+        {% else %}
+          <a class="bo-side-link" href="{% url 'login' %}">Ingresar</a>
         {% endif %}
-      </nav>
-
-      <div class="bo-side-foot">
-        Ideas Boutique · Caupolicán 437-B<br>
-        Los Vilos
+        <a class="bo-edtech" href="https://edtech.cl" target="_blank" rel="noopener">
+          <svg width="11" height="16" viewBox="0 0 11.2 16.2" aria-hidden="true"><g transform="translate(9.6,6.6)"><path class="acento" d="M -2 0 L -8 0" fill="none" stroke-width="3.2"/><path class="forma" d="M 0 8 A 8 8 0 0 1 -8 0 A 5 5 0 0 1 -3 -5 A 3 3 0 0 1 0 -2 A 2 2 0 0 1 -2 0" fill="none" stroke-width="3.2"/><path class="punto" d="M -2 -1.6 L -1.658 -1.6 A 1.4 1.4 0 0 0 -1.6 -2 A 0.4 0.4 0 0 1 -2 -1.6 Z"/></g></svg>
+          Hecho por edtech.cl
+        </a>
       </div>
     </aside>
 
-    {# ─────────── MAIN ─────────── #}
     <div class="bo-main">
-      <main class="bo-content">
+      <header class="bo-bar">
+        <button class="bo-top-burger" type="button" aria-label="Abrir menú" aria-controls="boSide" aria-expanded="false" onclick="boMenu(true)">
+          <svg class="ico" aria-hidden="true"><use href="#ico-menu"/></svg>
+        </button>
+        <a class="bo-bar-brand" href="{% if user.is_authenticated %}{% url 'accounts:dashboard' %}{% else %}{% url 'index' %}{% endif %}">
+          {% include 'partials/_ideas_logo.html' with size=28 show_wordmark=False %}
+          <span class="bo-bar-nombre">Ideas Boutique</span>
+        </a>
+        {% if user.is_authenticated and perms.bodega.view_stocktienda or user.is_superuser %}
+          <form class="bo-bar-search" method="get" action="{% url 'bodega:stock' %}" role="search">
+            <label class="bo-sr" for="bo-buscar">Buscar en el stock</label>
+            <svg class="ico" aria-hidden="true"><use href="#ico-search"/></svg>
+            <input id="bo-buscar" type="search" name="q" placeholder="Buscar producto o SKU en el stock…" autocomplete="off" spellcheck="false" enterkeyhint="search">
+          </form>
+        {% endif %}
+        <span class="bo-bar-fecha">Hoy, {% now "l j \d\e F" %}</span>
+        <button class="bo-tema" type="button" aria-pressed="false" aria-label="Modo oscuro" title="Modo oscuro" onclick="boTema()">
+          <svg class="ico ico-oscuro" aria-hidden="true"><use href="#ico-moon"/></svg>
+          <svg class="ico ico-claro" aria-hidden="true"><use href="#ico-sun"/></svg>
+        </button>
+      </header>
+
+      <main class="bo-content" id="main-content">
         {% comment %}
-          Los messages ahora salen como toasts (top-right, auto-dismiss).
-          Si quieres un alert persistente para algo crítico de la
-          página, lo puedes meter directo en el bloque content.
+          Los messages salen como toasts (arriba a la derecha, se cierran
+          solos). Para un aviso persistente, ponlo directo en el bloque
+          content de la pagina.
         {% endcomment %}
         {% block content %}{% endblock content %}
       </main>
     </div>
   </div>
+
+  <script>
+    // Menu en el celular: se abre a pantalla completa y se cierra con la X o Escape.
+    function boMenu(abrir) {
+      var side = document.getElementById('boSide');
+      var boton = document.querySelector('.bo-top-burger');
+      if (!side) return;
+      side.classList.toggle('open', abrir);
+      document.body.classList.toggle('bo-menu-abierto', abrir);
+      if (boton) boton.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+      if (abrir) { var cerrar = side.querySelector('.bo-side-close'); if (cerrar) cerrar.focus(); }
+      else if (boton) { boton.focus(); }
+    }
+    // Modo claro/oscuro: sigue al sistema hasta que la persona elige uno;
+    // la eleccion queda guardada en este equipo.
+    function boTemaOscuro() {
+      var t = document.documentElement.getAttribute('data-tema');
+      if (t) return t === 'oscuro';
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function boTemaBoton() {
+      var b = document.querySelector('.bo-tema');
+      if (b) b.setAttribute('aria-pressed', boTemaOscuro() ? 'true' : 'false');
+    }
+    function boTema() {
+      var nuevo = boTemaOscuro() ? 'claro' : 'oscuro';
+      document.documentElement.setAttribute('data-tema', nuevo);
+      try { localStorage.setItem('boTema', nuevo); } catch (e) {}
+      boTemaBoton();
+    }
+    boTemaBoton();
+    document.addEventListener('keydown', function (e) {
+      var side = document.getElementById('boSide');
+      if (e.key === 'Escape' && side && side.classList.contains('open')) boMenu(false);
+    });
+  </script>
 
   {% comment %}
     CSRF global para requests HTMX que NO salen de un <form> (ej. la

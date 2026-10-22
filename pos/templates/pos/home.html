@@ -8,13 +8,14 @@
 <style>
   /* Banner de escaneo: prominente al inicio de la pagina, con un
      input grande que captura el escaner USB (que actua como teclado). */
+  /* Panel plano con los colores del tema (claro u oscuro). */
   .pos-scan-bar {
-    background: linear-gradient(135deg, var(--bo-primary, #0891b2), var(--bo-primary-2, #0e7490));
-    color: #fff;
+    background: var(--bo-card);
+    color: var(--bo-text);
+    border: 1px solid var(--bo-border);
     border-radius: 10px;
     padding: 14px 18px;
     margin-bottom: 18px;
-    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
   }
   .pos-scan-form {
     display: flex;
@@ -22,25 +23,24 @@
     gap: 12px;
     margin: 0;
   }
-  .pos-scan-form svg { color: rgba(255, 255, 255, 0.9); }
+  .pos-scan-form svg { color: var(--bo-side-icon); }
   .pos-scan-form input[type="text"] {
     flex: 1;
-    background: rgba(255, 255, 255, 0.95);
-    border: 0;
+    background: var(--bo-bg);
+    border: 1px solid var(--bo-campo-borde);
     border-radius: 6px;
     padding: 10px 14px;
     font-size: 16px;
-    font-family: monospace;
-    letter-spacing: 0.04em;
-    color: #1f2937;
+    color: var(--bo-text);
   }
   .pos-scan-form input[type="text"]:focus {
-    outline: 2px solid rgba(255, 255, 255, 0.7);
-    outline-offset: 2px;
+    outline: none;
+    border-color: var(--bo-primary);
+    box-shadow: 0 0 0 3px var(--bo-primary-soft);
   }
   .pos-scan-form button {
-    background: rgba(255, 255, 255, 0.95);
-    color: var(--bo-primary, #0891b2);
+    background: var(--bo-primary-2);
+    color: var(--bo-on-primary);
     border: 0;
     padding: 9px 18px;
     border-radius: 6px;
@@ -49,7 +49,7 @@
     font: inherit;
   }
   .pos-scan-form button:hover {
-    background: #fff;
+    background: var(--bo-primary-hover);
   }
   .pos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
   @media (max-width: 1100px) { .pos-grid { grid-template-columns: 1fr; } }

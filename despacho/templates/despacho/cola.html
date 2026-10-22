@@ -18,7 +18,7 @@
   {% if messages %}
     {% for message in messages %}
       <div style="padding:12px 16px; margin-bottom:14px; border-radius:8px;
-                  background:{% if 'error' in message.tags %}#fee{% elif 'success' in message.tags %}#e8f5e9{% else %}#fffde7{% endif %};">
+                  background:{% if 'error' in message.tags %}var(--bo-danger-soft){% elif 'success' in message.tags %}var(--bo-success-soft){% else %}var(--bo-warning-soft){% endif %};">
         {{ message }}
       </div>
     {% endfor %}
@@ -40,7 +40,7 @@
   <div style="display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;">
     <a href="?estado=nuevos"
        style="padding:10px 18px; border-radius:8px; text-decoration:none;
-              {% if estado_filtro != 'despachados' and estado_filtro != 'transferencias' %}background:#7A1E2B; color:#fff;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
+              {% if estado_filtro != 'despachados' and estado_filtro != 'transferencias' %}background:var(--bo-primary-2); color:var(--bo-on-primary);{% else %}background:var(--bo-card); color:var(--bo-text); border:1px solid var(--bo-border);{% endif %}">
       🆕 Nuevos
       <span style="background:rgba(255,255,255,.2); padding:2px 8px; border-radius:10px; margin-left:6px; font-size:12px;">
         {{ contadores.nuevos }}
@@ -48,7 +48,7 @@
     </a>
     <a href="?estado=transferencias"
        style="padding:10px 18px; border-radius:8px; text-decoration:none;
-              {% if estado_filtro == 'transferencias' %}background:#e65100; color:#fff;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
+              {% if estado_filtro == 'transferencias' %}background:var(--bo-primary-2); color:var(--bo-on-primary);{% else %}background:var(--bo-card); color:var(--bo-text); border:1px solid var(--bo-border);{% endif %}">
       💸 Por confirmar
       <span style="background:rgba(255,255,255,.2); padding:2px 8px; border-radius:10px; margin-left:6px; font-size:12px;">
         {{ contadores.transferencias }}
@@ -56,7 +56,7 @@
     </a>
     <a href="?estado=despachados"
        style="padding:10px 18px; border-radius:8px; text-decoration:none;
-              {% if estado_filtro == 'despachados' %}background:#0E0E0E; color:#C9A96E;{% else %}background:#FBF7EE; color:#0E0E0E; border:1px solid #E5DCC8;{% endif %}">
+              {% if estado_filtro == 'despachados' %}background:var(--bo-primary-2); color:var(--bo-on-primary);{% else %}background:var(--bo-card); color:var(--bo-text); border:1px solid var(--bo-border);{% endif %}">
       ✓ Despachados (últimos 100)
       <span style="background:rgba(255,255,255,.2); padding:2px 8px; border-radius:10px; margin-left:6px; font-size:12px;">
         {{ contadores.despachados }}
@@ -65,7 +65,7 @@
   </div>
 
   {% if estado_filtro == 'transferencias' %}
-    <div style="padding:10px 16px; margin-bottom:14px; border-radius:8px; background:#fff3e0; font-size:13px;">
+    <div style="padding:10px 16px; margin-bottom:14px; border-radius:8px; background:var(--bo-warning-soft); font-size:13px;">
       Pedidos pagando por <strong>transferencia directa</strong>: revisa la
       cartola del banco y confirma solo los abonos que ya llegaron.
       Confirmar descuenta el stock, envía la boleta y pasa el pedido a "Nuevos".
@@ -76,7 +76,7 @@
     {% if pedidos %}
     <table class="bo-table" style="width:100%; border-collapse:collapse;">
       <thead>
-        <tr style="background:#FBF7EE; text-align:left;">
+        <tr style="text-align:left;">
           <th style="padding:14px 16px;">#</th>
           <th style="padding:14px 16px;">Fecha</th>
           <th style="padding:14px 16px;">Cliente</th>
@@ -90,7 +90,7 @@
       </thead>
       <tbody>
         {% for pedido in pedidos %}
-        <tr style="border-bottom:1px solid #E5DCC8;">
+        <tr style="border-bottom:1px solid var(--bo-border-soft);">
           <td style="padding:14px 16px; font-weight:600;">
             #{{ pedido.pk }}
           </td>

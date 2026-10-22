@@ -19,10 +19,13 @@
   --radius-lg: 18px;
   --shadow-sm: 0 1px 2px rgba(14,14,14,.04), 0 4px 12px rgba(14,14,14,.05);
   --shadow-md: 0 2px 6px rgba(14,14,14,.06), 0 20px 40px rgba(14,14,14,.08);
-  /* EB Garamond primero (decisión del dueño). De Cormorant solo se cargan
-     las 2 variantes del logo (600 normal e itálica, base_public.html);
-     volver a Cormorant como serif del sitio exige cargar sus otros pesos. */
+  /* EB Garamond primero (decisión del dueño). De Cormorant se cargan el
+     600 del logo y su itálica (500 y 600, base_public.html): la cursiva de
+     los títulos y frases usa la de Cormorant, más fina que la de EB
+     Garamond. Volver a Cormorant como serif del sitio exige cargar sus
+     otros pesos. */
   --serif: 'EB Garamond', 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --serif-italica: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -34,7 +37,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 img { max-width: 100%; display: block; }
 input, select { font-family: inherit; }
 
-.italic-gold { font-style: italic; color: var(--vino); font-weight: 400; }
+.italic-gold { font-family: var(--serif-italica); font-style: italic; font-size: 1.08em; color: var(--vino); font-weight: 500; }
 /* Dorado solo sobre fondo oscuro: sobre crema daba 2,1-2,7:1 (WCAG pide
    4,5:1). En fondos claros el acento es vino (9,6:1). */
 .hero .italic-gold, .uniformes .italic-gold { color: var(--gold); }
@@ -98,11 +101,11 @@ input, select { font-family: inherit; }
 .historia-img img { width: 100%; border-radius: var(--radius-lg); aspect-ratio: 4/5; object-fit: cover; filter: saturate(0.95); }
 .historia-badge { position: absolute; bottom: 24px; left: -24px; background: var(--ink); color: var(--cream); padding: 20px 28px; border-radius: 12px; max-width: 240px; }
 .historia-badge .quote { font-family: var(--serif); font-size: 60px; line-height: 0.5; color: var(--gold); display: block; margin-bottom: 6px; }
-.historia-badge p { font-family: var(--serif); font-style: italic; font-size: 18px; }
+.historia-badge p { font-family: var(--serif-italica); font-style: italic; font-weight: 500; font-size: 20px; }
 .historia-copy h2 { font-size: clamp(36px, 4vw, 56px); margin-bottom: 24px; }
 .historia-copy p { font-size: 16px; color: var(--ink-60); margin-bottom: 18px; line-height: 1.7; max-width: 520px; }
 .historia-sign { margin-top: 32px; }
-.sign-name { font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--vino); }
+.sign-name { font-family: var(--serif-italica); font-style: italic; font-weight: 500; font-size: 22px; color: var(--vino); }
 .sign-sub { font-size: 12px; color: var(--ink-60); margin-top: 4px; }
 
 /* Historia timeline - removed, kept simple */
@@ -131,7 +134,7 @@ input, select { font-family: inherit; }
 .tela-price { font-family: var(--serif); font-size: 16px; font-weight: 600; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .telas-foot { max-width: 720px; margin: 0 auto; text-align: center; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
 .telas-foot p strong { color: var(--vino); font-style: normal; font-weight: 600; }
-.telas-foot p { font-family: var(--serif); font-size: 22px; font-style: italic; line-height: 1.4; color: var(--ink); margin: 0; }
+.telas-foot p { font-family: var(--serif-italica); font-weight: 500; font-size: 24px; font-style: italic; line-height: 1.4; color: var(--ink); margin: 0; }
 .telas-foot em { font-style: normal; font-family: var(--sans); font-size: 13px; color: var(--vino); display: inline-block; margin-left: 8px; letter-spacing: 0.05em; }
 
 /* Colegios strip */
@@ -196,7 +199,7 @@ input, select { font-family: inherit; }
 .testi { background: var(--cream); color: var(--ink); padding: 120px 56px; text-align: center; }
 .testi-inner { max-width: 720px; margin: 0 auto; }
 .testi svg { color: var(--gold-2); margin-bottom: 24px; }
-.testi blockquote { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.3; font-style: italic; margin-bottom: 32px; color: var(--ink); }
+.testi blockquote { font-family: var(--serif-italica); font-weight: 500; font-size: clamp(26px, 3vw, 36px); line-height: 1.3; font-style: italic; margin-bottom: 32px; color: var(--ink); }
 .testi-author { display: inline-flex; align-items: center; gap: 14px; }
 .testi-author .avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--gold); color: var(--ink); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 20px; font-weight: 600; }
 .testi-author strong { display: block; font-size: 14px; font-weight: 600; }

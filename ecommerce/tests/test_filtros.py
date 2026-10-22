@@ -1,8 +1,10 @@
 """Tests de filtros y búsqueda accent-insensitive en el catálogo público."""
+from datetime import timedelta
 from decimal import Decimal
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from bodega.models import StockTienda, Tienda
 from catalogo.models import (
@@ -60,6 +62,12 @@ class CatalogoFiltrosTests(TestCase):
             tiene_variantes=False,
         )
         StockTienda.objects.create(tienda=cls.tienda, producto=cls.perfume, cantidad=4)
+
+        # Fechas de creacion separadas: creados en el mismo instante, el
+        # orden "Mas nuevos" empataba y el test fallaba a veces.
+        ahora = timezone.now()
+        for minutos, prod in ((3, cls.buzo_sfj), (2, cls.polera_dp), (1, cls.perfume)):
+            Producto.objects.filter(pk=prod.pk).update(creado=ahora - timedelta(minutes=minutos))
 
     def setUp(self):
         # Setea ECOMMERCE_TIENDA_ID al pk de la tienda creada para que los

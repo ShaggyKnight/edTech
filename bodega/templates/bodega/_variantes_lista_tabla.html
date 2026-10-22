@@ -18,7 +18,7 @@
       </thead>
       <tbody>
         {% for v in variantes %}
-          <tr {% if not v.activa %}style="opacity:.5;"{% endif %}>
+          <tr{% if not v.activa %} class="bo-fila-inactiva"{% endif %}>
             <td><code>{{ v.sku }}</code></td>
             <td>
               {% for val in v.valores.all %}

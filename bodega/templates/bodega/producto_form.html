@@ -253,7 +253,7 @@
             </thead>
             <tbody>
               {% for v in variantes %}
-                <tr {% if not v.activa %}style="opacity:.55;"{% endif %}>
+                <tr{% if not v.activa %} class="bo-fila-inactiva"{% endif %}>
                   <td><strong>{{ v.sku }}</strong></td>
                   <td style="font-size:12px;color:var(--bo-muted);">
                     {% for val in v.valores.all %}

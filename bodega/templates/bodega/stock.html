@@ -15,7 +15,7 @@
   }
   .stock-toggle.on {
     background: var(--bo-success-soft); border-color: var(--bo-success);
-    color: #0E7B3F;
+    color: var(--bo-success-tinta);
   }
   .stock-toggle.on::before {
     content: ""; width: 6px; height: 6px; border-radius: 50%;
@@ -28,11 +28,11 @@
     border-radius: 4px; text-align: center;
   }
   .stock-reponer button {
-    padding: 4px 10px; background: var(--bo-success-soft); color: #0E7B3F;
+    padding: 4px 10px; background: var(--bo-success-soft); color: var(--bo-success-tinta);
     border: 1px solid var(--bo-success); border-radius: 4px; font-size: 11px;
     font-weight: 600; cursor: pointer;
   }
-  .stock-reponer button:hover { background: var(--bo-success); color: #fff; }
+  .stock-reponer button:hover { background: var(--bo-success); color: var(--bo-on-estado); }
 </style>
 {% endblock %}
 

@@ -87,7 +87,7 @@
       </thead>
       <tbody>
         {% for p in productos %}
-          <tr {% if not p.activo %}style="opacity:.5;"{% endif %}>
+          <tr{% if not p.activo %} class="bo-fila-inactiva"{% endif %}>
             {% if puede_editar_activo %}
               <td>
                 <input type="checkbox" name="ids" value="{{ p.pk }}"

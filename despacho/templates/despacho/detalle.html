@@ -13,7 +13,7 @@
 
   <div style="margin-bottom:18px;">
     <a href="{% url 'despacho:cola' %}" class="no-print"
-       style="color:#7A1E2B; text-decoration:none; font-size:13px;">
+       style="color:var(--bo-vino); text-decoration:none; font-size:13px;">
       ← Volver a la cola
     </a>
     <button type="button" class="bo-btn no-print" onclick="window.print()"
@@ -58,7 +58,7 @@
         {% if pedido.payment_provider == 'transferencia' %}
           <strong>Esperando la transferencia.</strong> No lo prepares todavía:
           cuando veas el abono en la cartola, confírmalo en
-          <a href="{% url 'despacho:cola' %}?estado=transferencias" style="color:#7A1E2B;">Por confirmar</a>.
+          <a href="{% url 'despacho:cola' %}?estado=transferencias" style="color:var(--bo-vino);">Por confirmar</a>.
         {% else %}
           <strong>Pago pendiente.</strong> La pasarela todavía no confirma el
           pago. No lo prepares hasta que aparezca en la cola de nuevos.
@@ -86,7 +86,7 @@
         </div>
         <div style="font-size:18px; font-weight:600;">{{ pedido.cliente_nombre|default:"Sin nombre" }}</div>
         <div style="margin-top:8px; font-size:14px; line-height:1.6;">
-          📧 <a href="mailto:{{ pedido.cliente_email }}" style="color:#7A1E2B;">{{ pedido.cliente_email|default:"—" }}</a><br>
+          📧 <a href="mailto:{{ pedido.cliente_email }}" style="color:var(--bo-vino);">{{ pedido.cliente_email|default:"—" }}</a><br>
           📞 {{ pedido.cliente_telefono|default:"sin teléfono" }}<br>
           🆔 {{ pedido.cliente_rut|default:"sin RUT" }}
         </div>

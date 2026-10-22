@@ -55,7 +55,7 @@
       </thead>
       <tbody>
         {% for m in materiales %}
-          <tr {% if not m.activo %}style="opacity:.5;"{% endif %}>
+          <tr{% if not m.activo %} class="bo-fila-inactiva"{% endif %}>
             {% if puede_bulk_materiales %}
               <td>
                 <input type="checkbox" name="ids" value="{{ m.pk }}"

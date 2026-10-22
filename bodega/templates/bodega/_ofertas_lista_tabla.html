@@ -57,7 +57,7 @@
       </thead>
       <tbody>
         {% for o in ofertas %}
-          <tr {% if not o.activa %}style="opacity:.55;"{% endif %}>
+          <tr{% if not o.activa %} class="bo-fila-inactiva"{% endif %}>
             {% if puede_bulk_ofertas %}
               <td>
                 <input type="checkbox" name="ids" value="{{ o.pk }}"

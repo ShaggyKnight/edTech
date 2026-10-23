@@ -396,6 +396,9 @@ body.pos-fullscreen .bo-content { margin: 0; border: 0; border-radius: 0; }
 }
 
 /* ---- Tablas ------------------------------------------------------------- */
+/* Si una tabla no cabe en su tarjeta, se desplaza dentro de ella en vez de
+   sacar columnas y botones fuera del cuadro. */
+.bo-card:has(.bo-table) { overflow-x: auto; }
 .bo-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .bo-table th {
   text-align: left; font-weight: 500; color: var(--bo-muted);
@@ -419,7 +422,7 @@ body.pos-fullscreen .bo-content { margin: 0; border: 0; border-radius: 0; }
   border: 1px solid var(--bo-border); background: var(--bo-card);
   color: var(--bo-text); font: inherit; font-size: 12px; font-weight: 500;
   cursor: pointer; text-decoration: none; transition: all .12s;
-  line-height: 1.4; white-space: nowrap;
+  line-height: 1.4;
 }
 .bo-btn:hover { background: var(--bo-bg); }
 .bo-btn-primary { background: var(--bo-primary-2); border-color: var(--bo-primary-2); color: var(--bo-on-primary); }

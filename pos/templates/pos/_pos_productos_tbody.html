@@ -8,9 +8,9 @@
 {% endcomment %}
 <tbody id="pos-productos-tbody">
   {% for v in variantes %}
-    <tr {% if not v.stock %}style="opacity:.6;"{% endif %}>
-      <td>{{ v.producto.nombre }}</td>
+    <tr{% if not v.stock %} class="bo-fila-inactiva"{% endif %}>
       <td>
+        <div class="pos-prod-nombre">{{ v.producto.nombre }}</div>
         {% comment %}
           Mejora: talla(s) PRIMERO y en grande. El SKU técnico queda
           como referencia debajo. El cajero ve la talla de un vistazo.
@@ -22,7 +22,7 @@
         </div>
         <code class="pos-variante-sku">{{ v.sku }}</code>
       </td>
-      <td>{{ v.producto.familia.nombre }}</td>
+      <td class="pos-col-familia">{{ v.producto.familia.nombre }}</td>
       <td class="num">${{ v.precio|floatformat:0|intcomma }}</td>
       <td class="num">
         {% if not v.stock %}
@@ -47,10 +47,12 @@
     </tr>
   {% endfor %}
   {% for p in productos %}
-    <tr {% if not p.stock %}style="opacity:.6;"{% endif %}>
-      <td>{{ p.nombre }}</td>
-      <td><em style="color:var(--bo-muted);">sin variantes</em></td>
-      <td>{{ p.familia.nombre }}</td>
+    <tr{% if not p.stock %} class="bo-fila-inactiva"{% endif %}>
+      <td>
+        <div class="pos-prod-nombre">{{ p.nombre }}</div>
+        <span class="pos-variante-sku">Sin variantes</span>
+      </td>
+      <td class="pos-col-familia">{{ p.familia.nombre }}</td>
       <td class="num">${{ p.precio_base|floatformat:0|intcomma }}</td>
       <td class="num">
         {% if not p.stock %}
@@ -76,7 +78,7 @@
   {% endfor %}
   {% if not variantes and not productos %}
     <tr>
-      <td colspan="6"
+      <td colspan="5"
           style="text-align:center;color:var(--bo-muted);padding:30px;">
         No hay productos que coincidan con los filtros.
       </td>

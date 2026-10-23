@@ -52,6 +52,16 @@
     background: var(--bo-primary-hover);
   }
   .pos-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+  /* "+ Agregar" en una sola linea (sin el + partido arriba del texto). */
+  .pos-grid .bo-btn { white-space: nowrap; }
+  /* La lista de productos baja dentro de su caja con el encabezado fijo,
+     para no perder las columnas al recorrerla. */
+  .pos-tabla-scroll { max-height: max(420px, calc(100vh - 320px)); overflow-y: auto; }
+  .pos-tabla-scroll thead th { position: sticky; top: 0; z-index: 1; box-shadow: 0 1px 0 var(--bo-border); }
+  body.pos-fullscreen .pos-tabla-scroll { max-height: calc(100vh - 280px); }
+  .pos-prod-nombre { font-weight: 500; margin-bottom: 4px; }
+  /* Familia ya esta en las categorias de arriba: se oculta si falta ancho. */
+  @media (max-width: 1600px) { .pos-col-familia { display: none; } }
   @media (max-width: 1100px) { .pos-grid { grid-template-columns: 1fr; } }
   .pos-cart-empty {
     text-align: center; padding: 60px 20px; color: var(--bo-muted);

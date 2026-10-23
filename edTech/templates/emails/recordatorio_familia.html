@@ -3,7 +3,7 @@
 {% block titulo %}¿Está empezando a quedar chico? · Ideas Boutique{% endblock %}
 {% block preheader %}Llegó febrero. Te ayudamos a renovar el uniforme.{% endblock %}
 
-{% block heading %}Llegó <em style="color:#8B7A5A;font-style:italic;">febrero</em>. ¿Estás lista para marzo?{% endblock %}
+{% block heading %}Llegó <em style="color:#6E5C3A;font-style:italic;">febrero</em>. ¿Estás lista para marzo?{% endblock %}
 
 {% block body %}
 <p style="margin:0 0 18px;">Hola {{ cliente_nombre }}, todos los años por estas fechas miramos los uniformes y nos preguntamos: <em>¿le sigue quedando?</em></p>
@@ -20,7 +20,7 @@
           {% if hijo.talla_buzo %}Buzo {{ hijo.talla_buzo }} · {% endif %}{% if hijo.talla_polera %}Polera {{ hijo.talla_polera }} · {% endif %}{% if hijo.talla_chaleco %}Chaleco {{ hijo.talla_chaleco }}{% endif %}
         </span>
       </td>
-      <td align="right" style="font-size:12px;color:#8B7A5A;font-style:italic;">{{ hijo.colegio }}</td>
+      <td align="right" style="font-size:12px;color:#6E5C3A;font-style:italic;">{{ hijo.colegio }}</td>
     </tr></table>
   </td></tr>
   {% endfor %}
@@ -38,6 +38,6 @@
 </td></tr></table>
 
 <p style="text-align:center;margin:18px 0 0;font-size:13px;color:#6a6a6a;">
-  O {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" style="color:#8B7A5A;">escríbenos por WhatsApp</a>{% else %}escríbenos por WhatsApp{% endif %} y te preparamos todo.
+  O {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" style="color:#6E5C3A;">escríbenos por WhatsApp</a>{% else %}escríbenos por WhatsApp{% endif %} y te preparamos todo.
 </p>
 {% endblock %}

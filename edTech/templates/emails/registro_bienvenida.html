@@ -3,7 +3,7 @@
 {% block titulo %}Bienvenida a Ideas Boutique{% endblock %}
 {% block preheader %}Tu cuenta quedó lista. Ya puedes guardar tu carrito y ver tus pedidos.{% endblock %}
 
-{% block heading %}Bienvenida, <em style="color:#8B7A5A;font-style:italic;">{{ user.first_name|default:"vecina" }}</em>.{% endblock %}
+{% block heading %}Bienvenida, <em style="color:#6E5C3A;font-style:italic;">{{ user.first_name|default:"vecina" }}</em>.{% endblock %}
 
 {% block body %}
 <p style="margin:0 0 14px;">Tu cuenta en Ideas Boutique quedó lista. Desde acá puedes:</p>
@@ -23,7 +23,7 @@
   </td></tr>
 </table>
 
-<p style="font-size:14px;color:#6a6a6a;">Si nunca creaste esta cuenta, {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" style="color:#8B7A5A;">escríbenos por WhatsApp</a>{% else %}escríbenos por WhatsApp{% endif %} y la borramos al toque.</p>
+<p style="font-size:14px;color:#6a6a6a;">Si nunca creaste esta cuenta, {% if PUBLIC_WHATSAPP %}<a href="https://wa.me/{{ PUBLIC_WHATSAPP }}" style="color:#6E5C3A;">escríbenos por WhatsApp</a>{% else %}escríbenos por WhatsApp{% endif %} y la borramos al toque.</p>
 {% endblock %}
 
 {% block cta %}

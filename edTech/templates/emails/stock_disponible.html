@@ -4,14 +4,14 @@
 {% block titulo %}¡Volvió! {{ variante.producto.nombre }}{% endblock %}
 {% block preheader %}La talla {{ variante|stringformat:"s" }} que estabas esperando ya está disponible.{% endblock %}
 
-{% block heading %}¡Volvió! <em style="color:#8B7A5A;font-style:italic;">{{ variante.producto.nombre }}</em>{% endblock %}
+{% block heading %}¡Volvió! <em style="color:#6E5C3A;font-style:italic;">{{ variante.producto.nombre }}</em>{% endblock %}
 
 {% block body %}
 <p style="margin:0 0 18px;font-size:16px;">Hola, la talla que estabas esperando volvió a estar disponible.</p>
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:8px 0 20px;">
   <tr><td style="padding:20px 24px;text-align:center;">
-    <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;margin-bottom:8px;">Volvió a stock</div>
+    <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#6E5C3A;margin-bottom:8px;">Volvió a stock</div>
     <div style="font-family:Georgia,serif;font-size:22px;font-weight:600;line-height:1.2;margin-bottom:6px;">{{ variante.producto.nombre }}</div>
     <div style="font-family:Georgia,serif;font-size:36px;font-weight:600;color:#C9A96E;margin-top:8px;">
       {% for val in variante.valores.all %}{{ val.valor }}{% if not forloop.last %} · {% endif %}{% endfor %}
@@ -30,7 +30,7 @@
   </a>
 </td></tr></table>
 
-<p style="text-align:center;margin:14px 0 0;font-size:12px;color:#8B7A5A;">
-  Te avisamos esta vez porque tú lo pediste. <a href="{{ unsub_url }}" style="color:#8B7A5A;">Cancelar la alerta</a>.
+<p style="text-align:center;margin:14px 0 0;font-size:12px;color:#6E5C3A;">
+  Te avisamos esta vez porque tú lo pediste. <a href="{{ unsub_url }}" style="color:#6E5C3A;">Cancelar la alerta</a>.
 </p>
 {% endblock %}

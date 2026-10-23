@@ -4,13 +4,13 @@
 {% block titulo %}Boleta #{{ recibo.pk }} · Ideas Boutique{% endblock %}
 {% block preheader %}Gracias por tu compra. Total ${{ recibo.total|floatformat:0|intcomma }} · Pedido #{{ recibo.pk }}.{% endblock %}
 
-{% block heading %}Gracias por tu compra, <em style="color:#8B7A5A;font-style:italic;">{{ recibo.cliente_nombre|default:"vecina/o" }}</em>.{% endblock %}
+{% block heading %}Gracias por tu compra, <em style="color:#6E5C3A;font-style:italic;">{{ recibo.cliente_nombre|default:"vecina/o" }}</em>.{% endblock %}
 
 {% block body %}
 <p style="margin:0 0 14px;">Tu pedido <strong>#{{ recibo.pk }}</strong> quedó confirmado.{% if recibo.dte_url_pdf %} Adjuntamos tu boleta electrónica.{% endif %}</p>
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F5EFE4;border:1px solid #E5DCC8;border-radius:10px;margin:18px 0;">
-  <tr><td style="padding:18px 22px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8B7A5A;border-bottom:1px solid #E5DCC8;">Detalle del pedido</td></tr>
+  <tr><td style="padding:18px 22px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#6E5C3A;border-bottom:1px solid #E5DCC8;">Detalle del pedido</td></tr>
   {% for det in recibo.detalles.all %}
   <tr><td style="padding:12px 22px;border-bottom:1px solid #E5DCC8;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -50,7 +50,7 @@
 
 {% if recibo.dte_url_pdf %}
 <p style="text-align:center;margin:14px 0 0;font-size:13px;color:#6a6a6a;">
-  ¿Necesitas solo el PDF de la boleta? <a href="{{ recibo.dte_url_pdf }}" style="color:#8B7A5A;">Descárgalo acá</a>.
+  ¿Necesitas solo el PDF de la boleta? <a href="{{ recibo.dte_url_pdf }}" style="color:#6E5C3A;">Descárgalo acá</a>.
 </p>
 {% endif %}
 {% endblock %}

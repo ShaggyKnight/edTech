@@ -12,20 +12,20 @@
      mayúsculas+espaciado. Los .gateway-option también son <label> pero
      muestran texto normal — sin este selector acotado heredaban el
      uppercase y se veían desbordados. */
-  .checkout-form .field > label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-60); margin-bottom: 6px; }
+  .checkout-form .field > label { display: block; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
   /* :not([type=radio]) — sin esto, los radios del método de pago heredan
      width:100% + padding de campo de texto y aplastan su texto contra el
      borde derecho. */
   .checkout-form input:not([type=radio]), .checkout-form textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--cream-3); }
   .checkout-form input:not([type=radio]):focus, .checkout-form textarea:focus { outline: none; border-color: var(--gold); background: white; }
   .gateway-option input[type=radio] { width: 16px; height: 16px; }
-  .checkout-form .hint { font-size: 12px; color: var(--ink-60); margin-top: 4px; }
+  .checkout-form .hint { font-size: 13px; color: var(--ink-60); margin-top: 4px; }
   .checkout-form .err { color: var(--vino); font-size: 13px; margin-top: 4px; }
   .field-msg {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 6px;
     font-weight: 500;
     animation: field-msg-in 0.15s ease-out;
@@ -41,7 +41,7 @@
   .checkout-summary h3 { font-family: var(--serif); font-size: 24px; margin-bottom: 16px; }
   .checkout-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
   .checkout-line:last-of-type { border: none; }
-  .checkout-line .qty-mul { color: var(--ink-60); font-size: 12px; }
+  .checkout-line .qty-mul { color: var(--ink-60); font-size: 13px; }
   .checkout-total { margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
   .checkout-total strong { font-family: var(--serif); font-size: 28px; }
   @media (max-width: 860px) {
@@ -85,7 +85,7 @@
         {% if form.cliente_nombre.errors %}<div class="err">{{ form.cliente_nombre.errors|join:", " }}</div>{% endif %}
       </div>
 
-      <div style="background:var(--cream-3,#faf6ef); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:12.5px; color:var(--ink-60); line-height:1.45;">
+      <div style="background:var(--cream-3,#faf6ef); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size: 14px; color:var(--ink-60); line-height:1.45;">
         Déjanos <strong>al menos uno</strong>: al email te llega la boleta,
         al celular te avisamos por WhatsApp cuando esté listo.
       </div>
@@ -118,7 +118,7 @@
         <div class="field"
              style="background:var(--cream); border:1px solid var(--line); border-radius:10px; padding:10px 14px;">
           <div style="font-weight:600; font-size:13.5px;">Retiro en tienda, gratis</div>
-          <div style="font-size:12.5px; color:var(--ink-60); line-height:1.45;">
+          <div style="font-size: 14px; color:var(--ink-60); line-height:1.45;">
             Caupolicán 437-B, Los Vilos · lunes a sábado de 9 a 19 hrs.
             Te avisamos apenas esté listo.
           </div>
@@ -144,7 +144,7 @@
                     {{ g.icono }} {{ g.nombre_publico }}
                   </span>
                   {% if g.subtitulo %}
-                    <span style="font-size:12px;color:var(--ink-60);line-height:1.4;">{{ g.subtitulo }}</span>
+                    <span style="font-size: 13px;color:var(--ink-60);line-height:1.4;">{{ g.subtitulo }}</span>
                   {% endif %}
                 </span>
               </label>
@@ -166,7 +166,7 @@
         online, decir QUIEN esta detras y COMO se procesa el pago es lo
         que mas convierte.
       {% endcomment %}
-      <div style="margin-top:14px; font-size:12px; color:var(--ink-60); line-height:1.6; text-align:center;">
+      <div style="margin-top:14px; font-size: 13px; color:var(--ink-60); line-height:1.6; text-align:center;">
         Pago seguro procesado por
         {% for g in gateways %}{{ g.nombre_publico }}{% if not forloop.last %} / {% endif %}{% endfor %}
         — no vemos ni guardamos tus datos bancarios.<br>

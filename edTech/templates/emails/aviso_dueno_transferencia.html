@@ -4,7 +4,7 @@
 {% block titulo %}Pedido #{{ recibo.pk }} esperando transferencia{% endblock %}
 {% block preheader %}${{ recibo.total|floatformat:0|intcomma }} por confirmar cuando llegue el abono.{% endblock %}
 
-{% block heading %}Pedido <em style="color:#8B7A5A;font-style:italic;">#{{ recibo.pk }}</em> espera una transferencia.{% endblock %}
+{% block heading %}Pedido <em style="color:#6E5C3A;font-style:italic;">#{{ recibo.pk }}</em> espera una transferencia.{% endblock %}
 
 {% block body %}
 <p style="margin:0 0 18px;">Entró un pedido que va a pagar por <strong>transferencia directa</strong>. Todavía NO está pagado — cuando el abono aparezca en la cuenta, confírmalo en Despacho.</p>
@@ -18,8 +18,8 @@
   </td></tr>
   <tr><td style="padding:14px 22px;font-size:14px;line-height:1.8;">
     <strong>{{ recibo.cliente_nombre|default:"Sin nombre" }}</strong><br>
-    {% if recibo.cliente_telefono %}📞 {{ recibo.cliente_telefono }}<br>{% endif %}
-    {% if recibo.cliente_email %}📧 {{ recibo.cliente_email }}<br>{% endif %}
+    {% if recibo.cliente_telefono %}Teléfono: {{ recibo.cliente_telefono }}<br>{% endif %}
+    {% if recibo.cliente_email %}Correo: {{ recibo.cliente_email }}<br>{% endif %}
     Referencia esperada: <strong>Pedido #{{ recibo.pk }}</strong>
   </td></tr>
   <tr><td style="padding:0 22px 14px;font-size:13px;color:#6a6a6a;">

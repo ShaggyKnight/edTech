@@ -30,7 +30,7 @@ class PerfilUsuario(models.Model):
         help_text=(
             'Si está prendido y el usuario tiene rol DESPACHADOR + esta '
             'activo, recibe email cada vez que entra una venta online. '
-            'Apagalo para pausar notificaciones sin desactivar la cuenta.'
+            'Apágalo para pausar notificaciones sin desactivar la cuenta.'
         ),
         verbose_name='Recibe email de pedidos online',
     )
@@ -51,3 +51,34 @@ def _crear_perfil_al_crear_user(sender, instance, created, **kwargs):
     """Garantiza que TODO User tenga su PerfilUsuario. Idempotente."""
     if created:
         PerfilUsuario.objects.get_or_create(usuario=instance)
+
+
+class ConfiguracionSistema(models.Model):
+    """Funciones del backoffice que un superusuario enciende o apaga desde
+    Administracion > Funciones. Una sola fila (pk=1).
+
+    Apagar una funcion la saca del menu y sus pantallas dejan de abrirse
+    (ver accounts/funciones.py y FuncionesMiddleware); no borra datos.
+    """
+    produccion = models.BooleanField('Producción', default=True)
+    etiquetas = models.BooleanField('Etiquetas', default=True)
+    materiales = models.BooleanField('Telas y materiales', default=True)
+
+    modificado = models.DateTimeField(auto_now=True)
+    modificado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+
+    class Meta:
+        verbose_name = 'configuración del sistema'
+        verbose_name_plural = 'configuración del sistema'
+
+    def __str__(self):
+        return 'Configuración del sistema'
+
+    @classmethod
+    def actual(cls):
+        """La unica fila; se crea con todo encendido la primera vez."""
+        conf, _ = cls.objects.get_or_create(pk=1)
+        return conf

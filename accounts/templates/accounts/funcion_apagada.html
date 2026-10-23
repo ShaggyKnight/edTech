@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ funcion.nombre }} está apagada · Ideas Boutique{% endblock %}
+
+{% block content %}
+<div class="bo-page-head">
+  <div>
+    <h1>{{ funcion.nombre }} está apagada</h1>
+    <div class="sub">{{ funcion.descripcion }}</div>
+  </div>
+</div>
+
+<div class="bo-card" style="max-width: 640px;">
+  <div class="bo-card-body" style="font-size: 14px; line-height: 1.6;">
+    {% if user.is_superuser %}
+      Puedes volver a encenderla en
+      <a href="{% url 'accounts:funciones' %}">Administración › Funciones</a>.
+      Sus datos siguen guardados.
+    {% else %}
+      Esta parte del sistema no está en uso en este momento. Si la necesitas,
+      pídele a quien administra el sistema que la encienda.
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

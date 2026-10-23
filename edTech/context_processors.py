@@ -118,3 +118,11 @@ def backoffice_badges(request):
         'badge_despacho_nuevos': SimpleLazyObject(_despacho_nuevos),
         'badge_stock_agotados': SimpleLazyObject(_stock_agotados),
     }
+
+
+def funciones(request):
+    """FUNCIONES: {clave: encendida} para esconder del menu lo que un
+    superusuario apago (ver accounts/funciones.py). Lazy: solo consulta
+    la base si el template lo usa (el backoffice)."""
+    from accounts.funciones import estado_funciones
+    return {'FUNCIONES': SimpleLazyObject(estado_funciones)}

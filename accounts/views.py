@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import PermissionDenied
 from django.core.mail import EmailMultiAlternatives
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,6 +11,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .email_previews import PREVIEWS, get_preview
+from .funciones import FUNCIONES
 from .forms import (
     ROL_LABELS, ResetPasswordForm, UsuarioCrearForm, UsuarioEditarForm,
     _rol_actual,
@@ -281,3 +283,25 @@ def usuario_editar(request, pk):
         'modo': 'editar',
         'usuario': usuario,
     })
+
+
+@login_required
+def funciones_config(request):
+    """Encender o apagar funciones del backoffice (solo superusuario).
+
+    Una funcion apagada sale del menu y sus pantallas dejan de abrirse
+    (FuncionesMiddleware). No se borra ningun dato: al encenderla vuelve
+    todo como estaba."""
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    from .models import ConfiguracionSistema
+    conf = ConfiguracionSistema.actual()
+    if request.method == 'POST':
+        for f in FUNCIONES:
+            setattr(conf, f.clave, request.POST.get(f.clave) == 'on')
+        conf.modificado_por = request.user
+        conf.save()
+        messages.success(request, 'Funciones guardadas.')
+        return redirect('accounts:funciones')
+    filas = [{'funcion': f, 'activa': getattr(conf, f.clave)} for f in FUNCIONES]
+    return render(request, 'accounts/funciones.html', {'filas': filas, 'conf': conf})

@@ -69,7 +69,7 @@
   </div>
 
   {# ─── KPIs ─── #}
-  <div class="bo-grid cols-4" style="margin-bottom:20px;">
+  <div class="bo-grid {% if FUNCIONES.materiales %}cols-4{% else %}cols-3{% endif %}" style="margin-bottom:20px;">
     <div class="bo-card bo-kpi is-success">
       <div class="label">Stock OK</div>
       <div class="value">{{ kpi.n_ok }}</div>
@@ -85,11 +85,13 @@
       <div class="value">{{ kpi.n_agotado }}</div>
       <div class="sub">Sin stock disponible</div>
     </div>
+    {% if FUNCIONES.materiales %}
     <div class="bo-card bo-kpi is-gold">
       <div class="label">Rollos en bodega</div>
       <div class="value">{{ kpi.rollos_total }}</div>
       <div class="sub">Materia prima total</div>
     </div>
+    {% endif %}
   </div>
 
   {# ─── Filtros (AJAX: auto-apply al cambiar input/select) ─── #}

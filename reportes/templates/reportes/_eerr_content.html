@@ -214,11 +214,11 @@
 </div>
 
 {# ─── Potencial: lo que la materia prima ya comprada permitiría ─── #}
-{% if potencial.capacidad_unidades %}
+{% if potencial.capacidad_unidades and FUNCIONES.materiales %}
   <div class="bo-card" style="border-left: 4px solid var(--bo-gold);">
     <div class="bo-card-head">
       <h3>Potencial de confección con la materia prima en bodega</h3>
-      <a href="{% url 'reportes:produccion' %}" class="bo-btn bo-btn-sm">Ver detalle por variante →</a>
+      {% if FUNCIONES.produccion %}<a href="{% url 'reportes:produccion' %}" class="bo-btn bo-btn-sm">Ver detalle por variante →</a>{% endif %}
     </div>
     <div class="bo-card-body">
       <p style="margin-top:0; color: var(--bo-muted);">

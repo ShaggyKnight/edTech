@@ -145,7 +145,7 @@
               Telas del taller: el rol operador (duena, vista simplificada)
               no las ve; bodeguero y admin si.
             {% endcomment %}
-            {% if perms.bodega.change_material or user.is_superuser %}
+            {% if FUNCIONES.materiales and perms.bodega.change_material or FUNCIONES.materiales and user.is_superuser %}
               <a class="bo-side-link{% if ns == 'bodega' and 'material' in un or ns == 'bodega' and 'rendimiento' in un %} active" aria-current="page{% endif %}" href="{% url 'bodega:lista_materiales' %}">
                 <svg class="ico" aria-hidden="true"><use href="#ico-layers"/></svg>
                 Telas y materiales
@@ -157,7 +157,7 @@
                 Ofertas
               </a>
             {% endif %}
-            {% if user|has_any_role:'admin,bodeguero' %}
+            {% if FUNCIONES.etiquetas and user|has_any_role:'admin,bodeguero' %}
               <a class="bo-side-link{% if ns == 'bodega' and 'etiqueta' in un %} active" aria-current="page{% endif %}" href="{% url 'bodega:etiquetas_seleccionar' %}">
                 <svg class="ico" aria-hidden="true"><use href="#ico-barcode"/></svg>
                 Etiquetas
@@ -179,10 +179,12 @@
               <svg class="ico" aria-hidden="true"><use href="#ico-scale"/></svg>
               Balance general
             </a>
+            {% if FUNCIONES.produccion %}
             <a class="bo-side-link{% if ns == 'reportes' and un == 'produccion' %} active" aria-current="page{% endif %}" href="{% url 'reportes:produccion' %}">
               <svg class="ico" aria-hidden="true"><use href="#ico-scissors"/></svg>
               Producción
             </a>
+            {% endif %}
           {% endif %}
 
           {% if user|has_role:'admin' %}
@@ -195,6 +197,12 @@
               <svg class="ico" aria-hidden="true"><use href="#ico-mail"/></svg>
               Correos
             </a>
+            {% if user.is_superuser %}
+              <a class="bo-side-link{% if ns == 'accounts' and un == 'funciones' %} active" aria-current="page{% endif %}" href="{% url 'accounts:funciones' %}">
+                <svg class="ico" aria-hidden="true"><use href="#ico-switch"/></svg>
+                Funciones
+              </a>
+            {% endif %}
           {% endif %}
         {% endif %}
       </nav>

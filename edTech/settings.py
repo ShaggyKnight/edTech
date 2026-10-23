@@ -234,6 +234,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Funciones del backoffice apagadas por un superusuario (accounts/funciones.py).
+    'accounts.middleware.FuncionesMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Marca request.htmx para que views/templates puedan ajustar su salida.
     'edTech.middleware.HtmxMiddleware',
@@ -285,6 +287,7 @@ TEMPLATES = [
                 'edTech.context_processors.public_settings',
                 # Badges del sidebar backoffice (lazy — solo evalua en base.html).
                 'edTech.context_processors.backoffice_badges',
+                'edTech.context_processors.funciones',
             ],
         },
     },
